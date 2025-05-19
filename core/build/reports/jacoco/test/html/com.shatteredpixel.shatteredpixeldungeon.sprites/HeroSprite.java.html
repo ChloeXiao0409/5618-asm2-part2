@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HeroSprite.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.sprites</a> &gt; <span class="el_source">HeroSprite.java</span></div><h1>HeroSprite.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.sprites;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.HeroDisguise;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.watabou.gltextures.SmartTexture;
+import com.watabou.gltextures.TextureCache;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.TextureFilm;
+import com.watabou.utils.Callback;
+import com.watabou.utils.PointF;
+import com.watabou.utils.RectF;
+
+public class HeroSprite extends CharSprite {
+	
+	private static final int FRAME_WIDTH	= 12;
+	private static final int FRAME_HEIGHT	= 15;
+	
+	private static final int RUN_FRAMERATE	= 20;
+	
+	private static TextureFilm tiers;
+	
+	private Animation fly;
+	private Animation read;
+
+	public HeroSprite() {
+<span class="nc" id="L53">		super();</span>
+		
+<span class="nc" id="L55">		texture( Dungeon.hero.heroClass.spritesheet() );</span>
+<span class="nc" id="L56">		updateArmor();</span>
+		
+<span class="nc" id="L58">		link( Dungeon.hero );</span>
+
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		if (ch.isAlive())</span>
+<span class="nc" id="L61">			idle();</span>
+		else
+<span class="nc" id="L63">			die();</span>
+<span class="nc" id="L64">	}</span>
+
+	public void disguise(HeroClass cls){
+<span class="nc" id="L67">		texture( cls.spritesheet() );</span>
+<span class="nc" id="L68">		updateArmor();</span>
+<span class="nc" id="L69">	}</span>
+	
+	public void updateArmor() {
+
+<span class="nc" id="L73">		TextureFilm film = new TextureFilm( tiers(), Dungeon.hero.tier(), FRAME_WIDTH, FRAME_HEIGHT );</span>
+		
+<span class="nc" id="L75">		idle = new Animation( 1, true );</span>
+<span class="nc" id="L76">		idle.frames( film, 0, 0, 0, 1, 0, 0, 1, 1 );</span>
+		
+<span class="nc" id="L78">		run = new Animation( RUN_FRAMERATE, true );</span>
+<span class="nc" id="L79">		run.frames( film, 2, 3, 4, 5, 6, 7 );</span>
+		
+<span class="nc" id="L81">		die = new Animation( 20, false );</span>
+<span class="nc" id="L82">		die.frames( film, 8, 9, 10, 11, 12, 11 );</span>
+		
+<span class="nc" id="L84">		attack = new Animation( 15, false );</span>
+<span class="nc" id="L85">		attack.frames( film, 13, 14, 15, 0 );</span>
+		
+<span class="nc" id="L87">		zap = attack.clone();</span>
+		
+<span class="nc" id="L89">		operate = new Animation( 8, false );</span>
+<span class="nc" id="L90">		operate.frames( film, 16, 17, 16, 17 );</span>
+		
+<span class="nc" id="L92">		fly = new Animation( 1, true );</span>
+<span class="nc" id="L93">		fly.frames( film, 18 );</span>
+
+<span class="nc" id="L95">		read = new Animation( 20, false );</span>
+<span class="nc" id="L96">		read.frames( film, 19, 20, 20, 20, 20, 20, 20, 20, 20, 19 );</span>
+		
+<span class="nc bnc" id="L98" title="All 2 branches missed.">		if (Dungeon.hero.isAlive())</span>
+<span class="nc" id="L99">			idle();</span>
+		else
+<span class="nc" id="L101">			die();</span>
+<span class="nc" id="L102">	}</span>
+	
+	@Override
+	public void place( int p ) {
+<span class="nc" id="L106">		super.place( p );</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		if (Game.scene() instanceof GameScene) Camera.main.panFollow(this, 5f);</span>
+<span class="nc" id="L108">	}</span>
+
+	@Override
+	public void move( int from, int to ) {
+<span class="nc" id="L112">		super.move( from, to );</span>
+<span class="nc bnc" id="L113" title="All 4 branches missed.">		if (ch != null &amp;&amp; ch.flying) {</span>
+<span class="nc" id="L114">			play( fly );</span>
+		}
+<span class="nc" id="L116">		Camera.main.panFollow(this, 20f);</span>
+<span class="nc" id="L117">	}</span>
+
+	@Override
+	public void idle() {
+<span class="nc" id="L121">		super.idle();</span>
+<span class="nc bnc" id="L122" title="All 4 branches missed.">		if (ch != null &amp;&amp; ch.flying) {</span>
+<span class="nc" id="L123">			play( fly );</span>
+		}
+<span class="nc" id="L125">	}</span>
+
+	@Override
+	public void jump( int from, int to, float height, float duration,  Callback callback ) {
+<span class="nc" id="L129">		super.jump( from, to, height, duration, callback );</span>
+<span class="nc" id="L130">		play( fly );</span>
+<span class="nc" id="L131">		Camera.main.panFollow(this, 20f);</span>
+<span class="nc" id="L132">	}</span>
+
+	public synchronized void read() {
+<span class="nc" id="L135">		animCallback = new Callback() {</span>
+			@Override
+			public void call() {
+<span class="nc" id="L138">				idle();</span>
+<span class="nc" id="L139">				ch.onOperateComplete();</span>
+<span class="nc" id="L140">			}</span>
+		};
+<span class="nc" id="L142">		play( read );</span>
+<span class="nc" id="L143">	}</span>
+
+	@Override
+	public void bloodBurstA(PointF from, int damage) {
+		//Does nothing.
+
+		/*
+		 * This is both for visual clarity, and also for content ratings regarding violence
+		 * towards human characters. The heroes are the only human or human-like characters which
+		 * participate in combat, so removing all blood associated with them is a simple way to
+		 * reduce the violence rating of the game.
+		 */
+<span class="nc" id="L155">	}</span>
+
+	@Override
+	public void update() {
+<span class="nc bnc" id="L159" title="All 4 branches missed.">		sleeping = ch.isAlive() &amp;&amp; ((Hero)ch).resting;</span>
+		
+<span class="nc" id="L161">		super.update();</span>
+<span class="nc" id="L162">	}</span>
+	
+	public void sprint( float speed ) {
+<span class="nc" id="L165">		run.delay = 1f / speed / RUN_FRAMERATE;</span>
+<span class="nc" id="L166">	}</span>
+	
+	public static TextureFilm tiers() {
+<span class="nc bnc" id="L169" title="All 2 branches missed.">		if (tiers == null) {</span>
+<span class="nc" id="L170">			SmartTexture texture = TextureCache.get( Assets.Sprites.ROGUE );</span>
+<span class="nc" id="L171">			tiers = new TextureFilm( texture, texture.width, FRAME_HEIGHT );</span>
+		}
+		
+<span class="nc" id="L174">		return tiers;</span>
+	}
+
+	public static Image avatar( Hero hero ){
+<span class="nc bnc" id="L178" title="All 2 branches missed.">		if (hero.buff(HeroDisguise.class) != null){</span>
+<span class="nc" id="L179">			return avatar(hero.buff(HeroDisguise.class).getDisguise(), hero.tier());</span>
+		} else {
+<span class="nc" id="L181">			return avatar(hero.heroClass, hero.tier());</span>
+		}
+	}
+	
+	public static Image avatar( HeroClass cl, int armorTier ) {
+		
+<span class="nc" id="L187">		RectF patch = tiers().get( armorTier );</span>
+<span class="nc" id="L188">		Image avatar = new Image( cl.spritesheet() );</span>
+<span class="nc" id="L189">		RectF frame = avatar.texture.uvRect( 1, 0, FRAME_WIDTH, FRAME_HEIGHT );</span>
+<span class="nc" id="L190">		frame.shift( patch.left, patch.top );</span>
+<span class="nc" id="L191">		avatar.frame( frame );</span>
+		
+<span class="nc" id="L193">		return avatar;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Heap.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items</a> &gt; <span class="el_source">Heap.java</span></div><h1>Heap.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Wraith;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Shopkeeper;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ElmoParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact;
+import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
+import com.shatteredpixel.shatteredpixeldungeon.items.food.ChargrilledMeat;
+import com.shatteredpixel.shatteredpixeldungeon.items.food.FrozenCarpaccio;
+import com.shatteredpixel.shatteredpixeldungeon.items.food.MysteryMeat;
+import com.shatteredpixel.shatteredpixeldungeon.items.journal.DocumentPage;
+import com.shatteredpixel.shatteredpixeldungeon.items.journal.Guidebook;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfWealth;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.Dart;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.TippedDart;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Document;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundlable;
+import com.watabou.utils.Bundle;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+
+<span class="nc" id="L60">public class Heap implements Bundlable {</span>
+	
+<span class="nc" id="L62">	public enum Type {</span>
+<span class="nc" id="L63">		HEAP,</span>
+<span class="nc" id="L64">		FOR_SALE,</span>
+<span class="nc" id="L65">		CHEST,</span>
+<span class="nc" id="L66">		LOCKED_CHEST,</span>
+<span class="nc" id="L67">		CRYSTAL_CHEST,</span>
+<span class="nc" id="L68">		TOMB,</span>
+<span class="nc" id="L69">		SKELETON,</span>
+<span class="nc" id="L70">		REMAINS</span>
+	}
+<span class="nc" id="L72">	public Type type = Type.HEAP;</span>
+	
+<span class="nc" id="L74">	public int pos = 0;</span>
+	
+	public ItemSprite sprite;
+<span class="nc" id="L77">	public boolean seen = false;</span>
+<span class="nc" id="L78">	public boolean haunted = false;</span>
+<span class="nc" id="L79">	public boolean autoExplored = false; //used to determine if this heap should count for exploration bonus</span>
+	
+<span class="nc" id="L81">	public LinkedList&lt;Item&gt; items = new LinkedList&lt;&gt;();</span>
+	
+	public void open( Hero hero ) {
+<span class="nc bnc" id="L84" title="All 3 branches missed.">		switch (type) {</span>
+		case TOMB:
+<span class="nc" id="L86">			Wraith.spawnAround( hero.pos );</span>
+<span class="nc" id="L87">			break;</span>
+		case REMAINS:
+		case SKELETON:
+<span class="nc" id="L90">			CellEmitter.center( pos ).start(Speck.factory(Speck.RATTLE), 0.1f, 3);</span>
+<span class="nc" id="L91">			break;</span>
+		default:
+		}
+		
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		if (haunted){</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">			if (Wraith.spawnAt( pos ) == null) {</span>
+<span class="nc" id="L97">				hero.sprite.emitter().burst( ShadowParticle.CURSE, 6 );</span>
+<span class="nc" id="L98">				hero.damage( hero.HP / 2, this );</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">				if (!hero.isAlive()){</span>
+<span class="nc" id="L100">					Dungeon.fail(Wraith.class);</span>
+<span class="nc" id="L101">					GLog.n( Messages.capitalize(Messages.get(Char.class, &quot;kill&quot;, Messages.get(Wraith.class, &quot;name&quot;))));</span>
+				}
+			}
+<span class="nc" id="L104">			Sample.INSTANCE.play( Assets.Sounds.CURSED );</span>
+		}
+
+<span class="nc" id="L107">		type = Type.HEAP;</span>
+<span class="nc" id="L108">		ArrayList&lt;Item&gt; bonus = RingOfWealth.tryForBonusDrop(hero, 1);</span>
+<span class="nc bnc" id="L109" title="All 4 branches missed.">		if (bonus != null &amp;&amp; !bonus.isEmpty()) {</span>
+<span class="nc" id="L110">			items.addAll(0, bonus);</span>
+<span class="nc" id="L111">			RingOfWealth.showFlareForBonusDrop(sprite);</span>
+		}
+<span class="nc" id="L113">		sprite.link();</span>
+<span class="nc" id="L114">		sprite.drop();</span>
+<span class="nc" id="L115">	}</span>
+	
+	public Heap setHauntedIfCursed(){
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		for (Item item : items) {</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">			if (item.cursed) {</span>
+<span class="nc" id="L120">				haunted = true;</span>
+<span class="nc" id="L121">				item.cursedKnown = true;</span>
+<span class="nc" id="L122">				break;</span>
+			}
+<span class="nc" id="L124">		}</span>
+<span class="nc" id="L125">		return this;</span>
+	}
+	
+	public int size() {
+<span class="nc" id="L129">		return items.size();</span>
+	}
+	
+	public Item pickUp() {
+		
+<span class="nc bnc" id="L134" title="All 2 branches missed.">		if (items.isEmpty()){</span>
+<span class="nc" id="L135">			destroy();</span>
+<span class="nc" id="L136">			return null;</span>
+		}
+<span class="nc" id="L138">		Item item = items.removeFirst();</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		if (items.isEmpty()) {</span>
+<span class="nc" id="L140">			destroy();</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">		} else if (sprite != null) {</span>
+<span class="nc" id="L142">			sprite.view(this).place( pos );</span>
+		}
+		
+<span class="nc" id="L145">		return item;</span>
+	}
+	
+	public Item peek() {
+<span class="nc" id="L149">		return items.peek();</span>
+	}
+	
+	public void drop( Item item ) {
+		
+<span class="nc bnc" id="L154" title="All 4 branches missed.">		if (item.stackable &amp;&amp; type != Type.FOR_SALE) {</span>
+			
+<span class="nc bnc" id="L156" title="All 2 branches missed.">			for (Item i : items) {</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">				if (i.isSimilar( item )) {</span>
+<span class="nc" id="L158">					item = i.merge( item );</span>
+<span class="nc" id="L159">					break;</span>
+				}
+<span class="nc" id="L161">			}</span>
+<span class="nc" id="L162">			items.remove( item );</span>
+			
+		}
+
+		//lost backpack must always be on top of a heap
+<span class="nc bnc" id="L167" title="All 6 branches missed.">		if ((item.dropsDownHeap &amp;&amp; type != Type.FOR_SALE) || peek() instanceof LostBackpack) {</span>
+<span class="nc" id="L168">			items.add( item );</span>
+		} else {
+<span class="nc" id="L170">			items.addFirst( item );</span>
+		}
+		
+<span class="nc bnc" id="L173" title="All 2 branches missed.">		if (sprite != null) {</span>
+<span class="nc" id="L174">			sprite.view(this).place( pos );</span>
+		}
+
+<span class="nc bnc" id="L177" title="All 2 branches missed.">		if (TippedDart.lostDarts &gt; 0){</span>
+<span class="nc" id="L178">			Dart d = new Dart();</span>
+<span class="nc" id="L179">			d.quantity(TippedDart.lostDarts);</span>
+<span class="nc" id="L180">			TippedDart.lostDarts = 0;</span>
+<span class="nc" id="L181">			drop(d);</span>
+		}
+<span class="nc" id="L183">	}</span>
+	
+	public void replace( Item a, Item b ) {
+<span class="nc" id="L186">		int index = items.indexOf( a );</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">		if (index != -1) {</span>
+<span class="nc" id="L188">			items.remove( index );</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">			for (Item i : items) {</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">				if (i.isSimilar( b )) {</span>
+<span class="nc" id="L191">					i.merge( b );</span>
+<span class="nc" id="L192">					return;</span>
+				}
+<span class="nc" id="L194">			}</span>
+<span class="nc" id="L195">			items.add( index, b );</span>
+		}
+<span class="nc" id="L197">	}</span>
+	
+	public void remove( Item a ){
+<span class="nc" id="L200">		items.remove(a);</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">		if (items.isEmpty()){</span>
+<span class="nc" id="L202">			destroy();</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">		} else if (sprite != null) {</span>
+<span class="nc" id="L204">			sprite.view(this).place( pos );</span>
+		}
+<span class="nc" id="L206">	}</span>
+	
+	public void burn() {
+
+<span class="nc bnc" id="L210" title="All 2 branches missed.">		if (type != Type.HEAP) {</span>
+<span class="nc" id="L211">			return;</span>
+		}
+		
+<span class="nc" id="L214">		boolean burnt = false;</span>
+<span class="nc" id="L215">		boolean evaporated = false;</span>
+		
+<span class="nc bnc" id="L217" title="All 2 branches missed.">		for (Item item : items.toArray( new Item[0] )) {</span>
+<span class="nc bnc" id="L218" title="All 4 branches missed.">			if (item instanceof Scroll &amp;&amp; !item.unique) {</span>
+<span class="nc" id="L219">				items.remove( item );</span>
+<span class="nc" id="L220">				burnt = true;</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">			} else if (item instanceof Dewdrop) {</span>
+<span class="nc" id="L222">				items.remove( item );</span>
+<span class="nc" id="L223">				evaporated = true;</span>
+<span class="nc bnc" id="L224" title="All 4 branches missed.">			} else if (item instanceof MysteryMeat || item instanceof FrozenCarpaccio) {</span>
+<span class="nc" id="L225">				replace( item, ChargrilledMeat.cook( item.quantity ) );</span>
+<span class="nc" id="L226">				burnt = true;</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">			} else if (item instanceof Bomb) {</span>
+<span class="nc" id="L228">				items.remove( item );</span>
+<span class="nc" id="L229">				((Bomb) item).explode( pos );</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">				if (((Bomb) item).explodesDestructively()) {</span>
+					//stop processing the burning, it will be replaced by the explosion.
+<span class="nc" id="L232">					return;</span>
+				} else {
+<span class="nc" id="L234">					burnt = true;</span>
+				}
+			}
+		}
+		
+<span class="nc bnc" id="L239" title="All 4 branches missed.">		if (burnt || evaporated) {</span>
+			
+<span class="nc bnc" id="L241" title="All 2 branches missed.">			if (Dungeon.level.heroFOV[pos]) {</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">				if (burnt) {</span>
+<span class="nc" id="L243">					burnFX( pos );</span>
+				} else {
+<span class="nc" id="L245">					evaporateFX( pos );</span>
+				}
+			}
+			
+<span class="nc bnc" id="L249" title="All 2 branches missed.">			if (isEmpty()) {</span>
+<span class="nc" id="L250">				destroy();</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">			} else if (sprite != null) {</span>
+<span class="nc" id="L252">				sprite.view(this).place( pos );</span>
+			}
+			
+		}
+<span class="nc" id="L256">	}</span>
+
+	//Note: should not be called to initiate an explosion, but rather by an explosion that is happening.
+	public void explode() {
+
+		//breaks open most standard containers, mimics die.
+<span class="nc bnc" id="L262" title="All 4 branches missed.">		if (type == Type.CHEST || type == Type.SKELETON) {</span>
+<span class="nc" id="L263">			type = Type.HEAP;</span>
+<span class="nc" id="L264">			sprite.link();</span>
+<span class="nc" id="L265">			sprite.drop();</span>
+<span class="nc" id="L266">			return;</span>
+		}
+
+<span class="nc bnc" id="L269" title="All 2 branches missed.">		if (type != Type.HEAP) {</span>
+
+<span class="nc" id="L271">			return;</span>
+
+		} else {
+
+<span class="nc bnc" id="L275" title="All 2 branches missed.">			for (Item item : items.toArray( new Item[0] )) {</span>
+
+				//unique items and equipment aren't affect by explosions
+<span class="nc bnc" id="L278" title="All 6 branches missed.">				if (item.unique || item.isUpgradable() || item instanceof EquipableItem){</span>
+<span class="nc" id="L279">					continue;</span>
+				}
+
+<span class="nc bnc" id="L282" title="All 2 branches missed.">				if (item instanceof Potion) {</span>
+<span class="nc" id="L283">					items.remove(item);</span>
+<span class="nc" id="L284">					((Potion) item).shatter(pos);</span>
+
+<span class="nc bnc" id="L286" title="All 2 branches missed.">				} else if (item instanceof Honeypot.ShatteredPot) {</span>
+<span class="nc" id="L287">					items.remove(item);</span>
+<span class="nc" id="L288">					((Honeypot.ShatteredPot) item).destroyPot(pos);</span>
+
+<span class="nc bnc" id="L290" title="All 2 branches missed.">				} else if (item instanceof Bomb) {</span>
+<span class="nc" id="L291">					items.remove( item );</span>
+<span class="nc" id="L292">					((Bomb) item).explode(pos);</span>
+<span class="nc bnc" id="L293" title="All 2 branches missed.">					if (((Bomb) item).explodesDestructively()) {</span>
+						//stop processing current explosion, it will be replaced by the new one.
+<span class="nc" id="L295">						return;</span>
+					}
+
+				} else {
+<span class="nc" id="L299">					items.remove( item );</span>
+				}
+
+			}
+
+<span class="nc bnc" id="L304" title="All 2 branches missed.">			if (isEmpty()){</span>
+<span class="nc" id="L305">				destroy();</span>
+<span class="nc bnc" id="L306" title="All 2 branches missed.">			} else if (sprite != null) {</span>
+<span class="nc" id="L307">				sprite.view(this).place( pos );</span>
+			}
+		}
+<span class="nc" id="L310">	}</span>
+	
+	public void freeze() {
+
+<span class="nc bnc" id="L314" title="All 2 branches missed.">		if (type != Type.HEAP) {</span>
+<span class="nc" id="L315">			return;</span>
+		}
+		
+<span class="nc" id="L318">		boolean frozen = false;</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">		for (Item item : items.toArray( new Item[0] )) {</span>
+<span class="nc bnc" id="L320" title="All 2 branches missed.">			if (item instanceof MysteryMeat) {</span>
+<span class="nc" id="L321">				replace( item, FrozenCarpaccio.cook( (MysteryMeat)item ) );</span>
+<span class="nc" id="L322">				frozen = true;</span>
+<span class="nc bnc" id="L323" title="All 4 branches missed.">			} else if (item instanceof Potion &amp;&amp; !item.unique) {</span>
+<span class="nc" id="L324">				items.remove(item);</span>
+<span class="nc" id="L325">				((Potion) item).shatter(pos);</span>
+<span class="nc" id="L326">				frozen = true;</span>
+<span class="nc bnc" id="L327" title="All 4 branches missed.">			} else if (item instanceof Bomb &amp;&amp; ((Bomb) item).fuse != null){</span>
+<span class="nc bnc" id="L328" title="All 4 branches missed.">				frozen = frozen || ((Bomb) item).fuse.freeze();</span>
+			}
+		}
+		
+<span class="nc bnc" id="L332" title="All 2 branches missed.">		if (frozen) {</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">			if (isEmpty()) {</span>
+<span class="nc" id="L334">				destroy();</span>
+<span class="nc bnc" id="L335" title="All 2 branches missed.">			} else if (sprite != null) {</span>
+<span class="nc" id="L336">				sprite.view(this).place( pos );</span>
+			}
+		}
+<span class="nc" id="L339">	}</span>
+	
+	public static void burnFX( int pos ) {
+<span class="nc" id="L342">		CellEmitter.get( pos ).burst( ElmoParticle.FACTORY, 6 );</span>
+<span class="nc" id="L343">		Sample.INSTANCE.play( Assets.Sounds.BURNING );</span>
+<span class="nc" id="L344">	}</span>
+	
+	public static void evaporateFX( int pos ) {
+<span class="nc" id="L347">		CellEmitter.get( pos ).burst( Speck.factory( Speck.STEAM ), 5 );</span>
+<span class="nc" id="L348">	}</span>
+	
+	public boolean isEmpty() {
+<span class="nc bnc" id="L351" title="All 4 branches missed.">		return items == null || items.size() == 0;</span>
+	}
+	
+	public void destroy() {
+<span class="nc" id="L355">		Dungeon.level.heaps.remove( this.pos );</span>
+<span class="nc bnc" id="L356" title="All 2 branches missed.">		if (sprite != null) {</span>
+<span class="nc" id="L357">			sprite.kill();</span>
+		}
+<span class="nc" id="L359">		items.clear();</span>
+<span class="nc" id="L360">	}</span>
+
+	public String title(){
+<span class="nc bnc" id="L363" title="All 8 branches missed.">		switch(type){</span>
+			case FOR_SALE:
+<span class="nc" id="L365">				Item i = peek();</span>
+<span class="nc bnc" id="L366" title="All 2 branches missed.">				if (size() == 1) {</span>
+<span class="nc" id="L367">					return Messages.get(this, &quot;for_sale&quot;, Shopkeeper.sellPrice(i), i.title());</span>
+				} else {
+<span class="nc" id="L369">					return i.title();</span>
+				}
+			case CHEST:
+<span class="nc" id="L372">				return Messages.get(this, &quot;chest&quot;);</span>
+			case LOCKED_CHEST:
+<span class="nc" id="L374">				return Messages.get(this, &quot;locked_chest&quot;);</span>
+			case CRYSTAL_CHEST:
+<span class="nc" id="L376">				return Messages.get(this, &quot;crystal_chest&quot;);</span>
+			case TOMB:
+<span class="nc" id="L378">				return Messages.get(this, &quot;tomb&quot;);</span>
+			case SKELETON:
+<span class="nc" id="L380">				return Messages.get(this, &quot;skeleton&quot;);</span>
+			case REMAINS:
+<span class="nc" id="L382">				return Messages.get(this, &quot;remains&quot;);</span>
+			default:
+<span class="nc" id="L384">				return peek().title();</span>
+		}
+	}
+
+	public String info(){
+<span class="nc bnc" id="L389" title="All 7 branches missed.">		switch(type){</span>
+			case CHEST:
+<span class="nc" id="L391">				return Messages.get(this, &quot;chest_desc&quot;);</span>
+			case LOCKED_CHEST:
+<span class="nc" id="L393">				return Messages.get(this, &quot;locked_chest_desc&quot;);</span>
+			case CRYSTAL_CHEST:
+<span class="nc bnc" id="L395" title="All 2 branches missed.">				if (peek() instanceof Artifact)</span>
+<span class="nc" id="L396">					return Messages.get(this, &quot;crystal_chest_desc&quot;, Messages.get(this, &quot;artifact&quot;) );</span>
+<span class="nc bnc" id="L397" title="All 2 branches missed.">				else if (peek() instanceof Wand)</span>
+<span class="nc" id="L398">					return Messages.get(this, &quot;crystal_chest_desc&quot;, Messages.get(this, &quot;wand&quot;) );</span>
+				else
+<span class="nc" id="L400">					return Messages.get(this, &quot;crystal_chest_desc&quot;, Messages.get(this, &quot;ring&quot;) );</span>
+			case TOMB:
+<span class="nc" id="L402">				return Messages.get(this, &quot;tomb_desc&quot;);</span>
+			case SKELETON:
+<span class="nc" id="L404">				return Messages.get(this, &quot;skeleton_desc&quot;);</span>
+			case REMAINS:
+<span class="nc" id="L406">				return Messages.get(this, &quot;remains_desc&quot;);</span>
+			default:
+<span class="nc" id="L408">				return peek().info();</span>
+		}
+	}
+
+	private static final String POS		= &quot;pos&quot;;
+	private static final String SEEN	= &quot;seen&quot;;
+	private static final String TYPE	= &quot;type&quot;;
+	private static final String ITEMS	= &quot;items&quot;;
+	private static final String HAUNTED	= &quot;haunted&quot;;
+	private static final String AUTO_EXPLORED	= &quot;auto_explored&quot;;
+	
+	@SuppressWarnings(&quot;unchecked&quot;)
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L422">		pos = bundle.getInt( POS );</span>
+<span class="nc" id="L423">		seen = bundle.getBoolean( SEEN );</span>
+<span class="nc" id="L424">		type = Type.valueOf( bundle.getString( TYPE ) );</span>
+		
+<span class="nc" id="L426">		items = new LinkedList&lt;&gt;((Collection&lt;Item&gt;) ((Collection&lt;?&gt;) bundle.getCollection(ITEMS)));</span>
+<span class="nc" id="L427">		items.removeAll(Collections.singleton(null));</span>
+		
+		//remove any document pages that either don't exist anymore or that the player already has
+<span class="nc bnc" id="L430" title="All 2 branches missed.">		for (Item item : items.toArray(new Item[0])){</span>
+<span class="nc bnc" id="L431" title="All 2 branches missed.">			if (item instanceof DocumentPage</span>
+<span class="nc bnc" id="L432" title="All 2 branches missed.">					&amp;&amp; ( !((DocumentPage) item).document().pageNames().contains(((DocumentPage) item).page())</span>
+<span class="nc bnc" id="L433" title="All 2 branches missed.">					||    ((DocumentPage) item).document().isPageFound(((DocumentPage) item).page()))){</span>
+<span class="nc" id="L434">				items.remove(item);</span>
+			}
+<span class="nc bnc" id="L436" title="All 4 branches missed.">			if (item instanceof Guidebook &amp;&amp; Document.ADVENTURERS_GUIDE.isPageRead(0)){</span>
+<span class="nc" id="L437">				items.remove(item);</span>
+			}
+		}
+		
+<span class="nc" id="L441">		haunted = bundle.getBoolean( HAUNTED );</span>
+<span class="nc" id="L442">		autoExplored = bundle.getBoolean( AUTO_EXPLORED );</span>
+<span class="nc" id="L443">	}</span>
+
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L447">		bundle.put( POS, pos );</span>
+<span class="nc" id="L448">		bundle.put( SEEN, seen );</span>
+<span class="nc" id="L449">		bundle.put( TYPE, type );</span>
+<span class="nc" id="L450">		bundle.put( ITEMS, items );</span>
+<span class="nc" id="L451">		bundle.put( HAUNTED, haunted );</span>
+<span class="nc" id="L452">		bundle.put( AUTO_EXPLORED, autoExplored );</span>
+<span class="nc" id="L453">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

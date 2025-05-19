@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SewerBossLevel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels</a> &gt; <span class="el_source">SewerBossLevel.java</span></div><h1>SewerBossLevel.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Bones;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.levels.builders.Builder;
+import com.shatteredpixel.shatteredpixeldungeon.levels.builders.FigureEightBuilder;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.SewerPainter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret.RatKingRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.sewerboss.GooBossRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.sewerboss.SewerBossEntranceRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.sewerboss.SewerBossExitRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.StandardRoom;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Group;
+import com.watabou.noosa.audio.Music;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L54">public class SewerBossLevel extends SewerLevel {</span>
+
+	{
+<span class="nc" id="L57">		color1 = 0x48763c;</span>
+<span class="nc" id="L58">		color2 = 0x59994a;</span>
+<span class="nc" id="L59">	}</span>
+	
+	@Override
+	public void playLevelMusic() {
+<span class="nc bnc" id="L63" title="All 2 branches missed.">		if (locked){</span>
+<span class="nc" id="L64">			Music.INSTANCE.play(Assets.Music.SEWERS_BOSS, true);</span>
+<span class="nc" id="L65">			return;</span>
+		}
+
+<span class="nc" id="L68">		boolean gooAlive = false;</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		for (Mob m : mobs){</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">			if (m instanceof Goo) {</span>
+<span class="nc" id="L71">				gooAlive = true;</span>
+<span class="nc" id="L72">				break;</span>
+			}
+<span class="nc" id="L74">		}</span>
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		if (gooAlive){</span>
+<span class="nc" id="L77">			Music.INSTANCE.end();</span>
+		} else {
+<span class="nc" id="L79">			Music.INSTANCE.playTracks(SewerLevel.SEWER_TRACK_LIST, SewerLevel.SEWER_TRACK_CHANCES, false);</span>
+		}
+
+<span class="nc" id="L82">	}</span>
+
+	@Override
+	protected ArrayList&lt;Room&gt; initRooms() {
+<span class="nc" id="L86">		ArrayList&lt;Room&gt; initRooms = new ArrayList&lt;&gt;();</span>
+		
+<span class="nc" id="L88">		initRooms.add( roomEntrance = new SewerBossEntranceRoom() );</span>
+<span class="nc" id="L89">		initRooms.add( roomExit = new SewerBossExitRoom() );</span>
+		
+<span class="nc" id="L91">		int standards = standardRooms(true);</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		for (int i = 0; i &lt; standards; i++) {</span>
+<span class="nc" id="L93">			StandardRoom s = StandardRoom.createRoom();</span>
+			//force to normal size
+<span class="nc" id="L95">			s.setSizeCat(0, 0);</span>
+<span class="nc" id="L96">			initRooms.add(s);</span>
+		}
+		
+<span class="nc" id="L99">		GooBossRoom gooRoom = GooBossRoom.randomGooRoom();</span>
+<span class="nc" id="L100">		initRooms.add(gooRoom);</span>
+<span class="nc" id="L101">		((FigureEightBuilder)builder).setLandmarkRoom(gooRoom);</span>
+<span class="nc" id="L102">		initRooms.add(new RatKingRoom());</span>
+<span class="nc" id="L103">		return initRooms;</span>
+	}
+	
+	@Override
+	protected int standardRooms(boolean forceMax) {
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		if (forceMax) return 3;</span>
+		//2 to 3, average 2.5
+<span class="nc" id="L110">		return 2+Random.chances(new float[]{1, 1});</span>
+	}
+	
+	protected Builder builder(){
+<span class="nc" id="L114">		return new FigureEightBuilder()</span>
+<span class="nc" id="L115">				.setLoopShape( 2 , Random.Float(0.3f, 0.8f), 0f)</span>
+<span class="nc" id="L116">				.setPathLength(1f, new float[]{1})</span>
+<span class="nc" id="L117">				.setTunnelLength(new float[]{1, 2}, new float[]{1});</span>
+	}
+	
+	@Override
+	protected Painter painter() {
+<span class="nc" id="L122">		return new SewerPainter()</span>
+<span class="nc" id="L123">				.setWater(0.50f, 5)</span>
+<span class="nc" id="L124">				.setGrass(0.20f, 4)</span>
+<span class="nc" id="L125">				.setTraps(nTraps(), trapClasses(), trapChances());</span>
+	}
+	
+	protected int nTraps() {
+<span class="nc" id="L129">		return 0;</span>
+	}
+
+	@Override
+	protected void createMobs() {
+<span class="nc" id="L134">	}</span>
+	
+	public Actor addRespawner() {
+<span class="nc" id="L137">		return null;</span>
+	}
+	
+	@Override
+	protected void createItems() {
+<span class="nc" id="L142">		Random.pushGenerator(Random.Long());</span>
+<span class="nc" id="L143">			ArrayList&lt;Item&gt; bonesItems = Bones.get();</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">			if (bonesItems != null) {</span>
+				int pos;
+				do {
+<span class="nc" id="L147">					pos = pointToCell(roomEntrance.random());</span>
+<span class="nc bnc" id="L148" title="All 4 branches missed.">				} while (pos == entrance() || solid[pos]);</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">				for (Item i : bonesItems) {</span>
+<span class="nc" id="L150">					drop(i, pos).setHauntedIfCursed().type = Heap.Type.REMAINS;</span>
+<span class="nc" id="L151">				}</span>
+			}
+<span class="nc" id="L153">		Random.popGenerator();</span>
+<span class="nc" id="L154">	}</span>
+
+	@Override
+	public int randomRespawnCell( Char ch ) {
+<span class="nc" id="L158">		ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">		for (Point p : roomEntrance.getPoints()){</span>
+<span class="nc" id="L160">			int cell = pointToCell(p);</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">			if (passable[cell]</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">					&amp;&amp; roomEntrance.inside(p)</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">					&amp;&amp; Actor.findChar(cell) == null</span>
+<span class="nc bnc" id="L164" title="All 4 branches missed.">					&amp;&amp; (!Char.hasProp(ch, Char.Property.LARGE) || openSpace[cell])){</span>
+<span class="nc" id="L165">				candidates.add(cell);</span>
+			}
+<span class="nc" id="L167">		}</span>
+
+<span class="nc bnc" id="L169" title="All 2 branches missed.">		if (candidates.isEmpty()){</span>
+<span class="nc" id="L170">			return -1;</span>
+		} else {
+<span class="nc" id="L172">			return Random.element(candidates);</span>
+		}
+	}
+
+	
+	public void seal() {
+<span class="nc bnc" id="L178" title="All 2 branches missed.">		if (!locked) {</span>
+
+<span class="nc" id="L180">			super.seal();</span>
+
+<span class="nc" id="L182">			Statistics.qualifiedForBossChallengeBadge = true;</span>
+
+<span class="nc" id="L184">			set( entrance(), Terrain.WATER );</span>
+<span class="nc" id="L185">			GameScene.updateMap( entrance() );</span>
+<span class="nc" id="L186">			GameScene.ripple( entrance() );</span>
+
+<span class="nc" id="L188">			Game.runOnRenderThread(new Callback() {</span>
+				@Override
+				public void call() {
+<span class="nc" id="L191">					Music.INSTANCE.play(Assets.Music.SEWERS_BOSS, true);</span>
+<span class="nc" id="L192">				}</span>
+			});
+		}
+<span class="nc" id="L195">	}</span>
+	
+	public void unseal() {
+<span class="nc bnc" id="L198" title="All 2 branches missed.">		if (locked) {</span>
+
+<span class="nc" id="L200">			super.unseal();</span>
+
+<span class="nc" id="L202">			set( entrance(), Terrain.ENTRANCE );</span>
+<span class="nc" id="L203">			GameScene.updateMap( entrance() );</span>
+
+<span class="nc" id="L205">			Game.runOnRenderThread(new Callback() {</span>
+				@Override
+				public void call() {
+<span class="nc" id="L208">					Music.INSTANCE.fadeOut(5f, new Callback() {</span>
+						@Override
+						public void call() {
+<span class="nc" id="L211">							Music.INSTANCE.end();</span>
+<span class="nc" id="L212">						}</span>
+					});
+<span class="nc" id="L214">				}</span>
+			});
+		}
+<span class="nc" id="L217">	}</span>
+	
+	@Override
+	public Group addVisuals() {
+<span class="nc" id="L221">		super.addVisuals();</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">		if (map[exit()-1] != Terrain.WALL_DECO) visuals.add(new PrisonLevel.Torch(exit()-1));</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">		if (map[exit()+1] != Terrain.WALL_DECO) visuals.add(new PrisonLevel.Torch(exit()+1));</span>
+<span class="nc" id="L224">		return visuals;</span>
+	}
+	
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L229">		super.restoreFromBundle( bundle );</span>
+<span class="nc" id="L230">		roomExit = roomEntrance;</span>
+<span class="nc" id="L231">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

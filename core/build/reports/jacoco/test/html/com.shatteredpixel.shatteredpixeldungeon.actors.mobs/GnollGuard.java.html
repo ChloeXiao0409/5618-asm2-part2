@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GnollGuard.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">GnollGuard.java</span></div><h1>GnollGuard.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Spear;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.GnollGuardSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L35">public class GnollGuard extends Mob {</span>
+
+	{
+<span class="nc" id="L38">		spriteClass = GnollGuardSprite.class;</span>
+
+<span class="nc" id="L40">		HP = HT = 35;</span>
+<span class="nc" id="L41">		defenseSkill = 15;</span>
+
+<span class="nc" id="L43">		EXP = 7;</span>
+<span class="nc" id="L44">		maxLvl = -2;</span>
+
+<span class="nc" id="L46">		loot = Spear.class;</span>
+<span class="nc" id="L47">		lootChance = 0.1f;</span>
+
+<span class="nc" id="L49">		WANDERING = new Wandering();</span>
+	}
+
+<span class="nc" id="L52">	private int sapperID = -1;</span>
+
+	public void linkSapper( GnollSapper sapper){
+<span class="nc" id="L55">		this.sapperID = sapper.id();</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">		if (sprite instanceof GnollGuardSprite){</span>
+<span class="nc" id="L57">			((GnollGuardSprite) sprite).setupArmor();</span>
+		}
+<span class="nc" id="L59">	}</span>
+
+	public boolean hasSapper(){
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		return sapperID != -1</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">				&amp;&amp; Actor.findById(sapperID) instanceof GnollSapper</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">				&amp;&amp; ((GnollSapper)Actor.findById(sapperID)).isAlive();</span>
+	}
+
+	public void loseSapper(){
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		if (sapperID != -1){</span>
+<span class="nc" id="L69">			sapperID = -1;</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">			if (sprite instanceof GnollGuardSprite){</span>
+<span class="nc" id="L71">				((GnollGuardSprite) sprite).loseArmor();</span>
+			}
+		}
+<span class="nc" id="L74">	}</span>
+
+	@Override
+	public void damage(int dmg, Object src) {
+<span class="nc bnc" id="L78" title="All 2 branches missed.">		if (hasSapper()) dmg /= 4;</span>
+<span class="nc" id="L79">		super.damage(dmg, src);</span>
+<span class="nc" id="L80">	}</span>
+
+	@Override
+	public int damageRoll() {
+<span class="nc bnc" id="L84" title="All 4 branches missed.">		if (enemy != null &amp;&amp; !Dungeon.level.adjacent(pos, enemy.pos)){</span>
+<span class="nc" id="L85">			return Random.NormalIntRange( 16, 22 );</span>
+		} else {
+<span class="nc" id="L87">			return Random.NormalIntRange( 6, 12 );</span>
+		}
+	}
+
+	@Override
+	public int attackProc(Char enemy, int damage) {
+<span class="nc" id="L93">		int dmg = super.attackProc(enemy, damage);</span>
+<span class="nc bnc" id="L94" title="All 6 branches missed.">		if (enemy == Dungeon.hero &amp;&amp; !Dungeon.level.adjacent(pos, enemy.pos) &amp;&amp; dmg &gt; 12){</span>
+<span class="nc" id="L95">			GLog.n(Messages.get(this, &quot;spear_warn&quot;));</span>
+		}
+<span class="nc" id="L97">		return dmg;</span>
+	}
+
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L102">		return 20;</span>
+	}
+
+	@Override
+	public int drRoll() {
+<span class="nc" id="L107">		return super.drRoll() + Random.NormalIntRange(0, 6);</span>
+	}
+
+	@Override
+	protected boolean canAttack( Char enemy ) {
+		//cannot 'curve' spear hits like the hero, requires fairly open space to hit at a distance
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		return Dungeon.level.distance(enemy.pos, pos) &lt;= 2</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">				&amp;&amp; new Ballistica( pos, enemy.pos, Ballistica.PROJECTILE).collisionPos == enemy.pos</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">				&amp;&amp; new Ballistica( enemy.pos, pos, Ballistica.PROJECTILE).collisionPos == pos;</span>
+	}
+
+	@Override
+	public String description() {
+<span class="nc bnc" id="L120" title="All 2 branches missed.">		if (hasSapper()){</span>
+<span class="nc" id="L121">			return super.description() + &quot;\n\n&quot; + Messages.get(this, &quot;desc_armor&quot;);</span>
+		} else {
+<span class="nc" id="L123">			return super.description();</span>
+		}
+	}
+
+	private static final String SAPPER_ID = &quot;sapper_id&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L131">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L132">		bundle.put(SAPPER_ID, sapperID);</span>
+<span class="nc" id="L133">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L137">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L138">		sapperID = bundle.getInt(SAPPER_ID);</span>
+<span class="nc" id="L139">	}</span>
+
+<span class="nc" id="L141">	public class Wandering extends Mob.Wandering {</span>
+		@Override
+		protected int randomDestination() {
+<span class="nc bnc" id="L144" title="All 2 branches missed.">			if (hasSapper()){</span>
+<span class="nc" id="L145">				return ((GnollSapper)Actor.findById(sapperID)).pos;</span>
+			} else {
+<span class="nc" id="L147">				return super.randomDestination();</span>
+			}
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

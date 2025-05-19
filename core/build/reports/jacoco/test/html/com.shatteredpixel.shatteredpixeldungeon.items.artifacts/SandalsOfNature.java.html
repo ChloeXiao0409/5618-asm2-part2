@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SandalsOfNature.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.artifacts</a> &gt; <span class="el_source">SandalsOfNature.java</span></div><h1>SandalsOfNature.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.LeafParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.VelvetPouch;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Blindweed;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Earthroot;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Fadeleaf;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Icecap;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Mageroyal;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Rotberry;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Sorrowmoss;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Starflower;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Stormvine;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Sungrass;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Swiftthistle;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+<span class="nc" id="L70">public class SandalsOfNature extends Artifact {</span>
+
+	{
+<span class="nc" id="L73">		image = ItemSpriteSheet.ARTIFACT_SANDALS;</span>
+
+<span class="nc" id="L75">		levelCap = 3;</span>
+
+<span class="nc" id="L77">		charge = 0;</span>
+<span class="nc" id="L78">		chargeCap = 100;</span>
+
+<span class="nc" id="L80">		defaultAction = AC_ROOT;</span>
+	}
+
+	public static final String AC_FEED = &quot;FEED&quot;;
+	public static final String AC_ROOT = &quot;ROOT&quot;;
+
+<span class="nc" id="L86">	public ArrayList&lt;Class&gt; seeds = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L87">	public Class curSeedEffect = null;</span>
+
+<span class="nc" id="L89">	private static final HashMap&lt;Class&lt;? extends Plant.Seed&gt;, Integer&gt; seedColors = new HashMap&lt;&gt;();</span>
+	static {
+<span class="nc" id="L91">		seedColors.put(Rotberry.Seed.class,     0xCC0022);</span>
+<span class="nc" id="L92">		seedColors.put(Firebloom.Seed.class,    0xFF7F00);</span>
+<span class="nc" id="L93">		seedColors.put(Swiftthistle.Seed.class, 0xCCBB00);</span>
+<span class="nc" id="L94">		seedColors.put(Sungrass.Seed.class,     0x2EE62E);</span>
+<span class="nc" id="L95">		seedColors.put(Icecap.Seed.class,       0x66B3FF);</span>
+<span class="nc" id="L96">		seedColors.put(Stormvine.Seed.class,    0x195D80);</span>
+<span class="nc" id="L97">		seedColors.put(Sorrowmoss.Seed.class,   0xA15CE5);</span>
+<span class="nc" id="L98">		seedColors.put(Mageroyal.Seed.class,    0xFF4CD2);</span>
+<span class="nc" id="L99">		seedColors.put(Earthroot.Seed.class,    0x67583D);</span>
+<span class="nc" id="L100">		seedColors.put(Starflower.Seed.class,   0x404040);</span>
+<span class="nc" id="L101">		seedColors.put(Fadeleaf.Seed.class,     0x919999);</span>
+<span class="nc" id="L102">		seedColors.put(Blindweed.Seed.class,    0XD9D9D9);</span>
+	}
+
+<span class="nc" id="L105">	private static final HashMap&lt;Class&lt;? extends Plant.Seed&gt;, Integer&gt; seedChargeReqs = new HashMap&lt;&gt;();</span>
+	static {
+<span class="nc" id="L107">		seedChargeReqs.put(Rotberry.Seed.class,     8);</span>
+<span class="nc" id="L108">		seedChargeReqs.put(Firebloom.Seed.class,    20);</span>
+<span class="nc" id="L109">		seedChargeReqs.put(Swiftthistle.Seed.class, 20);</span>
+<span class="nc" id="L110">		seedChargeReqs.put(Sungrass.Seed.class,     80);</span>
+<span class="nc" id="L111">		seedChargeReqs.put(Icecap.Seed.class,       20);</span>
+<span class="nc" id="L112">		seedChargeReqs.put(Stormvine.Seed.class,    20);</span>
+<span class="nc" id="L113">		seedChargeReqs.put(Sorrowmoss.Seed.class,   20);</span>
+<span class="nc" id="L114">		seedChargeReqs.put(Mageroyal.Seed.class,    12);</span>
+<span class="nc" id="L115">		seedChargeReqs.put(Earthroot.Seed.class,    40);</span>
+<span class="nc" id="L116">		seedChargeReqs.put(Starflower.Seed.class,   40);</span>
+<span class="nc" id="L117">		seedChargeReqs.put(Fadeleaf.Seed.class,     12);</span>
+<span class="nc" id="L118">		seedChargeReqs.put(Blindweed.Seed.class,    12);</span>
+<span class="nc" id="L119">	}</span>
+
+	@Override
+	public ArrayList&lt;String&gt; actions( Hero hero ) {
+<span class="nc" id="L123">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">		if (hero.buff(MagicImmune.class) != null){</span>
+<span class="nc" id="L125">			return actions;</span>
+		}
+<span class="nc bnc" id="L127" title="All 4 branches missed.">		if (isEquipped( hero ) &amp;&amp; !cursed) {</span>
+<span class="nc" id="L128">			actions.add(AC_FEED);</span>
+		}
+<span class="nc bnc" id="L130" title="All 6 branches missed.">		if (isEquipped( hero )</span>
+				&amp;&amp; !cursed
+				&amp;&amp; curSeedEffect != null
+<span class="nc bnc" id="L133" title="All 2 branches missed.">				&amp;&amp; charge &gt;= seedChargeReqs.get(curSeedEffect)) {</span>
+<span class="nc" id="L134">			actions.add(AC_ROOT);</span>
+		}
+<span class="nc" id="L136">		return actions;</span>
+	}
+
+	@Override
+	public void execute( Hero hero, String action ) {
+<span class="nc" id="L141">		super.execute(hero, action);</span>
+
+<span class="nc bnc" id="L143" title="All 2 branches missed.">		if (hero.buff(MagicImmune.class) != null) return;</span>
+
+<span class="nc bnc" id="L145" title="All 2 branches missed.">		if (action.equals(AC_FEED)){</span>
+
+<span class="nc" id="L147">			GameScene.selectItem(itemSelector);</span>
+
+<span class="nc bnc" id="L149" title="All 4 branches missed.">		} else if (action.equals(AC_ROOT) &amp;&amp; !cursed){</span>
+
+<span class="nc bnc" id="L151" title="All 2 branches missed.">			if (!isEquipped( hero ))                                GLog.i( Messages.get(Artifact.class, &quot;need_to_equip&quot;) );</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">			else if (curSeedEffect == null)                         GLog.i( Messages.get(this, &quot;no_effect&quot;) );</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">			else if (charge &lt; seedChargeReqs.get(curSeedEffect))    GLog.i( Messages.get(this, &quot;low_charge&quot;) );</span>
+			else {
+<span class="nc" id="L155">				GameScene.selectCell(cellSelector);</span>
+			}
+		}
+<span class="nc" id="L158">	}</span>
+
+	@Override
+	protected ArtifactBuff passiveBuff() {
+<span class="nc" id="L162">		return new Naturalism();</span>
+	}
+	
+	@Override
+	public void charge(Hero target, float amount) {
+<span class="nc bnc" id="L167" title="All 4 branches missed.">		if (cursed || target.buff(MagicImmune.class) != null) return;</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">		if (charge &lt; chargeCap) {</span>
+<span class="nc" id="L169">			partialCharge += 2*amount;</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">			while (partialCharge &gt;= 1f){</span>
+<span class="nc" id="L171">				charge++;</span>
+<span class="nc" id="L172">				partialCharge--;</span>
+			}
+<span class="nc bnc" id="L174" title="All 2 branches missed.">			if (charge &gt;= chargeCap) {</span>
+<span class="nc" id="L175">				charge = chargeCap;</span>
+<span class="nc" id="L176">				partialCharge = 0;</span>
+			}
+<span class="nc" id="L178">			updateQuickslot();</span>
+		}
+<span class="nc" id="L180">	}</span>
+
+	@Override
+	public ItemSprite.Glowing glowing() {
+<span class="nc bnc" id="L184" title="All 2 branches missed.">		if (curSeedEffect != null){</span>
+<span class="nc" id="L185">			return new ItemSprite.Glowing(seedColors.get(curSeedEffect));</span>
+		}
+<span class="nc" id="L187">		return null;</span>
+	}
+
+	@Override
+	public String name() {
+<span class="nc bnc" id="L192" title="All 2 branches missed.">		if (level() == 0)   return super.name();</span>
+<span class="nc" id="L193">		else                return Messages.get(this, &quot;name_&quot; + level());</span>
+	}
+
+	@Override
+	public String desc() {
+<span class="nc" id="L198">		String desc = Messages.get(this, &quot;desc_&quot; + (level()+1));</span>
+
+<span class="nc bnc" id="L200" title="All 2 branches missed.">		if ( isEquipped ( Dungeon.hero ) ) {</span>
+<span class="nc" id="L201">			desc += &quot;\n\n&quot;;</span>
+
+<span class="nc bnc" id="L203" title="All 2 branches missed.">			if (!cursed) {</span>
+<span class="nc" id="L204">				desc += Messages.get(this, &quot;desc_hint&quot;);</span>
+			} else {
+<span class="nc" id="L206">				desc += Messages.get(this, &quot;desc_cursed&quot;);</span>
+			}
+
+		}
+
+<span class="nc bnc" id="L211" title="All 2 branches missed.">		if (curSeedEffect != null){</span>
+<span class="nc" id="L212">				desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_ability&quot;,</span>
+<span class="nc" id="L213">					Messages.titleCase(Messages.get(curSeedEffect, &quot;name&quot;)),</span>
+<span class="nc" id="L214">					seedChargeReqs.get(curSeedEffect));</span>
+		}
+
+<span class="nc bnc" id="L217" title="All 2 branches missed.">		if (!seeds.isEmpty()){</span>
+<span class="nc" id="L218">			desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_seeds&quot;, seeds.size());</span>
+		}
+
+<span class="nc" id="L221">		return desc;</span>
+	}
+
+	@Override
+	public Item upgrade() {
+<span class="nc bnc" id="L226" title="All 2 branches missed.">		if (level() &lt; 0)        image = ItemSpriteSheet.ARTIFACT_SANDALS;</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">		else if (level() == 0)  image = ItemSpriteSheet.ARTIFACT_SHOES;</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">		else if (level() == 1)  image = ItemSpriteSheet.ARTIFACT_BOOTS;</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">		else if (level() &gt;= 2)  image = ItemSpriteSheet.ARTIFACT_GREAVES;</span>
+<span class="nc" id="L230">		return super.upgrade();</span>
+	}
+
+	public boolean canUseSeed(Item item){
+<span class="nc bnc" id="L234" title="All 2 branches missed.">		return item instanceof Plant.Seed</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">				&amp;&amp; !seeds.contains(item.getClass())</span>
+<span class="nc bnc" id="L236" title="All 4 branches missed.">				&amp;&amp; (level() &lt; 3 || curSeedEffect != item.getClass());</span>
+	}
+
+	@Override
+	public void resetForTrinity(int visibleLevel) {
+<span class="nc" id="L241">		super.reset();</span>
+<span class="nc" id="L242">		curSeedEffect = null;</span>
+<span class="nc" id="L243">	}</span>
+
+	private static final String SEEDS = &quot;seeds&quot;;
+	private static final String CUR_SEED_EFFECT = &quot;cur_seed_effect&quot;;
+
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L250">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L251">		bundle.put(SEEDS, seeds.toArray(new Class[0]));</span>
+<span class="nc" id="L252">		bundle.put(CUR_SEED_EFFECT, curSeedEffect);</span>
+<span class="nc" id="L253">	}</span>
+
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L257">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L258">		seeds.clear();</span>
+<span class="nc bnc" id="L259" title="All 4 branches missed.">		if (bundle.contains(SEEDS) &amp;&amp; bundle.getClassArray(SEEDS) != null) {</span>
+<span class="nc bnc" id="L260" title="All 2 branches missed.">			for (Class&lt;?&gt; seed : bundle.getClassArray(SEEDS)) {</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">				if (seed != null) seeds.add(seed);</span>
+			}
+		}
+<span class="nc" id="L264">		curSeedEffect = bundle.getClass(CUR_SEED_EFFECT);</span>
+
+<span class="nc bnc" id="L266" title="All 2 branches missed.">		if (level() == 1)  image = ItemSpriteSheet.ARTIFACT_SHOES;</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">		else if (level() == 2)  image = ItemSpriteSheet.ARTIFACT_BOOTS;</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">		else if (level() &gt;= 3)  image = ItemSpriteSheet.ARTIFACT_GREAVES;</span>
+<span class="nc" id="L269">	}</span>
+
+<span class="nc" id="L271">	public class Naturalism extends ArtifactBuff{</span>
+		public void charge() {
+<span class="nc bnc" id="L273" title="All 4 branches missed.">			if (cursed || target.buff(MagicImmune.class) != null) return;</span>
+<span class="nc bnc" id="L274" title="All 2 branches missed.">			if (charge &lt; chargeCap){</span>
+				//0.5 charge per grass at +0, up to 1 at +10
+<span class="nc" id="L276">				float chargeGain = (3f + level())/6f;</span>
+<span class="nc" id="L277">				chargeGain *= RingOfEnergy.artifactChargeMultiplier(target);</span>
+<span class="nc" id="L278">				partialCharge += Math.max(0, chargeGain);</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">				while (partialCharge &gt;= 1){</span>
+<span class="nc" id="L280">					charge++;</span>
+<span class="nc" id="L281">					partialCharge--;</span>
+				}
+<span class="nc" id="L283">				charge = Math.min(charge, chargeCap);</span>
+<span class="nc" id="L284">				updateQuickslot();</span>
+			}
+<span class="nc" id="L286">		}</span>
+	}
+
+<span class="nc" id="L289">	protected WndBag.ItemSelector itemSelector = new WndBag.ItemSelector() {</span>
+
+		@Override
+		public String textPrompt() {
+<span class="nc" id="L293">			return Messages.get(SandalsOfNature.class, &quot;prompt&quot;);</span>
+		}
+
+		@Override
+		public Class&lt;?extends Bag&gt; preferredBag(){
+<span class="nc" id="L298">			return VelvetPouch.class;</span>
+		}
+
+		@Override
+		public boolean itemSelectable(Item item) {
+<span class="nc" id="L303">			return canUseSeed(item);</span>
+		}
+
+		@Override
+		public void onSelect( Item item ) {
+<span class="nc bnc" id="L308" title="All 4 branches missed.">			if (item != null &amp;&amp; item instanceof Plant.Seed) {</span>
+<span class="nc bnc" id="L309" title="All 2 branches missed.">				if (level() &lt; 3) seeds.add(0, item.getClass());</span>
+<span class="nc" id="L310">				curSeedEffect = item.getClass();</span>
+
+<span class="nc" id="L312">				Hero hero = Dungeon.hero;</span>
+<span class="nc" id="L313">				hero.sprite.operate( hero.pos );</span>
+<span class="nc" id="L314">				Sample.INSTANCE.play( Assets.Sounds.PLANT );</span>
+<span class="nc" id="L315">				hero.busy();</span>
+<span class="nc" id="L316">				hero.spend( Actor.TICK );</span>
+<span class="nc bnc" id="L317" title="All 2 branches missed.">				if (seeds.size() &gt;= 3+(level()*3)){</span>
+<span class="nc" id="L318">					seeds.clear();</span>
+<span class="nc" id="L319">					upgrade();</span>
+<span class="nc bnc" id="L320" title="All 2 branches missed.">					Catalog.countUses(SandalsOfNature.class, level() == 3 ? 4 : 3);</span>
+<span class="nc bnc" id="L321" title="All 4 branches missed.">					if (level() &gt;= 1 &amp;&amp; level() &lt;= 3) {</span>
+<span class="nc" id="L322">						GLog.p( Messages.get(SandalsOfNature.class, &quot;levelup&quot;) );</span>
+					}
+
+				} else {
+<span class="nc" id="L326">					GLog.i( Messages.get(SandalsOfNature.class, &quot;absorb_seed&quot;) );</span>
+				}
+<span class="nc" id="L328">				item.detach(hero.belongings.backpack);</span>
+			}
+<span class="nc" id="L330">		}</span>
+	};
+
+<span class="nc" id="L333">	public CellSelector.Listener cellSelector = new CellSelector.Listener(){</span>
+
+		@Override
+		public void onSelect(Integer cell) {
+<span class="nc bnc" id="L337" title="All 2 branches missed.">			if (cell != null){</span>
+
+<span class="nc bnc" id="L339" title="All 4 branches missed.">				if (!Dungeon.level.heroFOV[cell] || Dungeon.level.distance(curUser.pos, cell) &gt; 3){</span>
+<span class="nc" id="L340">					GLog.w(Messages.get(SandalsOfNature.class, &quot;out_of_range&quot;));</span>
+				} else {
+
+<span class="nc" id="L343">					Ballistica aim = new Ballistica(curUser.pos, cell, Ballistica.STOP_TARGET);</span>
+<span class="nc bnc" id="L344" title="All 2 branches missed.">					for (int c : aim.subPath(0, aim.dist)){</span>
+<span class="nc" id="L345">						CellEmitter.get( c ).burst( LeafParticle.GENERAL, 6 );</span>
+<span class="nc" id="L346">					}</span>
+
+<span class="nc" id="L348">					Splash.at(DungeonTilemap.tileCenterToWorld( cell ), -PointF.PI/2, PointF.PI/2, seedColors.get(curSeedEffect), 6);</span>
+<span class="nc" id="L349">					Invisibility.dispel(curUser);</span>
+
+<span class="nc" id="L351">					Plant plant = ((Plant.Seed) Reflection.newInstance(curSeedEffect)).couch(cell, null);</span>
+<span class="nc" id="L352">					plant.activate(Actor.findChar(cell));</span>
+<span class="nc" id="L353">					Sample.INSTANCE.play(Assets.Sounds.PLANT);</span>
+<span class="nc" id="L354">					Sample.INSTANCE.playDelayed(Assets.Sounds.TRAMPLE, 0.25f, 1, Random.Float( 0.96f, 1.05f ) );</span>
+
+<span class="nc bnc" id="L356" title="All 2 branches missed.">					if (Actor.findChar(cell) != null){</span>
+<span class="nc" id="L357">						artifactProc(Actor.findChar(cell), visiblyUpgraded(), seedChargeReqs.get(curSeedEffect));</span>
+					}
+
+<span class="nc" id="L360">					charge -= seedChargeReqs.get(curSeedEffect);</span>
+<span class="nc" id="L361">					Talent.onArtifactUsed(Dungeon.hero);</span>
+<span class="nc" id="L362">					updateQuickslot();</span>
+<span class="nc" id="L363">					curUser.spendAndNext(1f);</span>
+				}
+			}
+<span class="nc" id="L366">		}</span>
+
+		@Override
+		public String prompt() {
+<span class="nc" id="L370">			return Messages.get(SandalsOfNature.class, &quot;prompt_target&quot;);</span>
+		}
+	};
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

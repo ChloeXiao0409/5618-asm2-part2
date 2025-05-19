@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Challenge.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.duelist</a> &gt; <span class="el_source">Challenge.java</span></div><h1>Challenge.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.duelist;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.BlobImmunity;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Doom;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.NPC;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.BArray;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+
+<span class="nc" id="L55">public class Challenge extends ArmorAbility {</span>
+
+	{
+<span class="nc" id="L58">		baseChargeUse = 35;</span>
+<span class="nc" id="L59">	}</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L63">		return HeroIcon.CHALLENGE;</span>
+	}
+
+	@Override
+	public String targetingPrompt() {
+<span class="nc" id="L68">		return Messages.get(this, &quot;prompt&quot;);</span>
+	}
+
+	@Override
+	public int targetedPos(Char user, int dst) {
+<span class="nc" id="L73">		return dst;</span>
+	}
+
+	@Override
+	public float chargeUse( Hero hero ) {
+<span class="nc" id="L78">		float chargeUse = super.chargeUse(hero);</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if (hero.buff(EliminationMatchTracker.class) != null){</span>
+			//reduced charge use by 16%/30%/41%/50%
+<span class="nc" id="L81">			chargeUse *= Math.pow(0.84, hero.pointsInTalent(Talent.ELIMINATION_MATCH));</span>
+		}
+<span class="nc" id="L83">		return chargeUse;</span>
+	}
+
+	@Override
+	protected void activate(ClassArmor armor, Hero hero, Integer target) {
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		if (target == null){</span>
+<span class="nc" id="L89">			return;</span>
+		}
+
+<span class="nc" id="L92">		Char targetCh = Actor.findChar(target);</span>
+<span class="nc bnc" id="L93" title="All 4 branches missed.">		if (targetCh == null || !Dungeon.level.heroFOV[target]){</span>
+<span class="nc" id="L94">			GLog.w(Messages.get(this, &quot;no_target&quot;));</span>
+<span class="nc" id="L95">			return;</span>
+		}
+
+<span class="nc bnc" id="L98" title="All 2 branches missed.">		if (hero.buff(DuelParticipant.class) != null){</span>
+<span class="nc" id="L99">			GLog.w(Messages.get(this, &quot;already_dueling&quot;));</span>
+<span class="nc" id="L100">			return;</span>
+		}
+
+<span class="nc bnc" id="L103" title="All 6 branches missed.">		if (targetCh.alignment != Char.Alignment.ENEMY</span>
+				&amp;&amp; !(targetCh instanceof Mimic &amp;&amp; targetCh.alignment == Char.Alignment.NEUTRAL)){
+<span class="nc" id="L105">			GLog.w(Messages.get(this, &quot;ally_target&quot;));</span>
+<span class="nc" id="L106">			return;</span>
+		}
+
+<span class="nc" id="L109">		boolean[] passable = BArray.or(Dungeon.level.passable, Dungeon.level.avoid, null);</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		for (Char c : Actor.chars()) {</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">			if (c != hero) passable[c.pos] = false;</span>
+<span class="nc" id="L112">		}</span>
+<span class="nc" id="L113">		PathFinder.buildDistanceMap(targetCh.pos, passable);</span>
+<span class="nc" id="L114">		int[] reachable = PathFinder.distance.clone();</span>
+
+<span class="nc" id="L116">		int blinkpos = hero.pos;</span>
+<span class="nc bnc" id="L117" title="All 4 branches missed.">		if (hero.hasTalent(Talent.CLOSE_THE_GAP) &amp;&amp; !hero.rooted){</span>
+
+<span class="nc" id="L119">			int blinkrange = 1 + hero.pointsInTalent(Talent.CLOSE_THE_GAP);</span>
+<span class="nc" id="L120">			PathFinder.buildDistanceMap(hero.pos, BArray.or(Dungeon.level.passable, Dungeon.level.avoid, null), blinkrange);</span>
+
+<span class="nc bnc" id="L122" title="All 2 branches missed.">			for (int i = 0; i &lt; PathFinder.distance.length; i++){</span>
+<span class="nc bnc" id="L123" title="All 12 branches missed.">				if (PathFinder.distance[i] == Integer.MAX_VALUE</span>
+						|| reachable[i] == Integer.MAX_VALUE
+						|| (!Dungeon.level.passable[i] &amp;&amp; !(hero.flying &amp;&amp; Dungeon.level.avoid[i]))
+						|| i == targetCh.pos){
+<span class="nc" id="L127">					continue;</span>
+				}
+
+<span class="nc bnc" id="L130" title="All 2 branches missed.">				if (Dungeon.level.distance(i, targetCh.pos) &lt; Dungeon.level.distance(blinkpos, targetCh.pos)){</span>
+<span class="nc" id="L131">					blinkpos = i;</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">				} else if (Dungeon.level.distance(i, targetCh.pos) == Dungeon.level.distance(blinkpos, targetCh.pos)){</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">					if (Dungeon.level.trueDistance(i, hero.pos) &lt; Dungeon.level.trueDistance(blinkpos, hero.pos)){</span>
+<span class="nc" id="L134">						blinkpos = i;</span>
+					}
+				}
+			}
+		}
+
+<span class="nc bnc" id="L140" title="All 2 branches missed.">		if (reachable[blinkpos] == Integer.MAX_VALUE){</span>
+<span class="nc" id="L141">			GLog.w(Messages.get(this, &quot;unreachable_target&quot;));</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">			if (hero.rooted) PixelScene.shake( 1, 1f );</span>
+<span class="nc" id="L143">			return;</span>
+		}
+
+<span class="nc bnc" id="L146" title="All 2 branches missed.">		if (Dungeon.level.distance(blinkpos, targetCh.pos) &gt; 5){</span>
+<span class="nc" id="L147">			GLog.w(Messages.get(this, &quot;distant_target&quot;));</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">			if (hero.rooted) PixelScene.shake( 1, 1f );</span>
+<span class="nc" id="L149">			return;</span>
+		}
+
+<span class="nc bnc" id="L152" title="All 2 branches missed.">		if (blinkpos != hero.pos){</span>
+<span class="nc" id="L153">			Dungeon.hero.pos = blinkpos;</span>
+<span class="nc" id="L154">			Dungeon.level.occupyCell(Dungeon.hero);</span>
+			//prevents the hero from being interrupted by seeing new enemies
+<span class="nc" id="L156">			Dungeon.observe();</span>
+<span class="nc" id="L157">			GameScene.updateFog();</span>
+<span class="nc" id="L158">			Dungeon.hero.checkVisibleMobs();</span>
+
+<span class="nc" id="L160">			Dungeon.hero.sprite.place( Dungeon.hero.pos );</span>
+<span class="nc" id="L161">			CellEmitter.get( Dungeon.hero.pos ).burst( Speck.factory( Speck.WOOL ), 6 );</span>
+<span class="nc" id="L162">			Sample.INSTANCE.play( Assets.Sounds.PUFF );</span>
+		}
+
+<span class="nc" id="L165">		boolean bossTarget = Char.hasProp(targetCh, Char.Property.BOSS);</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">		for (Char toFreeze : Actor.chars()){</span>
+<span class="nc bnc" id="L167" title="All 8 branches missed.">			if (toFreeze != targetCh &amp;&amp; toFreeze.alignment != Char.Alignment.ALLY &amp;&amp; !(toFreeze instanceof NPC)</span>
+<span class="nc bnc" id="L168" title="All 4 branches missed.">				&amp;&amp; (!bossTarget || !(Char.hasProp(targetCh, Char.Property.BOSS) || Char.hasProp(targetCh, Char.Property.BOSS_MINION)))) {</span>
+<span class="nc" id="L169">				Actor.delayChar(toFreeze, DuelParticipant.DURATION);</span>
+<span class="nc" id="L170">				Buff.affect(toFreeze, SpectatorFreeze.class, DuelParticipant.DURATION);</span>
+			}
+<span class="nc" id="L172">		}</span>
+
+<span class="nc" id="L174">		Buff.affect(targetCh, DuelParticipant.class);</span>
+<span class="nc" id="L175">		Buff.affect(hero, DuelParticipant.class);</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">		if (targetCh instanceof Mob){</span>
+<span class="nc" id="L177">			((Mob) targetCh).aggro(hero);</span>
+		}
+
+<span class="nc" id="L180">		GameScene.flash(0x80FFFFFF);</span>
+<span class="nc" id="L181">		Sample.INSTANCE.play(Assets.Sounds.DESCEND);</span>
+
+<span class="nc" id="L183">		armor.charge -= chargeUse( hero );</span>
+<span class="nc" id="L184">		armor.updateQuickslot();</span>
+<span class="nc" id="L185">		Invisibility.dispel();</span>
+<span class="nc" id="L186">		hero.sprite.zap(target);</span>
+
+<span class="nc" id="L188">		hero.next();</span>
+
+<span class="nc bnc" id="L190" title="All 2 branches missed.">		if (hero.buff(EliminationMatchTracker.class) != null){</span>
+<span class="nc" id="L191">			hero.buff(EliminationMatchTracker.class).detach();</span>
+		}
+<span class="nc" id="L193">	}</span>
+
+	@Override
+	public Talent[] talents() {
+<span class="nc" id="L197">		return new Talent[]{Talent.CLOSE_THE_GAP, Talent.INVIGORATING_VICTORY, Talent.ELIMINATION_MATCH, Talent.HEROIC_ENERGY};</span>
+	}
+
+<span class="nc" id="L200">	public static class EliminationMatchTracker extends FlavourBuff{};</span>
+
+<span class="nc" id="L202">	public static class DuelParticipant extends Buff {</span>
+
+<span class="nc" id="L204">		public static float DURATION = 10f;</span>
+
+<span class="nc" id="L206">		private int left = (int)DURATION;</span>
+<span class="nc" id="L207">		private int takenDmg = 0;</span>
+
+		@Override
+		public int icon() {
+<span class="nc" id="L211">			return BuffIndicator.CHALLENGE;</span>
+		}
+
+		@Override
+		public float iconFadePercent() {
+<span class="nc" id="L216">			return Math.max(0, (DURATION - left) / DURATION);</span>
+		}
+
+		@Override
+		public String iconTextDisplay() {
+<span class="nc" id="L221">			return Integer.toString(left);</span>
+		}
+
+		public void addDamage(int dmg){
+<span class="nc" id="L225">			takenDmg += dmg;</span>
+<span class="nc" id="L226">		}</span>
+
+		@Override
+		public boolean act() {
+
+<span class="nc" id="L231">			left--;</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">			if (left == 0) {</span>
+<span class="nc" id="L233">				detach();</span>
+			} else {
+<span class="nc" id="L235">				Char other = null;</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">				for (Char ch : Actor.chars()){</span>
+<span class="nc bnc" id="L237" title="All 4 branches missed.">					if (ch != target &amp;&amp; ch.buff(DuelParticipant.class) != null){</span>
+<span class="nc" id="L238">						other = ch;</span>
+					}
+<span class="nc" id="L240">				}</span>
+
+<span class="nc bnc" id="L242" title="All 4 branches missed.">				if (other == null</span>
+					|| target.alignment == other.alignment
+<span class="nc bnc" id="L244" title="All 2 branches missed.">					|| Dungeon.level.distance(target.pos, other.pos) &gt; 5) {</span>
+<span class="nc" id="L245">					detach();</span>
+				}
+			}
+
+<span class="nc" id="L249">			spend(TICK);</span>
+<span class="nc" id="L250">			return true;</span>
+		}
+
+		@Override
+		public void detach() {
+<span class="nc" id="L255">			super.detach();</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">			if (target != Dungeon.hero){</span>
+<span class="nc bnc" id="L257" title="All 4 branches missed.">				if (!target.isAlive() || target.alignment == Dungeon.hero.alignment){</span>
+<span class="nc" id="L258">					Sample.INSTANCE.play(Assets.Sounds.BOSS);</span>
+
+<span class="nc bnc" id="L260" title="All 2 branches missed.">					if (Dungeon.hero.hasTalent(Talent.INVIGORATING_VICTORY)){</span>
+<span class="nc" id="L261">						DuelParticipant heroBuff = Dungeon.hero.buff(DuelParticipant.class);</span>
+
+<span class="nc" id="L263">						int hpToHeal = 0;</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">						if (heroBuff != null){</span>
+<span class="nc" id="L265">							hpToHeal = heroBuff.takenDmg;</span>
+						}
+
+						//heals for 30%/50%/65%/75% of taken damage plus 5/10/15/20 bonus, based on talent points
+<span class="nc" id="L269">						hpToHeal = (int)Math.round(hpToHeal * (1f - Math.pow(0.707f, Dungeon.hero.pointsInTalent(Talent.INVIGORATING_VICTORY))));</span>
+<span class="nc" id="L270">						hpToHeal += 5*Dungeon.hero.pointsInTalent(Talent.INVIGORATING_VICTORY);</span>
+<span class="nc" id="L271">						hpToHeal = Math.min(hpToHeal, Dungeon.hero.HT - Dungeon.hero.HP);</span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">						if (hpToHeal &gt; 0){</span>
+<span class="nc" id="L273">							Dungeon.hero.HP += hpToHeal;</span>
+<span class="nc" id="L274">							Dungeon.hero.sprite.emitter().start( Speck.factory( Speck.HEALING ), 0.33f, 6 );</span>
+<span class="nc" id="L275">							Dungeon.hero.sprite.showStatusWithIcon( CharSprite.POSITIVE, Integer.toString(hpToHeal), FloatingText.HEALING );</span>
+						}
+<span class="nc" id="L277">					}</span>
+				}
+
+			} else {
+<span class="nc bnc" id="L281" title="All 2 branches missed.">				if (Dungeon.hero.isAlive()) {</span>
+<span class="nc" id="L282">					GameScene.flash(0x80FFFFFF);</span>
+
+<span class="nc bnc" id="L284" title="All 2 branches missed.">					if (Dungeon.hero.hasTalent(Talent.ELIMINATION_MATCH)){</span>
+<span class="nc" id="L285">						Buff.affect(target, EliminationMatchTracker.class, 3);</span>
+					}
+				}
+			}
+
+<span class="nc bnc" id="L290" title="All 2 branches missed.">			for (Char ch : Actor.chars()) {</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">				if (ch.buff(SpectatorFreeze.class) != null) {</span>
+<span class="nc" id="L292">					ch.buff(SpectatorFreeze.class).detach();</span>
+				}
+<span class="nc bnc" id="L294" title="All 4 branches missed.">				if (ch.buff(DuelParticipant.class) != null &amp;&amp; ch != target) {</span>
+<span class="nc" id="L295">					ch.buff(DuelParticipant.class).detach();</span>
+				}
+<span class="nc" id="L297">			}</span>
+<span class="nc" id="L298">		}</span>
+
+		@Override
+		public String desc() {
+<span class="nc" id="L302">			return Messages.get(this, &quot;desc&quot;, left);</span>
+		}
+
+		private static final String LEFT = &quot;left&quot;;
+		private static final String TAKEN_DMG = &quot;taken_dmg&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L310">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L311">			bundle.put(LEFT, left);</span>
+<span class="nc" id="L312">			bundle.put(TAKEN_DMG, takenDmg);</span>
+<span class="nc" id="L313">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L317">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L318">			left = bundle.getInt(LEFT);</span>
+<span class="nc" id="L319">			takenDmg = bundle.getInt(TAKEN_DMG);</span>
+<span class="nc" id="L320">		}</span>
+	}
+
+<span class="nc" id="L323">	public static class SpectatorFreeze extends FlavourBuff {</span>
+
+		@Override
+		public void fx(boolean on) {
+<span class="nc bnc" id="L327" title="All 2 branches missed.">			if (on) {</span>
+<span class="nc" id="L328">				target.sprite.add(CharSprite.State.DARKENED);</span>
+<span class="nc" id="L329">				target.sprite.add(CharSprite.State.PARALYSED);</span>
+			} else {
+				//allies can't be spectator frozen, so just check doom
+<span class="nc bnc" id="L332" title="All 2 branches missed.">				if (target.buff(Doom.class) == null) target.sprite.remove(CharSprite.State.DARKENED);</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">				if (target.paralysed == 0) target.sprite.remove(CharSprite.State.PARALYSED);</span>
+			}
+<span class="nc" id="L335">		}</span>
+
+		@Override
+		public void detach(){
+<span class="nc" id="L339">			super.detach();</span>
+<span class="nc bnc" id="L340" title="All 2 branches missed.">			if (cooldown() &gt; 0) {</span>
+<span class="nc" id="L341">				Actor.delayChar(target, -cooldown());</span>
+			}
+<span class="nc" id="L343">		}</span>
+
+		{
+<span class="nc" id="L346">			immunities.addAll(new BlobImmunity().immunities());</span>
+<span class="nc" id="L347">		}</span>
+
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

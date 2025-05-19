@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MnemonicPrayer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells</a> &gt; <span class="el_source">MnemonicPrayer.java</span></div><h1>MnemonicPrayer.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AdrenalineSurge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ArcaneArmor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ArtifactRecharge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barkskin;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Bleeding;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Corrosion;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Dread;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FireImbue;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.GreaterHaste;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Healing;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.LifeLink;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Ooze;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Poison;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ShieldBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ToxicImbue;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.WellFed;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.AscendedForm;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.PowerOfMany;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Viscosity;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs.ElixirOfAquaticRejuvenation;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfChallenge;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Kinetic;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Sungrass;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+
+<span class="nc" id="L66">public class MnemonicPrayer extends TargetedClericSpell {</span>
+
+<span class="nc" id="L68">	public static MnemonicPrayer INSTANCE = new MnemonicPrayer();</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L72">		return HeroIcon.MNEMONIC_PRAYER;</span>
+	}
+
+	@Override
+	public int targetingFlags() {
+<span class="nc" id="L77">		return Ballistica.STOP_TARGET;</span>
+	}
+
+	@Override
+	public boolean canCast(Hero hero) {
+<span class="nc bnc" id="L82" title="All 4 branches missed.">		return super.canCast(hero) &amp;&amp; hero.hasTalent(Talent.MNEMONIC_PRAYER);</span>
+	}
+
+	@Override
+	@SuppressWarnings(&quot;unchecked&quot;)
+	protected void onTargetSelected(HolyTome tome, Hero hero, Integer target) {
+
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		if (target == null){</span>
+<span class="nc" id="L90">			return;</span>
+		}
+
+<span class="nc" id="L93">		Char ch = Actor.findChar(target);</span>
+<span class="nc bnc" id="L94" title="All 4 branches missed.">		if (ch == null || !Dungeon.level.heroFOV[target]){</span>
+<span class="nc" id="L95">			GLog.w(Messages.get(this, &quot;no_target&quot;));</span>
+<span class="nc" id="L96">			return;</span>
+		}
+
+<span class="nc" id="L99">		QuickSlotButton.target(ch);</span>
+
+<span class="nc" id="L101">		float extension = 2 + hero.pointsInTalent(Talent.MNEMONIC_PRAYER);</span>
+<span class="nc" id="L102">		affectChar(ch, extension);</span>
+
+<span class="nc" id="L104">		Char ally = PowerOfMany.getPoweredAlly();</span>
+<span class="nc bnc" id="L105" title="All 4 branches missed.">		if (ally != null &amp;&amp; ally.buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null){</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			if (ch == hero){</span>
+<span class="nc" id="L107">				affectChar(ally, extension); //if cast on hero, duplicate to ally</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">			} else if (ch == ally){</span>
+<span class="nc" id="L109">				affectChar(hero, extension); //if cast on ally, duplicate to hero</span>
+			}
+		}
+
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		if (ch == hero){</span>
+<span class="nc" id="L114">			hero.busy();</span>
+<span class="nc" id="L115">			hero.sprite.operate(ch.pos);</span>
+<span class="nc" id="L116">			hero.spend( 1f );</span>
+<span class="nc" id="L117">			BuffIndicator.refreshHero();</span>
+		} else {
+<span class="nc" id="L119">			hero.sprite.zap(ch.pos);</span>
+<span class="nc" id="L120">			hero.spendAndNext( 1f );</span>
+		}
+
+<span class="nc" id="L123">		onSpellCast(tome, hero);</span>
+
+<span class="nc" id="L125">	}</span>
+
+	private void affectChar( Char ch, float extension ){
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		if (ch.alignment == Char.Alignment.ALLY){</span>
+
+<span class="nc" id="L130">			Sample.INSTANCE.play(Assets.Sounds.CHARGEUP);</span>
+<span class="nc" id="L131">			ch.sprite.emitter().start(Speck.factory(Speck.UP), 0.15f, 4);</span>
+
+<span class="nc bnc" id="L133" title="All 2 branches missed.">			for (Buff b : ch.buffs()){</span>
+<span class="nc bnc" id="L134" title="All 6 branches missed.">				if (b.type != Buff.buffType.POSITIVE || b.mnemonicExtended || b.icon() == BuffIndicator.NONE){</span>
+<span class="nc" id="L135">					continue;</span>
+				}
+
+				//does not boost buffs from armor abilities or T4 spells
+<span class="nc bnc" id="L139" title="All 14 branches missed.">				if (b instanceof AscendedForm.AscendBuff</span>
+						|| b instanceof BodyForm.BodyFormBuff || b instanceof SpiritForm.SpiritFormBuff
+						|| b instanceof PowerOfMany.PowerBuff || b instanceof BeamingRay.BeamingRayBoost || b instanceof LifeLink || b instanceof LifeLinkSpell.LifeLinkSpellBuff){
+<span class="nc" id="L142">					continue;</span>
+				}
+
+				//should consider some buffs that may be OP here, e.g. invuln
+<span class="nc bnc" id="L146" title="All 2 branches missed.">				if (b instanceof FlavourBuff)           Buff.affect(ch, (Class&lt;?extends FlavourBuff&gt;)b.getClass(), extension);</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">				else if (b instanceof AdrenalineSurge)  ((AdrenalineSurge) b).delay(extension);</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">				else if (b instanceof ArcaneArmor)      ((ArcaneArmor) b).delay(extension);</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">				else if (b instanceof ArtifactRecharge) ((ArtifactRecharge) b).extend(extension);</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">				else if (b instanceof Barkskin)         ((Barkskin) b).delay(extension);</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">				else if (b instanceof FireImbue)        ((FireImbue) b).extend(extension);</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">				else if (b instanceof GreaterHaste)     ((GreaterHaste) b).extend(extension);</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">				else if (b instanceof Healing)          ((Healing) b).increaseHeal((int)extension);</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">				else if (b instanceof ToxicImbue)       ((ToxicImbue) b).extend(extension);</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">				else if (b instanceof WellFed)          ((WellFed) b).extend(extension);</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">				else if (b instanceof ElixirOfAquaticRejuvenation.AquaHealing)  ((ElixirOfAquaticRejuvenation.AquaHealing) b).extend(extension);</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">				else if (b instanceof ScrollOfChallenge.ChallengeArena)         ((ScrollOfChallenge.ChallengeArena) b).extend(extension);</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">				else if (b instanceof ShieldBuff)               ((ShieldBuff) b).delay(extension);</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">				else if (b instanceof Kinetic.ConservedDamage)  ((Kinetic.ConservedDamage) b).delay(extension);</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">				else if (b instanceof Sungrass.Health)          ((Sungrass.Health) b).boost((int) extension);</span>
+
+<span class="nc" id="L162">				b.mnemonicExtended = true;</span>
+
+<span class="nc" id="L164">			}</span>
+
+		} else {
+
+<span class="nc" id="L168">			Sample.INSTANCE.play(Assets.Sounds.DEBUFF);</span>
+<span class="nc" id="L169">			ch.sprite.emitter().start(Speck.factory(Speck.DOWN), 0.15f, 4);</span>
+
+<span class="nc bnc" id="L171" title="All 2 branches missed.">			for (Buff b : ch.buffs()){</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">				if (b instanceof GuidingLight.WasIlluminatedTracker){</span>
+<span class="nc" id="L173">					Buff.affect(ch, GuidingLight.Illuminated.class);</span>
+<span class="nc" id="L174">					continue;</span>
+				}
+
+<span class="nc bnc" id="L177" title="All 4 branches missed.">				if (b.type != Buff.buffType.NEGATIVE || b.mnemonicExtended){</span>
+<span class="nc" id="L178">					continue;</span>
+				}
+
+				//this might need a nerf of aggression vs bosses. (perhaps nerf the extension?)
+<span class="nc bnc" id="L182" title="All 2 branches missed.">				if (b instanceof FlavourBuff)       Buff.affect(ch, (Class&lt;?extends FlavourBuff&gt;)b.getClass(), extension);</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">				else if (b instanceof Bleeding)     ((Bleeding) b).extend( extension );</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">				else if (b instanceof Burning)      ((Burning) b).extend( extension );</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">				else if (b instanceof Corrosion)    ((Corrosion) b).extend( extension );</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">				else if (b instanceof Dread)        ((Dread) b).extend( extension );</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">				else if (b instanceof Ooze)         ((Ooze) b).extend( extension );</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">				else if (b instanceof Poison)       ((Poison) b).extend( extension );</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">				else if (b instanceof Viscosity.DeferedDamage)  ((Viscosity.DeferedDamage) b).extend( extension );</span>
+
+<span class="nc" id="L191">				b.mnemonicExtended = true;</span>
+
+<span class="nc" id="L193">			}</span>
+
+		}
+<span class="nc" id="L196">	}</span>
+
+	public String desc(){
+<span class="nc" id="L199">		return Messages.get(this, &quot;desc&quot;, 2 + Dungeon.hero.pointsInTalent(Talent.MNEMONIC_PRAYER)) + &quot;\n\n&quot; + Messages.get(this, &quot;charge_cost&quot;, (int)chargeUse(Dungeon.hero));</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BlessSpell.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells</a> &gt; <span class="el_source">BlessSpell.java</span></div><h1>BlessSpell.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Bless;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.PowerOfMany;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+
+<span class="nc" id="L43">public class BlessSpell extends TargetedClericSpell {</span>
+
+<span class="nc" id="L45">	public static final BlessSpell INSTANCE = new BlessSpell();</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L49">		return HeroIcon.BLESS;</span>
+	}
+
+	@Override
+	public int targetingFlags(){
+<span class="nc" id="L54">		return -1; //auto-targeting behaviour is often wrong, so we don't use it</span>
+	}
+
+	@Override
+	public boolean canCast(Hero hero) {
+<span class="nc bnc" id="L59" title="All 4 branches missed.">		return super.canCast(hero) &amp;&amp; hero.hasTalent(Talent.BLESS);</span>
+	}
+
+	@Override
+	protected void onTargetSelected(HolyTome tome, Hero hero, Integer target) {
+<span class="nc bnc" id="L64" title="All 2 branches missed.">		if (target == null){</span>
+<span class="nc" id="L65">			return;</span>
+		}
+
+<span class="nc" id="L68">		Char ch = Actor.findChar(target);</span>
+<span class="nc bnc" id="L69" title="All 4 branches missed.">		if (ch == null || !Dungeon.level.heroFOV[target]){</span>
+<span class="nc" id="L70">			GLog.w(Messages.get(this, &quot;no_target&quot;));</span>
+<span class="nc" id="L71">			return;</span>
+		}
+
+<span class="nc" id="L74">		Sample.INSTANCE.play(Assets.Sounds.TELEPORT);</span>
+
+<span class="nc" id="L76">		affectChar(hero, ch);</span>
+
+<span class="nc bnc" id="L78" title="All 2 branches missed.">		if (ch == hero){</span>
+<span class="nc" id="L79">			hero.busy();</span>
+<span class="nc" id="L80">			hero.sprite.operate(ch.pos);</span>
+<span class="nc" id="L81">			hero.spend( 1f );</span>
+		} else {
+<span class="nc" id="L83">			hero.sprite.zap(ch.pos);</span>
+<span class="nc" id="L84">			hero.spendAndNext( 1f );</span>
+		}
+
+<span class="nc" id="L87">		Char ally = PowerOfMany.getPoweredAlly();</span>
+<span class="nc bnc" id="L88" title="All 4 branches missed.">		if (ally != null &amp;&amp; ally.buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null){</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">			if (ch == hero){</span>
+<span class="nc" id="L90">				affectChar(hero, ally); //if cast on hero, duplicate to ally</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">			} else if (ally == ch) {</span>
+<span class="nc" id="L92">				affectChar(hero, hero); //if cast on ally, duplicate to hero</span>
+			}
+		}
+
+<span class="nc" id="L96">		onSpellCast(tome, hero);</span>
+<span class="nc" id="L97">	}</span>
+
+	private void affectChar(Hero hero, Char ch){
+<span class="nc" id="L100">		new Flare(6, 32).color(0xFFFF00, true).show(ch.sprite, 2f);</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (ch == hero){</span>
+<span class="nc" id="L102">			Buff.prolong(ch, Bless.class, 2f + 4*hero.pointsInTalent(Talent.BLESS));</span>
+<span class="nc" id="L103">			Buff.affect(ch, Barrier.class).setShield(5 + 5*hero.pointsInTalent(Talent.BLESS));</span>
+<span class="nc" id="L104">			ch.sprite.showStatusWithIcon( CharSprite.POSITIVE, Integer.toString(5 + 5*hero.pointsInTalent(Talent.BLESS)), FloatingText.SHIELDING );</span>
+		} else {
+<span class="nc" id="L106">			Buff.prolong(ch, Bless.class, 5f + 5*hero.pointsInTalent(Talent.BLESS));</span>
+<span class="nc" id="L107">			int totalHeal = 5 + 5*hero.pointsInTalent(Talent.BLESS);</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">			if (ch.HT - ch.HP &lt; totalHeal){</span>
+<span class="nc" id="L109">				int barrier = totalHeal - (ch.HT - ch.HP);</span>
+<span class="nc" id="L110">				barrier = Math.max(barrier, 0);</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">				if (ch.HP != ch.HT) {</span>
+<span class="nc" id="L112">					ch.HP = ch.HT;</span>
+<span class="nc" id="L113">					ch.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(totalHeal - barrier), FloatingText.HEALING);</span>
+				}
+<span class="nc bnc" id="L115" title="All 2 branches missed.">				if (barrier &gt; 0) {</span>
+<span class="nc" id="L116">					Buff.affect(ch, Barrier.class).setShield(barrier);</span>
+<span class="nc" id="L117">					ch.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(barrier), FloatingText.SHIELDING);</span>
+				}
+<span class="nc" id="L119">			} else {</span>
+<span class="nc" id="L120">				ch.HP = ch.HP + totalHeal;</span>
+<span class="nc" id="L121">				ch.sprite.showStatusWithIcon( CharSprite.POSITIVE, Integer.toString(totalHeal), FloatingText.HEALING );</span>
+			}
+		}
+<span class="nc" id="L124">	}</span>
+
+	public String desc(){
+<span class="nc" id="L127">		int talentLvl = Dungeon.hero.pointsInTalent(Talent.BLESS);</span>
+<span class="nc" id="L128">		return Messages.get(this, &quot;desc&quot;, 2+4*talentLvl, 5+5*talentLvl, 5+5*talentLvl, 5+5*talentLvl) + &quot;\n\n&quot; + Messages.get(this, &quot;charge_cost&quot;, (int)chargeUse(Dungeon.hero));</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UnstableSpellbook.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.artifacts</a> &gt; <span class="el_source">UnstableSpellbook.java</span></div><h1>UnstableSpellbook.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Blindness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ElmoParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.ScrollHolder;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfIdentify;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfLullaby;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfMagicMapping;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRage;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRemoveCurse;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTerror;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTransmutation;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ExoticScroll;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+
+public class UnstableSpellbook extends Artifact {
+
+	{
+<span class="nc" id="L68">		image = ItemSpriteSheet.ARTIFACT_SPELLBOOK;</span>
+
+<span class="nc" id="L70">		levelCap = 10;</span>
+
+<span class="nc" id="L72">		charge = (int)(level()*0.6f)+2;</span>
+<span class="nc" id="L73">		partialCharge = 0;</span>
+<span class="nc" id="L74">		chargeCap = (int)(level()*0.6f)+2;</span>
+
+<span class="nc" id="L76">		defaultAction = AC_READ;</span>
+	}
+
+	public static final String AC_READ = &quot;READ&quot;;
+	public static final String AC_ADD = &quot;ADD&quot;;
+
+<span class="nc" id="L82">	private final ArrayList&lt;Class&gt; scrolls = new ArrayList&lt;&gt;();</span>
+
+	public UnstableSpellbook() {
+<span class="nc" id="L85">		super();</span>
+
+<span class="nc" id="L87">		setupScrolls();</span>
+<span class="nc" id="L88">	}</span>
+
+	private void setupScrolls(){
+<span class="nc" id="L91">		scrolls.clear();</span>
+
+<span class="nc" id="L93">		Class&lt;?&gt;[] scrollClasses = Generator.Category.SCROLL.classes;</span>
+<span class="nc" id="L94">		float[] probs = Generator.Category.SCROLL.defaultProbsTotal.clone(); //array of primitives, clone gives deep copy.</span>
+<span class="nc" id="L95">		int i = Random.chances(probs);</span>
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">		while (i != -1){</span>
+<span class="nc" id="L98">			scrolls.add(scrollClasses[i]);</span>
+<span class="nc" id="L99">			probs[i] = 0;</span>
+
+<span class="nc" id="L101">			i = Random.chances(probs);</span>
+		}
+<span class="nc" id="L103">		scrolls.remove(ScrollOfTransmutation.class);</span>
+<span class="nc" id="L104">	}</span>
+
+	@Override
+	public ArrayList&lt;String&gt; actions( Hero hero ) {
+<span class="nc" id="L108">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc bnc" id="L109" title="All 8 branches missed.">		if (isEquipped( hero ) &amp;&amp; charge &gt; 0 &amp;&amp; !cursed &amp;&amp; hero.buff(MagicImmune.class) == null) {</span>
+<span class="nc" id="L110">			actions.add(AC_READ);</span>
+		}
+<span class="nc bnc" id="L112" title="All 8 branches missed.">		if (isEquipped( hero ) &amp;&amp; level() &lt; levelCap &amp;&amp; !cursed &amp;&amp; hero.buff(MagicImmune.class) == null) {</span>
+<span class="nc" id="L113">			actions.add(AC_ADD);</span>
+		}
+<span class="nc" id="L115">		return actions;</span>
+	}
+
+	@Override
+	public void execute( Hero hero, String action ) {
+
+<span class="nc" id="L121">		super.execute( hero, action );</span>
+
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		if (hero.buff(MagicImmune.class) != null) return;</span>
+
+<span class="nc bnc" id="L125" title="All 2 branches missed.">		if (action.equals( AC_READ )) {</span>
+
+<span class="nc bnc" id="L127" title="All 2 branches missed.">			if (hero.buff( Blindness.class ) != null) GLog.w( Messages.get(this, &quot;blinded&quot;) );</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">			else if (!isEquipped( hero ))             GLog.i( Messages.get(Artifact.class, &quot;need_to_equip&quot;) );</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">			else if (charge &lt;= 0)                     GLog.i( Messages.get(this, &quot;no_charge&quot;) );</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">			else if (cursed)                          GLog.i( Messages.get(this, &quot;cursed&quot;) );</span>
+			else {
+<span class="nc" id="L132">				doReadEffect(hero);</span>
+			}
+
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		} else if (action.equals( AC_ADD )) {</span>
+<span class="nc" id="L136">			GameScene.selectItem(itemSelector);</span>
+		}
+<span class="nc" id="L138">	}</span>
+
+	public void doReadEffect(Hero hero){
+<span class="nc" id="L141">		charge--;</span>
+
+		Scroll scroll;
+		do {
+<span class="nc" id="L145">			scroll = (Scroll) Generator.randomUsingDefaults(Generator.Category.SCROLL);</span>
+<span class="nc bnc" id="L146" title="All 8 branches missed.">		} while (scroll == null</span>
+				//reduce the frequency of these scrolls by half
+				||((scroll instanceof ScrollOfIdentify ||
+				scroll instanceof ScrollOfRemoveCurse ||
+<span class="nc bnc" id="L150" title="All 4 branches missed.">				scroll instanceof ScrollOfMagicMapping) &amp;&amp; Random.Int(2) == 0)</span>
+				//cannot roll transmutation
+				|| (scroll instanceof ScrollOfTransmutation));
+
+<span class="nc" id="L154">		scroll.anonymize();</span>
+<span class="nc" id="L155">		curItem = scroll;</span>
+<span class="nc" id="L156">		curUser = hero;</span>
+
+		//if there are charges left and the scroll has been given to the book
+<span class="nc bnc" id="L159" title="All 4 branches missed.">		if (charge &gt; 0 &amp;&amp; !scrolls.contains(scroll.getClass())) {</span>
+<span class="nc" id="L160">			final Scroll fScroll = scroll;</span>
+
+<span class="nc" id="L162">			final ExploitHandler handler = Buff.affect(hero, ExploitHandler.class);</span>
+<span class="nc" id="L163">			handler.scroll = scroll;</span>
+
+<span class="nc" id="L165">			GameScene.show(new WndOptions(new ItemSprite(this),</span>
+<span class="nc" id="L166">					Messages.get(this, &quot;prompt&quot;),</span>
+<span class="nc" id="L167">					Messages.get(this, &quot;read_empowered&quot;),</span>
+<span class="nc" id="L168">					scroll.trueName(),</span>
+<span class="nc" id="L169">					Messages.get(ExoticScroll.regToExo.get(scroll.getClass()), &quot;name&quot;)){</span>
+				@Override
+				protected void onSelect(int index) {
+<span class="nc" id="L172">					handler.detach();</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">					if (index == 1){</span>
+<span class="nc" id="L174">						Scroll scroll = Reflection.newInstance(ExoticScroll.regToExo.get(fScroll.getClass()));</span>
+<span class="nc" id="L175">						curItem = scroll;</span>
+<span class="nc" id="L176">						charge--;</span>
+<span class="nc" id="L177">						scroll.anonymize();</span>
+<span class="nc" id="L178">						checkForArtifactProc(curUser, scroll);</span>
+<span class="nc" id="L179">						scroll.doRead();</span>
+<span class="nc" id="L180">						Talent.onArtifactUsed(Dungeon.hero);</span>
+<span class="nc" id="L181">					} else {</span>
+<span class="nc" id="L182">						checkForArtifactProc(curUser, fScroll);</span>
+<span class="nc" id="L183">						fScroll.doRead();</span>
+<span class="nc" id="L184">						Talent.onArtifactUsed(Dungeon.hero);</span>
+					}
+<span class="nc" id="L186">					updateQuickslot();</span>
+<span class="nc" id="L187">				}</span>
+
+				@Override
+				public void onBackPressed() {
+					//do nothing
+<span class="nc" id="L192">				}</span>
+			});
+<span class="nc" id="L194">		} else {</span>
+<span class="nc" id="L195">			checkForArtifactProc(curUser, scroll);</span>
+<span class="nc" id="L196">			scroll.doRead();</span>
+<span class="nc" id="L197">			Talent.onArtifactUsed(Dungeon.hero);</span>
+		}
+
+<span class="nc" id="L200">		updateQuickslot();</span>
+<span class="nc" id="L201">	}</span>
+
+	private void checkForArtifactProc(Hero user, Scroll scroll){
+		//if the base scroll (exotics all match) is an AOE effect, then also trigger illuminate
+<span class="nc bnc" id="L205" title="All 6 branches missed.">		if (scroll instanceof ScrollOfLullaby</span>
+				|| scroll instanceof ScrollOfRemoveCurse || scroll instanceof ScrollOfTerror) {
+<span class="nc bnc" id="L207" title="All 2 branches missed.">			for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">				if (Dungeon.level.heroFOV[mob.pos]) {</span>
+<span class="nc" id="L209">					artifactProc(mob, visiblyUpgraded(), 1);</span>
+				}
+			}
+		//except rage, which affects everything even if it isn't visible
+<span class="nc bnc" id="L213" title="All 2 branches missed.">		} else if (scroll instanceof ScrollOfRage){</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">			for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {</span>
+<span class="nc" id="L215">				artifactProc(mob, visiblyUpgraded(), 1);</span>
+			}
+		}
+<span class="nc" id="L218">	}</span>
+
+	//forces the reading of a regular scroll if the player tried to exploit by quitting the game when the menu was up
+<span class="nc" id="L221">	public static class ExploitHandler extends Buff {</span>
+<span class="nc" id="L222">		{ actPriority = VFX_PRIO; }</span>
+
+		public Scroll scroll;
+
+		@Override
+		public boolean act() {
+<span class="nc" id="L228">			curUser = Dungeon.hero;</span>
+<span class="nc" id="L229">			curItem = scroll;</span>
+<span class="nc" id="L230">			scroll.anonymize();</span>
+<span class="nc" id="L231">			Game.runOnRenderThread(new Callback() {</span>
+				@Override
+				public void call() {
+<span class="nc" id="L234">					scroll.doRead();</span>
+<span class="nc" id="L235">					Item.updateQuickslot();</span>
+<span class="nc" id="L236">				}</span>
+			});
+<span class="nc" id="L238">			detach();</span>
+<span class="nc" id="L239">			return true;</span>
+		}
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L244">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L245">			bundle.put( &quot;scroll&quot;, scroll );</span>
+<span class="nc" id="L246">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L250">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L251">			scroll = (Scroll)bundle.get(&quot;scroll&quot;);</span>
+<span class="nc" id="L252">		}</span>
+	}
+
+	@Override
+	protected ArtifactBuff passiveBuff() {
+<span class="nc" id="L257">		return new bookRecharge();</span>
+	}
+	
+	@Override
+	public void charge(Hero target, float amount) {
+<span class="nc bnc" id="L262" title="All 6 branches missed.">		if (charge &lt; chargeCap &amp;&amp; !cursed &amp;&amp; target.buff(MagicImmune.class) == null){</span>
+<span class="nc" id="L263">			partialCharge += 0.1f*amount;</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">			while (partialCharge &gt;= 1){</span>
+<span class="nc" id="L265">				partialCharge--;</span>
+<span class="nc" id="L266">				charge++;</span>
+			}
+<span class="nc bnc" id="L268" title="All 2 branches missed.">			if (charge &gt;= chargeCap){</span>
+<span class="nc" id="L269">				partialCharge = 0;</span>
+			}
+<span class="nc" id="L271">			updateQuickslot();</span>
+		}
+<span class="nc" id="L273">	}</span>
+
+	@Override
+	public Item upgrade() {
+<span class="nc" id="L277">		chargeCap = (int)((level()+1)*0.6f)+2;</span>
+
+		//for artifact transmutation.
+<span class="nc bnc" id="L280" title="All 4 branches missed.">		while (!scrolls.isEmpty() &amp;&amp; scrolls.size() &gt; (levelCap-1-level())) {</span>
+<span class="nc" id="L281">			scrolls.remove(0);</span>
+		}
+
+<span class="nc" id="L284">		return super.upgrade();</span>
+	}
+
+	@Override
+	public void resetForTrinity(int visibleLevel) {
+<span class="nc" id="L289">		super.resetForTrinity(visibleLevel);</span>
+<span class="nc" id="L290">		setupScrolls();</span>
+<span class="nc bnc" id="L291" title="All 4 branches missed.">		while (!scrolls.isEmpty() &amp;&amp; scrolls.size() &gt; (levelCap-1-level())) {</span>
+<span class="nc" id="L292">			scrolls.remove(0);</span>
+		}
+<span class="nc" id="L294">	}</span>
+
+	@Override
+	public String desc() {
+<span class="nc" id="L298">		String desc = super.desc();</span>
+
+<span class="nc bnc" id="L300" title="All 2 branches missed.">		if (isEquipped(Dungeon.hero)) {</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">			if (cursed) {</span>
+<span class="nc" id="L302">				desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_cursed&quot;);</span>
+			}
+			
+<span class="nc bnc" id="L305" title="All 4 branches missed.">			if (level() &lt; levelCap &amp;&amp; scrolls.size() &gt; 0) {</span>
+<span class="nc" id="L306">				desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_index&quot;);</span>
+<span class="nc" id="L307">				desc += &quot;\n&quot; + &quot;_&quot; + Messages.get(scrolls.get(0), &quot;name&quot;) + &quot;_&quot;;</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">				if (scrolls.size() &gt; 1)</span>
+<span class="nc" id="L309">					desc += &quot;\n&quot; + &quot;_&quot; + Messages.get(scrolls.get(1), &quot;name&quot;) + &quot;_&quot;;</span>
+			}
+		}
+		
+<span class="nc bnc" id="L313" title="All 2 branches missed.">		if (level() &gt; 0) {</span>
+<span class="nc" id="L314">			desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_empowered&quot;);</span>
+		}
+
+<span class="nc" id="L317">		return desc;</span>
+	}
+
+	private static final String SCROLLS =   &quot;scrolls&quot;;
+
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L324">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L325">		bundle.put( SCROLLS, scrolls.toArray(new Class[scrolls.size()]) );</span>
+<span class="nc" id="L326">	}</span>
+
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L330">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L331">		scrolls.clear();</span>
+<span class="nc bnc" id="L332" title="All 4 branches missed.">		if (bundle.contains(SCROLLS) &amp;&amp; bundle.getClassArray(SCROLLS) != null) {</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">			for (Class&lt;?&gt; scroll : bundle.getClassArray(SCROLLS)) {</span>
+<span class="nc bnc" id="L334" title="All 2 branches missed.">				if (scroll != null) scrolls.add(scroll);</span>
+			}
+		}
+<span class="nc" id="L337">	}</span>
+
+<span class="nc" id="L339">	public class bookRecharge extends ArtifactBuff{</span>
+		@Override
+		public boolean act() {
+<span class="nc bnc" id="L342" title="All 4 branches missed.">			if (charge &lt; chargeCap</span>
+					&amp;&amp; !cursed
+<span class="nc bnc" id="L344" title="All 2 branches missed.">					&amp;&amp; target.buff(MagicImmune.class) == null</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">					&amp;&amp; Regeneration.regenOn()) {</span>
+				//120 turns to charge at full, 80 turns to charge at 0/8
+<span class="nc" id="L347">				float chargeGain = 1 / (120f - (chargeCap - charge)*5f);</span>
+<span class="nc" id="L348">				chargeGain *= RingOfEnergy.artifactChargeMultiplier(target);</span>
+<span class="nc" id="L349">				partialCharge += chargeGain;</span>
+
+<span class="nc bnc" id="L351" title="All 2 branches missed.">				while (partialCharge &gt;= 1) {</span>
+<span class="nc" id="L352">					partialCharge --;</span>
+<span class="nc" id="L353">					charge ++;</span>
+
+<span class="nc bnc" id="L355" title="All 2 branches missed.">					if (charge == chargeCap){</span>
+<span class="nc" id="L356">						partialCharge = 0;</span>
+					}
+				}
+			}
+
+<span class="nc" id="L361">			updateQuickslot();</span>
+
+<span class="nc" id="L363">			spend( TICK );</span>
+
+<span class="nc" id="L365">			return true;</span>
+		}
+	}
+
+<span class="nc" id="L369">	protected WndBag.ItemSelector itemSelector = new WndBag.ItemSelector() {</span>
+
+		@Override
+		public String textPrompt() {
+<span class="nc" id="L373">			return Messages.get(UnstableSpellbook.class, &quot;prompt&quot;);</span>
+		}
+
+		@Override
+		public Class&lt;?extends Bag&gt; preferredBag(){
+<span class="nc" id="L378">			return ScrollHolder.class;</span>
+		}
+
+		@Override
+		public boolean itemSelectable(Item item) {
+<span class="nc bnc" id="L383" title="All 6 branches missed.">			return item instanceof Scroll &amp;&amp; item.isIdentified() &amp;&amp; scrolls.contains(item.getClass());</span>
+		}
+
+		@Override
+		public void onSelect(Item item) {
+<span class="nc bnc" id="L388" title="All 6 branches missed.">			if (item != null &amp;&amp; item instanceof Scroll &amp;&amp; item.isIdentified()){</span>
+<span class="nc" id="L389">				Hero hero = Dungeon.hero;</span>
+<span class="nc bnc" id="L390" title="All 4 branches missed.">				for (int i = 0; ( i &lt;= 1 &amp;&amp; i &lt; scrolls.size() ); i++){</span>
+<span class="nc bnc" id="L391" title="All 2 branches missed.">					if (scrolls.get(i).equals(item.getClass())){</span>
+<span class="nc" id="L392">						hero.sprite.operate( hero.pos );</span>
+<span class="nc" id="L393">						hero.busy();</span>
+<span class="nc" id="L394">						hero.spend( 2f );</span>
+<span class="nc" id="L395">						Sample.INSTANCE.play(Assets.Sounds.BURNING);</span>
+<span class="nc" id="L396">						hero.sprite.emitter().burst( ElmoParticle.FACTORY, 12 );</span>
+
+<span class="nc" id="L398">						scrolls.remove(i);</span>
+<span class="nc" id="L399">						item.detach(hero.belongings.backpack);</span>
+
+<span class="nc" id="L401">						upgrade();</span>
+<span class="nc" id="L402">						Catalog.countUse(UnstableSpellbook.class);</span>
+<span class="nc" id="L403">						GLog.i( Messages.get(UnstableSpellbook.class, &quot;infuse_scroll&quot;) );</span>
+<span class="nc" id="L404">						return;</span>
+					}
+				}
+<span class="nc" id="L407">				GLog.w( Messages.get(UnstableSpellbook.class, &quot;unable_scroll&quot;) );</span>
+<span class="nc bnc" id="L408" title="All 4 branches missed.">			} else if (item instanceof Scroll &amp;&amp; !item.isIdentified()) {</span>
+<span class="nc" id="L409">				GLog.w( Messages.get(UnstableSpellbook.class, &quot;unknown_scroll&quot;) );</span>
+			}
+<span class="nc" id="L411">		}</span>
+	};
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BrokenSeal.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items</a> &gt; <span class="el_source">BrokenSeal.java</span></div><h1>BrokenSeal.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ShieldBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndUseItem;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+
+<span class="nc" id="L48">public class BrokenSeal extends Item {</span>
+
+	public static final String AC_AFFIX = &quot;AFFIX&quot;;
+
+	//only to be used from the quickslot, for tutorial purposes mostly.
+	public static final String AC_INFO = &quot;INFO_WINDOW&quot;;
+
+	{
+<span class="nc" id="L56">		image = ItemSpriteSheet.SEAL;</span>
+
+<span class="nc" id="L58">		cursedKnown = levelKnown = true;</span>
+<span class="nc" id="L59">		unique = true;</span>
+<span class="nc" id="L60">		bones = false;</span>
+
+<span class="nc" id="L62">		defaultAction = AC_INFO;</span>
+<span class="nc" id="L63">	}</span>
+
+	private Armor.Glyph glyph;
+
+	public boolean canTransferGlyph(){
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		if (glyph == null){</span>
+<span class="nc" id="L69">			return false;</span>
+		}
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		if (Dungeon.hero.pointsInTalent(Talent.RUNIC_TRANSFERENCE) == 2){</span>
+<span class="nc" id="L72">			return true;</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">		} else if (Dungeon.hero.pointsInTalent(Talent.RUNIC_TRANSFERENCE) == 1</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">			&amp;&amp; (Arrays.asList(Armor.Glyph.common).contains(glyph.getClass())</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">				|| Arrays.asList(Armor.Glyph.uncommon).contains(glyph.getClass()))){</span>
+<span class="nc" id="L76">			return true;</span>
+		} else {
+<span class="nc" id="L78">			return false;</span>
+		}
+	}
+
+	public Armor.Glyph getGlyph(){
+<span class="nc" id="L83">		return glyph;</span>
+	}
+
+	public void setGlyph( Armor.Glyph glyph ){
+<span class="nc" id="L87">		this.glyph = glyph;</span>
+<span class="nc" id="L88">	}</span>
+
+	public int maxShield( int armTier, int armLvl ){
+<span class="nc" id="L91">		return armTier + armLvl + Dungeon.hero.pointsInTalent(Talent.IRON_WILL);</span>
+	}
+
+	@Override
+	public ItemSprite.Glowing glowing() {
+<span class="nc bnc" id="L96" title="All 2 branches missed.">		return glyph != null ? glyph.glowing() : null;</span>
+	}
+
+	@Override
+	public ArrayList&lt;String&gt; actions(Hero hero) {
+<span class="nc" id="L101">		ArrayList&lt;String&gt; actions =  super.actions(hero);</span>
+<span class="nc" id="L102">		actions.add(AC_AFFIX);</span>
+<span class="nc" id="L103">		return actions;</span>
+	}
+
+	@Override
+	public void execute(Hero hero, String action) {
+
+<span class="nc" id="L109">		super.execute(hero, action);</span>
+
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		if (action.equals(AC_AFFIX)){</span>
+<span class="nc" id="L112">			curItem = this;</span>
+<span class="nc" id="L113">			GameScene.selectItem(armorSelector);</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">		} else if (action.equals(AC_INFO)) {</span>
+<span class="nc" id="L115">			GameScene.show(new WndUseItem(null, this));</span>
+		}
+<span class="nc" id="L117">	}</span>
+
+	@Override
+	public String name() {
+<span class="nc bnc" id="L121" title="All 2 branches missed.">		return glyph != null ? glyph.name( super.name() ) : super.name();</span>
+	}
+
+	@Override
+	public String info() {
+<span class="nc" id="L126">		String info = super.info();</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		if (glyph != null){</span>
+<span class="nc" id="L128">			info += &quot;\n\n&quot; + Messages.get(this, &quot;inscribed&quot;, glyph.name());</span>
+<span class="nc" id="L129">			info += &quot; &quot; + glyph.desc();</span>
+		}
+<span class="nc" id="L131">		return info;</span>
+	}
+
+	@Override
+	//scroll of upgrade can be used directly once, same as upgrading armor the seal is affixed to then removing it.
+	public boolean isUpgradable() {
+<span class="nc bnc" id="L137" title="All 2 branches missed.">		return level() == 0;</span>
+	}
+
+<span class="nc" id="L140">	protected static WndBag.ItemSelector armorSelector = new WndBag.ItemSelector() {</span>
+
+		@Override
+		public String textPrompt() {
+<span class="nc" id="L144">			return  Messages.get(BrokenSeal.class, &quot;prompt&quot;);</span>
+		}
+
+		@Override
+		public Class&lt;?extends Bag&gt; preferredBag(){
+<span class="nc" id="L149">			return Belongings.Backpack.class;</span>
+		}
+
+		@Override
+		public boolean itemSelectable(Item item) {
+<span class="nc" id="L154">			return item instanceof Armor;</span>
+		}
+
+		@Override
+		public void onSelect( Item item ) {
+<span class="nc" id="L159">			BrokenSeal seal = (BrokenSeal) curItem;</span>
+<span class="nc bnc" id="L160" title="All 4 branches missed.">			if (item != null &amp;&amp; item instanceof Armor) {</span>
+<span class="nc" id="L161">				Armor armor = (Armor)item;</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">				if (!armor.levelKnown){</span>
+<span class="nc" id="L163">					GLog.w(Messages.get(BrokenSeal.class, &quot;unknown_armor&quot;));</span>
+
+<span class="nc bnc" id="L165" title="All 6 branches missed.">				} else if (armor.cursed &amp;&amp; (seal.getGlyph() == null || !seal.getGlyph().curse())){</span>
+<span class="nc" id="L166">					GLog.w(Messages.get(BrokenSeal.class, &quot;cursed_armor&quot;));</span>
+
+<span class="nc bnc" id="L168" title="All 4 branches missed.">				} else if (armor.glyph != null &amp;&amp; seal.getGlyph() != null</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">						&amp;&amp; armor.glyph.getClass() != seal.getGlyph().getClass()) {</span>
+<span class="nc" id="L170">					GameScene.show(new WndOptions(new ItemSprite(seal),</span>
+<span class="nc" id="L171">							Messages.get(BrokenSeal.class, &quot;choose_title&quot;),</span>
+<span class="nc" id="L172">							Messages.get(BrokenSeal.class, &quot;choose_desc&quot;),</span>
+<span class="nc" id="L173">							armor.glyph.name(),</span>
+<span class="nc" id="L174">							seal.getGlyph().name()){</span>
+						@Override
+						protected void onSelect(int index) {
+<span class="nc bnc" id="L177" title="All 2 branches missed.">							if (index == 0) seal.setGlyph(null);</span>
+							//if index is 1, then the glyph transfer happens in affixSeal
+
+<span class="nc" id="L180">							GLog.p(Messages.get(BrokenSeal.class, &quot;affix&quot;));</span>
+<span class="nc" id="L181">							Dungeon.hero.sprite.operate(Dungeon.hero.pos);</span>
+<span class="nc" id="L182">							Sample.INSTANCE.play(Assets.Sounds.UNLOCK);</span>
+<span class="nc" id="L183">							armor.affixSeal(seal);</span>
+<span class="nc" id="L184">							seal.detach(Dungeon.hero.belongings.backpack);</span>
+<span class="nc" id="L185">						}</span>
+					});
+
+				} else {
+<span class="nc" id="L189">					GLog.p(Messages.get(BrokenSeal.class, &quot;affix&quot;));</span>
+<span class="nc" id="L190">					Dungeon.hero.sprite.operate(Dungeon.hero.pos);</span>
+<span class="nc" id="L191">					Sample.INSTANCE.play(Assets.Sounds.UNLOCK);</span>
+<span class="nc" id="L192">					armor.affixSeal((BrokenSeal)curItem);</span>
+<span class="nc" id="L193">					curItem.detach(Dungeon.hero.belongings.backpack);</span>
+				}
+			}
+<span class="nc" id="L196">		}</span>
+	};
+
+	private static final String GLYPH = &quot;glyph&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L203">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L204">		bundle.put(GLYPH, glyph);</span>
+<span class="nc" id="L205">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L209">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L210">		glyph = (Armor.Glyph)bundle.get(GLYPH);</span>
+<span class="nc" id="L211">	}</span>
+
+<span class="nc" id="L213">	public static class WarriorShield extends ShieldBuff {</span>
+
+		{
+<span class="nc" id="L216">			detachesAtZero = false;</span>
+<span class="nc" id="L217">		}</span>
+
+		private Armor armor;
+		private float partialShield;
+
+		@Override
+		public synchronized boolean act() {
+<span class="nc bnc" id="L224" title="All 4 branches missed.">			if (Regeneration.regenOn() &amp;&amp; shielding() &lt; maxShield()) {</span>
+<span class="nc" id="L225">				partialShield += 1/30f;</span>
+			}
+			
+<span class="nc bnc" id="L228" title="All 2 branches missed.">			while (partialShield &gt;= 1){</span>
+<span class="nc" id="L229">				incShield();</span>
+<span class="nc" id="L230">				partialShield--;</span>
+			}
+			
+<span class="nc bnc" id="L233" title="All 4 branches missed.">			if (shielding() &lt;= 0 &amp;&amp; maxShield() &lt;= 0){</span>
+<span class="nc" id="L234">				detach();</span>
+			}
+			
+<span class="nc" id="L237">			spend(TICK);</span>
+<span class="nc" id="L238">			return true;</span>
+		}
+		
+		public synchronized void supercharge(int maxShield){
+<span class="nc bnc" id="L242" title="All 2 branches missed.">			if (maxShield &gt; shielding()){</span>
+<span class="nc" id="L243">				setShield(maxShield);</span>
+			}
+<span class="nc" id="L245">		}</span>
+
+		public synchronized void setArmor(Armor arm){
+<span class="nc" id="L248">			armor = arm;</span>
+<span class="nc" id="L249">		}</span>
+
+		public synchronized int maxShield() {
+			//metamorphed iron will logic
+<span class="nc bnc" id="L253" title="All 4 branches missed.">			if (((Hero)target).heroClass != HeroClass.WARRIOR &amp;&amp; ((Hero) target).hasTalent(Talent.IRON_WILL)){</span>
+<span class="nc" id="L254">				return ((Hero) target).pointsInTalent(Talent.IRON_WILL);</span>
+			}
+
+<span class="nc bnc" id="L257" title="All 6 branches missed.">			if (armor != null &amp;&amp; armor.isEquipped((Hero)target) &amp;&amp; armor.checkSeal() != null) {</span>
+<span class="nc" id="L258">				return armor.checkSeal().maxShield(armor.tier, armor.level());</span>
+			} else {
+<span class="nc" id="L260">				return 0;</span>
+			}
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

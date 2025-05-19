@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RipperDemon.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">RipperDemon.java</span></div><h1>RipperDemon.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Bleeding;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Light;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.RipperSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L45">public class RipperDemon extends Mob {</span>
+
+	{
+<span class="nc" id="L48">		spriteClass = RipperSprite.class;</span>
+
+<span class="nc" id="L50">		HP = HT = 60;</span>
+<span class="nc" id="L51">		defenseSkill = 22;</span>
+<span class="nc" id="L52">		viewDistance = Light.DISTANCE;</span>
+
+<span class="nc" id="L54">		EXP = 9; //for corrupting</span>
+<span class="nc" id="L55">		maxLvl = -2;</span>
+
+<span class="nc" id="L57">		HUNTING = new Hunting();</span>
+
+<span class="nc" id="L59">		baseSpeed = 1f;</span>
+
+<span class="nc" id="L61">		properties.add(Property.DEMONIC);</span>
+<span class="nc" id="L62">		properties.add(Property.UNDEAD);</span>
+	}
+
+	@Override
+	public float spawningWeight() {
+<span class="nc" id="L67">		return 0;</span>
+	}
+
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L72">		return Random.NormalIntRange( 15, 25 );</span>
+	}
+
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L77">		return 30;</span>
+	}
+
+	@Override
+	public float attackDelay() {
+<span class="nc" id="L82">		return super.attackDelay()*0.5f;</span>
+	}
+
+	@Override
+	public int drRoll() {
+<span class="nc" id="L87">		return super.drRoll() + Random.NormalIntRange(0, 4);</span>
+	}
+
+	private static final String LAST_ENEMY_POS = &quot;last_enemy_pos&quot;;
+	private static final String LEAP_POS = &quot;leap_pos&quot;;
+	private static final String LEAP_CD = &quot;leap_cd&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L96">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L97">		bundle.put(LAST_ENEMY_POS, lastEnemyPos);</span>
+<span class="nc" id="L98">		bundle.put(LEAP_POS, leapPos);</span>
+<span class="nc" id="L99">		bundle.put(LEAP_CD, leapCooldown);</span>
+<span class="nc" id="L100">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L104">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L105">		lastEnemyPos = bundle.getInt(LAST_ENEMY_POS);</span>
+<span class="nc" id="L106">		leapPos = bundle.getInt(LEAP_POS);</span>
+<span class="nc" id="L107">		leapCooldown = bundle.getFloat(LEAP_CD);</span>
+<span class="nc" id="L108">	}</span>
+
+<span class="nc" id="L110">	private int lastEnemyPos = -1;</span>
+
+	@Override
+	protected boolean act() {
+<span class="nc bnc" id="L114" title="All 2 branches missed.">		if (state == WANDERING){</span>
+<span class="nc" id="L115">			leapPos = -1;</span>
+		}
+
+<span class="nc" id="L118">		AiState lastState = state;</span>
+<span class="nc" id="L119">		boolean result = super.act();</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">		if (paralysed &lt;= 0) leapCooldown --;</span>
+
+		//if state changed from wandering to hunting, we haven't acted yet, don't update.
+<span class="nc bnc" id="L123" title="All 4 branches missed.">		if (!(lastState == WANDERING &amp;&amp; state == HUNTING)) {</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">			if (enemy != null) {</span>
+<span class="nc" id="L125">				lastEnemyPos = enemy.pos;</span>
+			} else {
+<span class="nc" id="L127">				lastEnemyPos = Dungeon.hero.pos;</span>
+			}
+		}
+
+<span class="nc" id="L131">		return result;</span>
+	}
+
+<span class="nc" id="L134">	private int leapPos = -1;</span>
+<span class="nc" id="L135">	private float leapCooldown = 0;</span>
+
+<span class="nc" id="L137">	public class Hunting extends Mob.Hunting {</span>
+
+		@Override
+		public boolean act( boolean enemyInFOV, boolean justAlerted ) {
+
+<span class="nc bnc" id="L142" title="All 2 branches missed.">			if (leapPos != -1){</span>
+
+<span class="nc" id="L144">				leapCooldown = Random.NormalIntRange(2, 4);</span>
+
+<span class="nc bnc" id="L146" title="All 2 branches missed.">				if (rooted){</span>
+<span class="nc" id="L147">					leapPos = -1;</span>
+<span class="nc" id="L148">					return true;</span>
+				}
+
+<span class="nc" id="L151">				Ballistica b = new Ballistica(pos, leapPos, Ballistica.STOP_TARGET | Ballistica.STOP_SOLID);</span>
+<span class="nc" id="L152">				leapPos = b.collisionPos;</span>
+
+<span class="nc" id="L154">				final Char leapVictim = Actor.findChar(leapPos);</span>
+				final int endPos;
+
+				//ensure there is somewhere to land after leaping
+<span class="nc bnc" id="L158" title="All 2 branches missed.">				if (leapVictim != null){</span>
+<span class="nc" id="L159">					int bouncepos = -1;</span>
+					//attempt to bounce in free passable space
+<span class="nc bnc" id="L161" title="All 2 branches missed.">					for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L162" title="All 4 branches missed.">						if ((bouncepos == -1 || Dungeon.level.trueDistance(pos, leapPos+i) &lt; Dungeon.level.trueDistance(pos, bouncepos))</span>
+<span class="nc bnc" id="L163" title="All 4 branches missed.">								&amp;&amp; Actor.findChar(leapPos+i) == null &amp;&amp; Dungeon.level.passable[leapPos+i]){</span>
+<span class="nc" id="L164">							bouncepos = leapPos+i;</span>
+						}
+					}
+					//try again, allowing a bounce into any non-solid terrain
+<span class="nc bnc" id="L168" title="All 2 branches missed.">					if (bouncepos == -1){</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">						for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L170" title="All 4 branches missed.">							if ((bouncepos == -1 || Dungeon.level.trueDistance(pos, leapPos+i) &lt; Dungeon.level.trueDistance(pos, bouncepos))</span>
+<span class="nc bnc" id="L171" title="All 4 branches missed.">									&amp;&amp; Actor.findChar(leapPos+i) == null &amp;&amp; !Dungeon.level.solid[leapPos+i]){</span>
+<span class="nc" id="L172">								bouncepos = leapPos+i;</span>
+							}
+						}
+					}
+					//if no valid position, cancel the leap
+<span class="nc bnc" id="L177" title="All 2 branches missed.">					if (bouncepos == -1) {</span>
+<span class="nc" id="L178">						leapPos = -1;</span>
+<span class="nc" id="L179">						return true;</span>
+					} else {
+<span class="nc" id="L181">						endPos = bouncepos;</span>
+					}
+<span class="nc" id="L183">				} else {</span>
+<span class="nc" id="L184">					endPos = leapPos;</span>
+				}
+
+				//do leap
+<span class="nc bnc" id="L188" title="All 6 branches missed.">				sprite.visible = Dungeon.level.heroFOV[pos] || Dungeon.level.heroFOV[leapPos] || Dungeon.level.heroFOV[endPos];</span>
+<span class="nc" id="L189">				sprite.jump(pos, leapPos, new Callback() {</span>
+					@Override
+					public void call() {
+
+<span class="nc bnc" id="L193" title="All 4 branches missed.">						if (leapVictim != null &amp;&amp; alignment != leapVictim.alignment){</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">							if (hit(RipperDemon.this, leapVictim, Char.INFINITE_ACCURACY, false)) {</span>
+<span class="nc" id="L195">								Buff.affect(leapVictim, Bleeding.class).set(0.75f * damageRoll());</span>
+<span class="nc" id="L196">								leapVictim.sprite.flash();</span>
+<span class="nc" id="L197">								Sample.INSTANCE.play(Assets.Sounds.HIT);</span>
+							} else {
+<span class="nc" id="L199">								leapVictim.sprite.showStatus( CharSprite.NEUTRAL, leapVictim.defenseVerb() );</span>
+<span class="nc" id="L200">								Sample.INSTANCE.play(Assets.Sounds.MISS);</span>
+							}
+						}
+
+<span class="nc bnc" id="L204" title="All 2 branches missed.">						if (endPos != leapPos){</span>
+<span class="nc" id="L205">							Actor.add(new Pushing(RipperDemon.this, leapPos, endPos));</span>
+						}
+
+<span class="nc" id="L208">						pos = endPos;</span>
+<span class="nc" id="L209">						leapPos = -1;</span>
+<span class="nc" id="L210">						sprite.idle();</span>
+<span class="nc" id="L211">						Dungeon.level.occupyCell(RipperDemon.this);</span>
+<span class="nc" id="L212">						next();</span>
+<span class="nc" id="L213">					}</span>
+				});
+<span class="nc" id="L215">				return false;</span>
+			}
+
+<span class="nc" id="L218">			enemySeen = enemyInFOV;</span>
+<span class="nc bnc" id="L219" title="All 6 branches missed.">			if (enemyInFOV &amp;&amp; !isCharmedBy( enemy ) &amp;&amp; canAttack( enemy )) {</span>
+
+<span class="nc" id="L221">				recentlyAttackedBy.clear();</span>
+<span class="nc" id="L222">				target = enemy.pos;</span>
+<span class="nc" id="L223">				return doAttack( enemy );</span>
+
+			} else {
+
+<span class="nc bnc" id="L227" title="All 2 branches missed.">				if (enemyInFOV) {</span>
+<span class="nc" id="L228">					target = enemy.pos;</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">				} else if (enemy == null) {</span>
+<span class="nc" id="L230">					state = WANDERING;</span>
+<span class="nc" id="L231">					target = Dungeon.level.randomDestination( RipperDemon.this );</span>
+<span class="nc" id="L232">					return true;</span>
+				}
+
+<span class="nc bnc" id="L235" title="All 6 branches missed.">				if (leapCooldown &lt;= 0 &amp;&amp; enemyInFOV &amp;&amp; !rooted</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">						&amp;&amp; Dungeon.level.distance(pos, enemy.pos) &gt;= 3) {</span>
+
+<span class="nc" id="L238">					int targetPos = enemy.pos;</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">					if (lastEnemyPos != enemy.pos){</span>
+<span class="nc" id="L240">						int closestIdx = 0;</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">						for (int i = 1; i &lt; PathFinder.CIRCLE8.length; i++){</span>
+<span class="nc" id="L242">							if (Dungeon.level.trueDistance(lastEnemyPos, enemy.pos+PathFinder.CIRCLE8[i])</span>
+<span class="nc bnc" id="L243" title="All 2 branches missed.">									&lt; Dungeon.level.trueDistance(lastEnemyPos, enemy.pos+PathFinder.CIRCLE8[closestIdx])){</span>
+<span class="nc" id="L244">								closestIdx = i;</span>
+							}
+						}
+<span class="nc" id="L247">						targetPos = enemy.pos + PathFinder.CIRCLE8[(closestIdx+4)%8];</span>
+					}
+
+<span class="nc" id="L250">					Ballistica b = new Ballistica(pos, targetPos, Ballistica.STOP_TARGET | Ballistica.STOP_SOLID);</span>
+					//try aiming directly at hero if aiming near them doesn't work
+<span class="nc bnc" id="L252" title="All 4 branches missed.">					if (b.collisionPos != targetPos &amp;&amp; targetPos != enemy.pos){</span>
+<span class="nc" id="L253">						targetPos = enemy.pos;</span>
+<span class="nc" id="L254">						b = new Ballistica(pos, targetPos, Ballistica.STOP_TARGET | Ballistica.STOP_SOLID);</span>
+					}
+<span class="nc bnc" id="L256" title="All 2 branches missed.">					if (b.collisionPos == targetPos){</span>
+						//get ready to leap
+<span class="nc" id="L258">						leapPos = targetPos;</span>
+						//don't want to overly punish players with slow move or attack speed
+<span class="nc" id="L260">						spend(GameMath.gate(attackDelay(), (int)Math.ceil(enemy.cooldown()), 3*attackDelay()));</span>
+<span class="nc bnc" id="L261" title="All 4 branches missed.">						if (Dungeon.level.heroFOV[pos] || Dungeon.level.heroFOV[leapPos]){</span>
+<span class="nc" id="L262">							GLog.w(Messages.get(RipperDemon.this, &quot;leap&quot;));</span>
+<span class="nc" id="L263">							sprite.parent.addToBack(new TargetedCell(leapPos, 0xFF0000));</span>
+<span class="nc" id="L264">							((RipperSprite)sprite).leapPrep( leapPos );</span>
+<span class="nc" id="L265">							Dungeon.hero.interrupt();</span>
+						}
+<span class="nc" id="L267">						return true;</span>
+					}
+				}
+
+<span class="nc" id="L271">				int oldPos = pos;</span>
+<span class="nc bnc" id="L272" title="All 4 branches missed.">				if (target != -1 &amp;&amp; getCloser( target )) {</span>
+
+<span class="nc" id="L274">					spend( 1 / speed() );</span>
+<span class="nc" id="L275">					return moveSprite( oldPos,  pos );</span>
+
+				} else {
+<span class="nc" id="L278">					spend( TICK );</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">					if (!enemyInFOV) {</span>
+<span class="nc" id="L280">						sprite.showLost();</span>
+<span class="nc" id="L281">						state = WANDERING;</span>
+<span class="nc" id="L282">						target = Dungeon.level.randomDestination( RipperDemon.this );</span>
+					}
+<span class="nc" id="L284">					return true;</span>
+				}
+			}
+		}
+
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

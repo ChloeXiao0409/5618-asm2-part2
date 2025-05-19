@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Sheep.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs</a> &gt; <span class="el_source">Sheep.java</span></div><h1>Sheep.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Bestiary;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.SheepSprite;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L36">public class Sheep extends NPC {</span>
+
+<span class="nc" id="L38">	private static final String[] LINE_KEYS = {&quot;Baa!&quot;, &quot;Baa?&quot;, &quot;Baa.&quot;, &quot;Baa...&quot;};</span>
+
+	{
+<span class="nc" id="L41">		spriteClass = SheepSprite.class;</span>
+	}
+
+	public float lifespan;
+
+<span class="nc" id="L46">	private boolean initialized = false;</span>
+
+	@Override
+	protected boolean act() {
+<span class="nc bnc" id="L50" title="All 2 branches missed.">		if (Dungeon.level.heroFOV[pos]){</span>
+<span class="nc" id="L51">			Bestiary.setSeen(getClass());</span>
+		}
+<span class="nc bnc" id="L53" title="All 2 branches missed.">		if (initialized) {</span>
+<span class="nc" id="L54">			HP = 0;</span>
+
+<span class="nc" id="L56">			destroy();</span>
+<span class="nc" id="L57">			sprite.die();</span>
+
+		} else {
+<span class="nc" id="L60">			initialized = true;</span>
+<span class="nc" id="L61">			spend( lifespan + Random.Float(-2, 2) );</span>
+		}
+<span class="nc" id="L63">		return true;</span>
+	}
+
+	@Override
+	public int defenseSkill(Char enemy) {
+<span class="nc" id="L68">		return INFINITE_EVASION;</span>
+	}
+
+	@Override
+	public void damage( int dmg, Object src ) {
+		//do nothing
+<span class="nc" id="L74">	}</span>
+
+	@Override
+	public boolean add( Buff buff ) {
+<span class="nc" id="L78">		return false;</span>
+	}
+
+	@Override
+	public boolean interact(Char c) {
+<span class="nc" id="L83">		sprite.showStatus( CharSprite.NEUTRAL, Messages.get(this, Random.element( LINE_KEYS )) );</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		if (c == Dungeon.hero) {</span>
+<span class="nc" id="L85">			Dungeon.hero.spendAndNext(1f);</span>
+<span class="nc" id="L86">			Sample.INSTANCE.play(Assets.Sounds.SHEEP, 1, Random.Float(0.91f, 1.1f));</span>
+			//sheep summoned by woolly bomb can be dispelled by interacting
+<span class="nc bnc" id="L88" title="All 2 branches missed.">			if (lifespan &gt;= 20){</span>
+<span class="nc" id="L89">				spend(-cooldown());</span>
+			}
+		}
+<span class="nc" id="L92">		return true;</span>
+	}
+
+	private static final String LIFESPAN = &quot;lifespan&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L99">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L100">		bundle.put(LIFESPAN, lifespan);</span>
+<span class="nc" id="L101">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L105">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L106">		lifespan = bundle.getInt(LIFESPAN);</span>
+<span class="nc" id="L107">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UnstableBrew.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.potions.brews</a> &gt; <span class="el_source">UnstableBrew.java</span></div><h1>UnstableBrew.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.potions.brews;
+
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfExperience;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfFrost;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHaste;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLevitation;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLiquidFlame;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfMindVision;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfParalyticGas;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfPurity;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfToxicGas;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.ExoticPotion;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+<span class="nc" id="L49">public class UnstableBrew extends Brew {</span>
+
+	{
+<span class="nc" id="L52">		image = ItemSpriteSheet.BREW_UNSTABLE;</span>
+<span class="nc" id="L53">	}</span>
+
+	@Override
+	public ArrayList&lt;String&gt; actions(Hero hero) {
+<span class="nc" id="L57">		ArrayList&lt;String&gt; actions = super.actions(hero);</span>
+<span class="nc" id="L58">		actions.add(AC_DRINK);</span>
+<span class="nc" id="L59">		return actions;</span>
+	}
+
+	@Override
+	public String defaultAction() {
+<span class="nc" id="L64">		return AC_CHOOSE;</span>
+	}
+
+<span class="nc" id="L67">	private static HashMap&lt;Class&lt;? extends Potion&gt;, Float&gt; potionChances = new HashMap&lt;&gt;();</span>
+	static {
+<span class="nc" id="L69">		potionChances.put(PotionOfHealing.class, 3f);</span>
+<span class="nc" id="L70">		potionChances.put(PotionOfMindVision.class, 2f);</span>
+<span class="nc" id="L71">		potionChances.put(PotionOfFrost.class, 2f);</span>
+<span class="nc" id="L72">		potionChances.put(PotionOfLiquidFlame.class, 2f);</span>
+<span class="nc" id="L73">		potionChances.put(PotionOfToxicGas.class, 2f);</span>
+<span class="nc" id="L74">		potionChances.put(PotionOfHaste.class, 2f);</span>
+<span class="nc" id="L75">		potionChances.put(PotionOfInvisibility.class, 2f);</span>
+<span class="nc" id="L76">		potionChances.put(PotionOfLevitation.class, 2f);</span>
+<span class="nc" id="L77">		potionChances.put(PotionOfParalyticGas.class, 2f);</span>
+<span class="nc" id="L78">		potionChances.put(PotionOfPurity.class, 2f);</span>
+<span class="nc" id="L79">		potionChances.put(PotionOfExperience.class, 1f);</span>
+<span class="nc" id="L80">	}</span>
+	
+	@Override
+	public void apply(Hero hero) {
+		//Don't allow this to roll healing in pharma
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if (Dungeon.isChallenged(Challenges.NO_HEALING)){</span>
+<span class="nc" id="L86">			potionChances.put(PotionOfHealing.class, 0f);</span>
+		}
+
+<span class="nc" id="L89">		Potion p = Reflection.newInstance(Random.chances(potionChances));</span>
+
+		//reroll the potion if it wasn't a good potion to drink
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		while (mustThrowPots.contains(p.getClass())){</span>
+<span class="nc" id="L93">			p = Reflection.newInstance(Random.chances(potionChances));</span>
+		}
+
+<span class="nc" id="L96">		p.anonymize();</span>
+<span class="nc" id="L97">		p.apply(hero);</span>
+
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		if (Dungeon.isChallenged(Challenges.NO_HEALING)){</span>
+<span class="nc" id="L100">			potionChances.put(PotionOfHealing.class, 3f);</span>
+		}
+<span class="nc" id="L102">	}</span>
+	
+	@Override
+	public void shatter(int cell) {
+<span class="nc" id="L106">		Potion p = Reflection.newInstance(Random.chances(potionChances));</span>
+
+		//reroll the potion if it wasn't a good potion to throw
+<span class="nc bnc" id="L109" title="All 4 branches missed.">		while (!mustThrowPots.contains(p.getClass()) &amp;&amp; !canThrowPots.contains(p.getClass())){</span>
+<span class="nc" id="L110">			p = Reflection.newInstance(Random.chances(potionChances));</span>
+		}
+
+<span class="nc" id="L113">		p.anonymize();</span>
+<span class="nc" id="L114">		curItem = p;</span>
+<span class="nc" id="L115">		p.shatter(cell);</span>
+<span class="nc" id="L116">	}</span>
+	
+	@Override
+	public boolean isKnown() {
+<span class="nc" id="L120">		return true;</span>
+	}
+
+	//lower values, as it's cheaper to make
+	@Override
+	public int value() {
+<span class="nc" id="L126">		return 40 * quantity;</span>
+	}
+
+	@Override
+	public int energyVal() {
+<span class="nc" id="L131">		return 8 * quantity;</span>
+	}
+
+<span class="nc" id="L134">	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe {</span>
+		
+		@Override
+		public boolean testIngredients(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc" id="L138">			boolean potion = false;</span>
+<span class="nc" id="L139">			boolean seed = false;</span>
+
+<span class="nc bnc" id="L141" title="All 2 branches missed.">			for (Item i : ingredients){</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">				if (i instanceof Plant.Seed) {</span>
+<span class="nc" id="L143">					seed = true;</span>
+					//if it is a regular or exotic potion
+<span class="nc bnc" id="L145" title="All 2 branches missed.">				} else if (ExoticPotion.regToExo.containsKey(i.getClass())</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">						|| ExoticPotion.regToExo.containsValue(i.getClass())) {</span>
+<span class="nc" id="L147">					potion = true;</span>
+				}
+<span class="nc" id="L149">			}</span>
+
+<span class="nc bnc" id="L151" title="All 4 branches missed.">			return potion &amp;&amp; seed;</span>
+		}
+
+		@Override
+		public int cost(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc" id="L156">			return 1;</span>
+		}
+
+		@Override
+		public Item brew(ArrayList&lt;Item&gt; ingredients) {
+
+<span class="nc bnc" id="L162" title="All 2 branches missed.">			for (Item i : ingredients){</span>
+<span class="nc" id="L163">				i.quantity(i.quantity()-1);</span>
+<span class="nc" id="L164">			}</span>
+			
+<span class="nc" id="L166">			return sampleOutput(null);</span>
+		}
+		
+		@Override
+		public Item sampleOutput(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc" id="L171">			return new UnstableBrew();</span>
+		}
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

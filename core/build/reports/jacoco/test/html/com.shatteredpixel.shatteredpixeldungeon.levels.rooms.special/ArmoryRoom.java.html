@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ArmoryRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special</a> &gt; <span class="el_source">ArmoryRoom.java</span></div><h1>ArmoryRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
+import com.shatteredpixel.shatteredpixeldungeon.items.keys.IronKey;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.TrinketCatalyst;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L36">public class ArmoryRoom extends SpecialRoom {</span>
+
+	public void paint( Level level ) {
+		
+<span class="nc" id="L40">		Painter.fill( level, this, Terrain.WALL );</span>
+<span class="nc" id="L41">		Painter.fill( level, this, 1, Terrain.EMPTY );</span>
+		
+<span class="nc" id="L43">		Door entrance = entrance();</span>
+<span class="nc" id="L44">		Point statue = null;</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">		if (entrance.x == left) {</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">			statue = new Point( right-1, Random.Int( 2 ) == 0 ? top+1 : bottom-1 );</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">		} else if (entrance.x == right) {</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">			statue = new Point( left+1, Random.Int( 2 ) == 0 ? top+1 : bottom-1 );</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">		} else if (entrance.y == top) {</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">			statue = new Point( Random.Int( 2 ) == 0 ? left+1 : right-1, bottom-1 );</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">		} else if (entrance.y == bottom) {</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">			statue = new Point( Random.Int( 2 ) == 0 ? left+1 : right-1, top+1 );</span>
+		}
+<span class="nc bnc" id="L54" title="All 2 branches missed.">		if (statue != null) {</span>
+<span class="nc" id="L55">			Painter.set( level, statue, Terrain.STATUE );</span>
+		}
+		
+<span class="nc" id="L58">		int n = Random.IntRange( 2, 3 );</span>
+<span class="nc" id="L59">		prizeCats = new float[]{1,1,1,1};</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		for (int i=0; i &lt; n; i++) {</span>
+			int pos;
+			do {
+<span class="nc" id="L63">				pos = level.pointToCell(random());</span>
+<span class="nc bnc" id="L64" title="All 4 branches missed.">			} while (level.map[pos] != Terrain.EMPTY || level.heaps.get( pos ) != null);</span>
+<span class="nc" id="L65">			level.drop( prize( level ), pos );</span>
+		}
+
+<span class="nc" id="L68">		Item cata = level.findPrizeItem(TrinketCatalyst.class);</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		if (cata != null){</span>
+			int pos;
+			do {
+<span class="nc" id="L72">				pos = level.pointToCell(random());</span>
+<span class="nc bnc" id="L73" title="All 4 branches missed.">			} while (level.map[pos] != Terrain.EMPTY || level.heaps.get( pos ) != null);</span>
+<span class="nc" id="L74">			level.drop( cata, pos );</span>
+		}
+		
+<span class="nc" id="L77">		entrance.set( Door.Type.LOCKED );</span>
+<span class="nc" id="L78">		level.addItemToSpawn( new IronKey( Dungeon.depth ) );</span>
+<span class="nc" id="L79">	}</span>
+
+	//only a max of 1 prize from each category can be dropped at a time
+	private static float[] prizeCats;
+	private static Item prize( Level level ) {
+<span class="nc" id="L84">		int index = Random.chances(prizeCats);</span>
+<span class="nc" id="L85">		prizeCats[index] = 0;</span>
+<span class="nc bnc" id="L86" title="All 4 branches missed.">		switch (index){</span>
+			case 0:
+<span class="nc" id="L88">				return new Bomb().random();</span>
+			case 1:
+<span class="nc" id="L90">				return Generator.randomWeapon();</span>
+			case 2:
+<span class="nc" id="L92">				return Generator.randomArmor();</span>
+			case 3: default:
+<span class="nc" id="L94">				return Generator.randomMissile();</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

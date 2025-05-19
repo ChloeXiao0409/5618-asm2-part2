@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CurrencyIndicator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">CurrencyIndicator.java</span></div><h1>CurrencyIndicator.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.ui.Component;
+
+<span class="nc" id="L30">public class CurrencyIndicator extends Component {</span>
+
+	private static final float TIME	= 2f;
+	
+<span class="nc" id="L34">	private int lastGold = 0;</span>
+<span class="nc" id="L35">	private int lastEnergy = 0;</span>
+	
+	private BitmapText gold;
+	private BitmapText energy;
+	
+	private float goldTime;
+	private float energyTime;
+	
+	@Override
+	protected void createChildren() {
+<span class="nc" id="L45">		gold = new BitmapText( PixelScene.pixelFont);</span>
+<span class="nc" id="L46">		add( gold );</span>
+
+<span class="nc" id="L48">		energy = new BitmapText( PixelScene.pixelFont);</span>
+<span class="nc" id="L49">		add( energy );</span>
+		
+<span class="nc" id="L51">		gold.visible = energy.visible = false;</span>
+<span class="nc" id="L52">	}</span>
+	
+	@Override
+	protected void layout() {
+<span class="nc" id="L56">		energy.x = x + (width - energy.width()) / 2;</span>
+<span class="nc" id="L57">		energy.y = bottom() - energy.height();</span>
+
+<span class="nc" id="L59">		gold.x = x + (width - gold.width()) / 2;</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		if (energy.visible) {</span>
+<span class="nc" id="L61">			gold.y = bottom() - gold.height()- gold.height() + 2;</span>
+		} else {
+<span class="nc" id="L63">			gold.y = bottom() - gold.height();</span>
+		}
+<span class="nc" id="L65">	}</span>
+	
+	@Override
+	public void update() {
+<span class="nc" id="L69">		super.update();</span>
+		
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		if (gold.visible) {</span>
+			
+<span class="nc" id="L73">			goldTime -= Game.elapsed;</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">			if (goldTime &gt; 0) {</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">				gold.alpha( goldTime &gt; TIME / 2 ? 1f : goldTime * 2 / TIME );</span>
+			} else {
+<span class="nc" id="L77">				gold.visible = false;</span>
+			}
+			
+		}
+
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		if (energy.visible) {</span>
+
+<span class="nc" id="L84">			energyTime -= Game.elapsed;</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">			if (energyTime &gt; 0) {</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">				energy.alpha( energyTime &gt; TIME / 2 ? 1f : energyTime * 2 / TIME );</span>
+			} else {
+<span class="nc" id="L88">				energy.visible = false;</span>
+			}
+
+		}
+
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		if (Dungeon.gold != lastGold) {</span>
+			
+<span class="nc" id="L95">			lastGold = Dungeon.gold;</span>
+			
+<span class="nc" id="L97">			gold.text( Integer.toString(lastGold) );</span>
+<span class="nc" id="L98">			gold.measure();</span>
+<span class="nc" id="L99">			gold.hardlight( 0xFFFF00 );</span>
+			
+<span class="nc" id="L101">			gold.visible = true;</span>
+<span class="nc" id="L102">			goldTime = TIME;</span>
+			
+<span class="nc" id="L104">			layout();</span>
+		}
+
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		if (Dungeon.energy != lastEnergy) {</span>
+<span class="nc" id="L108">			lastEnergy = Dungeon.energy;</span>
+
+<span class="nc" id="L110">			energy.text( Integer.toString(lastEnergy) );</span>
+<span class="nc" id="L111">			energy.measure();</span>
+<span class="nc" id="L112">			energy.hardlight( 0x44CCFF );</span>
+
+<span class="nc" id="L114">			energy.visible = true;</span>
+<span class="nc" id="L115">			energyTime = TIME;</span>
+
+<span class="nc" id="L117">			layout();</span>
+		}
+<span class="nc" id="L119">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

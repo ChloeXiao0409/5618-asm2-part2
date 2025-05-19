@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SewerPipeRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard</a> &gt; <span class="el_source">SewerPipeRoom.java</span></div><h1>SewerPipeRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard;
+
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Point;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+import com.watabou.utils.Rect;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L37">public class SewerPipeRoom extends StandardRoom {</span>
+
+	@Override
+	public int minWidth() {
+<span class="nc" id="L41">		return Math.max(7, super.minWidth());</span>
+	}
+
+	@Override
+	public int minHeight() {
+<span class="nc" id="L46">		return Math.max(7, super.minHeight());</span>
+	}
+
+	@Override
+	public float[] sizeCatProbs() {
+<span class="nc" id="L51">		return new float[]{4, 2, 1};</span>
+	}
+
+	@Override
+	public boolean canMerge(Level l, Room other, Point p, int mergeTerrain) {
+<span class="nc" id="L56">		return false;</span>
+	}
+
+	@Override
+	public boolean canConnect(Point p) {
+		//refuses connections next to corners
+<span class="nc bnc" id="L62" title="All 10 branches missed.">		return super.canConnect(p) &amp;&amp; ((p.x &gt; left+1 &amp;&amp; p.x &lt; right-1) || (p.y &gt; top+1 &amp;&amp; p.y &lt; bottom-1));</span>
+	}
+
+	//FIXME this class is a total mess, lots of copy-pasta from tunnel and perimeter rooms here
+	@Override
+	public void paint(Level level) {
+
+<span class="nc" id="L69">		Painter.fill( level, this, Terrain.WALL );</span>
+
+<span class="nc" id="L71">		Rect c = getConnectionSpace();</span>
+
+<span class="nc bnc" id="L73" title="All 2 branches missed.">		if (connected.size() &lt;= 2) {</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">			for (Door door : connected.values()) {</span>
+				
+				Point start;
+				Point mid;
+				Point end;
+				
+<span class="nc" id="L80">				start = new Point(door);</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">				if (start.x == left) start.x += 2;</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">				else if (start.y == top) start.y += 2;</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">				else if (start.x == right) start.x -= 2;</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">				else if (start.y == bottom) start.y -= 2;</span>
+				
+				int rightShift;
+				int downShift;
+				
+<span class="nc bnc" id="L89" title="All 2 branches missed.">				if (start.x &lt; c.left) rightShift = c.left - start.x;</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">				else if (start.x &gt; c.right) rightShift = c.right - start.x;</span>
+<span class="nc" id="L91">				else rightShift = 0;</span>
+				
+<span class="nc bnc" id="L93" title="All 2 branches missed.">				if (start.y &lt; c.top) downShift = c.top - start.y;</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">				else if (start.y &gt; c.bottom) downShift = c.bottom - start.y;</span>
+<span class="nc" id="L95">				else downShift = 0;</span>
+				
+				//always goes inward first
+<span class="nc bnc" id="L98" title="All 4 branches missed.">				if (door.x == left || door.x == right) {</span>
+<span class="nc" id="L99">					mid = new Point(start.x + rightShift, start.y);</span>
+<span class="nc" id="L100">					end = new Point(mid.x, mid.y + downShift);</span>
+					
+				} else {
+<span class="nc" id="L103">					mid = new Point(start.x, start.y + downShift);</span>
+<span class="nc" id="L104">					end = new Point(mid.x + rightShift, mid.y);</span>
+					
+				}
+				
+<span class="nc" id="L108">				Painter.drawLine(level, start, mid, Terrain.WATER);</span>
+<span class="nc" id="L109">				Painter.drawLine(level, mid, end, Terrain.WATER);</span>
+				
+<span class="nc" id="L111">			}</span>
+		} else {
+<span class="nc" id="L113">			ArrayList&lt;Point&gt; pointsToFill = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">			for (Point door : connected.values()) {</span>
+<span class="nc" id="L115">				Point p = new Point(door);</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">				if (p.y == top){</span>
+<span class="nc" id="L117">					p.y+=2;</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">				} else if (p.y == bottom) {</span>
+<span class="nc" id="L119">					p.y-=2;</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">				} else if (p.x == left){</span>
+<span class="nc" id="L121">					p.x+=2;</span>
+				} else {
+<span class="nc" id="L123">					p.x-=2;</span>
+				}
+<span class="nc" id="L125">				pointsToFill.add( p );</span>
+<span class="nc" id="L126">			}</span>
+			
+<span class="nc" id="L128">			ArrayList&lt;Point&gt; pointsFilled = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L129">			pointsFilled.add(pointsToFill.remove(0));</span>
+			
+<span class="nc" id="L131">			Point from = null, to = null;</span>
+			int shortestDistance;
+<span class="nc bnc" id="L133" title="All 2 branches missed.">			while(!pointsToFill.isEmpty()){</span>
+<span class="nc" id="L134">				shortestDistance = Integer.MAX_VALUE;</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">				for (Point f : pointsFilled){</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">					for (Point t : pointsToFill){</span>
+<span class="nc" id="L137">						int dist = distanceBetweenPoints(f, t);</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">						if (dist &lt; shortestDistance){</span>
+<span class="nc" id="L139">							from = f;</span>
+<span class="nc" id="L140">							to = t;</span>
+<span class="nc" id="L141">							shortestDistance = dist;</span>
+						}
+<span class="nc" id="L143">					}</span>
+<span class="nc" id="L144">				}</span>
+<span class="nc" id="L145">				fillBetweenPoints(level, from, to, Terrain.WATER);</span>
+<span class="nc" id="L146">				pointsFilled.add(to);</span>
+<span class="nc" id="L147">				pointsToFill.remove(to);</span>
+			}
+		}
+
+<span class="nc bnc" id="L151" title="All 2 branches missed.">		for(Point p : getPoints()){</span>
+<span class="nc" id="L152">			int cell = level.pointToCell(p);</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">			if (level.map[cell] == Terrain.WATER){</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">				for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">					if (level.map[cell + i] == Terrain.WALL){</span>
+<span class="nc" id="L156">						Painter.set(level, cell + i, Terrain.EMPTY);</span>
+					}
+				}
+			}
+<span class="nc" id="L160">		}</span>
+
+<span class="nc bnc" id="L162" title="All 2 branches missed.">		for (Room r : connected.keySet()) {</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">			if (r instanceof SewerPipeRoom){</span>
+<span class="nc" id="L164">				Point door = connected.get(r);</span>
+<span class="nc" id="L165">				Painter.fill(level, door.x-1, door.y-1, 3, 3, Terrain.EMPTY);</span>
+<span class="nc bnc" id="L166" title="All 4 branches missed.">				if (door.x == left || door.x == right){</span>
+<span class="nc" id="L167">					Painter.fill(level, door.x-1, door.y, 3, 1, Terrain.WATER);</span>
+				} else {
+<span class="nc" id="L169">					Painter.fill(level, door.x, door.y-1, 1, 3, Terrain.WATER);</span>
+				}
+<span class="nc" id="L171">				connected.get(r).set( Door.Type.WATER );</span>
+<span class="nc" id="L172">			} else {</span>
+<span class="nc" id="L173">				connected.get(r).set( Door.Type.REGULAR );</span>
+			}
+<span class="nc" id="L175">		}</span>
+<span class="nc" id="L176">	}</span>
+
+	//returns the space which all doors must connect to (usually 1 cell, but can be more)
+	//Note that, like rooms, this space is inclusive to its right and bottom sides
+	protected Rect getConnectionSpace(){
+<span class="nc bnc" id="L181" title="All 2 branches missed.">		Point c = connected.size() &lt;= 1 ? center() : getDoorCenter();</span>
+
+<span class="nc" id="L183">		return new Rect(c.x, c.y, c.x, c.y);</span>
+	}
+
+	@Override
+	public boolean canPlaceWater(Point p) {
+<span class="nc" id="L188">		return false;</span>
+	}
+
+	//returns a point equidistant from all doors this room has
+	protected final Point getDoorCenter(){
+<span class="nc" id="L193">		PointF doorCenter = new PointF(0, 0);</span>
+
+<span class="nc bnc" id="L195" title="All 2 branches missed.">		for (Door door : connected.values()) {</span>
+<span class="nc" id="L196">			doorCenter.x += door.x;</span>
+<span class="nc" id="L197">			doorCenter.y += door.y;</span>
+<span class="nc" id="L198">		}</span>
+
+<span class="nc" id="L200">		Point c = new Point((int)doorCenter.x / connected.size(), (int)doorCenter.y / connected.size());</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">		if (Random.Float() &lt; doorCenter.x % 1) c.x++;</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">		if (Random.Float() &lt; doorCenter.y % 1) c.y++;</span>
+<span class="nc" id="L203">		c.x = (int) GameMath.gate(left+2, c.x, right-2);</span>
+<span class="nc" id="L204">		c.y = (int)GameMath.gate(top+2, c.y, bottom-2);</span>
+
+<span class="nc" id="L206">		return c;</span>
+	}
+
+	private int spaceBetween(int a, int b){
+<span class="nc" id="L210">		return Math.abs(a - b)-1;</span>
+	}
+
+	//gets the path distance between two points
+	private int distanceBetweenPoints(Point a, Point b){
+		//on the same side
+<span class="nc bnc" id="L216" title="All 12 branches missed.">		if (((a.x == left+2 || a.x == right-2) &amp;&amp; a.y == b.y)</span>
+				|| ((a.y == top+2 || a.y == bottom-2) &amp;&amp; a.x == b.x)){
+<span class="nc" id="L218">			return Math.max(spaceBetween(a.x, b.x), spaceBetween(a.y, b.y));</span>
+		}
+
+		//otherwise...
+		//subtract 1 at the end to account for overlap
+<span class="nc" id="L223">		return</span>
+<span class="nc" id="L224">				Math.min(spaceBetween(left, a.x) + spaceBetween(left, b.x),</span>
+<span class="nc" id="L225">						spaceBetween(right, a.x) + spaceBetween(right, b.x))</span>
+						+
+<span class="nc" id="L227">						Math.min(spaceBetween(top, a.y) + spaceBetween(top, b.y),</span>
+<span class="nc" id="L228">								spaceBetween(bottom, a.y) + spaceBetween(bottom, b.y))</span>
+						-
+						1;
+	}
+
+	private Point[] corners;
+
+	//picks the smallest path to fill between two points
+	private void fillBetweenPoints(Level level, Point from, Point to, int floor){
+
+		//doors are along the same side
+<span class="nc bnc" id="L239" title="All 12 branches missed.">		if (((from.x == left+2 || from.x == right-2) &amp;&amp; from.x == to.x)</span>
+				|| ((from.y == top+2 || from.y == bottom-2) &amp;&amp; from.y == to.y)){
+<span class="nc" id="L241">			Painter.fill(level,</span>
+<span class="nc" id="L242">					Math.min(from.x, to.x),</span>
+<span class="nc" id="L243">					Math.min(from.y, to.y),</span>
+<span class="nc" id="L244">					spaceBetween(from.x, to.x) + 2,</span>
+<span class="nc" id="L245">					spaceBetween(from.y, to.y) + 2,</span>
+					floor);
+<span class="nc" id="L247">			return;</span>
+		}
+
+		//set up corners
+<span class="nc bnc" id="L251" title="All 2 branches missed.">		if (corners == null){</span>
+<span class="nc" id="L252">			corners = new Point[4];</span>
+<span class="nc" id="L253">			corners[0] = new Point(left+2, top+2);</span>
+<span class="nc" id="L254">			corners[1] = new Point(right-2, top+2);</span>
+<span class="nc" id="L255">			corners[2] = new Point(right-2, bottom-2);</span>
+<span class="nc" id="L256">			corners[3] = new Point(left+2, bottom-2);</span>
+		}
+
+		//doors on adjacent sides
+<span class="nc bnc" id="L260" title="All 2 branches missed.">		for (Point c : corners){</span>
+<span class="nc bnc" id="L261" title="All 8 branches missed.">			if ((c.x == from.x || c.y == from.y) &amp;&amp; (c.x == to.x || c.y == to.y)){</span>
+<span class="nc" id="L262">				Painter.drawLine(level, from, c, floor);</span>
+<span class="nc" id="L263">				Painter.drawLine(level, c, to, floor);</span>
+<span class="nc" id="L264">				return;</span>
+			}
+		}
+
+		//doors on opposite sides
+		Point side;
+<span class="nc bnc" id="L270" title="All 4 branches missed.">		if (from.y == top+2 || from.y == bottom-2){</span>
+			//connect along the left, or right side
+<span class="nc" id="L272">			if (spaceBetween(left, from.x) + spaceBetween(left, to.x) &lt;=</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">					spaceBetween(right, from.x) + spaceBetween(right, to.x)){</span>
+<span class="nc" id="L274">				side = new Point(left+2, top + height()/2);</span>
+			} else {
+<span class="nc" id="L276">				side = new Point(right-2, top + height()/2);</span>
+			}
+
+		} else {
+			//connect along the top, or bottom side
+<span class="nc" id="L281">			if (spaceBetween(top, from.y) + spaceBetween(top, to.y) &lt;=</span>
+<span class="nc bnc" id="L282" title="All 2 branches missed.">					spaceBetween(bottom, from.y) + spaceBetween(bottom, to.y)){</span>
+<span class="nc" id="L283">				side = new Point(left + width()/2, top+2);</span>
+			} else {
+<span class="nc" id="L285">				side = new Point(left + width()/2, bottom-2);</span>
+			}
+		}
+		//treat this as two connections with adjacent sides
+<span class="nc" id="L289">		fillBetweenPoints(level, from, side, floor);</span>
+<span class="nc" id="L290">		fillBetweenPoints(level, side, to, floor);</span>
+<span class="nc" id="L291">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

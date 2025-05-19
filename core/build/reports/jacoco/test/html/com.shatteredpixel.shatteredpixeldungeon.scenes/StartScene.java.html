@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StartScene.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.scenes</a> &gt; <span class="el_source">StartScene.java</span></div><h1>StartScene.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.scenes;
+
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Journal;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Archs;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Button;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ExitButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.windows.IconTitle;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndGameInProgress;
+import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.NinePatch;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L49">public class StartScene extends PixelScene {</span>
+	
+	private static final int SLOT_WIDTH = 120;
+	private static final int SLOT_HEIGHT = 22;
+	
+	@Override
+	public void create() {
+<span class="nc" id="L56">		super.create();</span>
+		
+<span class="nc" id="L58">		Badges.loadGlobal();</span>
+<span class="nc" id="L59">		Journal.loadGlobal();</span>
+		
+<span class="nc" id="L61">		uiCamera.visible = false;</span>
+		
+<span class="nc" id="L63">		int w = Camera.main.width;</span>
+<span class="nc" id="L64">		int h = Camera.main.height;</span>
+		
+<span class="nc" id="L66">		Archs archs = new Archs();</span>
+<span class="nc" id="L67">		archs.setSize( w, h );</span>
+<span class="nc" id="L68">		add( archs );</span>
+		
+<span class="nc" id="L70">		ExitButton btnExit = new ExitButton();</span>
+<span class="nc" id="L71">		btnExit.setPos( w - btnExit.width(), 0 );</span>
+<span class="nc" id="L72">		add( btnExit );</span>
+		
+<span class="nc" id="L74">		IconTitle title = new IconTitle( Icons.ENTER.get(), Messages.get(this, &quot;title&quot;));</span>
+<span class="nc" id="L75">		title.setSize(200, 0);</span>
+<span class="nc" id="L76">		title.setPos(</span>
+<span class="nc" id="L77">				(w - title.reqWidth()) / 2f,</span>
+<span class="nc" id="L78">				(20 - title.height()) / 2f</span>
+		);
+<span class="nc" id="L80">		align(title);</span>
+<span class="nc" id="L81">		add(title);</span>
+		
+<span class="nc" id="L83">		ArrayList&lt;GamesInProgress.Info&gt; games = GamesInProgress.checkAll();</span>
+		
+<span class="nc" id="L85">		int slotCount = Math.min(GamesInProgress.MAX_SLOTS, games.size()+1);</span>
+<span class="nc" id="L86">		int slotGap = 10 - slotCount;</span>
+<span class="nc" id="L87">		int slotsHeight = slotCount*SLOT_HEIGHT + (slotCount-1)* slotGap;</span>
+<span class="nc" id="L88">		slotsHeight += 14;</span>
+
+<span class="nc bnc" id="L90" title="All 4 branches missed.">		while (slotGap &gt;= 2 &amp;&amp; slotsHeight &gt; (h-title.bottom()-2)){</span>
+<span class="nc" id="L91">			slotGap--;</span>
+<span class="nc" id="L92">			slotsHeight -= slotCount-1;</span>
+		}
+		
+<span class="nc" id="L95">		float yPos = (h - slotsHeight + title.bottom() + 2)/2f - 4;</span>
+<span class="nc" id="L96">		yPos = Math.max(yPos, title.bottom()+2);</span>
+<span class="nc" id="L97">		float slotLeft = (w - SLOT_WIDTH) / 2f;</span>
+		
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		for (GamesInProgress.Info game : games) {</span>
+<span class="nc" id="L100">			SaveSlotButton existingGame = new SaveSlotButton();</span>
+<span class="nc" id="L101">			existingGame.set(game.slot);</span>
+<span class="nc" id="L102">			existingGame.setRect(slotLeft, yPos, SLOT_WIDTH, SLOT_HEIGHT);</span>
+<span class="nc" id="L103">			yPos += SLOT_HEIGHT + slotGap;</span>
+<span class="nc" id="L104">			align(existingGame);</span>
+<span class="nc" id="L105">			add(existingGame);</span>
+			
+<span class="nc" id="L107">		}</span>
+		
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		if (games.size() &lt; GamesInProgress.MAX_SLOTS){</span>
+<span class="nc" id="L110">			SaveSlotButton newGame = new SaveSlotButton();</span>
+<span class="nc" id="L111">			newGame.set(GamesInProgress.firstEmpty());</span>
+<span class="nc" id="L112">			newGame.setRect(slotLeft, yPos, SLOT_WIDTH, SLOT_HEIGHT);</span>
+<span class="nc" id="L113">			yPos += SLOT_HEIGHT + slotGap;</span>
+<span class="nc" id="L114">			align(newGame);</span>
+<span class="nc" id="L115">			add(newGame);</span>
+		}
+		
+<span class="nc" id="L118">		GamesInProgress.curSlot = 0;</span>
+
+<span class="nc" id="L120">		String sortText = &quot;&quot;;</span>
+<span class="nc bnc" id="L121" title="All 3 branches missed.">		switch (SPDSettings.gamesInProgressSort()){</span>
+			case &quot;level&quot;:
+<span class="nc" id="L123">				sortText = Messages.get(this, &quot;sort_level&quot;);</span>
+<span class="nc" id="L124">				break;</span>
+			case &quot;last_played&quot;:
+<span class="nc" id="L126">				sortText = Messages.get(this, &quot;sort_recent&quot;);</span>
+				break;
+		}
+
+<span class="nc" id="L130">		StyledButton btnSort = new StyledButton(Chrome.Type.TOAST_TR, sortText, 6){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L133">				super.onClick();</span>
+
+<span class="nc bnc" id="L135" title="All 2 branches missed.">				if (SPDSettings.gamesInProgressSort().equals(&quot;level&quot;)){</span>
+<span class="nc" id="L136">					SPDSettings.gamesInProgressSort(&quot;last_played&quot;);</span>
+				} else {
+<span class="nc" id="L138">					SPDSettings.gamesInProgressSort(&quot;level&quot;);</span>
+				}
+
+<span class="nc" id="L141">				ShatteredPixelDungeon.seamlessResetScene();</span>
+<span class="nc" id="L142">			}</span>
+		};
+<span class="nc" id="L144">		btnSort.textColor(0xCCCCCC);</span>
+
+<span class="nc bnc" id="L146" title="All 2 branches missed.">		if (yPos + 10 &gt; Camera.main.height) {</span>
+<span class="nc" id="L147">			btnSort.setRect(slotLeft - btnSort.reqWidth() - 6, Camera.main.height - 14, btnSort.reqWidth() + 4, 12);</span>
+		} else {
+<span class="nc" id="L149">			btnSort.setRect(slotLeft, yPos, btnSort.reqWidth() + 4, 12);</span>
+		}
+<span class="nc bnc" id="L151" title="All 2 branches missed.">		if (games.size() &gt;= 2) add(btnSort);</span>
+
+<span class="nc" id="L153">		fadeIn();</span>
+		
+<span class="nc" id="L155">	}</span>
+
+	@Override
+	protected void onBackPressed() {
+<span class="nc" id="L159">		ShatteredPixelDungeon.switchNoFade( TitleScene.class );</span>
+<span class="nc" id="L160">	}</span>
+	
+	private static class SaveSlotButton extends Button {
+		
+		private NinePatch bg;
+		
+		private Image hero;
+		private RenderedTextBlock name;
+		private RenderedTextBlock lastPlayed;
+		
+		private Image steps;
+		private BitmapText depth;
+		private Image classIcon;
+		private BitmapText level;
+		
+		private int slot;
+		private boolean newGame;
+		
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L180">			super.createChildren();</span>
+			
+<span class="nc" id="L182">			bg = Chrome.get(Chrome.Type.TOAST_TR);</span>
+<span class="nc" id="L183">			add( bg );</span>
+			
+<span class="nc" id="L185">			name = PixelScene.renderTextBlock(9);</span>
+<span class="nc" id="L186">			add(name);</span>
+
+<span class="nc" id="L188">			lastPlayed = PixelScene.renderTextBlock(6);</span>
+<span class="nc" id="L189">			add(lastPlayed);</span>
+<span class="nc" id="L190">		}</span>
+		
+		public void set( int slot ){
+<span class="nc" id="L193">			this.slot = slot;</span>
+<span class="nc" id="L194">			GamesInProgress.Info info = GamesInProgress.check(slot);</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">			newGame = info == null;</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">			if (newGame){</span>
+<span class="nc" id="L197">				name.text( Messages.get(StartScene.class, &quot;new&quot;));</span>
+				
+<span class="nc bnc" id="L199" title="All 2 branches missed.">				if (hero != null){</span>
+<span class="nc" id="L200">					remove(hero);</span>
+<span class="nc" id="L201">					hero = null;</span>
+<span class="nc" id="L202">					remove(steps);</span>
+<span class="nc" id="L203">					steps = null;</span>
+<span class="nc" id="L204">					remove(depth);</span>
+<span class="nc" id="L205">					depth = null;</span>
+<span class="nc" id="L206">					remove(classIcon);</span>
+<span class="nc" id="L207">					classIcon = null;</span>
+<span class="nc" id="L208">					remove(level);</span>
+<span class="nc" id="L209">					level = null;</span>
+				}
+			} else {
+				
+<span class="nc bnc" id="L213" title="All 2 branches missed.">				if (info.subClass != HeroSubClass.NONE){</span>
+<span class="nc" id="L214">					name.text(Messages.titleCase(info.subClass.title()));</span>
+				} else {
+<span class="nc" id="L216">					name.text(Messages.titleCase(info.heroClass.title()));</span>
+				}
+				
+<span class="nc bnc" id="L219" title="All 2 branches missed.">				if (hero == null){</span>
+<span class="nc" id="L220">					hero = new Image(info.heroClass.spritesheet(), 0, 15*info.armorTier, 12, 15);</span>
+<span class="nc" id="L221">					add(hero);</span>
+					
+<span class="nc" id="L223">					steps = new Image(Icons.get(Icons.STAIRS));</span>
+<span class="nc" id="L224">					add(steps);</span>
+<span class="nc" id="L225">					depth = new BitmapText(PixelScene.pixelFont);</span>
+<span class="nc" id="L226">					add(depth);</span>
+					
+<span class="nc" id="L228">					classIcon = new Image(Icons.get(info.heroClass));</span>
+<span class="nc" id="L229">					add(classIcon);</span>
+<span class="nc" id="L230">					level = new BitmapText(PixelScene.pixelFont);</span>
+<span class="nc" id="L231">					add(level);</span>
+				} else {
+<span class="nc" id="L233">					hero.copy(new Image(info.heroClass.spritesheet(), 0, 15*info.armorTier, 12, 15));</span>
+					
+<span class="nc" id="L235">					classIcon.copy(Icons.get(info.heroClass));</span>
+				}
+
+<span class="nc" id="L238">				long diff = Game.realTime - info.lastPlayed;</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">				if (diff &gt; 99L * 30 * 24 * 60 * 60_000){</span>
+<span class="nc" id="L240">					lastPlayed.text(&quot; &quot;); //show no text for &gt;99 months ago</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">				} else if (diff &lt; 60_000){</span>
+<span class="nc" id="L242">					lastPlayed.text(Messages.get(StartScene.class, &quot;one_minute_ago&quot;));</span>
+<span class="nc bnc" id="L243" title="All 2 branches missed.">				} else if (diff &lt; 2 * 60 * 60_000){</span>
+<span class="nc" id="L244">					lastPlayed.text(Messages.get(StartScene.class, &quot;minutes_ago&quot;, diff / 60_000));</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">				} else if (diff &lt; 2 * 24 * 60 * 60_000){</span>
+<span class="nc" id="L246">					lastPlayed.text(Messages.get(StartScene.class, &quot;hours_ago&quot;, diff / (60 * 60_000)));</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">				} else if (diff &lt; 2L * 30 * 24 * 60 * 60_000){</span>
+<span class="nc" id="L248">					lastPlayed.text(Messages.get(StartScene.class, &quot;days_ago&quot;, diff / (24 * 60 * 60_000)));</span>
+				} else {
+<span class="nc" id="L250">					lastPlayed.text(Messages.get(StartScene.class, &quot;months_ago&quot;, diff / (30L * 24 * 60 * 60_000)));</span>
+				}
+				
+<span class="nc" id="L253">				depth.text(Integer.toString(info.depth));</span>
+<span class="nc" id="L254">				depth.measure();</span>
+				
+<span class="nc" id="L256">				level.text(Integer.toString(info.level));</span>
+<span class="nc" id="L257">				level.measure();</span>
+				
+<span class="nc bnc" id="L259" title="All 2 branches missed.">				if (info.challenges &gt; 0){</span>
+<span class="nc" id="L260">					name.hardlight(Window.TITLE_COLOR);</span>
+<span class="nc" id="L261">					lastPlayed.hardlight(Window.TITLE_COLOR);</span>
+<span class="nc" id="L262">					depth.hardlight(Window.TITLE_COLOR);</span>
+<span class="nc" id="L263">					level.hardlight(Window.TITLE_COLOR);</span>
+				} else {
+<span class="nc" id="L265">					name.resetColor();</span>
+<span class="nc" id="L266">					lastPlayed.resetColor();</span>
+<span class="nc" id="L267">					depth.resetColor();</span>
+<span class="nc" id="L268">					level.resetColor();</span>
+				}
+
+<span class="nc bnc" id="L271" title="All 2 branches missed.">				if (info.daily){</span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">					if (info.dailyReplay){</span>
+<span class="nc" id="L273">						steps.hardlight(1f, 0.5f, 2f);</span>
+					} else {
+<span class="nc" id="L275">						steps.hardlight(0.5f, 1f, 2f);</span>
+					}
+<span class="nc bnc" id="L277" title="All 2 branches missed.">				} else if (!info.customSeed.isEmpty()){</span>
+<span class="nc" id="L278">					steps.hardlight(1f, 1.5f, 0.67f);</span>
+				}
+				
+			}
+			
+<span class="nc" id="L283">			layout();</span>
+<span class="nc" id="L284">		}</span>
+		
+		@Override
+		protected void layout() {
+<span class="nc" id="L288">			super.layout();</span>
+			
+<span class="nc" id="L290">			bg.x = x;</span>
+<span class="nc" id="L291">			bg.y = y;</span>
+<span class="nc" id="L292">			bg.size( width, height );</span>
+			
+<span class="nc bnc" id="L294" title="All 2 branches missed.">			if (hero != null){</span>
+<span class="nc" id="L295">				hero.x = x+8;</span>
+<span class="nc" id="L296">				hero.y = y + (height - hero.height())/2f;</span>
+<span class="nc" id="L297">				align(hero);</span>
+				
+<span class="nc" id="L299">				name.setPos(</span>
+<span class="nc" id="L300">						hero.x + hero.width() + 6,</span>
+<span class="nc" id="L301">						y + (height - name.height() - lastPlayed.height() - 2)/2f</span>
+				);
+<span class="nc" id="L303">				align(name);</span>
+
+<span class="nc" id="L305">				lastPlayed.setPos(</span>
+<span class="nc" id="L306">						hero.x + hero.width() + 6,</span>
+<span class="nc" id="L307">						name.bottom()+2</span>
+				);
+				
+<span class="nc" id="L310">				classIcon.x = x + width - 24 + (16 - classIcon.width())/2f;</span>
+<span class="nc" id="L311">				classIcon.y = y + (height - classIcon.height())/2f;</span>
+<span class="nc" id="L312">				align(classIcon);</span>
+				
+<span class="nc" id="L314">				level.x = classIcon.x + (classIcon.width() - level.width()) / 2f;</span>
+<span class="nc" id="L315">				level.y = classIcon.y + (classIcon.height() - level.height()) / 2f + 1;</span>
+<span class="nc" id="L316">				align(level);</span>
+				
+<span class="nc" id="L318">				steps.x = x + width - 40 + (16 - steps.width())/2f;</span>
+<span class="nc" id="L319">				steps.y = y + (height - steps.height())/2f;</span>
+<span class="nc" id="L320">				align(steps);</span>
+				
+<span class="nc" id="L322">				depth.x = steps.x + (steps.width() - depth.width()) / 2f;</span>
+<span class="nc" id="L323">				depth.y = steps.y + (steps.height() - depth.height()) / 2f + 1;</span>
+<span class="nc" id="L324">				align(depth);</span>
+				
+			} else {
+<span class="nc" id="L327">				name.setPos(</span>
+<span class="nc" id="L328">						x + (width - name.width())/2f,</span>
+<span class="nc" id="L329">						y + (height - name.height())/2f</span>
+				);
+<span class="nc" id="L331">				align(name);</span>
+			}
+			
+			
+<span class="nc" id="L335">		}</span>
+		
+		@Override
+		protected void onClick() {
+<span class="nc bnc" id="L339" title="All 2 branches missed.">			if (newGame) {</span>
+<span class="nc" id="L340">				GamesInProgress.selectedClass = null;</span>
+<span class="nc" id="L341">				GamesInProgress.curSlot = slot;</span>
+<span class="nc" id="L342">				ShatteredPixelDungeon.switchScene(HeroSelectScene.class);</span>
+			} else {
+<span class="nc" id="L344">				ShatteredPixelDungeon.scene().add( new WndGameInProgress(slot));</span>
+			}
+<span class="nc" id="L346">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

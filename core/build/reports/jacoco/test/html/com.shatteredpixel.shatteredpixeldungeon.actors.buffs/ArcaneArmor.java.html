@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ArcaneArmor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.buffs</a> &gt; <span class="el_source">ArcaneArmor.java</span></div><h1>ArcaneArmor.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.buffs;
+
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.watabou.noosa.Image;
+import com.watabou.utils.Bundle;
+
+//A magical version of barkskin, essentially
+<span class="nc" id="L31">public class ArcaneArmor extends Buff {</span>
+	
+	{
+<span class="nc" id="L34">		type = buffType.POSITIVE;</span>
+	}
+	
+<span class="nc" id="L37">	private int level = 0;</span>
+<span class="nc" id="L38">	private int interval = 1;</span>
+	
+	@Override
+	public boolean act() {
+<span class="nc bnc" id="L42" title="All 2 branches missed.">		if (target.isAlive()) {</span>
+			
+<span class="nc" id="L44">			spend( interval );</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">			if (--level &lt;= 0) {</span>
+<span class="nc" id="L46">				detach();</span>
+			}
+			
+		} else {
+			
+<span class="nc" id="L51">			detach();</span>
+			
+		}
+		
+<span class="nc" id="L55">		return true;</span>
+	}
+	
+	public int level() {
+<span class="nc" id="L59">		return level;</span>
+	}
+	
+	public void set( int value, int time ) {
+		//decide whether to override, preferring high value + low interval
+<span class="nc bnc" id="L64" title="All 2 branches missed.">		if (Math.sqrt(interval)*level &lt; Math.sqrt(time)*value) {</span>
+<span class="nc" id="L65">			level = value;</span>
+<span class="nc" id="L66">			interval = time;</span>
+<span class="nc" id="L67">			spend(time - cooldown() - 1);</span>
+		}
+<span class="nc" id="L69">	}</span>
+
+	public void delay( float value ){
+<span class="nc" id="L72">		spend(value);</span>
+<span class="nc" id="L73">	}</span>
+	
+	@Override
+	public int icon() {
+<span class="nc" id="L77">		return BuffIndicator.ARMOR;</span>
+	}
+	
+	@Override
+	public void tintIcon(Image icon) {
+<span class="nc" id="L82">		icon.hardlight(1f, 0.5f, 2f);</span>
+<span class="nc" id="L83">	}</span>
+
+	@Override
+	public float iconFadePercent() {
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		if (target instanceof Hero){</span>
+<span class="nc" id="L88">			float max = ((Hero) target).lvl/2 + 5;</span>
+<span class="nc" id="L89">			return (max-level)/max;</span>
+		}
+<span class="nc" id="L91">		return 0;</span>
+	}
+
+	@Override
+	public String iconTextDisplay() {
+<span class="nc" id="L96">		return Integer.toString(level);</span>
+	}
+	
+	@Override
+	public String desc() {
+<span class="nc" id="L101">		return Messages.get(this, &quot;desc&quot;, level, dispTurns(visualcooldown()));</span>
+	}
+	
+	private static final String LEVEL	    = &quot;level&quot;;
+	private static final String INTERVAL    = &quot;interval&quot;;
+	
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L109">		super.storeInBundle( bundle );</span>
+<span class="nc" id="L110">		bundle.put( INTERVAL, interval );</span>
+<span class="nc" id="L111">		bundle.put( LEVEL, level );</span>
+<span class="nc" id="L112">	}</span>
+	
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L116">		super.restoreFromBundle( bundle );</span>
+<span class="nc" id="L117">		interval = bundle.getInt( INTERVAL );</span>
+<span class="nc" id="L118">		level = bundle.getInt( LEVEL );</span>
+<span class="nc" id="L119">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

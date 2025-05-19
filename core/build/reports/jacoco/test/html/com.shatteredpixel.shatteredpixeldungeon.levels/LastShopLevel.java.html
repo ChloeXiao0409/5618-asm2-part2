@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LastShopLevel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels</a> &gt; <span class="el_source">LastShopLevel.java</span></div><h1>LastShopLevel.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Bones;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.levels.builders.Builder;
+import com.shatteredpixel.shatteredpixeldungeon.levels.builders.LineBuilder;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.CityPainter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.entrance.EntranceRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.exit.ExitRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.ImpShopRoom;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.watabou.noosa.Group;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L46">public class LastShopLevel extends RegularLevel {</span>
+	
+	{
+<span class="nc" id="L49">		color1 = 0x4b6636;</span>
+<span class="nc" id="L50">		color2 = 0xf2f2f2;</span>
+<span class="nc" id="L51">	}</span>
+	
+	@Override
+	public String tilesTex() {
+<span class="nc" id="L55">		return Assets.Environment.TILES_CITY;</span>
+	}
+	
+	@Override
+	public String waterTex() {
+<span class="nc" id="L60">		return Assets.Environment.WATER_CITY;</span>
+	}
+	
+	@Override
+	protected boolean build() {
+<span class="nc" id="L65">		feeling = Feeling.CHASM;</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (super.build()){</span>
+			
+<span class="nc bnc" id="L68" title="All 2 branches missed.">			for (int i=0; i &lt; length(); i++) {</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">				if (map[i] == Terrain.SECRET_DOOR) {</span>
+<span class="nc" id="L70">					map[i] = Terrain.DOOR;</span>
+				}
+			}
+			
+<span class="nc" id="L74">			return true;</span>
+		} else {
+<span class="nc" id="L76">			return false;</span>
+		}
+	}
+	
+	@Override
+	protected ArrayList&lt;Room&gt; initRooms() {
+<span class="nc" id="L82">		ArrayList&lt;Room&gt; rooms = new ArrayList&lt;&gt;();</span>
+		
+<span class="nc" id="L84">		rooms.add ( roomEntrance = new EntranceRoom());</span>
+<span class="nc" id="L85">		rooms.add( new ImpShopRoom() );</span>
+<span class="nc" id="L86">		rooms.add( roomExit = new ExitRoom());</span>
+		
+<span class="nc" id="L88">		return rooms;</span>
+	}
+	
+	@Override
+	protected Builder builder() {
+<span class="nc" id="L93">		return new LineBuilder()</span>
+<span class="nc" id="L94">				.setPathVariance(0f)</span>
+<span class="nc" id="L95">				.setPathLength(1f, new float[]{1})</span>
+<span class="nc" id="L96">				.setTunnelLength(new float[]{0, 0, 1}, new float[]{1});</span>
+	}
+	
+	@Override
+	protected Painter painter() {
+<span class="nc" id="L101">		return new CityPainter()</span>
+<span class="nc" id="L102">				.setWater( 0.10f, 4 )</span>
+<span class="nc" id="L103">				.setGrass( 0.10f, 3 );</span>
+	}
+	
+	@Override
+	public Mob createMob() {
+<span class="nc" id="L108">		return null;</span>
+	}
+	
+	@Override
+	protected void createMobs() {
+<span class="nc" id="L113">	}</span>
+	
+	public Actor addRespawner() {
+<span class="nc" id="L116">		return null;</span>
+	}
+	
+	@Override
+	protected void createItems() {
+<span class="nc" id="L121">		Random.pushGenerator(Random.Long());</span>
+<span class="nc" id="L122">			ArrayList&lt;Item&gt; bonesItems = Bones.get();</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">			if (bonesItems != null) {</span>
+				int pos;
+				do {
+<span class="nc" id="L126">					pos = pointToCell(roomEntrance.random());</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">				} while (pos == entrance());</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">				for (Item i : bonesItems) {</span>
+<span class="nc" id="L129">					drop(i, pos).setHauntedIfCursed().type = Heap.Type.REMAINS;</span>
+<span class="nc" id="L130">				}</span>
+			}
+<span class="nc" id="L132">		Random.popGenerator();</span>
+<span class="nc" id="L133">	}</span>
+	
+	@Override
+	public int randomRespawnCell( Char ch ) {
+<span class="nc" id="L137">		ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">		for (Point p : roomEntrance.getPoints()){</span>
+<span class="nc" id="L139">			int cell = pointToCell(p);</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">			if (passable[cell]</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">					&amp;&amp; Actor.findChar(cell) == null</span>
+<span class="nc bnc" id="L142" title="All 4 branches missed.">					&amp;&amp; (!Char.hasProp(ch, Char.Property.LARGE) || openSpace[cell])){</span>
+<span class="nc" id="L143">				candidates.add(cell);</span>
+			}
+<span class="nc" id="L145">		}</span>
+
+<span class="nc bnc" id="L147" title="All 2 branches missed.">		if (candidates.isEmpty()){</span>
+<span class="nc" id="L148">			return -1;</span>
+		} else {
+<span class="nc" id="L150">			return Random.element(candidates);</span>
+		}
+	}
+	
+	@Override
+	public String tileName( int tile ) {
+<span class="nc bnc" id="L156" title="All 3 branches missed.">		switch (tile) {</span>
+			case Terrain.WATER:
+<span class="nc" id="L158">				return Messages.get(CityLevel.class, &quot;water_name&quot;);</span>
+			case Terrain.HIGH_GRASS:
+<span class="nc" id="L160">				return Messages.get(CityLevel.class, &quot;high_grass_name&quot;);</span>
+			default:
+<span class="nc" id="L162">				return super.tileName( tile );</span>
+		}
+	}
+	
+	@Override
+	public String tileDesc(int tile) {
+<span class="nc bnc" id="L168" title="All 7 branches missed.">		switch (tile) {</span>
+			case Terrain.ENTRANCE:
+			case Terrain.ENTRANCE_SP:
+<span class="nc" id="L171">				return Messages.get(CityLevel.class, &quot;entrance_desc&quot;);</span>
+			case Terrain.EXIT:
+<span class="nc" id="L173">				return Messages.get(CityLevel.class, &quot;exit_desc&quot;);</span>
+			case Terrain.WALL_DECO:
+			case Terrain.EMPTY_DECO:
+<span class="nc" id="L176">				return Messages.get(CityLevel.class, &quot;deco_desc&quot;);</span>
+			case Terrain.EMPTY_SP:
+<span class="nc" id="L178">				return Messages.get(CityLevel.class, &quot;sp_desc&quot;);</span>
+			case Terrain.STATUE:
+			case Terrain.STATUE_SP:
+<span class="nc" id="L181">				return Messages.get(CityLevel.class, &quot;statue_desc&quot;);</span>
+			case Terrain.BOOKSHELF:
+<span class="nc" id="L183">				return Messages.get(CityLevel.class, &quot;bookshelf_desc&quot;);</span>
+			default:
+<span class="nc" id="L185">				return super.tileDesc( tile );</span>
+		}
+	}
+
+	@Override
+	public Group addVisuals( ) {
+<span class="nc" id="L191">		super.addVisuals();</span>
+<span class="nc" id="L192">		CityLevel.addCityVisuals(this, visuals);</span>
+<span class="nc" id="L193">		return visuals;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WelcomeScene.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.scenes</a> &gt; <span class="el_source">WelcomeScene.java</span></div><h1>WelcomeScene.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.scenes;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
+import com.shatteredpixel.shatteredpixeldungeon.Rankings;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.effects.BannerSprites;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Fireball;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Document;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Journal;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Archs;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndError;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndHardNotification;
+import com.watabou.glwrap.Blending;
+import com.watabou.input.ControllerHandler;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.ColorBlock;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Music;
+import com.watabou.utils.FileUtils;
+
+import java.util.Collections;
+
+<span class="nc" id="L54">public class WelcomeScene extends PixelScene {</span>
+
+	private static final int LATEST_UPDATE = ShatteredPixelDungeon.v3_0_0;
+
+	//used so that the game does not keep showing the window forever if cleaning fails
+<span class="nc" id="L59">	private static boolean triedCleaningTemp = false;</span>
+
+	@Override
+	public void create() {
+<span class="nc" id="L63">		super.create();</span>
+
+<span class="nc" id="L65">		final int previousVersion = SPDSettings.version();</span>
+
+<span class="nc bnc" id="L67" title="All 4 branches missed.">		if (!triedCleaningTemp &amp;&amp; FileUtils.cleanTempFiles()){</span>
+<span class="nc" id="L68">			add(new WndHardNotification(Icons.get(Icons.WARNING),</span>
+<span class="nc" id="L69">					Messages.get(WndError.class, &quot;title&quot;),</span>
+<span class="nc" id="L70">					Messages.get(this, &quot;save_warning&quot;),</span>
+<span class="nc" id="L71">					Messages.get(this, &quot;continue&quot;),</span>
+<span class="nc" id="L72">					5){</span>
+				@Override
+				public void hide() {
+<span class="nc" id="L75">					super.hide();</span>
+<span class="nc" id="L76">					triedCleaningTemp = true;</span>
+<span class="nc" id="L77">					ShatteredPixelDungeon.resetScene();</span>
+<span class="nc" id="L78">				}</span>
+			});
+<span class="nc" id="L80">			return;</span>
+		}
+
+<span class="nc bnc" id="L83" title="All 4 branches missed.">		if (ShatteredPixelDungeon.versionCode == previousVersion &amp;&amp; !SPDSettings.intro()) {</span>
+<span class="nc" id="L84">			ShatteredPixelDungeon.switchNoFade(TitleScene.class);</span>
+<span class="nc" id="L85">			return;</span>
+		}
+
+<span class="nc" id="L88">		Music.INSTANCE.playTracks(</span>
+				new String[]{Assets.Music.THEME_1, Assets.Music.THEME_2},
+				new float[]{1, 1},
+				false);
+
+<span class="nc" id="L93">		uiCamera.visible = false;</span>
+
+<span class="nc" id="L95">		int w = Camera.main.width;</span>
+<span class="nc" id="L96">		int h = Camera.main.height;</span>
+
+<span class="nc" id="L98">		Archs archs = new Archs();</span>
+<span class="nc" id="L99">		archs.setSize( w, h );</span>
+<span class="nc" id="L100">		add( archs );</span>
+
+		//darkens the arches
+<span class="nc" id="L103">		add(new ColorBlock(w, h, 0x88000000));</span>
+
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		Image title = BannerSprites.get( landscape() ? BannerSprites.Type.TITLE_LAND : BannerSprites.Type.TITLE_PORT);</span>
+<span class="nc" id="L106">		add( title );</span>
+
+<span class="nc" id="L108">		float topRegion = Math.max(title.height - 6, h*0.45f);</span>
+
+<span class="nc" id="L110">		title.x = (w - title.width()) / 2f;</span>
+<span class="nc" id="L111">		title.y = 2 + (topRegion - title.height()) / 2f;</span>
+
+<span class="nc" id="L113">		align(title);</span>
+
+<span class="nc bnc" id="L115" title="All 2 branches missed.">		if (landscape()){</span>
+<span class="nc" id="L116">			placeTorch(title.x + 30, title.y + 35);</span>
+<span class="nc" id="L117">			placeTorch(title.x + title.width - 30, title.y + 35);</span>
+		} else {
+<span class="nc" id="L119">			placeTorch(title.x + 16, title.y + 70);</span>
+<span class="nc" id="L120">			placeTorch(title.x + title.width - 16, title.y + 70);</span>
+		}
+
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		Image signs = new Image(BannerSprites.get( landscape() ? BannerSprites.Type.TITLE_GLOW_LAND : BannerSprites.Type.TITLE_GLOW_PORT)){</span>
+<span class="nc" id="L124">			private float time = 0;</span>
+			@Override
+			public void update() {
+<span class="nc" id="L127">				super.update();</span>
+<span class="nc" id="L128">				am = Math.max(0f, (float)Math.sin( time += Game.elapsed ));</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">				if (time &gt;= 1.5f*Math.PI) time = 0;</span>
+<span class="nc" id="L130">			}</span>
+			@Override
+			public void draw() {
+<span class="nc" id="L133">				Blending.setLightMode();</span>
+<span class="nc" id="L134">				super.draw();</span>
+<span class="nc" id="L135">				Blending.setNormalMode();</span>
+<span class="nc" id="L136">			}</span>
+		};
+<span class="nc" id="L138">		signs.x = title.x + (title.width() - signs.width())/2f;</span>
+<span class="nc" id="L139">		signs.y = title.y;</span>
+<span class="nc" id="L140">		add( signs );</span>
+		
+<span class="nc" id="L142">		StyledButton okay = new StyledButton(Chrome.Type.GREY_BUTTON_TR, Messages.get(this, &quot;continue&quot;)){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L145">				super.onClick();</span>
+<span class="nc bnc" id="L146" title="All 4 branches missed.">				if (previousVersion == 0 || SPDSettings.intro()){</span>
+
+<span class="nc bnc" id="L148" title="All 2 branches missed.">					if (previousVersion &gt; 0){</span>
+<span class="nc" id="L149">						updateVersion(previousVersion);</span>
+					}
+
+<span class="nc" id="L152">					SPDSettings.version(ShatteredPixelDungeon.versionCode);</span>
+<span class="nc" id="L153">					GamesInProgress.selectedClass = null;</span>
+<span class="nc" id="L154">					GamesInProgress.curSlot = GamesInProgress.firstEmpty();</span>
+<span class="nc bnc" id="L155" title="All 4 branches missed.">					if (GamesInProgress.curSlot == -1 || Rankings.INSTANCE.totalNumber &gt; 0){</span>
+<span class="nc" id="L156">						SPDSettings.intro(false);</span>
+<span class="nc" id="L157">						ShatteredPixelDungeon.switchScene(TitleScene.class);</span>
+					} else {
+<span class="nc" id="L159">						ShatteredPixelDungeon.switchScene(HeroSelectScene.class);</span>
+					}
+				} else {
+<span class="nc" id="L162">					updateVersion(previousVersion);</span>
+<span class="nc" id="L163">					ShatteredPixelDungeon.switchScene(TitleScene.class);</span>
+				}
+<span class="nc" id="L165">			}</span>
+		};
+
+<span class="nc bnc" id="L168" title="All 2 branches missed.">		float buttonY = Math.min(topRegion + (PixelScene.landscape() ? 60 : 120), h - 24);</span>
+
+<span class="nc bnc" id="L170" title="All 2 branches missed.">		float buttonAreaWidth = landscape() ? PixelScene.MIN_WIDTH_L-6 : PixelScene.MIN_WIDTH_P-2;</span>
+<span class="nc" id="L171">		float btnAreaLeft = (Camera.main.width - buttonAreaWidth) / 2f;</span>
+<span class="nc bnc" id="L172" title="All 4 branches missed.">		if (previousVersion != 0 &amp;&amp; !SPDSettings.intro()){</span>
+<span class="nc" id="L173">			StyledButton changes = new StyledButton(Chrome.Type.GREY_BUTTON_TR, Messages.get(TitleScene.class, &quot;changes&quot;)){</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L176">					super.onClick();</span>
+<span class="nc" id="L177">					updateVersion(previousVersion);</span>
+<span class="nc" id="L178">					ShatteredPixelDungeon.switchScene(ChangesScene.class);</span>
+<span class="nc" id="L179">				}</span>
+			};
+<span class="nc" id="L181">			okay.setRect(btnAreaLeft, buttonY, (buttonAreaWidth/2)-1, 20);</span>
+<span class="nc" id="L182">			add(okay);</span>
+
+<span class="nc" id="L184">			changes.setRect(okay.right()+1, buttonY, okay.width(), 20);</span>
+<span class="nc" id="L185">			changes.icon(Icons.get(Icons.CHANGES));</span>
+<span class="nc" id="L186">			add(changes);</span>
+<span class="nc" id="L187">		} else {</span>
+<span class="nc" id="L188">			okay.text(Messages.get(TitleScene.class, &quot;enter&quot;));</span>
+<span class="nc" id="L189">			okay.setRect(btnAreaLeft, buttonY, buttonAreaWidth, 20);</span>
+<span class="nc" id="L190">			okay.icon(Icons.get(Icons.ENTER));</span>
+<span class="nc" id="L191">			add(okay);</span>
+		}
+
+<span class="nc" id="L194">		RenderedTextBlock text = PixelScene.renderTextBlock(6);</span>
+		String message;
+<span class="nc bnc" id="L196" title="All 4 branches missed.">		if (previousVersion == 0 || SPDSettings.intro()) {</span>
+<span class="nc" id="L197">			message = Document.INTROS.pageBody(0);</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">		} else if (previousVersion &lt;= ShatteredPixelDungeon.versionCode) {</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">			if (previousVersion &lt; LATEST_UPDATE){</span>
+<span class="nc" id="L200">				message = Messages.get(this, &quot;update_intro&quot;);</span>
+<span class="nc" id="L201">				message += &quot;\n\n&quot; + Messages.get(this, &quot;update_msg&quot;);</span>
+			} else {
+				//TODO: change the messages here in accordance with the type of patch.
+<span class="nc" id="L204">				message = Messages.get(this, &quot;patch_intro&quot;);</span>
+<span class="nc" id="L205">				message += &quot;\n&quot;;</span>
+				//message += &quot;\n&quot; + Messages.get(this, &quot;patch_balance&quot;);
+<span class="nc" id="L207">				message += &quot;\n&quot; + Messages.get(this, &quot;patch_bugfixes&quot;);</span>
+<span class="nc" id="L208">				message += &quot;\n&quot; + Messages.get(this, &quot;patch_translations&quot;);</span>
+
+			}
+
+		} else {
+<span class="nc" id="L213">			message = Messages.get(this, &quot;what_msg&quot;);</span>
+		}
+
+<span class="nc" id="L216">		text.text(message, Math.min(w-20, 300));</span>
+<span class="nc" id="L217">		float titleBottom = title.y + title.height();</span>
+<span class="nc" id="L218">		float textSpace = okay.top() - titleBottom - 4;</span>
+<span class="nc" id="L219">		text.setPos((w - text.width()) / 2f, (titleBottom + 2) + (textSpace - text.height())/2);</span>
+<span class="nc" id="L220">		add(text);</span>
+
+<span class="nc bnc" id="L222" title="All 4 branches missed.">		if (SPDSettings.intro() &amp;&amp; ControllerHandler.isControllerConnected()){</span>
+<span class="nc" id="L223">			addToFront(new WndHardNotification(Icons.CONTROLLER.get(),</span>
+<span class="nc" id="L224">					Messages.get(WelcomeScene.class, &quot;controller_title&quot;),</span>
+<span class="nc" id="L225">					Messages.get(WelcomeScene.class, &quot;controller_body&quot;),</span>
+<span class="nc" id="L226">					Messages.get(WelcomeScene.class, &quot;controller_okay&quot;),</span>
+<span class="nc" id="L227">					0){</span>
+				@Override
+				public void onBackPressed() {
+					//do nothing, must press the okay button
+<span class="nc" id="L231">				}</span>
+			});
+		}
+<span class="nc" id="L234">	}</span>
+
+	private void placeTorch( float x, float y ) {
+<span class="nc" id="L237">		Fireball fb = new Fireball();</span>
+<span class="nc" id="L238">		fb.x = x - fb.width()/2f;</span>
+<span class="nc" id="L239">		fb.y = y - fb.height();</span>
+
+<span class="nc" id="L241">		align(fb);</span>
+<span class="nc" id="L242">		add( fb );</span>
+<span class="nc" id="L243">	}</span>
+
+	private void updateVersion(int previousVersion){
+
+		//update rankings, to update any data which may be outdated
+<span class="nc bnc" id="L248" title="All 2 branches missed.">		if (previousVersion &lt; LATEST_UPDATE){</span>
+
+<span class="nc" id="L250">			Badges.loadGlobal();</span>
+<span class="nc" id="L251">			Journal.loadGlobal();</span>
+
+			//pre-unlock Cleric for those who already have a win
+<span class="nc bnc" id="L254" title="All 2 branches missed.">			if (previousVersion &lt;= ShatteredPixelDungeon.v2_5_4){</span>
+<span class="nc bnc" id="L255" title="All 4 branches missed.">				if (Badges.isUnlocked(Badges.Badge.VICTORY) &amp;&amp; !Badges.isUnlocked(Badges.Badge.UNLOCK_CLERIC)){</span>
+<span class="nc" id="L256">					Badges.unlock(Badges.Badge.UNLOCK_CLERIC);</span>
+				}
+			}
+
+<span class="nc bnc" id="L260" title="All 2 branches missed.">			if (previousVersion &lt;= ShatteredPixelDungeon.v2_4_2){</span>
+				//Dwarf King's final journal entry changed, set it as un-read
+<span class="nc bnc" id="L262" title="All 2 branches missed.">				if (Document.HALLS_KING.isPageRead(Document.KING_ATTRITION)){</span>
+<span class="nc" id="L263">					Document.HALLS_KING.unreadPage(Document.KING_ATTRITION);</span>
+				}
+			}
+
+			try {
+<span class="nc" id="L268">				Rankings.INSTANCE.load();</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">				for (Rankings.Record rec : Rankings.INSTANCE.records.toArray(new Rankings.Record[0])){</span>
+					try {
+<span class="nc" id="L271">						Rankings.INSTANCE.loadGameData(rec);</span>
+<span class="nc" id="L272">						Rankings.INSTANCE.saveGameData(rec);</span>
+<span class="nc" id="L273">					} catch (Exception e) {</span>
+						//if we encounter a fatal per-record error, then clear that record's data
+<span class="nc" id="L275">						rec.gameData = null;</span>
+<span class="nc" id="L276">						Game.reportException( new RuntimeException(&quot;Rankings Updating Failed!&quot;,e));</span>
+<span class="nc" id="L277">					}</span>
+				}
+<span class="nc bnc" id="L279" title="All 2 branches missed.">				if (Rankings.INSTANCE.latestDaily != null){</span>
+					try {
+<span class="nc" id="L281">						Rankings.INSTANCE.loadGameData(Rankings.INSTANCE.latestDaily);</span>
+<span class="nc" id="L282">						Rankings.INSTANCE.saveGameData(Rankings.INSTANCE.latestDaily);</span>
+<span class="nc" id="L283">					} catch (Exception e) {</span>
+						//if we encounter a fatal per-record error, then clear that record's data
+<span class="nc" id="L285">						Rankings.INSTANCE.latestDaily.gameData = null;</span>
+<span class="nc" id="L286">						Game.reportException( new RuntimeException(&quot;Rankings Updating Failed!&quot;,e));</span>
+<span class="nc" id="L287">					}</span>
+				}
+<span class="nc" id="L289">				Collections.sort(Rankings.INSTANCE.records, Rankings.scoreComparator);</span>
+<span class="nc" id="L290">				Rankings.INSTANCE.save();</span>
+<span class="nc" id="L291">			} catch (Exception e) {</span>
+				//if we encounter a fatal error, then just clear the rankings
+<span class="nc" id="L293">				FileUtils.deleteFile( Rankings.RANKINGS_FILE );</span>
+<span class="nc" id="L294">				Game.reportException( new RuntimeException(&quot;Rankings Updating Failed!&quot;,e));</span>
+<span class="nc" id="L295">			}</span>
+<span class="nc" id="L296">			Dungeon.daily = Dungeon.dailyReplay = false;</span>
+
+<span class="nc bnc" id="L298" title="All 2 branches missed.">			if (previousVersion &lt;= ShatteredPixelDungeon.v2_3_2){</span>
+<span class="nc" id="L299">				Document.ADVENTURERS_GUIDE.findPage(Document.GUIDE_ALCHEMY);</span>
+			}
+
+<span class="nc" id="L302">			Badges.saveGlobal(true);</span>
+<span class="nc" id="L303">			Journal.saveGlobal(true);</span>
+
+		}
+
+<span class="nc" id="L307">		SPDSettings.version(ShatteredPixelDungeon.versionCode);</span>
+<span class="nc" id="L308">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

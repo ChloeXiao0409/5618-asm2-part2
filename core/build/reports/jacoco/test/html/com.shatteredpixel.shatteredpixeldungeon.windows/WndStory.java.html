@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WndStory.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.windows</a> &gt; <span class="el_source">WndStory.java</span></div><h1>WndStory.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.windows;
+
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.watabou.input.PointerEvent;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.PointerArea;
+
+public class WndStory extends Window {
+
+	private static final int WIDTH_P = 125;
+	private static final int WIDTH_L = 180;
+	private static final int MARGIN = 2;
+
+	private IconTitle ttl;
+	private RenderedTextBlock tf;
+	
+	private float appearDelay;
+	private float disappearDelay;
+
+	public WndStory( String text ) {
+<span class="nc" id="L46">		this( null, null, text );</span>
+<span class="nc" id="L47">	}</span>
+	
+	public WndStory(Image icon, String title, String text ) {
+<span class="nc" id="L50">		super( 0, 0, Chrome.get( Chrome.Type.SCROLL ) );</span>
+
+<span class="nc bnc" id="L52" title="All 2 branches missed.">		int width = PixelScene.landscape() ? WIDTH_L - MARGIN * 2: WIDTH_P - MARGIN *2;</span>
+
+<span class="nc" id="L54">		float y = MARGIN;</span>
+<span class="nc bnc" id="L55" title="All 4 branches missed.">		if (icon != null &amp;&amp; title != null){</span>
+<span class="nc" id="L56">			ttl = new IconTitle(icon, title);</span>
+<span class="nc" id="L57">			ttl.setRect(MARGIN, y, width-2*MARGIN, 0);</span>
+<span class="nc" id="L58">			y = ttl.bottom()+MARGIN;</span>
+<span class="nc" id="L59">			add(ttl);</span>
+<span class="nc" id="L60">			ttl.tfLabel.invert();</span>
+		}
+		
+<span class="nc" id="L63">		tf = PixelScene.renderTextBlock( text, 6 );</span>
+<span class="nc" id="L64">		tf.maxWidth(width);</span>
+<span class="nc" id="L65">		tf.invert();</span>
+<span class="nc" id="L66">		tf.setPos(MARGIN, y);</span>
+<span class="nc" id="L67">		add( tf );</span>
+
+<span class="nc" id="L69">		PointerArea blocker = new PointerArea( 0, 0, PixelScene.uiCamera.width, PixelScene.uiCamera.height ) {</span>
+			@Override
+			protected void onClick( PointerEvent event ) {
+<span class="nc" id="L72">				onBackPressed();</span>
+<span class="nc" id="L73">			}</span>
+		};
+<span class="nc" id="L75">		blocker.camera = PixelScene.uiCamera;</span>
+<span class="nc" id="L76">		add(blocker);</span>
+		
+<span class="nc" id="L78">		resize( width + 2*MARGIN, (int)(tf.bottom()+MARGIN) );</span>
+<span class="nc" id="L79">	}</span>
+
+	public WndStory setDelays(float appearDelay, float disappearDelay){
+<span class="nc" id="L82">		this.appearDelay = appearDelay;</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if (appearDelay &gt; 0){</span>
+<span class="nc" id="L84">			shadow.visible = chrome.visible = tf.visible = false;</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">			if (ttl != null) ttl.visible = false;</span>
+		}
+
+<span class="nc" id="L88">		this.disappearDelay = disappearDelay;</span>
+<span class="nc" id="L89">		return this;</span>
+	}
+
+	@Override
+	public void onBackPressed() {
+<span class="nc bnc" id="L94" title="All 4 branches missed.">		if (appearDelay &lt;= 0 &amp;&amp; disappearDelay &lt;= 0) {</span>
+<span class="nc" id="L95">			super.onBackPressed();</span>
+		}
+<span class="nc" id="L97">	}</span>
+
+	@Override
+	public void update() {
+<span class="nc" id="L101">		super.update();</span>
+		
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		if (appearDelay &gt; 0) {</span>
+<span class="nc" id="L104">			appearDelay -= Game.elapsed;</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">			if (appearDelay &lt;= 0) {</span>
+<span class="nc" id="L106">				shadow.visible = chrome.visible = tf.visible = true;</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">				if (ttl != null) ttl.visible = true;</span>
+			}
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		} else if (disappearDelay &gt; 0){</span>
+<span class="nc" id="L110">			disappearDelay -= Game.elapsed;</span>
+		}
+<span class="nc" id="L112">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

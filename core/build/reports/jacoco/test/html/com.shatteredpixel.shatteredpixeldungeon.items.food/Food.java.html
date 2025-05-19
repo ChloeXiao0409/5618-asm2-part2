@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Food.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.food</a> &gt; <span class="el_source">Food.java</span></div><h1>Food.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.food;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Hunger;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HornOfPlenty;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L45">public class Food extends Item {</span>
+
+	public static final float TIME_TO_EAT	= 3f;
+	
+	public static final String AC_EAT	= &quot;EAT&quot;;
+	
+<span class="nc" id="L51">	public float energy = Hunger.HUNGRY;</span>
+	
+	{
+<span class="nc" id="L54">		stackable = true;</span>
+<span class="nc" id="L55">		image = ItemSpriteSheet.RATION;</span>
+
+<span class="nc" id="L57">		defaultAction = AC_EAT;</span>
+
+<span class="nc" id="L59">		bones = true;</span>
+<span class="nc" id="L60">	}</span>
+	
+	@Override
+	public ArrayList&lt;String&gt; actions( Hero hero ) {
+<span class="nc" id="L64">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc" id="L65">		actions.add( AC_EAT );</span>
+<span class="nc" id="L66">		return actions;</span>
+	}
+	
+	@Override
+	public void execute( Hero hero, String action ) {
+
+<span class="nc" id="L72">		super.execute( hero, action );</span>
+
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		if (action.equals( AC_EAT )) {</span>
+			
+<span class="nc" id="L76">			detach( hero.belongings.backpack );</span>
+<span class="nc" id="L77">			Catalog.countUse(getClass());</span>
+			
+<span class="nc" id="L79">			satisfy(hero);</span>
+<span class="nc" id="L80">			GLog.i( Messages.get(this, &quot;eat_msg&quot;) );</span>
+			
+<span class="nc" id="L82">			hero.sprite.operate( hero.pos );</span>
+<span class="nc" id="L83">			hero.busy();</span>
+<span class="nc" id="L84">			SpellSprite.show( hero, SpellSprite.FOOD );</span>
+<span class="nc" id="L85">			eatSFX();</span>
+			
+<span class="nc" id="L87">			hero.spend( eatingTime() );</span>
+
+<span class="nc" id="L89">			Talent.onFoodEaten(hero, energy, this);</span>
+			
+<span class="nc" id="L91">			Statistics.foodEaten++;</span>
+<span class="nc" id="L92">			Badges.validateFoodEaten();</span>
+			
+		}
+<span class="nc" id="L95">	}</span>
+
+	protected void eatSFX(){
+<span class="nc" id="L98">		Sample.INSTANCE.play( Assets.Sounds.EAT );</span>
+<span class="nc" id="L99">	}</span>
+
+	protected float eatingTime(){
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if (Dungeon.hero.hasTalent(Talent.IRON_STOMACH)</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			|| Dungeon.hero.hasTalent(Talent.ENERGIZING_MEAL)</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">			|| Dungeon.hero.hasTalent(Talent.MYSTICAL_MEAL)</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">			|| Dungeon.hero.hasTalent(Talent.INVIGORATING_MEAL)</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			|| Dungeon.hero.hasTalent(Talent.FOCUSED_MEAL)</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">			|| Dungeon.hero.hasTalent(Talent.ENLIGHTENING_MEAL)){</span>
+<span class="nc" id="L108">			return TIME_TO_EAT - 2;</span>
+		} else {
+<span class="nc" id="L110">			return TIME_TO_EAT;</span>
+		}
+	}
+	
+	protected void satisfy( Hero hero ){
+<span class="nc" id="L115">		float foodVal = energy;</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		if (Dungeon.isChallenged(Challenges.NO_FOOD)){</span>
+<span class="nc" id="L117">			foodVal /= 3f;</span>
+		}
+
+<span class="nc" id="L120">		Artifact.ArtifactBuff buff = hero.buff( HornOfPlenty.hornRecharge.class );</span>
+<span class="nc bnc" id="L121" title="All 4 branches missed.">		if (buff != null &amp;&amp; buff.isCursed()){</span>
+<span class="nc" id="L122">			foodVal *= 0.67f;</span>
+<span class="nc" id="L123">			GLog.n( Messages.get(Hunger.class, &quot;cursedhorn&quot;) );</span>
+		}
+
+<span class="nc" id="L126">		Buff.affect(hero, Hunger.class).satisfy(foodVal);</span>
+<span class="nc" id="L127">	}</span>
+	
+	@Override
+	public boolean isUpgradable() {
+<span class="nc" id="L131">		return false;</span>
+	}
+	
+	@Override
+	public boolean isIdentified() {
+<span class="nc" id="L136">		return true;</span>
+	}
+	
+	@Override
+	public int value() {
+<span class="nc" id="L141">		return 10 * quantity;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

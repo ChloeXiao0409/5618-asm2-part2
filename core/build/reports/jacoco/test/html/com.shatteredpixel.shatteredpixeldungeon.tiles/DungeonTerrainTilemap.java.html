@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DungeonTerrainTilemap.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.tiles</a> &gt; <span class="el_source">DungeonTerrainTilemap.java</span></div><h1>DungeonTerrainTilemap.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.tiles;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.watabou.noosa.Image;
+import com.watabou.utils.PathFinder;
+
+public class DungeonTerrainTilemap extends DungeonTilemap {
+
+	static DungeonTerrainTilemap instance;
+
+	public DungeonTerrainTilemap(){
+<span class="nc" id="L34">		super(Dungeon.level.tilesTex());</span>
+
+<span class="nc" id="L36">		map( Dungeon.level.map, Dungeon.level.width() );</span>
+
+<span class="nc" id="L38">		instance = this;</span>
+<span class="nc" id="L39">	}</span>
+
+	@Override
+	protected int getTileVisual(int pos, int tile, boolean flat) {
+<span class="nc" id="L43">		int visual = DungeonTileSheet.directVisuals.get(tile, -1);</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">		if (visual != -1) return DungeonTileSheet.getVisualWithAlts(visual, pos);</span>
+
+<span class="nc bnc" id="L46" title="All 2 branches missed.">		if (tile == Terrain.WATER) {</span>
+<span class="nc" id="L47">			return DungeonTileSheet.stitchWaterTile(</span>
+					map[pos + PathFinder.CIRCLE4[0]],
+					map[pos + PathFinder.CIRCLE4[1]],
+					map[pos + PathFinder.CIRCLE4[2]],
+					map[pos + PathFinder.CIRCLE4[3]]
+			);
+
+<span class="nc bnc" id="L54" title="All 2 branches missed.">		} else if (tile == Terrain.CHASM) {</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">			return DungeonTileSheet.stitchChasmTile( pos &gt; mapWidth ? map[pos - mapWidth] : -1);</span>
+		}
+
+<span class="nc bnc" id="L58" title="All 2 branches missed.">		if (!flat) {</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">			if ((DungeonTileSheet.doorTile(tile))) {</span>
+<span class="nc" id="L60">				return DungeonTileSheet.getRaisedDoorTile(tile, map[pos - mapWidth]);</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">			} else if (DungeonTileSheet.wallStitcheable(tile)){</span>
+<span class="nc" id="L62">				return DungeonTileSheet.getRaisedWallTile(</span>
+						tile,
+						pos,
+<span class="nc bnc" id="L65" title="All 2 branches missed.">						(pos+1) % mapWidth != 0 ?   map[pos + 1] : -1,</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">						pos + mapWidth &lt; size ?     map[pos + mapWidth] : -1,</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">						pos % mapWidth != 0 ?       map[pos - 1] : -1</span>
+						);
+<span class="nc bnc" id="L69" title="All 2 branches missed.">			} else if (tile == Terrain.STATUE) {</span>
+<span class="nc" id="L70">				return DungeonTileSheet.RAISED_STATUE;</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">			} else if (tile == Terrain.STATUE_SP) {</span>
+<span class="nc" id="L72">				return DungeonTileSheet.RAISED_STATUE_SP;</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">			} else if (tile == Terrain.MINE_CRYSTAL) {</span>
+<span class="nc" id="L74">				return DungeonTileSheet.getVisualWithAlts(</span>
+						DungeonTileSheet.RAISED_MINE_CRYSTAL,
+						pos);
+<span class="nc bnc" id="L77" title="All 2 branches missed.">			} else if (tile == Terrain.MINE_BOULDER) {</span>
+<span class="nc" id="L78">				return DungeonTileSheet.getVisualWithAlts(</span>
+						DungeonTileSheet.RAISED_MINE_BOULDER,
+						pos);
+<span class="nc bnc" id="L81" title="All 2 branches missed.">			} else if (tile == Terrain.ALCHEMY) {</span>
+<span class="nc" id="L82">				return DungeonTileSheet.RAISED_ALCHEMY_POT;</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">			} else if (tile == Terrain.BARRICADE) {</span>
+<span class="nc" id="L84">				return DungeonTileSheet.RAISED_BARRICADE;</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">			} else if (tile == Terrain.HIGH_GRASS) {</span>
+<span class="nc" id="L86">				return DungeonTileSheet.getVisualWithAlts(</span>
+						DungeonTileSheet.RAISED_HIGH_GRASS,
+						pos);
+<span class="nc bnc" id="L89" title="All 2 branches missed.">			} else if (tile == Terrain.FURROWED_GRASS) {</span>
+<span class="nc" id="L90">				return DungeonTileSheet.getVisualWithAlts(</span>
+						DungeonTileSheet.RAISED_FURROWED_GRASS,
+						pos);
+			} else {
+<span class="nc" id="L94">				return DungeonTileSheet.NULL_TILE;</span>
+			}
+		} else {
+<span class="nc" id="L97">			return DungeonTileSheet.getVisualWithAlts(</span>
+<span class="nc" id="L98">					DungeonTileSheet.directFlatVisuals.get(tile),</span>
+					pos);
+		}
+
+	}
+
+	public static Image tile(int pos, int tile ) {
+<span class="nc" id="L105">		Image img = new Image( instance.texture );</span>
+<span class="nc" id="L106">		img.frame( instance.tileset.get( instance.getTileVisual( pos, tile, true ) ) );</span>
+<span class="nc" id="L107">		return img;</span>
+	}
+
+	@Override
+	protected boolean needsRender(int pos) {
+<span class="nc bnc" id="L112" title="All 4 branches missed.">		return super.needsRender(pos) &amp;&amp; data[pos] != DungeonTileSheet.WATER;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

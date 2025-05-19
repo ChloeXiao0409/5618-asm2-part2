@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Shopkeeper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs</a> &gt; <span class="el_source">Shopkeeper.java</span></div><h1>Shopkeeper.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AscensionChallenge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.BlobImmunity;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ElmoParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ShopkeeperSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndTitledMessage;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndTradeItem;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.utils.BArray;
+import com.watabou.utils.Bundlable;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.PathFinder;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L60">public class Shopkeeper extends NPC {</span>
+
+	{
+<span class="nc" id="L63">		spriteClass = ShopkeeperSprite.class;</span>
+
+<span class="nc" id="L65">		properties.add(Property.IMMOVABLE);</span>
+	}
+
+<span class="nc" id="L68">	public static int MAX_BUYBACK_HISTORY = 3;</span>
+<span class="nc" id="L69">	public ArrayList&lt;Item&gt; buybackItems = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L71">	private int turnsSinceHarmed = -1;</span>
+
+	@Override
+	public Notes.Landmark landmark() {
+<span class="nc" id="L75">		return Notes.Landmark.SHOP;</span>
+	}
+
+	@Override
+	protected boolean act() {
+
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		if (turnsSinceHarmed &gt;= 0){</span>
+<span class="nc" id="L82">			turnsSinceHarmed ++;</span>
+		}
+
+<span class="nc" id="L85">		sprite.turnTo( pos, Dungeon.hero.pos );</span>
+<span class="nc" id="L86">		spend( TICK );</span>
+<span class="nc" id="L87">		return super.act();</span>
+	}
+	
+	@Override
+	public void damage( int dmg, Object src ) {
+<span class="nc" id="L92">		processHarm();</span>
+<span class="nc" id="L93">	}</span>
+	
+	@Override
+	public boolean add( Buff buff ) {
+<span class="nc bnc" id="L97" title="All 2 branches missed.">		if (buff.type == Buff.buffType.NEGATIVE){</span>
+<span class="nc" id="L98">			processHarm();</span>
+		}
+<span class="nc" id="L100">		return false;</span>
+	}
+
+	public void processHarm(){
+
+		//do nothing if the shopkeeper is out of the hero's FOV
+<span class="nc bnc" id="L106" title="All 2 branches missed.">		if (!Dungeon.level.heroFOV[pos]){</span>
+<span class="nc" id="L107">			return;</span>
+		}
+
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		if (turnsSinceHarmed == -1){</span>
+<span class="nc" id="L111">			turnsSinceHarmed = 0;</span>
+<span class="nc" id="L112">			yell(Messages.get(this, &quot;warn&quot;));</span>
+
+			//use a new actor as we can't clear the gas while we're in the middle of processing it
+<span class="nc" id="L115">			Actor.add(new Actor() {</span>
+				{
+<span class="nc" id="L117">					actPriority = VFX_PRIO;</span>
+<span class="nc" id="L118">				}</span>
+
+				@Override
+				protected boolean act() {
+					//cleanses all harmful blobs in the shop
+<span class="nc" id="L123">					ArrayList&lt;Blob&gt; blobs = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">					for (Class c : new BlobImmunity().immunities()){</span>
+<span class="nc" id="L125">						Blob b = Dungeon.level.blobs.get(c);</span>
+<span class="nc bnc" id="L126" title="All 4 branches missed.">						if (b != null &amp;&amp; b.volume &gt; 0){</span>
+<span class="nc" id="L127">							blobs.add(b);</span>
+						}
+<span class="nc" id="L129">					}</span>
+
+<span class="nc" id="L131">					PathFinder.buildDistanceMap( pos, BArray.not( Dungeon.level.solid, null ), 4 );</span>
+
+<span class="nc bnc" id="L133" title="All 2 branches missed.">					for (int i=0; i &lt; Dungeon.level.length(); i++) {</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">						if (PathFinder.distance[i] &lt; Integer.MAX_VALUE) {</span>
+
+<span class="nc" id="L136">							boolean affected = false;</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">							for (Blob blob : blobs) {</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">								if (blob.cur[i] &gt; 0) {</span>
+<span class="nc" id="L139">									blob.clear(i);</span>
+<span class="nc" id="L140">									affected = true;</span>
+								}
+<span class="nc" id="L142">							}</span>
+
+<span class="nc bnc" id="L144" title="All 4 branches missed.">							if (affected &amp;&amp; Dungeon.level.heroFOV[i]) {</span>
+<span class="nc" id="L145">								CellEmitter.get( i ).burst( Speck.factory( Speck.DISCOVER ), 2 );</span>
+							}
+
+						}
+					}
+<span class="nc" id="L150">					Actor.remove(this);</span>
+<span class="nc" id="L151">					return true;</span>
+				}
+			});
+
+		//There is a 1 turn buffer before more damage/debuffs make the shopkeeper flee
+		//This is mainly to prevent stacked effects from causing an instant flee
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		} else if (turnsSinceHarmed &gt;= 1) {</span>
+<span class="nc" id="L158">			flee();</span>
+		}
+<span class="nc" id="L160">	}</span>
+	
+	public void flee() {
+<span class="nc" id="L163">		destroy();</span>
+
+<span class="nc" id="L165">		Notes.remove( landmark() );</span>
+<span class="nc" id="L166">		GLog.newLine();</span>
+<span class="nc" id="L167">		GLog.n(Messages.get(this, &quot;flee&quot;));</span>
+
+<span class="nc bnc" id="L169" title="All 2 branches missed.">		if (sprite != null) {</span>
+<span class="nc" id="L170">			sprite.killAndErase();</span>
+<span class="nc" id="L171">			CellEmitter.get(pos).burst(ElmoParticle.FACTORY, 6);</span>
+		}
+<span class="nc" id="L173">	}</span>
+	
+	@Override
+	public void destroy() {
+<span class="nc" id="L177">		super.destroy();</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">		for (Heap heap: Dungeon.level.heaps.valueList()) {</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">			if (heap.type == Heap.Type.FOR_SALE) {</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">				if (ShatteredPixelDungeon.scene() instanceof GameScene) {</span>
+<span class="nc" id="L181">					CellEmitter.get(heap.pos).burst(ElmoParticle.FACTORY, 4);</span>
+				}
+<span class="nc bnc" id="L183" title="All 2 branches missed.">				if (heap.size() == 1) {</span>
+<span class="nc" id="L184">					heap.destroy();</span>
+				} else {
+<span class="nc" id="L186">					heap.items.remove(heap.size()-1);</span>
+<span class="nc" id="L187">					heap.type = Heap.Type.HEAP;</span>
+				}
+			}
+<span class="nc" id="L190">		}</span>
+<span class="nc" id="L191">	}</span>
+	
+	@Override
+	public boolean reset() {
+<span class="nc" id="L195">		return true;</span>
+	}
+
+	//shopkeepers are greedy!
+	public static int sellPrice(Item item){
+<span class="nc" id="L200">		return item.value() * 5 * (Dungeon.depth / 5 + 1);</span>
+	}
+	
+	public static WndBag sell() {
+<span class="nc" id="L204">		return GameScene.selectItem( itemSelector );</span>
+	}
+
+	public static boolean canSell(Item item){
+<span class="nc bnc" id="L208" title="All 2 branches missed.">		if (item.value() &lt;= 0)                                              return false;</span>
+<span class="nc bnc" id="L209" title="All 4 branches missed.">		if (item.unique &amp;&amp; !item.stackable)                                 return false;</span>
+<span class="nc bnc" id="L210" title="All 4 branches missed.">		if (item instanceof Armor &amp;&amp; ((Armor) item).checkSeal() != null)    return false;</span>
+<span class="nc bnc" id="L211" title="All 4 branches missed.">		if (item.isEquipped(Dungeon.hero) &amp;&amp; item.cursed)                   return false;</span>
+<span class="nc" id="L212">		return true;</span>
+	}
+
+<span class="nc" id="L215">	private static WndBag.ItemSelector itemSelector = new WndBag.ItemSelector() {</span>
+		@Override
+		public String textPrompt() {
+<span class="nc" id="L218">			return Messages.get(Shopkeeper.class, &quot;sell&quot;);</span>
+		}
+
+		@Override
+		public boolean itemSelectable(Item item) {
+<span class="nc" id="L223">			return Shopkeeper.canSell(item);</span>
+		}
+
+		@Override
+		public void onSelect( Item item ) {
+<span class="nc bnc" id="L228" title="All 2 branches missed.">			if (item != null) {</span>
+<span class="nc" id="L229">				WndBag parentWnd = sell();</span>
+<span class="nc" id="L230">				GameScene.show( new WndTradeItem( item, parentWnd ) );</span>
+			}
+<span class="nc" id="L232">		}</span>
+	};
+
+	@Override
+	public boolean interact(Char c) {
+<span class="nc bnc" id="L237" title="All 2 branches missed.">		if (c != Dungeon.hero) {</span>
+<span class="nc" id="L238">			return true;</span>
+		}
+<span class="nc" id="L240">		Game.runOnRenderThread(new Callback() {</span>
+			@Override
+			public void call() {
+<span class="nc" id="L243">				String[] options = new String[2+ buybackItems.size()];</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">				int maxLen = PixelScene.landscape() ? 30 : 25;</span>
+<span class="nc" id="L245">				int i = 0;</span>
+<span class="nc" id="L246">				options[i++] = Messages.get(Shopkeeper.this, &quot;sell&quot;);</span>
+<span class="nc" id="L247">				options[i++] = Messages.get(Shopkeeper.this, &quot;talk&quot;);</span>
+<span class="nc bnc" id="L248" title="All 2 branches missed.">				for (Item item : buybackItems){</span>
+<span class="nc" id="L249">					options[i] = Messages.get(Heap.class, &quot;for_sale&quot;, item.value(), Messages.titleCase(item.title()));</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">					if (options[i].length() &gt; maxLen) options[i] = options[i].substring(0, maxLen-3) + &quot;...&quot;;</span>
+<span class="nc" id="L251">					i++;</span>
+<span class="nc" id="L252">				}</span>
+<span class="nc" id="L253">				GameScene.show(new WndOptions(sprite(), Messages.titleCase(name()), description(), options){</span>
+					@Override
+					protected void onSelect(int index) {
+<span class="nc" id="L256">						super.onSelect(index);</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">						if (index == 0){</span>
+<span class="nc" id="L258">							sell();</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">						} else if (index == 1){</span>
+<span class="nc" id="L260">							GameScene.show(new WndTitledMessage(sprite(), Messages.titleCase(name()), chatText()));</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">						} else if (index &gt; 1){</span>
+<span class="nc" id="L262">							GLog.i(Messages.get(Shopkeeper.this, &quot;buyback&quot;));</span>
+<span class="nc" id="L263">							Item returned = buybackItems.remove(index-2);</span>
+<span class="nc" id="L264">							Dungeon.gold -= returned.value();</span>
+<span class="nc" id="L265">							Statistics.goldCollected -= returned.value();</span>
+<span class="nc bnc" id="L266" title="All 2 branches missed.">							if (!returned.doPickUp(Dungeon.hero)){</span>
+<span class="nc" id="L267">								Dungeon.level.drop(returned, Dungeon.hero.pos);</span>
+							}
+						}
+<span class="nc" id="L270">					}</span>
+
+					@Override
+					protected boolean enabled(int index) {
+<span class="nc bnc" id="L274" title="All 2 branches missed.">						if (index &gt; 1){</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">							return Dungeon.gold &gt;= buybackItems.get(index-2).value();</span>
+						} else {
+<span class="nc" id="L277">							return super.enabled(index);</span>
+						}
+					}
+
+					@Override
+					protected boolean hasIcon(int index) {
+<span class="nc bnc" id="L283" title="All 2 branches missed.">						return index &gt; 1;</span>
+					}
+
+					@Override
+					protected Image getIcon(int index) {
+<span class="nc bnc" id="L288" title="All 2 branches missed.">						if (index &gt; 1){</span>
+<span class="nc" id="L289">							return new ItemSprite(buybackItems.get(index-2));</span>
+						}
+<span class="nc" id="L291">						return null;</span>
+					}
+				});
+<span class="nc" id="L294">			}</span>
+		});
+<span class="nc" id="L296">		return true;</span>
+	}
+
+	public String chatText(){
+<span class="nc bnc" id="L300" title="All 2 branches missed.">		if (Dungeon.hero.buff(AscensionChallenge.class) != null){</span>
+<span class="nc" id="L301">			return Messages.get(this, &quot;talk_ascent&quot;);</span>
+		}
+<span class="nc bnc" id="L303" title="All 4 branches missed.">		switch (Dungeon.depth){</span>
+			case 6: default:
+<span class="nc" id="L305">				return Messages.get(this, &quot;talk_prison_intro&quot;) + &quot;\n\n&quot; + Messages.get(this, &quot;talk_prison_&quot; + Dungeon.hero.heroClass.name());</span>
+			case 11:
+<span class="nc" id="L307">				return Messages.get(this, &quot;talk_caves&quot;);</span>
+			case 16:
+<span class="nc" id="L309">				return Messages.get(this, &quot;talk_city&quot;);</span>
+			case 20:
+<span class="nc" id="L311">				return Messages.get(this, &quot;talk_halls&quot;);</span>
+		}
+	}
+
+<span class="nc" id="L315">	public static String BUYBACK_ITEMS = &quot;buyback_items&quot;;</span>
+
+<span class="nc" id="L317">	public static String TURNS_SINCE_HARMED = &quot;turns_since_harmed&quot;;</span>
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L321">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L322">		bundle.put(BUYBACK_ITEMS, buybackItems);</span>
+<span class="nc" id="L323">		bundle.put(TURNS_SINCE_HARMED, turnsSinceHarmed);</span>
+<span class="nc" id="L324">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L328">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L329">		buybackItems.clear();</span>
+<span class="nc bnc" id="L330" title="All 2 branches missed.">		if (bundle.contains(BUYBACK_ITEMS)){</span>
+<span class="nc bnc" id="L331" title="All 2 branches missed.">			for (Bundlable i : bundle.getCollection(BUYBACK_ITEMS)){</span>
+<span class="nc" id="L332">				buybackItems.add((Item) i);</span>
+<span class="nc" id="L333">			}</span>
+		}
+<span class="nc bnc" id="L335" title="All 2 branches missed.">		turnsSinceHarmed = bundle.contains(TURNS_SINCE_HARMED) ? bundle.getInt(TURNS_SINCE_HARMED) : -1;</span>
+<span class="nc" id="L336">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

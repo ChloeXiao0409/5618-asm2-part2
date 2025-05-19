@@ -1,0 +1,1289 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CursedWand.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.wands</a> &gt; <span class="el_source">CursedWand.java</span></div><h1>CursedWand.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.wands;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ConfusionGas;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Electricity;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Fire;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ParalyticGas;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Regrowth;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ToxicGas;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Bless;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.GravityChaosTracker;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.HeroDisguise;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Hex;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invulnerability;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Levitation;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Ooze;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Poison;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Recharging;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.SuperNovaTracker;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.TimeStasis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GoldenMimic;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Piranha;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.NPC;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Sheep;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Lightning;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.FlameParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.PitfallParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.PoisonParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SparkParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfMirrorImage;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRecharging;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfChallenge;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfMetamorphosis;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfSirensSong;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.WondrousResin;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.BurningTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.ChillingTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.CursingTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.FlockTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.GeyserTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.PitfallTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.ShockingTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.SummoningTrap;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.ConeAOE;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.ShadowCaster;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.TargetHealthIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.BArray;
+import com.watabou.utils.Callback;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+
+import java.io.IOException;
+import java.util.ArrayList;
+
+//helper class to contain all the cursed wand zapping logic, so the main wand class doesn't get huge.
+<span class="nc" id="L119">public class CursedWand {</span>
+
+	public static void cursedZap(final Item origin, final Char user, final Ballistica bolt, final Callback afterZap){
+
+<span class="nc bnc" id="L123" title="All 4 branches missed.">		boolean positiveOnly = user == Dungeon.hero &amp;&amp; Random.Float() &lt; WondrousResin.positiveCurseEffectChance();</span>
+<span class="nc" id="L124">		CursedEffect effect = randomValidEffect(origin, user, bolt, positiveOnly);</span>
+
+<span class="nc" id="L126">		effect.FX(origin, user, bolt, new Callback() {</span>
+			@Override
+			public void call() {
+<span class="nc" id="L129">				effect.effect(origin, user, bolt, positiveOnly);</span>
+<span class="nc" id="L130">				afterZap.call();</span>
+<span class="nc" id="L131">			}</span>
+		});
+<span class="nc" id="L133">	}</span>
+
+	public static void tryForWandProc( Char target, Item origin ){
+<span class="nc bnc" id="L136" title="All 6 branches missed.">		if (target != null &amp;&amp; target != Dungeon.hero &amp;&amp; origin instanceof Wand){</span>
+<span class="nc" id="L137">			Wand.wandProc(target, origin.buffedLvl(), 1);</span>
+		}
+<span class="nc" id="L139">	}</span>
+
+	//*** Cursed Effects ***
+
+<span class="nc" id="L143">	public static abstract class CursedEffect {</span>
+
+		public boolean valid(Item origin, Char user, Ballistica bolt, boolean positiveOnly){
+<span class="nc" id="L146">			return true;</span>
+		}
+
+		public void FX(final Item origin, final Char user, final Ballistica bolt, final Callback callback){
+<span class="nc" id="L150">			MagicMissile.boltFromChar(user.sprite.parent,</span>
+					MagicMissile.RAINBOW,
+					user.sprite,
+<span class="nc" id="L153">					bolt.collisionPos,</span>
+					callback);
+<span class="nc" id="L155">			Sample.INSTANCE.play( Assets.Sounds.ZAP );</span>
+<span class="nc" id="L156">		}</span>
+
+		public abstract boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly);
+
+	}
+
+	// common/uncommon/rare/v.rare have a 60/30/9/1% chance respectively
+<span class="nc" id="L163">	private static float[] EFFECT_CAT_CHANCES = new float[]{60, 30, 9, 1};</span>
+
+	public static CursedEffect randomEffect(){
+<span class="nc bnc" id="L166" title="All 4 branches missed.">		switch (Random.chances(EFFECT_CAT_CHANCES)){</span>
+			case 0: default:
+<span class="nc" id="L168">				return randomCommonEffect();</span>
+			case 1:
+<span class="nc" id="L170">				return randomUncommonEffect();</span>
+			case 2:
+<span class="nc" id="L172">				return randomRareEffect();</span>
+			case 3:
+<span class="nc" id="L174">				return randomVeryRareEffect();</span>
+		}
+	}
+
+	public static CursedEffect randomValidEffect(Item origin, Char user, Ballistica bolt, boolean positiveOnly){
+<span class="nc bnc" id="L179" title="All 4 branches missed.">		switch (Random.chances(EFFECT_CAT_CHANCES)){</span>
+			case 0: default:
+<span class="nc" id="L181">				return randomValidCommonEffect(origin, user, bolt, positiveOnly);</span>
+			case 1:
+<span class="nc" id="L183">				return randomValidUncommonEffect(origin, user, bolt, positiveOnly);</span>
+			case 2:
+<span class="nc" id="L185">				return randomValidRareEffect(origin, user, bolt, positiveOnly);</span>
+			case 3:
+<span class="nc" id="L187">				return randomValidVeryRareEffect(origin, user, bolt, positiveOnly);</span>
+		}
+	}
+
+	//**********************
+	//*** Common Effects ***
+	//**********************
+
+<span class="nc" id="L195">	private static ArrayList&lt;CursedEffect&gt; COMMON_EFFECTS = new ArrayList&lt;&gt;();</span>
+	static {
+<span class="nc" id="L197">		COMMON_EFFECTS.add(new BurnAndFreeze());</span>
+<span class="nc" id="L198">		COMMON_EFFECTS.add(new SpawnRegrowth());</span>
+<span class="nc" id="L199">		COMMON_EFFECTS.add(new RandomTeleport());</span>
+<span class="nc" id="L200">		COMMON_EFFECTS.add(new RandomGas());</span>
+<span class="nc" id="L201">		COMMON_EFFECTS.add(new RandomAreaEffect());</span>
+<span class="nc" id="L202">		COMMON_EFFECTS.add(new Bubbles());</span>
+<span class="nc" id="L203">		COMMON_EFFECTS.add(new RandomWand());</span>
+<span class="nc" id="L204">		COMMON_EFFECTS.add(new SelfOoze());</span>
+	}
+
+	public static CursedEffect randomCommonEffect(){
+<span class="nc" id="L208">		return Random.element(COMMON_EFFECTS);</span>
+	}
+
+	public static CursedEffect randomValidCommonEffect(Item origin, Char user, Ballistica bolt, boolean positiveOnly){
+		CursedEffect effect;
+		do {
+<span class="nc" id="L214">			effect = Random.element(COMMON_EFFECTS);</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">		} while (!effect.valid(origin, user, bolt, positiveOnly));</span>
+<span class="nc" id="L216">		return effect;</span>
+	}
+
+<span class="nc" id="L219">	public static class BurnAndFreeze extends CursedEffect {</span>
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc" id="L222">			Char target = Actor.findChar(bolt.collisionPos);</span>
+			//doesn't affect caster if positive only
+<span class="nc bnc" id="L224" title="All 2 branches missed.">			if (Random.Int(2) == 0) {</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">				if (target != null) Buff.affect(target, Burning.class).reignite(target);</span>
+<span class="nc bnc" id="L226" title="All 2 branches missed.">				if (!positiveOnly) Buff.affect(user, Frost.class, Frost.DURATION);</span>
+			} else {
+<span class="nc bnc" id="L228" title="All 2 branches missed.">				if (!positiveOnly)Buff.affect(user, Burning.class).reignite(user);</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">				if (target != null) Buff.affect(target, Frost.class, Frost.DURATION);</span>
+			}
+<span class="nc" id="L231">			tryForWandProc(target, origin);</span>
+<span class="nc" id="L232">			return true;</span>
+		}
+	}
+
+<span class="nc" id="L236">	public static class SpawnRegrowth extends CursedEffect {</span>
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean postiveOnly) {
+<span class="nc bnc" id="L239" title="All 2 branches missed.">			if (Actor.findChar(bolt.collisionPos) == null){</span>
+<span class="nc" id="L240">				Dungeon.level.pressCell(bolt.collisionPos);</span>
+			}
+<span class="nc" id="L242">			GameScene.add( Blob.seed(bolt.collisionPos, 30, Regrowth.class));</span>
+<span class="nc" id="L243">			tryForWandProc(Actor.findChar(bolt.collisionPos), origin);</span>
+<span class="nc" id="L244">			return true;</span>
+		}
+	}
+
+<span class="nc" id="L248">	public static class RandomTeleport extends CursedEffect {</span>
+		@Override
+		public boolean valid(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc" id="L251">			Char target = Actor.findChar(bolt.collisionPos);</span>
+<span class="nc bnc" id="L252" title="All 6 branches missed.">			if (positiveOnly &amp;&amp; (target == null || Char.hasProp(target, Char.Property.IMMOVABLE))){</span>
+<span class="nc" id="L253">				return false;</span>
+			}
+<span class="nc" id="L255">			return true;</span>
+		}
+
+		//might be nice to have no fx if self teleports?
+
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc" id="L262">			Char target = Actor.findChar( bolt.collisionPos );</span>
+			//can only teleport target if positive only
+<span class="nc bnc" id="L264" title="All 8 branches missed.">			if (target != null &amp;&amp; !Char.hasProp(target, Char.Property.IMMOVABLE) &amp;&amp; (positiveOnly || Random.Int(2) == 0)){</span>
+<span class="nc" id="L265">				ScrollOfTeleportation.teleportChar(target);</span>
+<span class="nc" id="L266">				tryForWandProc(target, origin);</span>
+<span class="nc" id="L267">				return true;</span>
+			} else {
+<span class="nc bnc" id="L269" title="All 6 branches missed.">				if (positiveOnly || user == null || Char.hasProp(user, Char.Property.IMMOVABLE)){</span>
+<span class="nc" id="L270">					return false;</span>
+				} else {
+<span class="nc" id="L272">					ScrollOfTeleportation.teleportChar(user);</span>
+<span class="nc" id="L273">					return true;</span>
+				}
+			}
+		}
+	}
+
+<span class="nc" id="L279">	public static class RandomGas extends CursedEffect {</span>
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc" id="L282">			Sample.INSTANCE.play( Assets.Sounds.GAS );</span>
+<span class="nc" id="L283">			tryForWandProc(Actor.findChar(bolt.collisionPos), origin);</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">			if (Actor.findChar(bolt.collisionPos) == null){</span>
+<span class="nc" id="L285">				Dungeon.level.pressCell(bolt.collisionPos);</span>
+			}
+<span class="nc bnc" id="L287" title="All 3 branches missed.">			switch (Random.Int(3)) {</span>
+				case 0: default:
+<span class="nc" id="L289">					GameScene.add( Blob.seed( bolt.collisionPos, 800, ConfusionGas.class ) );</span>
+<span class="nc" id="L290">					return true;</span>
+				case 1:
+<span class="nc" id="L292">					GameScene.add( Blob.seed( bolt.collisionPos, 500, ToxicGas.class ) );</span>
+<span class="nc" id="L293">					return true;</span>
+				case 2:
+<span class="nc" id="L295">					GameScene.add( Blob.seed( bolt.collisionPos, 200, ParalyticGas.class ) );</span>
+<span class="nc" id="L296">					return true;</span>
+			}
+		}
+	}
+
+<span class="nc" id="L301">	public static class RandomAreaEffect extends CursedEffect {</span>
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc" id="L304">			tryForWandProc(Actor.findChar(bolt.collisionPos), origin);</span>
+<span class="nc bnc" id="L305" title="All 2 branches missed.">			if (Actor.findChar(bolt.collisionPos) == null){</span>
+<span class="nc" id="L306">				Dungeon.level.pressCell(bolt.collisionPos);</span>
+			}
+<span class="nc bnc" id="L308" title="All 3 branches missed.">			switch (Random.Int(3)) {</span>
+				case 0: default:
+<span class="nc" id="L310">					new BurningTrap().set(bolt.collisionPos).activate();</span>
+<span class="nc" id="L311">					return true;</span>
+				case 1:
+<span class="nc" id="L313">					new ChillingTrap().set(bolt.collisionPos).activate();</span>
+<span class="nc" id="L314">					return true;</span>
+				case 2:
+<span class="nc" id="L316">					new ShockingTrap().set(bolt.collisionPos).activate();</span>
+<span class="nc" id="L317">					return true;</span>
+			}
+		}
+	}
+
+<span class="nc" id="L322">	public static class Bubbles extends CursedEffect {</span>
+
+		@Override
+		public void FX(Item origin, Char user, Ballistica bolt, Callback callback) {
+<span class="nc" id="L326">			MagicMissile.boltFromChar(user.sprite.parent,</span>
+					MagicMissile.SPECK + Speck.BUBBLE,
+					user.sprite,
+<span class="nc" id="L329">					bolt.collisionPos,</span>
+					callback);
+<span class="nc" id="L331">			Sample.INSTANCE.play( Assets.Sounds.ZAP );</span>
+<span class="nc" id="L332">		}</span>
+
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc bnc" id="L336" title="All 2 branches missed.">			if (Actor.findChar(bolt.collisionPos) == null){</span>
+<span class="nc" id="L337">				Dungeon.level.pressCell(bolt.collisionPos);</span>
+			}
+<span class="nc" id="L339">			tryForWandProc(Actor.findChar(bolt.collisionPos), origin);</span>
+<span class="nc bnc" id="L340" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS9){</span>
+<span class="nc bnc" id="L341" title="All 2 branches missed.">				if (!Dungeon.level.solid[bolt.collisionPos+i]){</span>
+<span class="nc" id="L342">					CellEmitter.get(bolt.collisionPos+i).start(Speck.factory(Speck.BUBBLE), 0.25f, 40);</span>
+				}
+			}
+<span class="nc" id="L345">			return true;</span>
+		}
+	}
+
+<span class="nc" id="L349">	public static class RandomWand extends CursedEffect {</span>
+
+		private Wand wand;
+
+		@Override
+		public boolean valid(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+			//we have this limit atm because some wands are coded to depend on their fx logic
+			// and chaos elementals trigger the effect directly, with no FX first
+<span class="nc bnc" id="L357" title="All 4 branches missed.">			return super.valid(origin, user, bolt, positiveOnly) &amp;&amp; user instanceof Hero;</span>
+		}
+
+		@Override
+		public void FX(Item origin, Char user, Ballistica bolt, Callback callback) {
+<span class="nc bnc" id="L362" title="All 2 branches missed.">			if (wand == null){</span>
+<span class="nc" id="L363">				wand = (Wand)Generator.randomUsingDefaults(Generator.Category.WAND);</span>
+			}
+<span class="nc" id="L365">			wand.fx(bolt, callback);</span>
+<span class="nc" id="L366">		}</span>
+
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc bnc" id="L370" title="All 2 branches missed.">			if (wand == null){</span>
+<span class="nc" id="L371">				wand = (Wand)Generator.randomUsingDefaults(Generator.Category.WAND);</span>
+			}
+<span class="nc bnc" id="L373" title="All 2 branches missed.">			if (origin instanceof Wand){</span>
+<span class="nc" id="L374">				wand.upgrade(origin.level());</span>
+			} else {
+<span class="nc" id="L376">				wand.upgrade(Dungeon.scalingDepth()/5);</span>
+			}
+<span class="nc" id="L378">			wand.levelKnown = false;</span>
+<span class="nc" id="L379">			wand.onZap(bolt);</span>
+<span class="nc" id="L380">			wand = null;</span>
+<span class="nc" id="L381">			return true;</span>
+		}
+	}
+
+<span class="nc" id="L385">	public static class SelfOoze extends CursedEffect{</span>
+
+		@Override
+		public void FX(Item origin, Char user, Ballistica bolt, Callback callback) {
+<span class="nc" id="L389">			callback.call(); //no fx</span>
+<span class="nc" id="L390">		}</span>
+
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc" id="L394">			PathFinder.buildDistanceMap(user.pos, BArray.not( Dungeon.level.solid, null ), 2 );</span>
+<span class="nc bnc" id="L395" title="All 2 branches missed.">			for (int i = 0; i &lt; PathFinder.distance.length; i++) {</span>
+<span class="nc bnc" id="L396" title="All 2 branches missed.">				if (PathFinder.distance[i] &lt; Integer.MAX_VALUE) {</span>
+<span class="nc" id="L397">					Splash.at( i, 0x000000, 5);</span>
+<span class="nc" id="L398">					Char ch = Actor.findChar(  i );</span>
+					//does not harm hero or allies when positive only
+<span class="nc bnc" id="L400" title="All 6 branches missed.">					if (ch != null &amp;&amp; (!positiveOnly || ch.alignment != Char.Alignment.ALLY)){</span>
+<span class="nc" id="L401">						Buff.affect(ch, Ooze.class).set( Ooze.DURATION );</span>
+					}
+				}
+			}
+<span class="nc" id="L405">			Sample.INSTANCE.play(Assets.Sounds.SHATTER);</span>
+<span class="nc" id="L406">			return true;</span>
+		}
+	}
+
+	//************************
+	//*** Uncommon Effects ***
+	//************************
+
+<span class="nc" id="L414">	private static ArrayList&lt;CursedEffect&gt; UNCOMMON_EFFECTS = new ArrayList&lt;&gt;();</span>
+	static {
+<span class="nc" id="L416">		UNCOMMON_EFFECTS.add(new RandomPlant());</span>
+<span class="nc" id="L417">		UNCOMMON_EFFECTS.add(new HealthTransfer());</span>
+<span class="nc" id="L418">		UNCOMMON_EFFECTS.add(new Explosion());</span>
+<span class="nc" id="L419">		UNCOMMON_EFFECTS.add(new LightningBolt());</span>
+<span class="nc" id="L420">		UNCOMMON_EFFECTS.add(new Geyser());</span>
+<span class="nc" id="L421">		UNCOMMON_EFFECTS.add(new SummonSheep());</span>
+<span class="nc" id="L422">		UNCOMMON_EFFECTS.add(new Levitate());</span>
+<span class="nc" id="L423">		UNCOMMON_EFFECTS.add(new Alarm());</span>
+	}
+
+	public static CursedEffect randomUncommonEffect(){
+<span class="nc" id="L427">		return Random.element(UNCOMMON_EFFECTS);</span>
+	}
+
+	public static CursedEffect randomValidUncommonEffect(Item origin, Char user, Ballistica bolt, boolean positiveOnly){
+		CursedEffect effect;
+		do {
+<span class="nc" id="L433">			effect = Random.element(UNCOMMON_EFFECTS);</span>
+<span class="nc bnc" id="L434" title="All 2 branches missed.">		} while (!effect.valid(origin, user, bolt, positiveOnly));</span>
+<span class="nc" id="L435">		return effect;</span>
+	}
+
+<span class="nc" id="L438">	public static class RandomPlant extends CursedEffect {</span>
+
+		@Override
+		public boolean valid(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc" id="L442">			int pos = bolt.collisionPos;</span>
+
+<span class="nc bnc" id="L444" title="All 4 branches missed.">			if (Dungeon.level.map[pos] != Terrain.ALCHEMY</span>
+					&amp;&amp; !Dungeon.level.pit[pos]
+<span class="nc bnc" id="L446" title="All 2 branches missed.">					&amp;&amp; Dungeon.level.traps.get(pos) == null</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">					&amp;&amp; !Dungeon.isChallenged(Challenges.NO_HERBALISM)) {</span>
+<span class="nc" id="L448">				return true;</span>
+			} else {
+<span class="nc" id="L450">				return false;</span>
+			}
+		}
+
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc bnc" id="L456" title="All 2 branches missed.">			if (valid(origin, user, bolt, positiveOnly)) {</span>
+<span class="nc" id="L457">				tryForWandProc(Actor.findChar(bolt.collisionPos), origin);</span>
+<span class="nc" id="L458">				Dungeon.level.plant((Plant.Seed) Generator.randomUsingDefaults(Generator.Category.SEED), bolt.collisionPos);</span>
+<span class="nc" id="L459">				return true;</span>
+			} else {
+<span class="nc" id="L461">				return false;</span>
+			}
+		}
+	}
+
+<span class="nc" id="L466">	public static class HealthTransfer extends CursedEffect {</span>
+
+		@Override
+		public boolean valid(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc bnc" id="L470" title="All 2 branches missed.">			return Actor.findChar( bolt.collisionPos ) != null;</span>
+		}
+
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc" id="L475">			final Char target = Actor.findChar( bolt.collisionPos );</span>
+<span class="nc bnc" id="L476" title="All 2 branches missed.">			if (target != null) {</span>
+<span class="nc" id="L477">				int damage = Dungeon.scalingDepth() * 2;</span>
+				Char toHeal, toDamage;
+
+				//can only harm target if positive only
+<span class="nc bnc" id="L481" title="All 4 branches missed.">				if (positiveOnly || Random.Int(2) == 0){</span>
+<span class="nc" id="L482">					toHeal = user;</span>
+<span class="nc" id="L483">					toDamage = target;</span>
+				} else {
+<span class="nc" id="L485">					toHeal = target;</span>
+<span class="nc" id="L486">					toDamage = user;</span>
+				}
+<span class="nc" id="L488">				toHeal.HP = Math.min(toHeal.HT, toHeal.HP + damage/2);</span>
+<span class="nc" id="L489">				toHeal.sprite.emitter().burst(Speck.factory(Speck.HEALING), 3);</span>
+<span class="nc" id="L490">				toHeal.sprite.showStatusWithIcon( CharSprite.POSITIVE, Integer.toString(damage/2), FloatingText.HEALING );</span>
+
+<span class="nc" id="L492">				toDamage.damage(damage, new CursedWand());</span>
+<span class="nc" id="L493">				toDamage.sprite.emitter().start(ShadowParticle.UP, 0.05f, 10);</span>
+
+<span class="nc bnc" id="L495" title="All 2 branches missed.">				if (toDamage == Dungeon.hero){</span>
+<span class="nc" id="L496">					Sample.INSTANCE.play(Assets.Sounds.CURSED);</span>
+<span class="nc bnc" id="L497" title="All 2 branches missed.">					if (!toDamage.isAlive()) {</span>
+<span class="nc bnc" id="L498" title="All 4 branches missed.">						if (user == Dungeon.hero &amp;&amp; origin != null) {</span>
+<span class="nc" id="L499">							Badges.validateDeathFromFriendlyMagic();</span>
+<span class="nc" id="L500">							Dungeon.fail( origin );</span>
+<span class="nc" id="L501">							GLog.n( Messages.get( CursedWand.class, &quot;ondeath&quot;, origin.name() ) );</span>
+						} else {
+<span class="nc" id="L503">							Badges.validateDeathFromEnemyMagic();</span>
+<span class="nc" id="L504">							Dungeon.fail( toHeal );</span>
+						}
+					}
+				} else {
+<span class="nc" id="L508">					Sample.INSTANCE.play(Assets.Sounds.BURNING);</span>
+				}
+<span class="nc" id="L510">				tryForWandProc(target, origin);</span>
+<span class="nc" id="L511">				return true;</span>
+			} else {
+<span class="nc" id="L513">				return false;</span>
+			}
+		}
+	}
+
+<span class="nc" id="L518">	public static class Explosion extends CursedEffect {</span>
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc" id="L521">			new Bomb.ConjuredBomb().explode(bolt.collisionPos);</span>
+<span class="nc" id="L522">			tryForWandProc(Actor.findChar(bolt.collisionPos), origin);</span>
+<span class="nc" id="L523">			return true;</span>
+		}
+	}
+
+<span class="nc" id="L527">	public static class LightningBolt extends CursedEffect {</span>
+
+		@Override
+		public void FX(Item origin, Char user, Ballistica bolt, Callback callback) {
+<span class="nc" id="L531">			Char ch = Actor.findChar( bolt.collisionPos );</span>
+<span class="nc bnc" id="L532" title="All 2 branches missed.">			if (ch != null){</span>
+<span class="nc" id="L533">				user.sprite.parent.addToFront(new Lightning(user.sprite.center(), ch.sprite.center(), null));</span>
+			} else {
+<span class="nc" id="L535">				user.sprite.parent.addToFront(new Lightning(user.sprite.center(), DungeonTilemap.raisedTileCenterToWorld(bolt.collisionPos), null));</span>
+			}
+<span class="nc" id="L537">			Sample.INSTANCE.play( Assets.Sounds.LIGHTNING );</span>
+<span class="nc" id="L538">			callback.call();</span>
+<span class="nc" id="L539">		}</span>
+
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+
+<span class="nc" id="L544">			ArrayList&lt;Char&gt; affected = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L546">			user.sprite.parent.add(new Lightning(user.pos - 1, user.pos + 1, null));</span>
+<span class="nc" id="L547">			user.sprite.parent.add(new Lightning(user.pos - Dungeon.level.width(), user.pos + Dungeon.level.width(), null));</span>
+<span class="nc" id="L548">			user.sprite.parent.add(new Lightning(user.pos - 1 - Dungeon.level.width(), user.pos + 1 + Dungeon.level.width(), null));</span>
+<span class="nc" id="L549">			user.sprite.parent.add(new Lightning(user.pos - 1 + Dungeon.level.width(), user.pos + 1 - Dungeon.level.width(), null));</span>
+<span class="nc bnc" id="L550" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS9){</span>
+<span class="nc bnc" id="L551" title="All 2 branches missed.">				if (Actor.findChar(user.pos+i) != null){</span>
+<span class="nc" id="L552">					affected.add(Actor.findChar(user.pos+i));</span>
+				}
+			}
+
+<span class="nc" id="L556">			int pos = bolt.collisionPos;</span>
+<span class="nc" id="L557">			user.sprite.parent.add(new Lightning(pos - 1, user.pos + 1, null));</span>
+<span class="nc" id="L558">			user.sprite.parent.add(new Lightning(pos - Dungeon.level.width(), pos + Dungeon.level.width(), null));</span>
+<span class="nc" id="L559">			user.sprite.parent.add(new Lightning(pos - 1 - Dungeon.level.width(), pos + 1 + Dungeon.level.width(), null));</span>
+<span class="nc" id="L560">			user.sprite.parent.add(new Lightning(pos - 1 + Dungeon.level.width(), pos + 1 - Dungeon.level.width(), null));</span>
+<span class="nc bnc" id="L561" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS9){</span>
+<span class="nc bnc" id="L562" title="All 4 branches missed.">				if (Actor.findChar(pos+i) != null &amp;&amp; !affected.contains(Actor.findChar(pos+i))){</span>
+<span class="nc" id="L563">					affected.add(Actor.findChar(pos+i));</span>
+				}
+			}
+
+<span class="nc" id="L567">			tryForWandProc(Actor.findChar(bolt.collisionPos), origin);</span>
+
+<span class="nc bnc" id="L569" title="All 2 branches missed.">			for (Char ch : affected){</span>
+<span class="nc bnc" id="L570" title="All 2 branches missed.">				if (ch instanceof Hero) {</span>
+<span class="nc" id="L571">					Buff.prolong(ch, Recharging.class, Recharging.DURATION/3f);</span>
+<span class="nc" id="L572">					ScrollOfRecharging.charge(ch);</span>
+<span class="nc" id="L573">					SpellSprite.show(ch, SpellSprite.CHARGE);</span>
+				}
+				//does not harm allies if positive only
+<span class="nc bnc" id="L576" title="All 4 branches missed.">				if (ch.alignment != Char.Alignment.ALLY || !positiveOnly){</span>
+					//shocking dart damage and a little stun
+<span class="nc" id="L578">					ch.damage(Random.NormalIntRange(5 + Dungeon.scalingDepth() / 4, 10 + Dungeon.scalingDepth() / 4), new Electricity());</span>
+<span class="nc bnc" id="L579" title="All 2 branches missed.">					if (ch.isAlive()) {</span>
+<span class="nc" id="L580">						Buff.affect(ch, Paralysis.class, Paralysis.DURATION / 2f);</span>
+<span class="nc bnc" id="L581" title="All 2 branches missed.">					} else if (ch == Dungeon.hero){</span>
+<span class="nc bnc" id="L582" title="All 4 branches missed.">						if (user == Dungeon.hero &amp;&amp; origin != null) {</span>
+<span class="nc" id="L583">							Badges.validateDeathFromFriendlyMagic();</span>
+<span class="nc" id="L584">							Dungeon.fail( origin );</span>
+<span class="nc" id="L585">							GLog.n( Messages.get( CursedWand.class, &quot;ondeath&quot;, origin.name() ) );</span>
+						} else {
+<span class="nc" id="L587">							Badges.validateDeathFromEnemyMagic();</span>
+<span class="nc" id="L588">							Dungeon.fail( user );</span>
+						}
+					}
+				}
+<span class="nc" id="L592">			}</span>
+
+<span class="nc" id="L594">			return true;</span>
+		}
+	}
+
+<span class="nc" id="L598">	public static class Geyser extends CursedEffect{</span>
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc" id="L601">			tryForWandProc(Actor.findChar(bolt.collisionPos), origin);</span>
+<span class="nc" id="L602">			GeyserTrap geyser = new GeyserTrap();</span>
+<span class="nc" id="L603">			geyser.pos = bolt.collisionPos;</span>
+<span class="nc bnc" id="L604" title="All 2 branches missed.">			geyser.source = origin == null ? user : origin;</span>
+<span class="nc" id="L605">			geyser.activate();</span>
+<span class="nc" id="L606">			return true;</span>
+		}
+	}
+
+<span class="nc" id="L610">	public static class SummonSheep extends CursedEffect{</span>
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc" id="L613">			tryForWandProc(Actor.findChar(bolt.collisionPos), origin);</span>
+<span class="nc" id="L614">			new FlockTrap().set(bolt.collisionPos).activate();</span>
+<span class="nc" id="L615">			return true;</span>
+		}
+	}
+
+<span class="nc" id="L619">	public static class Levitate extends CursedEffect {</span>
+
+		@Override
+		public boolean valid(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc bnc" id="L623" title="All 4 branches missed.">			return positiveOnly || Actor.findChar(bolt.collisionPos) != null;</span>
+		}
+
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc" id="L628">			Char ch = Actor.findChar(bolt.collisionPos);</span>
+<span class="nc bnc" id="L629" title="All 10 branches missed.">			if ((!positiveOnly || (ch instanceof Piranha)) &amp;&amp; ch != null &amp;&amp; !ch.flying &amp;&amp; !Char.hasProp(ch, Char.Property.IMMOVABLE)) {</span>
+<span class="nc" id="L630">				Buff.affect(ch, Levitation.class, Levitation.DURATION);</span>
+			} else {
+<span class="nc" id="L632">				Buff.affect(user, Levitation.class, Levitation.DURATION);</span>
+			}
+<span class="nc" id="L634">			return true;</span>
+		}
+	}
+
+<span class="nc" id="L638">	public static class Alarm extends CursedEffect {</span>
+
+		@Override
+		public void FX(Item origin, Char user, Ballistica bolt, Callback callback) {
+<span class="nc" id="L642">			callback.call(); //no vfx</span>
+<span class="nc" id="L643">		}</span>
+
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc bnc" id="L647" title="All 2 branches missed.">			for (Mob mob : Dungeon.level.mobs) {</span>
+<span class="nc" id="L648">				mob.beckon( user.pos );</span>
+<span class="nc" id="L649">			}</span>
+<span class="nc" id="L650">			user.sprite.centerEmitter().start( Speck.factory( Speck.SCREAM ), 0.3f, 3 );</span>
+<span class="nc bnc" id="L651" title="All 2 branches missed.">			if (positiveOnly){</span>
+<span class="nc" id="L652">				Buff.affect(user, ScrollOfChallenge.ChallengeArena.class).setup(user.pos);</span>
+<span class="nc" id="L653">				Sample.INSTANCE.play( Assets.Sounds.CHALLENGE );</span>
+			} else {
+<span class="nc" id="L655">				Sample.INSTANCE.play(Assets.Sounds.ALERT);</span>
+			}
+<span class="nc" id="L657">			return true;</span>
+		}
+	}
+
+	//********************
+	//*** Rare Effects ***
+	//********************
+
+<span class="nc" id="L665">	private static ArrayList&lt;CursedEffect&gt; RARE_EFFECTS = new ArrayList&lt;&gt;();</span>
+	static {
+<span class="nc" id="L667">		RARE_EFFECTS.add(new SheepPolymorph());</span>
+<span class="nc" id="L668">		RARE_EFFECTS.add(new CurseEquipment());</span>
+<span class="nc" id="L669">		RARE_EFFECTS.add(new InterFloorTeleport());</span>
+<span class="nc" id="L670">		RARE_EFFECTS.add(new SummonMonsters());</span>
+<span class="nc" id="L671">		RARE_EFFECTS.add(new FireBall());</span>
+<span class="nc" id="L672">		RARE_EFFECTS.add(new ConeOfColors());</span>
+<span class="nc" id="L673">		RARE_EFFECTS.add(new MassInvuln());</span>
+<span class="nc" id="L674">		RARE_EFFECTS.add(new Petrify());</span>
+	}
+
+	public static CursedEffect randomRareEffect(){
+<span class="nc" id="L678">		return Random.element(RARE_EFFECTS);</span>
+	}
+
+	public static CursedEffect randomValidRareEffect(Item origin, Char user, Ballistica bolt, boolean positiveOnly){
+		CursedEffect effect;
+		do {
+<span class="nc" id="L684">			effect = Random.element(RARE_EFFECTS);</span>
+<span class="nc bnc" id="L685" title="All 2 branches missed.">		} while (!effect.valid(origin, user, bolt, positiveOnly));</span>
+<span class="nc" id="L686">		return effect;</span>
+	}
+
+<span class="nc" id="L689">	public static class SheepPolymorph extends CursedEffect {</span>
+
+		@Override
+		public boolean valid(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc" id="L693">			Char ch = Actor.findChar( bolt.collisionPos );</span>
+<span class="nc bnc" id="L694" title="All 4 branches missed.">			if (ch != null &amp;&amp; !(ch instanceof Hero)</span>
+					//ignores bosses, questgivers, rat king, etc.
+<span class="nc bnc" id="L696" title="All 2 branches missed.">					&amp;&amp; !ch.properties().contains(Char.Property.BOSS)</span>
+<span class="nc bnc" id="L697" title="All 6 branches missed.">					&amp;&amp; !ch.properties().contains(Char.Property.MINIBOSS)</span>
+					&amp;&amp; !(ch instanceof NPC &amp;&amp; ch.alignment == Char.Alignment.NEUTRAL)){
+<span class="nc" id="L699">				return true;</span>
+			} else {
+<span class="nc" id="L701">				return false;</span>
+			}
+		}
+
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc bnc" id="L707" title="All 2 branches missed.">			if (valid(origin, user, bolt, positiveOnly)){</span>
+<span class="nc" id="L708">				Char ch = Actor.findChar( bolt.collisionPos );</span>
+<span class="nc" id="L709">				Sheep sheep = new Sheep();</span>
+<span class="nc" id="L710">				sheep.lifespan = 10;</span>
+<span class="nc" id="L711">				sheep.pos = ch.pos;</span>
+<span class="nc" id="L712">				ch.destroy();</span>
+<span class="nc" id="L713">				ch.sprite.killAndErase();</span>
+<span class="nc" id="L714">				Dungeon.level.mobs.remove(ch);</span>
+<span class="nc" id="L715">				TargetHealthIndicator.instance.target(null);</span>
+<span class="nc" id="L716">				GameScene.add(sheep);</span>
+<span class="nc" id="L717">				CellEmitter.get(sheep.pos).burst(Speck.factory(Speck.WOOL), 4);</span>
+<span class="nc" id="L718">				Sample.INSTANCE.play(Assets.Sounds.PUFF);</span>
+<span class="nc" id="L719">				Sample.INSTANCE.play(Assets.Sounds.SHEEP);</span>
+<span class="nc" id="L720">				Dungeon.level.occupyCell(sheep);</span>
+<span class="nc" id="L721">				return true;</span>
+			} else {
+<span class="nc" id="L723">				return false;</span>
+			}
+		}
+	}
+
+<span class="nc" id="L728">	public static class CurseEquipment extends CursedEffect {</span>
+
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+			//hexes target if positive only or user isn't hero
+<span class="nc bnc" id="L733" title="All 4 branches missed.">			if (positiveOnly || !(user instanceof Hero)){</span>
+<span class="nc" id="L734">				Char ch = Actor.findChar( bolt.collisionPos );</span>
+<span class="nc bnc" id="L735" title="All 2 branches missed.">				if (ch != null){</span>
+<span class="nc" id="L736">					Buff.affect(ch, Hex.class, Hex.DURATION);</span>
+				}
+<span class="nc" id="L738">				return true;</span>
+			} else {
+<span class="nc" id="L740">				CursingTrap.curse( (Hero) user );</span>
+<span class="nc" id="L741">				return true;</span>
+			}
+		}
+	}
+
+<span class="nc" id="L746">	public static class InterFloorTeleport extends CursedEffect {</span>
+
+		@Override
+		public void FX(Item origin, Char user, Ballistica bolt, Callback callback) {
+<span class="nc" id="L750">			callback.call(); //no vfx</span>
+<span class="nc" id="L751">		}</span>
+
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc bnc" id="L755" title="All 8 branches missed.">			if (!positiveOnly &amp;&amp; Dungeon.depth &gt; 1 &amp;&amp; Dungeon.interfloorTeleportAllowed() &amp;&amp; user == Dungeon.hero) {</span>
+
+				//starting from 10 floors up (or floor 1), each floor has 1 more weight
+<span class="nc" id="L758">				float[] depths = new float[Dungeon.depth-1];</span>
+<span class="nc" id="L759">				int start = Math.max(1, Dungeon.depth-10);</span>
+<span class="nc bnc" id="L760" title="All 2 branches missed.">				for (int i = start; i &lt; Dungeon.depth; i++) {</span>
+<span class="nc" id="L761">					depths[i-1] = i-start+1;</span>
+				}
+<span class="nc" id="L763">				int depth = 1+Random.chances(depths);</span>
+
+<span class="nc" id="L765">				Level.beforeTransition();</span>
+<span class="nc" id="L766">				InterlevelScene.mode = InterlevelScene.Mode.RETURN;</span>
+<span class="nc" id="L767">				InterlevelScene.returnDepth = depth;</span>
+<span class="nc" id="L768">				InterlevelScene.returnBranch = 0;</span>
+<span class="nc" id="L769">				InterlevelScene.returnPos = -1;</span>
+<span class="nc" id="L770">				Game.switchScene(InterlevelScene.class);</span>
+
+			//scroll of teleportation if positive only, or inter-floor teleport disallowed
+<span class="nc" id="L773">			} else {</span>
+<span class="nc" id="L774">				ScrollOfTeleportation.teleportChar(user);</span>
+
+			}
+<span class="nc" id="L777">			return true;</span>
+		}
+	}
+
+<span class="nc" id="L781">	public static class SummonMonsters extends CursedEffect {</span>
+
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+			//mirror images if positive only and user is hero
+<span class="nc bnc" id="L786" title="All 4 branches missed.">			if (positiveOnly &amp;&amp; user == Dungeon.hero){</span>
+<span class="nc" id="L787">				ScrollOfMirrorImage.spawnImages(Dungeon.hero, bolt.collisionPos, 2);</span>
+			} else {
+<span class="nc" id="L789">				new SummoningTrap().set(bolt.collisionPos).activate();</span>
+			}
+<span class="nc" id="L791">			return true;</span>
+		}
+	}
+
+<span class="nc" id="L795">	public static class FireBall extends CursedEffect {</span>
+
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+
+<span class="nc" id="L800">			Point c = Dungeon.level.cellToPoint(bolt.collisionPos);</span>
+<span class="nc" id="L801">			boolean[] fieldOfView = new boolean[Dungeon.level.length()];</span>
+<span class="nc" id="L802">			ShadowCaster.castShadow(c.x, c.y, Dungeon.level.width(), fieldOfView, Dungeon.level.solid, 3);</span>
+
+<span class="nc" id="L804">			tryForWandProc(Actor.findChar(bolt.collisionPos), origin);</span>
+
+<span class="nc bnc" id="L806" title="All 2 branches missed.">			for (int i = 0; i &lt; Dungeon.level.length(); i++){</span>
+<span class="nc bnc" id="L807" title="All 4 branches missed.">				if (fieldOfView[i] &amp;&amp; !Dungeon.level.solid[i]){</span>
+					//does not directly harm allies
+<span class="nc bnc" id="L809" title="All 6 branches missed.">					if (positiveOnly &amp;&amp; Actor.findChar(i) != null &amp;&amp; Actor.findChar(i).alignment == Char.Alignment.ALLY){</span>
+<span class="nc" id="L810">						continue;</span>
+					}
+
+<span class="nc" id="L813">					CellEmitter.get(i).burst(FlameParticle.FACTORY, 10);</span>
+<span class="nc bnc" id="L814" title="All 2 branches missed.">					if (Actor.findChar(i) != null){</span>
+<span class="nc" id="L815">						Char ch = Actor.findChar(i);</span>
+<span class="nc" id="L816">						Burning burning = Buff.affect(ch, Burning.class);</span>
+<span class="nc" id="L817">						burning.reignite(ch);</span>
+<span class="nc" id="L818">						int dmg = Random.NormalIntRange(5 + Dungeon.scalingDepth(), 10 + Dungeon.scalingDepth()*2);</span>
+<span class="nc" id="L819">						ch.damage(dmg, burning);</span>
+					}
+<span class="nc bnc" id="L821" title="All 2 branches missed.">					if (Dungeon.level.flamable[i]){</span>
+<span class="nc" id="L822">						GameScene.add(Blob.seed(i, 4, Fire.class));</span>
+					}
+
+				}
+			}
+<span class="nc" id="L827">			WandOfBlastWave.BlastWave.blast(bolt.collisionPos, 6);</span>
+<span class="nc" id="L828">			Sample.INSTANCE.play(Assets.Sounds.BLAST);</span>
+<span class="nc" id="L829">			Sample.INSTANCE.play(Assets.Sounds.BURNING);</span>
+
+<span class="nc" id="L831">			return false;</span>
+		}
+	}
+
+<span class="nc" id="L835">	public static class ConeOfColors extends CursedEffect {</span>
+
+<span class="nc" id="L837">		private ConeAOE cone = null;</span>
+
+		@Override
+		public void FX(Item origin, Char user, Ballistica bolt, Callback callback) {
+
+			//need to re-do bolt as it should go through chars
+<span class="nc" id="L843">			bolt = new Ballistica(bolt.sourcePos, bolt.collisionPos, Ballistica.STOP_SOLID);</span>
+
+<span class="nc" id="L845">			cone = new ConeAOE( bolt,</span>
+					8,
+					90,
+					Ballistica.STOP_SOLID);
+
+<span class="nc" id="L850">			Ballistica longestRay = null;</span>
+<span class="nc bnc" id="L851" title="All 2 branches missed.">			for (Ballistica ray : cone.outerRays){</span>
+<span class="nc bnc" id="L852" title="All 4 branches missed.">				if (longestRay == null || ray.dist &gt; longestRay.dist){</span>
+<span class="nc" id="L853">					longestRay = ray;</span>
+				}
+<span class="nc" id="L855">				((MagicMissile)user.sprite.parent.recycle( MagicMissile.class )).reset(</span>
+						MagicMissile.RAINBOW_CONE,
+						user.sprite,
+<span class="nc" id="L858">						ray.path.get(ray.dist),</span>
+						null
+				);
+<span class="nc" id="L861">			}</span>
+
+			//final zap at half distance of the longest ray, for timing of the actual effect
+<span class="nc" id="L864">			MagicMissile.boltFromChar( user.sprite.parent,</span>
+					MagicMissile.RAINBOW_CONE,
+					user.sprite,
+<span class="nc" id="L867">					longestRay.path.get(longestRay.dist/2),</span>
+					callback );
+<span class="nc" id="L869">			Sample.INSTANCE.play( Assets.Sounds.ZAP );</span>
+<span class="nc" id="L870">		}</span>
+
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+
+<span class="nc" id="L875">			ArrayList&lt;Char&gt; affectedChars = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L876" title="All 4 branches missed.">			if (cone == null &amp;&amp; Actor.findChar(bolt.collisionPos) != null){</span>
+				//cone may be null in cases like chaos elemental melee
+<span class="nc" id="L878">				affectedChars.add(Actor.findChar(bolt.collisionPos));</span>
+			} else {
+<span class="nc bnc" id="L880" title="All 2 branches missed.">				for (Integer cell : cone.cells){</span>
+<span class="nc bnc" id="L881" title="All 2 branches missed.">					if (cell == user.pos) {</span>
+<span class="nc" id="L882">						continue;</span>
+					}
+<span class="nc bnc" id="L884" title="All 2 branches missed.">					if (Actor.findChar(cell) != null){</span>
+<span class="nc" id="L885">						affectedChars.add(Actor.findChar(cell));</span>
+					}
+<span class="nc" id="L887">				}</span>
+			}
+
+<span class="nc" id="L890">			tryForWandProc(Actor.findChar(bolt.collisionPos), origin);</span>
+
+<span class="nc bnc" id="L892" title="All 2 branches missed.">			for (Char ch : affectedChars){</span>
+				//positive only does not harm allies
+<span class="nc bnc" id="L894" title="All 4 branches missed.">				if (positiveOnly &amp;&amp; ch.alignment == Char.Alignment.ALLY){</span>
+<span class="nc" id="L895">					continue;</span>
+				} else {
+
+<span class="nc" id="L898">					int dmg = Random.NormalIntRange(5 + Dungeon.scalingDepth(), 10 + Dungeon.scalingDepth()*2);</span>
+<span class="nc bnc" id="L899" title="All 5 branches missed.">					switch (Random.Int(5)){</span>
+						case 0: default:
+<span class="nc" id="L901">							Burning burning = Buff.affect(ch, Burning.class);</span>
+<span class="nc" id="L902">							burning.reignite(ch);</span>
+<span class="nc" id="L903">							ch.damage(dmg, burning);</span>
+<span class="nc" id="L904">							ch.sprite.emitter().burst(FlameParticle.FACTORY, 20);</span>
+<span class="nc" id="L905">							break;</span>
+						case 1:
+<span class="nc" id="L907">							ch.damage(dmg, new Frost());</span>
+<span class="nc bnc" id="L908" title="All 2 branches missed.">							if (ch.isAlive()) Buff.affect(ch, Frost.class, Frost.DURATION);</span>
+<span class="nc" id="L909">							Splash.at( ch.sprite.center(), 0xFFB2D6FF, 20 );</span>
+<span class="nc" id="L910">							break;</span>
+						case 2:
+<span class="nc" id="L912">							Poison poison = Buff.affect(ch, Poison.class);</span>
+<span class="nc" id="L913">							poison.set(3 + Dungeon.scalingDepth() / 2);</span>
+<span class="nc" id="L914">							ch.damage(dmg, poison);</span>
+<span class="nc" id="L915">							ch.sprite.emitter().burst(PoisonParticle.SPLASH, 20);</span>
+<span class="nc" id="L916">							break;</span>
+						case 3:
+<span class="nc" id="L918">							Ooze ooze = Buff.affect(ch, Ooze.class);</span>
+<span class="nc" id="L919">							ooze.set(Ooze.DURATION);</span>
+<span class="nc" id="L920">							ch.damage(dmg, ooze);</span>
+<span class="nc" id="L921">							Splash.at( ch.sprite.center(), 0x000000, 20 );</span>
+<span class="nc" id="L922">							break;</span>
+						case 4:
+<span class="nc" id="L924">							ch.damage(dmg, new Electricity());</span>
+<span class="nc bnc" id="L925" title="All 2 branches missed.">							if (ch.isAlive()) Buff.affect(ch, Paralysis.class, Paralysis.DURATION);</span>
+<span class="nc" id="L926">							ch.sprite.emitter().burst(SparkParticle.FACTORY, 20);</span>
+							break;
+					}
+
+<span class="nc bnc" id="L930" title="All 4 branches missed.">					if (ch == Dungeon.hero &amp;&amp; !ch.isAlive()){</span>
+<span class="nc bnc" id="L931" title="All 4 branches missed.">						if (user == Dungeon.hero &amp;&amp; origin != null) {</span>
+<span class="nc" id="L932">							Badges.validateDeathFromFriendlyMagic();</span>
+<span class="nc" id="L933">							Dungeon.fail( origin );</span>
+<span class="nc" id="L934">							GLog.n( Messages.get( CursedWand.class, &quot;ondeath&quot;, origin.name() ) );</span>
+						} else {
+<span class="nc" id="L936">							Badges.validateDeathFromEnemyMagic();</span>
+<span class="nc" id="L937">							Dungeon.fail( user );</span>
+						}
+					}
+
+				}
+<span class="nc" id="L942">			}</span>
+<span class="nc" id="L943">			return true;</span>
+		}
+	}
+
+<span class="nc" id="L947">	public static class MassInvuln extends CursedEffect {</span>
+
+		@Override
+		public void FX(Item origin, Char user, Ballistica bolt, Callback callback) {
+<span class="nc" id="L951">			callback.call(); //no vfx</span>
+<span class="nc" id="L952">		}</span>
+
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+
+<span class="nc bnc" id="L957" title="All 2 branches missed.">			for (Char ch : Actor.chars()){</span>
+<span class="nc" id="L958">				Buff.affect(ch, Invulnerability.class, 10f);</span>
+<span class="nc" id="L959">				Buff.affect(ch, Bless.class, Bless.DURATION);</span>
+<span class="nc" id="L960">			}</span>
+
+<span class="nc" id="L962">			new Flare(5, 48).color(0xFFFF00, true).show(user.sprite, 3f);</span>
+<span class="nc" id="L963">			GameScene.flash(0x80FFFF40);</span>
+<span class="nc" id="L964">			Sample.INSTANCE.play(Assets.Sounds.TELEPORT);</span>
+<span class="nc" id="L965">			GLog.p(Messages.get(CursedWand.class, &quot;mass_invuln&quot;));</span>
+
+<span class="nc" id="L967">			return true;</span>
+		}
+
+	}
+
+<span class="nc" id="L972">	public static class Petrify extends CursedEffect {</span>
+
+		@Override
+		public boolean valid(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc bnc" id="L976" title="All 2 branches missed.">			return user == Dungeon.hero;</span>
+		}
+
+		@Override
+		public void FX(Item origin, Char user, Ballistica bolt, Callback callback) {
+<span class="nc" id="L981">			callback.call(); //no vfx</span>
+<span class="nc" id="L982">		}</span>
+
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+
+<span class="nc" id="L987">			Buff.affect(user, TimeStasis.class, 100f);</span>
+<span class="nc" id="L988">			Sample.INSTANCE.play(Assets.Sounds.TELEPORT);</span>
+
+<span class="nc" id="L990">			user.sprite.emitter().burst(Speck.factory(Speck.STEAM), 10);</span>
+<span class="nc" id="L991">			GLog.w(Messages.get(CursedWand.class, &quot;petrify&quot;));</span>
+
+<span class="nc" id="L993">			return true;</span>
+		}
+	}
+
+	//*************************
+	//*** Very Rare Effects ***
+	//*************************
+
+<span class="nc" id="L1001">	private static ArrayList&lt;CursedEffect&gt; VERY_RARE_EFFECTS = new ArrayList&lt;&gt;();</span>
+	static {
+<span class="nc" id="L1003">		VERY_RARE_EFFECTS.add(new ForestFire());</span>
+<span class="nc" id="L1004">		VERY_RARE_EFFECTS.add(new SpawnGoldenMimic());</span>
+<span class="nc" id="L1005">		VERY_RARE_EFFECTS.add(new AbortRetryFail());</span>
+<span class="nc" id="L1006">		VERY_RARE_EFFECTS.add(new RandomTransmogrify());</span>
+<span class="nc" id="L1007">		VERY_RARE_EFFECTS.add(new HeroShapeShift());</span>
+<span class="nc" id="L1008">		VERY_RARE_EFFECTS.add(new SuperNova());</span>
+<span class="nc" id="L1009">		VERY_RARE_EFFECTS.add(new SinkHole());</span>
+<span class="nc" id="L1010">		VERY_RARE_EFFECTS.add(new GravityChaos());</span>
+<span class="nc" id="L1011">	}</span>
+
+	public static CursedEffect randomVeryRareEffect(){
+<span class="nc" id="L1014">		return Random.element(VERY_RARE_EFFECTS);</span>
+	}
+
+	public static CursedEffect randomValidVeryRareEffect(Item origin, Char user, Ballistica bolt, boolean positiveOnly){
+		CursedEffect effect;
+		do {
+<span class="nc" id="L1020">			effect = Random.element(VERY_RARE_EFFECTS);</span>
+<span class="nc bnc" id="L1021" title="All 2 branches missed.">		} while (!effect.valid(origin, user, bolt, positiveOnly));</span>
+<span class="nc" id="L1022">		return effect;</span>
+	}
+
+<span class="nc" id="L1025">	public static class ForestFire extends CursedEffect {</span>
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc bnc" id="L1028" title="All 2 branches missed.">			for (int i = 0; i &lt; Dungeon.level.length(); i++){</span>
+<span class="nc" id="L1029">				GameScene.add( Blob.seed(i, 15, Regrowth.class));</span>
+			}
+
+<span class="nc" id="L1032">			new Flare(8, 32).color(0xFFFF66, true).show(user.sprite, 2f);</span>
+<span class="nc" id="L1033">			Sample.INSTANCE.play(Assets.Sounds.TELEPORT);</span>
+<span class="nc" id="L1034">			GLog.p(Messages.get(CursedWand.class, &quot;grass&quot;));</span>
+			//only grass, no fire, if positive only
+<span class="nc bnc" id="L1036" title="All 2 branches missed.">			if (!positiveOnly) {</span>
+<span class="nc" id="L1037">				GLog.w(Messages.get(CursedWand.class, &quot;fire&quot;));</span>
+				do {
+<span class="nc" id="L1039">					GameScene.add(Blob.seed(Dungeon.level.randomDestination(null), 10, Fire.class));</span>
+<span class="nc bnc" id="L1040" title="All 2 branches missed.">				} while (Random.Int(5) != 0);</span>
+			}
+<span class="nc" id="L1042">			return true;</span>
+		}
+	}
+
+<span class="nc" id="L1046">	public static class SpawnGoldenMimic extends CursedEffect {</span>
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc" id="L1049">			Char ch = Actor.findChar(bolt.collisionPos);</span>
+<span class="nc" id="L1050">			int spawnCell = bolt.collisionPos;</span>
+<span class="nc bnc" id="L1051" title="All 2 branches missed.">			if (ch != null){</span>
+<span class="nc" id="L1052">				ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;Integer&gt;();</span>
+<span class="nc bnc" id="L1053" title="All 2 branches missed.">				for (int n : PathFinder.NEIGHBOURS8) {</span>
+<span class="nc" id="L1054">					int cell = bolt.collisionPos + n;</span>
+<span class="nc bnc" id="L1055" title="All 4 branches missed.">					if (Dungeon.level.passable[cell] &amp;&amp; Actor.findChar( cell ) == null) {</span>
+<span class="nc" id="L1056">						candidates.add( cell );</span>
+					}
+				}
+<span class="nc bnc" id="L1059" title="All 2 branches missed.">				if (!candidates.isEmpty()){</span>
+<span class="nc" id="L1060">					spawnCell = Random.element(candidates);</span>
+				} else {
+<span class="nc" id="L1062">					return false;</span>
+				}
+			}
+
+<span class="nc" id="L1066">			Mimic mimic = Mimic.spawnAt(spawnCell, GoldenMimic.class, false);</span>
+<span class="nc" id="L1067">			mimic.stopHiding();</span>
+<span class="nc" id="L1068">			mimic.alignment = Char.Alignment.ENEMY;</span>
+			//play vfx/sfx manually as mimic isn't in the scene yet
+<span class="nc" id="L1070">			Sample.INSTANCE.play(Assets.Sounds.MIMIC, 1, 0.85f);</span>
+<span class="nc" id="L1071">			CellEmitter.get(mimic.pos).burst(Speck.factory(Speck.STAR), 10);</span>
+<span class="nc" id="L1072">			mimic.items.clear();</span>
+<span class="nc" id="L1073">			GameScene.add(mimic);</span>
+
+			//mimic is enthralled, but also contains no extra reward, if positive only
+<span class="nc bnc" id="L1076" title="All 2 branches missed.">			if (positiveOnly){</span>
+<span class="nc" id="L1077">				Buff.affect(mimic, ScrollOfSirensSong.Enthralled.class);</span>
+			} else {
+				Item reward;
+				do {
+<span class="nc" id="L1081">					reward = Generator.randomUsingDefaults(Random.oneOf(Generator.Category.WEAPON, Generator.Category.ARMOR,</span>
+							Generator.Category.RING, Generator.Category.WAND));
+<span class="nc bnc" id="L1083" title="All 2 branches missed.">				} while (reward.level() &lt; 1);</span>
+<span class="nc" id="L1084">				mimic.items.add(reward);</span>
+			}
+
+<span class="nc" id="L1087">			Dungeon.level.occupyCell(mimic);</span>
+
+<span class="nc" id="L1089">			return true;</span>
+		}
+	}
+
+<span class="nc" id="L1093">	public static class AbortRetryFail extends CursedEffect {</span>
+
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+			//appears to crash the game (actually just closes it)
+			try {
+<span class="nc" id="L1099">				Dungeon.saveAll();</span>
+<span class="nc bnc" id="L1100" title="All 2 branches missed.">				if(Messages.lang() != Languages.ENGLISH){</span>
+					//Don't bother doing this joke to none-english speakers, I doubt it would translate.
+					//we still consider the effect valid here though as it's cosmetic anyway
+<span class="nc" id="L1103">					return false;</span>
+				} else {
+<span class="nc" id="L1105">					ShatteredPixelDungeon.runOnRenderThread(</span>
+<span class="nc" id="L1106">							new Callback() {</span>
+								@Override
+								public void call() {
+<span class="nc" id="L1109">									GameScene.show(</span>
+<span class="nc" id="L1110">											new WndOptions(Icons.get(Icons.WARNING),</span>
+													&quot;CURSED WAND ERROR&quot;,
+													&quot;this application will now self-destruct&quot;,
+													&quot;abort&quot;,
+													&quot;retry&quot;,
+<span class="nc" id="L1115">													&quot;fail&quot;) {</span>
+
+												@Override
+												protected void onSelect(int index) {
+<span class="nc" id="L1119">													Game.instance.finish();</span>
+<span class="nc" id="L1120">												}</span>
+
+												@Override
+												public void onBackPressed() {
+													//do nothing
+<span class="nc" id="L1125">												}</span>
+											}
+									);
+<span class="nc" id="L1128">								}</span>
+							}
+					);
+<span class="nc" id="L1131">					return false;</span>
+				}
+<span class="nc" id="L1133">			} catch(IOException e){</span>
+<span class="nc" id="L1134">				ShatteredPixelDungeon.reportException(e);</span>
+				//maybe don't kill the game if the save failed, just do nothing
+<span class="nc" id="L1136">				return false;</span>
+			}
+		}
+	}
+
+<span class="nc" id="L1141">	public static class RandomTransmogrify extends CursedEffect {</span>
+
+		@Override
+		public boolean valid(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc bnc" id="L1145" title="All 2 branches missed.">			if (positiveOnly){</span>
+<span class="nc" id="L1146">				return true;</span>
+<span class="nc bnc" id="L1147" title="All 6 branches missed.">			} else if (origin == null || user != Dungeon.hero || !Dungeon.hero.belongings.contains(origin)){</span>
+<span class="nc" id="L1148">				return false;</span>
+			} else {
+<span class="nc" id="L1150">				return true;</span>
+			}
+		}
+
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+			//triggers metamorph effect if positive only
+<span class="nc bnc" id="L1157" title="All 2 branches missed.">			if (positiveOnly){</span>
+<span class="nc" id="L1158">				GameScene.show(new ScrollOfMetamorphosis.WndMetamorphChoose());</span>
+<span class="nc" id="L1159">				return true;</span>
+			}
+
+			//skips this effect if there is no item to transmogrify
+<span class="nc bnc" id="L1163" title="All 6 branches missed.">			if (origin == null || user != Dungeon.hero || !Dungeon.hero.belongings.contains(origin)){</span>
+<span class="nc" id="L1164">				return false;</span>
+			}
+<span class="nc" id="L1166">			origin.detach(Dungeon.hero.belongings.backpack);</span>
+			Item result;
+			do {
+<span class="nc" id="L1169">				result = Generator.randomUsingDefaults(Random.oneOf(Generator.Category.WEAPON, Generator.Category.ARMOR,</span>
+						Generator.Category.RING, Generator.Category.ARTIFACT));
+<span class="nc bnc" id="L1171" title="All 2 branches missed.">			} while (result.cursed);</span>
+<span class="nc bnc" id="L1172" title="All 2 branches missed.">			if (result.isUpgradable()) result.upgrade();</span>
+<span class="nc" id="L1173">			result.cursed = result.cursedKnown = true;</span>
+<span class="nc bnc" id="L1174" title="All 2 branches missed.">			if (origin instanceof Wand){</span>
+<span class="nc" id="L1175">				GLog.w( Messages.get(CursedWand.class, &quot;transmogrify_wand&quot;) );</span>
+			} else {
+<span class="nc" id="L1177">				GLog.w( Messages.get(CursedWand.class, &quot;transmogrify_other&quot;) );</span>
+			}
+<span class="nc" id="L1179">			Dungeon.level.drop(result, user.pos).sprite.drop();</span>
+<span class="nc" id="L1180">			return true;</span>
+		}
+	}
+
+<span class="nc" id="L1184">	public static class HeroShapeShift extends CursedEffect {</span>
+
+		@Override
+		public boolean valid(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc bnc" id="L1188" title="All 4 branches missed.">			return user instanceof Hero || Actor.findChar(bolt.collisionPos) instanceof Hero;</span>
+		}
+
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc bnc" id="L1193" title="All 2 branches missed.">			if (user instanceof Hero){</span>
+<span class="nc" id="L1194">				Buff.affect(user, HeroDisguise.class, HeroDisguise.DURATION);</span>
+<span class="nc" id="L1195">				GLog.w( Messages.get(CursedWand.class, &quot;disguise&quot;) );</span>
+<span class="nc" id="L1196">				return true;</span>
+<span class="nc bnc" id="L1197" title="All 2 branches missed.">			} else if (Actor.findChar(bolt.collisionPos) instanceof Hero){</span>
+<span class="nc" id="L1198">				Buff.affect(Actor.findChar(bolt.collisionPos), HeroDisguise.class, HeroDisguise.DURATION);</span>
+<span class="nc" id="L1199">				GLog.w( Messages.get(CursedWand.class, &quot;disguise&quot;) );</span>
+<span class="nc" id="L1200">				return true;</span>
+			}
+<span class="nc" id="L1202">			return false;</span>
+		}
+	}
+
+<span class="nc" id="L1206">	public static class SuperNova extends CursedEffect {</span>
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc" id="L1209">			SuperNovaTracker nova = Buff.append(Dungeon.hero, SuperNovaTracker.class);</span>
+<span class="nc" id="L1210">			nova.pos = bolt.collisionPos;</span>
+<span class="nc bnc" id="L1211" title="All 2 branches missed.">			nova.harmsAllies = !positiveOnly;</span>
+<span class="nc bnc" id="L1212" title="All 2 branches missed.">			if (positiveOnly){</span>
+<span class="nc" id="L1213">				GLog.p(Messages.get(CursedWand.class, &quot;supernova_positive&quot;));</span>
+			} else {
+<span class="nc" id="L1215">				GLog.w(Messages.get(CursedWand.class, &quot;supernova&quot;));</span>
+			}
+
+<span class="nc" id="L1218">			return true;</span>
+		}
+	}
+
+<span class="nc" id="L1222">	public static class SinkHole extends CursedEffect {</span>
+
+		@Override
+		public boolean valid(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+			//can't happen on floors where chasms aren't allowed
+<span class="nc bnc" id="L1227" title="All 6 branches missed.">			if( Dungeon.bossLevel() || Dungeon.depth &gt; 25 || Dungeon.branch != 0){</span>
+<span class="nc" id="L1228">				return false;</span>
+			}
+<span class="nc" id="L1230">			return true;</span>
+		}
+
+		@Override
+		public void FX(Item origin, Char user, Ballistica bolt, Callback callback) {
+<span class="nc" id="L1235">			callback.call(); //no vfx</span>
+<span class="nc" id="L1236">		}</span>
+
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc" id="L1240">			boolean[] passable = BArray.not( Dungeon.level.solid, null );</span>
+<span class="nc" id="L1241">			BArray.or(passable, Dungeon.level.passable, passable);</span>
+<span class="nc" id="L1242">			PathFinder.buildDistanceMap( user.pos, passable, 5 );</span>
+<span class="nc" id="L1243">			ArrayList&lt;Integer&gt; positions = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L1244" title="All 2 branches missed.">			for (int i = 0; i &lt; PathFinder.distance.length; i++) {</span>
+<span class="nc bnc" id="L1245" title="All 2 branches missed.">				if (PathFinder.distance[i] &lt; Integer.MAX_VALUE) {</span>
+<span class="nc bnc" id="L1246" title="All 4 branches missed.">					if (!Dungeon.level.solid[i] || Dungeon.level.passable[i]) {</span>
+<span class="nc" id="L1247">						CellEmitter.floor(i).burst(PitfallParticle.FACTORY4, 8);</span>
+<span class="nc" id="L1248">						positions.add(i);</span>
+					}
+				}
+			}
+<span class="nc" id="L1252">			PitfallTrap.DelayedPit p = Buff.append(Dungeon.hero, PitfallTrap.DelayedPit.class, 1);</span>
+<span class="nc" id="L1253">			p.depth = Dungeon.depth;</span>
+<span class="nc" id="L1254">			p.branch = Dungeon.branch;</span>
+<span class="nc" id="L1255">			p.setPositions(positions);</span>
+
+			//effect does not harm hero/allies if positive only
+<span class="nc bnc" id="L1258" title="All 2 branches missed.">			if (positiveOnly){</span>
+<span class="nc" id="L1259">				p.ignoreAllies = true;</span>
+<span class="nc" id="L1260">				GLog.p(Messages.get(CursedWand.class, &quot;sinkhole_positive&quot;));</span>
+			} else {
+<span class="nc" id="L1262">				GLog.w(Messages.get(CursedWand.class, &quot;sinkhole&quot;));</span>
+			}
+<span class="nc" id="L1264">			return true;</span>
+		}
+	}
+
+<span class="nc" id="L1268">	public static class GravityChaos extends CursedEffect{</span>
+
+		@Override
+		public void FX(Item origin, Char user, Ballistica bolt, Callback callback) {
+<span class="nc" id="L1272">			callback.call(); //no vfx</span>
+<span class="nc" id="L1273">		}</span>
+
+		@Override
+		public boolean effect(Item origin, Char user, Ballistica bolt, boolean positiveOnly) {
+<span class="nc" id="L1277">			Buff.append(user, GravityChaosTracker.class).positiveOnly = positiveOnly;</span>
+<span class="nc" id="L1278">			Sample.INSTANCE.play(Assets.Sounds.TELEPORT);</span>
+<span class="nc bnc" id="L1279" title="All 2 branches missed.">			if (positiveOnly){</span>
+<span class="nc" id="L1280">				GLog.p(Messages.get(CursedWand.class, &quot;gravity_positive&quot;));</span>
+			} else {
+<span class="nc" id="L1282">				GLog.w(Messages.get(CursedWand.class, &quot;gravity&quot;));</span>
+			}
+<span class="nc" id="L1284">			return true;</span>
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

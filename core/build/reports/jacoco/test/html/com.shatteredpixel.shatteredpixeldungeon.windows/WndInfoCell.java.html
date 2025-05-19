@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WndInfoCell.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.windows</a> &gt; <span class="el_source">WndInfoCell.java</span></div><h1>WndInfoCell.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.windows;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTerrainTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.watabou.noosa.Image;
+
+public class WndInfoCell extends Window {
+	
+	private static final float GAP	= 2;
+	
+	private static final int WIDTH = 120;
+
+	public static Image cellImage( int cell ){
+<span class="nc" id="L43">		int tile = Dungeon.level.map[cell];</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">		if (Dungeon.level.water[cell]) {</span>
+<span class="nc" id="L45">			tile = Terrain.WATER;</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">		} else if (Dungeon.level.pit[cell]) {</span>
+<span class="nc" id="L47">			tile = Terrain.CHASM;</span>
+		}
+
+<span class="nc" id="L50">		Image customImage = null;</span>
+<span class="nc" id="L51">		int x = cell % Dungeon.level.width();</span>
+<span class="nc" id="L52">		int y = cell / Dungeon.level.width();</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">		for (CustomTilemap i : Dungeon.level.customTiles){</span>
+<span class="nc bnc" id="L54" title="All 8 branches missed.">			if ((x &gt;= i.tileX &amp;&amp; x &lt; i.tileX+i.tileW) &amp;&amp;</span>
+					(y &gt;= i.tileY &amp;&amp; y &lt; i.tileY+i.tileH)){
+<span class="nc bnc" id="L56" title="All 2 branches missed.">				if ((customImage = i.image(x - i.tileX, y - i.tileY)) != null) {</span>
+<span class="nc" id="L57">					break;</span>
+				}
+			}
+<span class="nc" id="L60">		}</span>
+
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		if (customImage != null){</span>
+<span class="nc" id="L63">			return customImage;</span>
+		} else {
+
+<span class="nc bnc" id="L66" title="All 2 branches missed.">			if (tile == Terrain.WATER) {</span>
+<span class="nc" id="L67">				Image water = new Image(Dungeon.level.waterTex());</span>
+<span class="nc" id="L68">				water.frame(0, 0, DungeonTilemap.SIZE, DungeonTilemap.SIZE);</span>
+<span class="nc" id="L69">				return water;</span>
+			} else {
+<span class="nc" id="L71">				return DungeonTerrainTilemap.tile(cell, tile);</span>
+			}
+		}
+	}
+
+	public static String cellName( int cell ){
+
+<span class="nc" id="L78">		CustomTilemap customTile = null;</span>
+<span class="nc" id="L79">		int x = cell % Dungeon.level.width();</span>
+<span class="nc" id="L80">		int y = cell / Dungeon.level.width();</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		for (CustomTilemap i : Dungeon.level.customTiles){</span>
+<span class="nc bnc" id="L82" title="All 8 branches missed.">			if ((x &gt;= i.tileX &amp;&amp; x &lt; i.tileX+i.tileW) &amp;&amp;</span>
+					(y &gt;= i.tileY &amp;&amp; y &lt; i.tileY+i.tileH)){
+<span class="nc bnc" id="L84" title="All 2 branches missed.">				if (i.image(x - i.tileX, y - i.tileY) != null) {</span>
+<span class="nc" id="L85">					x -= i.tileX;</span>
+<span class="nc" id="L86">					y -= i.tileY;</span>
+<span class="nc" id="L87">					customTile = i;</span>
+<span class="nc" id="L88">					break;</span>
+				}
+			}
+<span class="nc" id="L91">		}</span>
+
+<span class="nc bnc" id="L93" title="All 4 branches missed.">		if (customTile != null &amp;&amp; customTile.name(x, y) != null){</span>
+<span class="nc" id="L94">			return customTile.name(x, y);</span>
+		} else {
+<span class="nc" id="L96">			return Dungeon.level.tileName(Dungeon.level.map[cell]);</span>
+		}
+	}
+	
+	public WndInfoCell( int cell ) {
+		
+<span class="nc" id="L102">		super();</span>
+
+<span class="nc" id="L104">		CustomTilemap customTile = null;</span>
+<span class="nc" id="L105">		int x = cell % Dungeon.level.width();</span>
+<span class="nc" id="L106">		int y = cell / Dungeon.level.width();</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		for (CustomTilemap i : Dungeon.level.customTiles){</span>
+<span class="nc bnc" id="L108" title="All 8 branches missed.">			if ((x &gt;= i.tileX &amp;&amp; x &lt; i.tileX+i.tileW) &amp;&amp;</span>
+					(y &gt;= i.tileY &amp;&amp; y &lt; i.tileY+i.tileH)){
+<span class="nc bnc" id="L110" title="All 2 branches missed.">				if (i.image(x - i.tileX, y - i.tileY) != null) {</span>
+<span class="nc" id="L111">					x -= i.tileX;</span>
+<span class="nc" id="L112">					y -= i.tileY;</span>
+<span class="nc" id="L113">					customTile = i;</span>
+<span class="nc" id="L114">					break;</span>
+				}
+			}
+<span class="nc" id="L117">		}</span>
+
+
+<span class="nc" id="L120">		String desc = &quot;&quot;;</span>
+
+<span class="nc" id="L122">		IconTitle titlebar = new IconTitle();</span>
+<span class="nc" id="L123">		titlebar.icon(cellImage(cell));</span>
+<span class="nc" id="L124">		titlebar.label(cellName(cell));</span>
+
+<span class="nc bnc" id="L126" title="All 2 branches missed.">		if (customTile != null){</span>
+<span class="nc" id="L127">			String customDesc = customTile.desc(x, y);</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">			if (customDesc != null) {</span>
+<span class="nc" id="L129">				desc += customDesc;</span>
+			} else {
+<span class="nc" id="L131">				desc += Dungeon.level.tileDesc(Dungeon.level.map[cell]);</span>
+			}
+
+<span class="nc" id="L134">		} else {</span>
+
+<span class="nc" id="L136">			desc += Dungeon.level.tileDesc(Dungeon.level.map[cell]);</span>
+		}
+<span class="nc" id="L138">		titlebar.setRect(0, 0, WIDTH, 0);</span>
+<span class="nc" id="L139">		add(titlebar);</span>
+
+<span class="nc" id="L141">		RenderedTextBlock info = PixelScene.renderTextBlock(6);</span>
+<span class="nc" id="L142">		add(info);</span>
+
+<span class="nc bnc" id="L144" title="All 2 branches missed.">		if (Dungeon.level.heroFOV[cell]) {</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">			for (Blob blob : Dungeon.level.blobs.values()) {</span>
+<span class="nc bnc" id="L146" title="All 6 branches missed.">				if (blob.volume &gt; 0 &amp;&amp; blob.cur[cell] &gt; 0 &amp;&amp; blob.tileDesc() != null) {</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">					if (desc.length() &gt; 0) {</span>
+<span class="nc" id="L148">						desc += &quot;\n\n&quot;;</span>
+					}
+<span class="nc" id="L150">					desc += blob.tileDesc();</span>
+				}
+<span class="nc" id="L152">			}</span>
+		}
+		
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		info.text( desc.length() == 0 ? Messages.get(this, &quot;nothing&quot;) : desc );</span>
+<span class="nc" id="L156">		info.maxWidth(WIDTH);</span>
+<span class="nc" id="L157">		info.setPos(titlebar.left(), titlebar.bottom() + 2*GAP);</span>
+		
+<span class="nc" id="L159">		resize( WIDTH, (int)info.bottom()+2 );</span>
+<span class="nc" id="L160">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

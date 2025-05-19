@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CrystalWisp.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">CrystalWisp.java</span></div><h1>CrystalWisp.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CrystalWispSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+
+public class CrystalWisp extends Mob{
+
+	{
+<span class="nc" id="L40">		spriteClass = CrystalWispSprite.class;</span>
+
+<span class="nc" id="L42">		HP = HT = 30;</span>
+<span class="nc" id="L43">		defenseSkill = 16;</span>
+
+<span class="nc" id="L45">		EXP = 7;</span>
+<span class="nc" id="L46">		maxLvl = -2;</span>
+
+<span class="nc" id="L48">		flying = true;</span>
+
+<span class="nc" id="L50">		properties.add(Property.INORGANIC);</span>
+	}
+
+	public CrystalWisp(){
+<span class="nc" id="L54">		super();</span>
+<span class="nc bnc" id="L55" title="All 3 branches missed.">		switch (Random.Int(3)){</span>
+			case 0: default:
+<span class="nc" id="L57">				spriteClass = CrystalWispSprite.Blue.class;</span>
+<span class="nc" id="L58">				break;</span>
+			case 1:
+<span class="nc" id="L60">				spriteClass = CrystalWispSprite.Green.class;</span>
+<span class="nc" id="L61">				break;</span>
+			case 2:
+<span class="nc" id="L63">				spriteClass = CrystalWispSprite.Red.class;</span>
+				break;
+		}
+<span class="nc" id="L66">	}</span>
+
+	@Override
+	public boolean[] modifyPassable(boolean[] passable) {
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		for (int i = 0; i &lt; Dungeon.level.length(); i++){</span>
+<span class="nc bnc" id="L71" title="All 4 branches missed.">			passable[i] = passable[i] || Dungeon.level.map[i] == Terrain.MINE_CRYSTAL;</span>
+		}
+<span class="nc" id="L73">		return passable;</span>
+	}
+
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L78">		return Random.NormalIntRange( 5, 10 );</span>
+	}
+
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L83">		return 18;</span>
+	}
+
+	@Override
+	public int drRoll() {
+<span class="nc" id="L88">		return super.drRoll() + Random.NormalIntRange(0, 5);</span>
+	}
+
+	@Override
+	protected boolean canAttack( Char enemy ) {
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		return super.canAttack(enemy)</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">				|| new Ballistica( pos, enemy.pos, Ballistica.MAGIC_BOLT).collisionPos == enemy.pos;</span>
+	}
+
+	protected boolean doAttack(Char enemy ) {
+
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		if (Dungeon.level.adjacent( pos, enemy.pos )</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">				|| new Ballistica( pos, enemy.pos, Ballistica.MAGIC_BOLT).collisionPos != enemy.pos) {</span>
+
+<span class="nc" id="L102">			return super.doAttack( enemy );</span>
+
+		} else {
+
+<span class="nc bnc" id="L106" title="All 6 branches missed.">			if (sprite != null &amp;&amp; (sprite.visible || enemy.sprite.visible)) {</span>
+<span class="nc" id="L107">				sprite.zap( enemy.pos );</span>
+<span class="nc" id="L108">				return false;</span>
+			} else {
+<span class="nc" id="L110">				zap();</span>
+<span class="nc" id="L111">				return true;</span>
+			}
+		}
+	}
+
+	@Override
+	public void die(Object cause) {
+<span class="nc" id="L118">		flying = false;</span>
+<span class="nc" id="L119">		super.die(cause);</span>
+<span class="nc" id="L120">	}</span>
+
+	//used so resistances can differentiate between melee and magical attacks
+<span class="nc" id="L123">	public static class LightBeam {}</span>
+
+	private void zap() {
+<span class="nc" id="L126">		spend( 1f );</span>
+
+<span class="nc" id="L128">		Invisibility.dispel(this);</span>
+<span class="nc" id="L129">		Char enemy = this.enemy;</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">		if (hit( this, enemy, true )) {</span>
+
+<span class="nc" id="L132">			int dmg = Random.NormalIntRange( 5, 10 );</span>
+<span class="nc" id="L133">			enemy.damage( dmg, new LightBeam() );</span>
+
+<span class="nc bnc" id="L135" title="All 4 branches missed.">			if (!enemy.isAlive() &amp;&amp; enemy == Dungeon.hero) {</span>
+<span class="nc" id="L136">				Badges.validateDeathFromEnemyMagic();</span>
+<span class="nc" id="L137">				Dungeon.fail( this );</span>
+<span class="nc" id="L138">				GLog.n( Messages.get(this, &quot;beam_kill&quot;) );</span>
+			}
+<span class="nc" id="L140">		} else {</span>
+<span class="nc" id="L141">			enemy.sprite.showStatus( CharSprite.NEUTRAL,  enemy.defenseVerb() );</span>
+		}
+<span class="nc" id="L143">	}</span>
+
+	public void onZapComplete() {
+<span class="nc" id="L146">		zap();</span>
+<span class="nc" id="L147">		next();</span>
+<span class="nc" id="L148">	}</span>
+
+	public static final String SPRITE = &quot;sprite&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L154">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L155">		bundle.put(SPRITE, spriteClass);</span>
+<span class="nc" id="L156">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L160">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L161">		spriteClass = bundle.getClass(SPRITE);</span>
+<span class="nc" id="L162">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

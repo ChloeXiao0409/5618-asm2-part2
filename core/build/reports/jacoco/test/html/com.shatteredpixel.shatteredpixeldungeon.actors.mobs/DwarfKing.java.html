@@ -1,0 +1,801 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DwarfKing.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">DwarfKing.java</span></div><h1>DwarfKing.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Doom;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.LifeLink;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.LockedFloor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Sheep;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Beam;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ElmoParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SparkParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.KingsCrown;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Viscosity;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.LloydsBeacon;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfLightning;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Bestiary;
+import com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.KingSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.audio.Music;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+
+<span class="nc" id="L78">public class DwarfKing extends Mob {</span>
+
+	{
+<span class="nc" id="L81">		spriteClass = KingSprite.class;</span>
+
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		HP = HT = Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? 450 : 300;</span>
+<span class="nc" id="L84">		EXP = 40;</span>
+<span class="nc" id="L85">		defenseSkill = 22;</span>
+
+<span class="nc" id="L87">		properties.add(Property.BOSS);</span>
+<span class="nc" id="L88">		properties.add(Property.UNDEAD);</span>
+	}
+
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L93">		return Random.NormalIntRange( 15, 25 );</span>
+	}
+
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L98">		return 26;</span>
+	}
+
+	@Override
+	public int drRoll() {
+<span class="nc" id="L103">		return super.drRoll() + Random.NormalIntRange(0, 10);</span>
+	}
+
+<span class="nc" id="L106">	private int phase = 1;</span>
+<span class="nc" id="L107">	private int summonsMade = 0;</span>
+
+<span class="nc" id="L109">	private float summonCooldown = 0;</span>
+<span class="nc" id="L110">	private float abilityCooldown = 0;</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">	private final int MIN_COOLDOWN = Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? 8 : 10;</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">	private final int MAX_COOLDOWN = Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? 10 : 14;</span>
+
+<span class="nc" id="L114">	private int lastAbility = 0;</span>
+	private static final int NONE = 0;
+	private static final int LINK = 1;
+	private static final int TELE = 2;
+
+	private static final String PHASE = &quot;phase&quot;;
+	private static final String SUMMONS_MADE = &quot;summons_made&quot;;
+
+	private static final String SUMMON_CD = &quot;summon_cd&quot;;
+	private static final String ABILITY_CD = &quot;ability_cd&quot;;
+	private static final String LAST_ABILITY = &quot;last_ability&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L128">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L129">		bundle.put( PHASE, phase );</span>
+<span class="nc" id="L130">		bundle.put( SUMMONS_MADE, summonsMade );</span>
+<span class="nc" id="L131">		bundle.put( SUMMON_CD, summonCooldown );</span>
+<span class="nc" id="L132">		bundle.put( ABILITY_CD, abilityCooldown );</span>
+<span class="nc" id="L133">		bundle.put( LAST_ABILITY, lastAbility );</span>
+<span class="nc" id="L134">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L138">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L139">		phase = bundle.getInt( PHASE );</span>
+<span class="nc" id="L140">		summonsMade = bundle.getInt( SUMMONS_MADE );</span>
+<span class="nc" id="L141">		summonCooldown = bundle.getFloat( SUMMON_CD );</span>
+<span class="nc" id="L142">		abilityCooldown = bundle.getFloat( ABILITY_CD );</span>
+<span class="nc" id="L143">		lastAbility = bundle.getInt( LAST_ABILITY );</span>
+
+<span class="nc bnc" id="L145" title="All 2 branches missed.">		if (phase == 2) properties.add(Property.IMMOVABLE);</span>
+
+<span class="nc" id="L147">		BossHealthBar.assignBoss(this);</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">		if (phase == 3) BossHealthBar.bleed(true);</span>
+<span class="nc" id="L149">	}</span>
+
+	@Override
+	protected boolean act() {
+<span class="nc bnc" id="L153" title="All 2 branches missed.">		if (pos == CityBossLevel.throne){</span>
+<span class="nc" id="L154">			throwItems();</span>
+		}
+
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		if (phase == 1) {</span>
+
+<span class="nc bnc" id="L159" title="All 6 branches missed.">			if (summonCooldown &lt;= 0 &amp;&amp; summonSubject(Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? 2 : 3)){</span>
+<span class="nc" id="L160">				summonsMade++;</span>
+<span class="nc" id="L161">				summonCooldown += Random.NormalIntRange(MIN_COOLDOWN, MAX_COOLDOWN);</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">			} else if (summonCooldown &gt; 0){</span>
+<span class="nc" id="L163">				summonCooldown--;</span>
+			}
+
+<span class="nc bnc" id="L166" title="All 2 branches missed.">			if (paralysed &gt; 0){</span>
+<span class="nc" id="L167">				spend(TICK);</span>
+<span class="nc" id="L168">				return true;</span>
+			}
+
+<span class="nc bnc" id="L171" title="All 2 branches missed.">			if (abilityCooldown &lt;= 0){</span>
+
+<span class="nc bnc" id="L173" title="All 2 branches missed.">				if (lastAbility == NONE) {</span>
+					//50/50 either ability
+<span class="nc bnc" id="L175" title="All 2 branches missed.">					lastAbility = Random.Int(2) == 0 ? LINK : TELE;</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">				} else if (lastAbility == LINK) {</span>
+					//more likely to use tele
+<span class="nc bnc" id="L178" title="All 2 branches missed.">					lastAbility = Random.Int(8) == 0 ? LINK : TELE;</span>
+				} else {
+					//more likely to use link
+<span class="nc bnc" id="L181" title="All 2 branches missed.">					lastAbility = Random.Int(8) != 0 ? LINK : TELE;</span>
+				}
+
+<span class="nc bnc" id="L184" title="All 4 branches missed.">				if (lastAbility == LINK &amp;&amp; lifeLinkSubject()){</span>
+<span class="nc" id="L185">					abilityCooldown += Random.NormalIntRange(MIN_COOLDOWN, MAX_COOLDOWN);</span>
+<span class="nc" id="L186">					spend(TICK);</span>
+<span class="nc" id="L187">					return true;</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">				} else if (teleportSubject()) {</span>
+<span class="nc" id="L189">					lastAbility = TELE;</span>
+<span class="nc" id="L190">					abilityCooldown += Random.NormalIntRange(MIN_COOLDOWN, MAX_COOLDOWN);</span>
+<span class="nc" id="L191">					spend(TICK);</span>
+<span class="nc" id="L192">					return true;</span>
+				}
+
+			} else {
+<span class="nc" id="L196">				abilityCooldown--;</span>
+			}
+
+<span class="nc bnc" id="L199" title="All 2 branches missed.">		} else if (phase == 2){</span>
+
+<span class="nc bnc" id="L201" title="All 2 branches missed.">			if (Dungeon.isChallenged(Challenges.STRONGER_BOSSES)){</span>
+				//challenge logic
+<span class="nc bnc" id="L203" title="All 2 branches missed.">				if (summonsMade &lt; 6){</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">					if (summonsMade == 0) {</span>
+<span class="nc" id="L205">						sprite.centerEmitter().start(Speck.factory(Speck.SCREAM), 0.4f, 2);</span>
+<span class="nc" id="L206">						Sample.INSTANCE.play(Assets.Sounds.CHALLENGE);</span>
+<span class="nc" id="L207">						yell(Messages.get(this, &quot;wave_1&quot;));</span>
+					}
+<span class="nc" id="L209">					summonSubject(3, DKGhoul.class);</span>
+<span class="nc" id="L210">					summonSubject(3, DKGhoul.class);</span>
+<span class="nc" id="L211">					spend(3 * TICK);</span>
+<span class="nc" id="L212">					summonsMade += 2;</span>
+<span class="nc" id="L213">					return true;</span>
+<span class="nc bnc" id="L214" title="All 4 branches missed.">				} else if (shielding() &lt;= 300 &amp;&amp; summonsMade &lt; 12){</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">					if (summonsMade == 6) {</span>
+<span class="nc" id="L216">						sprite.centerEmitter().start(Speck.factory(Speck.SCREAM), 0.4f, 2);</span>
+<span class="nc" id="L217">						Sample.INSTANCE.play(Assets.Sounds.CHALLENGE);</span>
+<span class="nc" id="L218">						yell(Messages.get(this, &quot;wave_2&quot;));</span>
+					}
+<span class="nc" id="L220">					summonSubject(3, DKGhoul.class);</span>
+<span class="nc" id="L221">					summonSubject(3, DKGhoul.class);</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">					if (summonsMade == 6) {</span>
+<span class="nc" id="L223">						summonSubject(3, DKMonk.class);</span>
+					} else {
+<span class="nc" id="L225">						summonSubject(3, DKWarlock.class);</span>
+					}
+<span class="nc" id="L227">					summonsMade += 3;</span>
+<span class="nc" id="L228">					spend(3*TICK);</span>
+<span class="nc" id="L229">					return true;</span>
+<span class="nc bnc" id="L230" title="All 4 branches missed.">				} else if (shielding() &lt;= 150 &amp;&amp; summonsMade &lt; 18) {</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">					if (summonsMade == 12) {</span>
+<span class="nc" id="L232">						sprite.centerEmitter().start(Speck.factory(Speck.SCREAM), 0.4f, 2);</span>
+<span class="nc" id="L233">						Sample.INSTANCE.play(Assets.Sounds.CHALLENGE);</span>
+<span class="nc" id="L234">						yell(Messages.get(this, &quot;wave_3&quot;));</span>
+<span class="nc" id="L235">						summonSubject(3, DKWarlock.class);</span>
+<span class="nc" id="L236">						summonSubject(3, DKMonk.class);</span>
+<span class="nc" id="L237">						summonSubject(3, DKGhoul.class);</span>
+<span class="nc" id="L238">						summonSubject(3, DKGhoul.class);</span>
+<span class="nc" id="L239">						summonsMade += 4;</span>
+<span class="nc" id="L240">						spend(3*TICK);</span>
+					} else {
+<span class="nc" id="L242">						summonSubject(3, DKGolem.class);</span>
+<span class="nc" id="L243">						summonSubject(3, DKGolem.class);</span>
+<span class="nc" id="L244">						summonsMade += 2;</span>
+<span class="nc" id="L245">						spend(TICK);</span>
+					}
+<span class="nc" id="L247">					return true;</span>
+				} else {
+<span class="nc" id="L249">					spend(TICK);</span>
+<span class="nc" id="L250">					return true;</span>
+				}
+			} else {
+				//non-challenge logic
+<span class="nc bnc" id="L254" title="All 2 branches missed.">				if (summonsMade &lt; 4) {</span>
+<span class="nc bnc" id="L255" title="All 2 branches missed.">					if (summonsMade == 0) {</span>
+<span class="nc" id="L256">						sprite.centerEmitter().start(Speck.factory(Speck.SCREAM), 0.4f, 2);</span>
+<span class="nc" id="L257">						Sample.INSTANCE.play(Assets.Sounds.CHALLENGE);</span>
+<span class="nc" id="L258">						yell(Messages.get(this, &quot;wave_1&quot;));</span>
+					}
+<span class="nc" id="L260">					summonSubject(3, DKGhoul.class);</span>
+<span class="nc" id="L261">					spend(3 * TICK);</span>
+<span class="nc" id="L262">					summonsMade++;</span>
+<span class="nc" id="L263">					return true;</span>
+<span class="nc bnc" id="L264" title="All 4 branches missed.">				} else if (shielding() &lt;= 200 &amp;&amp; summonsMade &lt; 8) {</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">					if (summonsMade == 4) {</span>
+<span class="nc" id="L266">						sprite.centerEmitter().start(Speck.factory(Speck.SCREAM), 0.4f, 2);</span>
+<span class="nc" id="L267">						Sample.INSTANCE.play(Assets.Sounds.CHALLENGE);</span>
+<span class="nc" id="L268">						yell(Messages.get(this, &quot;wave_2&quot;));</span>
+					}
+<span class="nc bnc" id="L270" title="All 2 branches missed.">					if (summonsMade == 7) {</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">						summonSubject(3, Random.Int(2) == 0 ? DKMonk.class : DKWarlock.class);</span>
+					} else {
+<span class="nc" id="L273">						summonSubject(3, DKGhoul.class);</span>
+					}
+<span class="nc" id="L275">					summonsMade++;</span>
+<span class="nc" id="L276">					spend(TICK);</span>
+<span class="nc" id="L277">					return true;</span>
+<span class="nc bnc" id="L278" title="All 4 branches missed.">				} else if (shielding() &lt;= 100 &amp;&amp; summonsMade &lt; 12) {</span>
+<span class="nc" id="L279">					sprite.centerEmitter().start(Speck.factory(Speck.SCREAM), 0.4f, 2);</span>
+<span class="nc" id="L280">					Sample.INSTANCE.play(Assets.Sounds.CHALLENGE);</span>
+<span class="nc" id="L281">					yell(Messages.get(this, &quot;wave_3&quot;));</span>
+<span class="nc" id="L282">					summonSubject(4, DKWarlock.class);</span>
+<span class="nc" id="L283">					summonSubject(4, DKMonk.class);</span>
+<span class="nc" id="L284">					summonSubject(4, DKGhoul.class);</span>
+<span class="nc" id="L285">					summonSubject(4, DKGhoul.class);</span>
+<span class="nc" id="L286">					summonsMade = 12;</span>
+<span class="nc" id="L287">					spend(TICK);</span>
+<span class="nc" id="L288">					return true;</span>
+				} else {
+<span class="nc" id="L290">					spend(TICK);</span>
+<span class="nc" id="L291">					return true;</span>
+				}
+			}
+<span class="nc bnc" id="L294" title="All 4 branches missed.">		} else if (phase == 3 &amp;&amp; buffs(Summoning.class).size() &lt; 4){</span>
+<span class="nc bnc" id="L295" title="All 4 branches missed.">			if (summonSubject(Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? 2 : 3)) summonsMade++;</span>
+		}
+
+<span class="nc" id="L298">		return super.act();</span>
+	}
+
+	private boolean summonSubject( int delay ){
+<span class="nc bnc" id="L302" title="All 2 branches missed.">		if (Dungeon.isChallenged(Challenges.STRONGER_BOSSES)) {</span>
+			//every 3rd summon is always a monk or warlock, otherwise ghoul
+			//except every 9th summon, which is a golem!
+<span class="nc bnc" id="L305" title="All 2 branches missed.">			if (summonsMade % 3 == 2) {</span>
+<span class="nc bnc" id="L306" title="All 2 branches missed.">				if (summonsMade % 9 == 8){</span>
+<span class="nc" id="L307">					return summonSubject(delay, DKGolem.class);</span>
+				} else {
+<span class="nc bnc" id="L309" title="All 2 branches missed.">					return summonSubject(delay, Random.Int(2) == 0 ? DKMonk.class : DKWarlock.class);</span>
+				}
+			} else {
+<span class="nc" id="L312">				return summonSubject(delay, DKGhoul.class);</span>
+			}
+
+		} else {
+			//every 4th summon is always a monk or warlock, otherwise ghoul
+<span class="nc bnc" id="L317" title="All 2 branches missed.">			if (summonsMade % 4 == 3) {</span>
+<span class="nc bnc" id="L318" title="All 2 branches missed.">				return summonSubject(delay, Random.Int(2) == 0 ? DKMonk.class : DKWarlock.class);</span>
+			} else {
+<span class="nc" id="L320">				return summonSubject(delay, DKGhoul.class);</span>
+			}
+		}
+	}
+
+	private boolean summonSubject( int delay, Class&lt;?extends Mob&gt; type ){
+<span class="nc" id="L326">		Summoning s = new Summoning();</span>
+<span class="nc" id="L327">		s.pos = ((CityBossLevel)Dungeon.level).getSummoningPos();</span>
+<span class="nc bnc" id="L328" title="All 2 branches missed.">		if (s.pos == -1) return false;</span>
+<span class="nc" id="L329">		s.summon = type;</span>
+<span class="nc" id="L330">		s.delay = delay;</span>
+<span class="nc" id="L331">		s.attachTo(this);</span>
+<span class="nc" id="L332">		return true;</span>
+	}
+
+	private HashSet&lt;Mob&gt; getSubjects(){
+<span class="nc" id="L336">		HashSet&lt;Mob&gt; subjects = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">		for (Mob m : Dungeon.level.mobs){</span>
+<span class="nc bnc" id="L338" title="All 10 branches missed.">			if (m.alignment == alignment &amp;&amp; (m instanceof Ghoul || m instanceof Monk || m instanceof Warlock || m instanceof Golem)){</span>
+<span class="nc" id="L339">				subjects.add(m);</span>
+			}
+<span class="nc" id="L341">		}</span>
+<span class="nc" id="L342">		return subjects;</span>
+	}
+
+	private boolean lifeLinkSubject(){
+<span class="nc" id="L346">		Mob furthest = null;</span>
+
+<span class="nc bnc" id="L348" title="All 2 branches missed.">		for (Mob m : getSubjects()){</span>
+<span class="nc" id="L349">			boolean alreadyLinked = false;</span>
+<span class="nc bnc" id="L350" title="All 2 branches missed.">			for (LifeLink l : m.buffs(LifeLink.class)){</span>
+<span class="nc bnc" id="L351" title="All 2 branches missed.">				if (l.object == id()) alreadyLinked = true;</span>
+<span class="nc" id="L352">			}</span>
+<span class="nc bnc" id="L353" title="All 2 branches missed.">			if (!alreadyLinked) {</span>
+<span class="nc bnc" id="L354" title="All 4 branches missed.">				if (furthest == null || Dungeon.level.distance(pos, furthest.pos) &lt; Dungeon.level.distance(pos, m.pos)){</span>
+<span class="nc" id="L355">					furthest = m;</span>
+				}
+			}
+<span class="nc" id="L358">		}</span>
+
+<span class="nc bnc" id="L360" title="All 2 branches missed.">		if (furthest != null) {</span>
+<span class="nc" id="L361">			Buff.append(furthest, LifeLink.class, 100f).object = id();</span>
+<span class="nc" id="L362">			Buff.append(this, LifeLink.class, 100f).object = furthest.id();</span>
+<span class="nc" id="L363">			yell(Messages.get(this, &quot;lifelink_&quot; + Random.IntRange(1, 2)));</span>
+<span class="nc" id="L364">			sprite.parent.add(new Beam.HealthRay(sprite.destinationCenter(), furthest.sprite.destinationCenter()));</span>
+<span class="nc" id="L365">			return true;</span>
+
+		}
+<span class="nc" id="L368">		return false;</span>
+	}
+
+	private boolean teleportSubject(){
+<span class="nc bnc" id="L372" title="All 2 branches missed.">		if (enemy == null) return false;</span>
+
+<span class="nc" id="L374">		Mob furthest = null;</span>
+
+<span class="nc bnc" id="L376" title="All 2 branches missed.">		for (Mob m : getSubjects()){</span>
+<span class="nc bnc" id="L377" title="All 4 branches missed.">			if (furthest == null || Dungeon.level.distance(pos, furthest.pos) &lt; Dungeon.level.distance(pos, m.pos)){</span>
+<span class="nc" id="L378">				furthest = m;</span>
+			}
+<span class="nc" id="L380">		}</span>
+
+<span class="nc bnc" id="L382" title="All 2 branches missed.">		if (furthest != null){</span>
+
+			float bestDist;
+<span class="nc" id="L385">			int bestPos = pos;</span>
+
+<span class="nc" id="L387">			Ballistica trajectory = new Ballistica(enemy.pos, pos, Ballistica.STOP_TARGET);</span>
+<span class="nc" id="L388">			int targetCell = trajectory.path.get(trajectory.dist+1);</span>
+			//if the position opposite the direction of the hero is open, go there
+<span class="nc bnc" id="L390" title="All 4 branches missed.">			if (Actor.findChar(targetCell) == null &amp;&amp; !Dungeon.level.solid[targetCell]){</span>
+<span class="nc" id="L391">				bestPos = targetCell;</span>
+
+			//Otherwise go to the neighbour cell that's open and is furthest
+			} else {
+<span class="nc" id="L395">				bestDist = Dungeon.level.trueDistance(pos, enemy.pos);</span>
+
+<span class="nc bnc" id="L397" title="All 2 branches missed.">				for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L398" title="All 4 branches missed.">					if (Actor.findChar(pos+i) == null</span>
+							&amp;&amp; !Dungeon.level.solid[pos+i]
+<span class="nc bnc" id="L400" title="All 2 branches missed.">							&amp;&amp; Dungeon.level.trueDistance(pos+i, enemy.pos) &gt; bestDist){</span>
+<span class="nc" id="L401">						bestPos = pos+i;</span>
+<span class="nc" id="L402">						bestDist = Dungeon.level.trueDistance(pos+i, enemy.pos);</span>
+					}
+				}
+			}
+
+<span class="nc" id="L407">			Actor.add(new Pushing(this, pos, bestPos));</span>
+<span class="nc" id="L408">			pos = bestPos;</span>
+
+			//find closest cell that's adjacent to enemy, place subject there
+<span class="nc" id="L411">			bestDist = Dungeon.level.trueDistance(enemy.pos, pos);</span>
+<span class="nc" id="L412">			bestPos = enemy.pos;</span>
+<span class="nc bnc" id="L413" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L414" title="All 4 branches missed.">				if (Actor.findChar(enemy.pos+i) == null</span>
+						&amp;&amp; !Dungeon.level.solid[enemy.pos+i]
+<span class="nc bnc" id="L416" title="All 2 branches missed.">						&amp;&amp; Dungeon.level.trueDistance(enemy.pos+i, pos) &lt; bestDist){</span>
+<span class="nc" id="L417">					bestPos = enemy.pos+i;</span>
+<span class="nc" id="L418">					bestDist = Dungeon.level.trueDistance(enemy.pos+i, pos);</span>
+				}
+			}
+
+<span class="nc bnc" id="L422" title="All 2 branches missed.">			if (bestPos != enemy.pos) ScrollOfTeleportation.appear(furthest, bestPos);</span>
+<span class="nc" id="L423">			yell(Messages.get(this, &quot;teleport_&quot; + Random.IntRange(1, 2)));</span>
+<span class="nc" id="L424">			return true;</span>
+		}
+<span class="nc" id="L426">		return false;</span>
+	}
+
+	@Override
+	public void notice() {
+<span class="nc" id="L431">		super.notice();</span>
+<span class="nc bnc" id="L432" title="All 2 branches missed.">		if (!BossHealthBar.isAssigned()) {</span>
+<span class="nc" id="L433">			BossHealthBar.assignBoss(this);</span>
+<span class="nc" id="L434">			yell(Messages.get(this, &quot;notice&quot;));</span>
+<span class="nc bnc" id="L435" title="All 2 branches missed.">			for (Char ch : Actor.chars()){</span>
+<span class="nc bnc" id="L436" title="All 2 branches missed.">				if (ch instanceof DriedRose.GhostHero){</span>
+<span class="nc" id="L437">					((DriedRose.GhostHero) ch).sayBoss();</span>
+				}
+<span class="nc" id="L439">			}</span>
+		}
+<span class="nc" id="L441">	}</span>
+
+	@Override
+	public boolean isInvulnerable(Class effect) {
+<span class="nc bnc" id="L445" title="All 2 branches missed.">		if (effect == KingDamager.class){</span>
+<span class="nc" id="L446">			return false;</span>
+		} else {
+<span class="nc bnc" id="L448" title="All 4 branches missed.">			return phase == 2 || super.isInvulnerable(effect);</span>
+		}
+	}
+
+	@Override
+	public void damage(int dmg, Object src) {
+		//hero counts as unarmed if they aren't attacking with a weapon and aren't benefiting from force
+<span class="nc bnc" id="L455" title="All 6 branches missed.">		if (src == Dungeon.hero &amp;&amp; (!RingOfForce.fightingUnarmed(Dungeon.hero) || Dungeon.hero.buff(RingOfForce.Force.class) != null)){</span>
+<span class="nc" id="L456">			Statistics.qualifiedForBossChallengeBadge = false;</span>
+		//Corrosion, corruption, and regrowth do no direct damage and so have their own custom logic
+		//Transfusion damages DK and so doesn't need custom logic
+		//Lightning has custom logic so that chaining it doesn't DQ for the badge
+<span class="nc bnc" id="L460" title="All 4 branches missed.">		} else if (src instanceof Wand &amp;&amp; !(src instanceof WandOfLightning)){</span>
+<span class="nc" id="L461">			Statistics.qualifiedForBossChallengeBadge = false;</span>
+		}
+
+<span class="nc bnc" id="L464" title="All 2 branches missed.">		if (isInvulnerable(src.getClass())){</span>
+<span class="nc" id="L465">			super.damage(dmg, src);</span>
+<span class="nc" id="L466">			return;</span>
+<span class="nc bnc" id="L467" title="All 4 branches missed.">		} else if (phase == 3 &amp;&amp; !(src instanceof Viscosity.DeferedDamage)){</span>
+<span class="nc bnc" id="L468" title="All 2 branches missed.">			if (dmg &gt;= 0) {</span>
+<span class="nc" id="L469">				Viscosity.DeferedDamage deferred = Buff.affect( this, Viscosity.DeferedDamage.class );</span>
+<span class="nc" id="L470">				deferred.extend( dmg );</span>
+
+<span class="nc" id="L472">				sprite.showStatus( CharSprite.WARNING, Messages.get(Viscosity.class, &quot;deferred&quot;, dmg) );</span>
+			}
+<span class="nc" id="L474">			return;</span>
+		}
+<span class="nc" id="L476">		int preHP = HP;</span>
+<span class="nc" id="L477">		super.damage(dmg, src);</span>
+
+<span class="nc" id="L479">		LockedFloor lock = Dungeon.hero.buff(LockedFloor.class);</span>
+<span class="nc bnc" id="L480" title="All 6 branches missed.">		if (lock != null &amp;&amp; !isImmune(src.getClass()) &amp;&amp; !isInvulnerable(src.getClass())){</span>
+<span class="nc bnc" id="L481" title="All 2 branches missed.">			if (Dungeon.isChallenged(Challenges.STRONGER_BOSSES))   lock.addTime(dmg/5f);</span>
+<span class="nc" id="L482">			else                                                    lock.addTime(dmg/3f);</span>
+		}
+
+<span class="nc bnc" id="L485" title="All 2 branches missed.">		if (phase == 1) {</span>
+<span class="nc" id="L486">			int dmgTaken = preHP - HP;</span>
+<span class="nc" id="L487">			abilityCooldown -= dmgTaken/8f;</span>
+<span class="nc" id="L488">			summonCooldown -= dmgTaken/8f;</span>
+<span class="nc bnc" id="L489" title="All 4 branches missed.">			if (HP &lt;= (Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? 100 : 50)) {</span>
+<span class="nc bnc" id="L490" title="All 2 branches missed.">				HP = (Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? 100 : 50);</span>
+<span class="nc" id="L491">				sprite.showStatus(CharSprite.POSITIVE, Messages.get(this, &quot;invulnerable&quot;));</span>
+<span class="nc" id="L492">				ScrollOfTeleportation.appear(this, CityBossLevel.throne);</span>
+<span class="nc" id="L493">				properties.add(Property.IMMOVABLE);</span>
+<span class="nc" id="L494">				phase = 2;</span>
+<span class="nc" id="L495">				summonsMade = 0;</span>
+<span class="nc" id="L496">				sprite.idle();</span>
+<span class="nc" id="L497">				Buff.affect(this, DKBarrior.class).setShield(HT);</span>
+<span class="nc bnc" id="L498" title="All 2 branches missed.">				for (Summoning s : buffs(Summoning.class)) {</span>
+<span class="nc" id="L499">					s.detach();</span>
+<span class="nc" id="L500">				}</span>
+<span class="nc" id="L501">				Bestiary.skipCountingEncounters = true;</span>
+<span class="nc bnc" id="L502" title="All 2 branches missed.">				for (Mob m : getSubjects()) {</span>
+<span class="nc" id="L503">					m.die(null);</span>
+<span class="nc" id="L504">				}</span>
+<span class="nc" id="L505">				Bestiary.skipCountingEncounters = false;</span>
+<span class="nc bnc" id="L506" title="All 2 branches missed.">				for (Buff b: buffs()){</span>
+<span class="nc bnc" id="L507" title="All 2 branches missed.">					if (b instanceof LifeLink){</span>
+<span class="nc" id="L508">						b.detach();</span>
+					}
+<span class="nc" id="L510">				}</span>
+			}
+<span class="nc bnc" id="L512" title="All 4 branches missed.">		} else if (phase == 2 &amp;&amp; shielding() == 0) {</span>
+<span class="nc" id="L513">			properties.remove(Property.IMMOVABLE);</span>
+<span class="nc" id="L514">			phase = 3;</span>
+<span class="nc" id="L515">			summonsMade = 1; //monk/warlock on 3rd summon</span>
+<span class="nc" id="L516">			sprite.centerEmitter().start( Speck.factory( Speck.SCREAM ), 0.4f, 2 );</span>
+<span class="nc" id="L517">			Sample.INSTANCE.play( Assets.Sounds.CHALLENGE );</span>
+<span class="nc" id="L518">			yell(  Messages.get(this, &quot;enraged&quot;, Dungeon.hero.name()) );</span>
+<span class="nc" id="L519">			BossHealthBar.bleed(true);</span>
+<span class="nc" id="L520">			Game.runOnRenderThread(new Callback() {</span>
+				@Override
+				public void call() {
+<span class="nc" id="L523">					Music.INSTANCE.fadeOut(0.5f, new Callback() {</span>
+						@Override
+						public void call() {
+<span class="nc" id="L526">							Music.INSTANCE.play(Assets.Music.CITY_BOSS_FINALE, true);</span>
+<span class="nc" id="L527">						}</span>
+					});
+<span class="nc" id="L529">				}</span>
+			});
+<span class="nc bnc" id="L531" title="All 8 branches missed.">		} else if (phase == 3 &amp;&amp; preHP &gt; 20 &amp;&amp; HP &lt; 20 &amp;&amp; isAlive()){</span>
+<span class="nc" id="L532">			yell( Messages.get(this, &quot;losing&quot;) );</span>
+		}
+<span class="nc" id="L534">	}</span>
+
+	@Override
+	public boolean isAlive() {
+<span class="nc bnc" id="L538" title="All 4 branches missed.">		return super.isAlive() || phase != 3;</span>
+	}
+
+	@Override
+	public void die(Object cause) {
+
+<span class="nc" id="L544">		GameScene.bossSlain();</span>
+
+<span class="nc" id="L546">		super.die( cause );</span>
+
+<span class="nc" id="L548">		Heap h = Dungeon.level.heaps.get(CityBossLevel.throne);</span>
+<span class="nc bnc" id="L549" title="All 2 branches missed.">		if (h != null) {</span>
+<span class="nc bnc" id="L550" title="All 2 branches missed.">			for (Item i : h.items) {</span>
+<span class="nc" id="L551">				Dungeon.level.drop(i, CityBossLevel.throne + Dungeon.level.width());</span>
+<span class="nc" id="L552">			}</span>
+<span class="nc" id="L553">			h.destroy();</span>
+		}
+
+<span class="nc bnc" id="L556" title="All 2 branches missed.">		if (pos == CityBossLevel.throne){</span>
+<span class="nc" id="L557">			Dungeon.level.drop(new KingsCrown(), pos + Dungeon.level.width()).sprite.drop(pos);</span>
+		} else {
+<span class="nc" id="L559">			Dungeon.level.drop(new KingsCrown(), pos).sprite.drop();</span>
+		}
+
+<span class="nc" id="L562">		Badges.validateBossSlain();</span>
+<span class="nc bnc" id="L563" title="All 2 branches missed.">		if (Statistics.qualifiedForBossChallengeBadge){</span>
+<span class="nc" id="L564">			Badges.validateBossChallengeCompleted();</span>
+		}
+<span class="nc" id="L566">		Statistics.bossScores[3] += 4000;</span>
+
+<span class="nc" id="L568">		Dungeon.level.unseal();</span>
+
+<span class="nc" id="L570">		Bestiary.skipCountingEncounters = true;</span>
+<span class="nc bnc" id="L571" title="All 2 branches missed.">		for (Mob m : getSubjects()){</span>
+<span class="nc" id="L572">			m.die(null);</span>
+<span class="nc" id="L573">		}</span>
+<span class="nc" id="L574">		Bestiary.skipCountingEncounters = false;</span>
+
+<span class="nc" id="L576">		LloydsBeacon beacon = Dungeon.hero.belongings.getItem(LloydsBeacon.class);</span>
+<span class="nc bnc" id="L577" title="All 2 branches missed.">		if (beacon != null) {</span>
+<span class="nc" id="L578">			beacon.upgrade();</span>
+		}
+
+<span class="nc" id="L581">		yell( Messages.get(this, &quot;defeated&quot;) );</span>
+<span class="nc" id="L582">	}</span>
+
+	@Override
+	public boolean isImmune(Class effect) {
+		//immune to damage amplification from doomed in 2nd phase or later, but it can still be applied
+<span class="nc bnc" id="L587" title="All 6 branches missed.">		if (phase &gt; 1 &amp;&amp; effect == Doom.class &amp;&amp; buff(Doom.class) != null ){</span>
+<span class="nc" id="L588">			return true;</span>
+		}
+<span class="nc" id="L590">		return super.isImmune(effect);</span>
+	}
+
+<span class="nc" id="L593">	public static class DKGhoul extends Ghoul {</span>
+		{
+<span class="nc" id="L595">			properties.add(Property.BOSS_MINION);</span>
+<span class="nc" id="L596">			state = HUNTING;</span>
+<span class="nc" id="L597">		}</span>
+
+		@Override
+		protected boolean act() {
+<span class="nc" id="L601">			partnerID = -2; //no partners</span>
+<span class="nc" id="L602">			return super.act();</span>
+		}
+	}
+
+<span class="nc" id="L606">	public static class DKMonk extends Monk {</span>
+		{
+<span class="nc" id="L608">			properties.add(Property.BOSS_MINION);</span>
+<span class="nc" id="L609">			state = HUNTING;</span>
+<span class="nc" id="L610">		}</span>
+	}
+
+<span class="nc" id="L613">	public static class DKWarlock extends Warlock {</span>
+		{
+<span class="nc" id="L615">			properties.add(Property.BOSS_MINION);</span>
+<span class="nc" id="L616">			state = HUNTING;</span>
+<span class="nc" id="L617">		}</span>
+
+		@Override
+		protected void zap() {
+<span class="nc bnc" id="L621" title="All 2 branches missed.">			if (enemy == Dungeon.hero){</span>
+<span class="nc" id="L622">				Statistics.bossScores[3] -= 400;</span>
+			}
+<span class="nc" id="L624">			super.zap();</span>
+<span class="nc" id="L625">		}</span>
+	}
+
+<span class="nc" id="L628">	public static class DKGolem extends Golem {</span>
+		{
+<span class="nc" id="L630">			properties.add(Property.BOSS_MINION);</span>
+<span class="nc" id="L631">			state = HUNTING;</span>
+<span class="nc" id="L632">		}</span>
+	}
+
+<span class="nc" id="L635">	public static class Summoning extends Buff {</span>
+
+		private int delay;
+		private int pos;
+		private Class&lt;?extends Mob&gt; summon;
+
+		private Emitter particles;
+
+		public int getPos() {
+<span class="nc" id="L644">			return pos;</span>
+		}
+
+		@Override
+		public boolean act() {
+<span class="nc" id="L649">			delay--;</span>
+
+<span class="nc bnc" id="L651" title="All 2 branches missed.">			if (delay &lt;= 0){</span>
+
+<span class="nc bnc" id="L653" title="All 2 branches missed.">				if (summon == DKGolem.class){</span>
+<span class="nc" id="L654">					particles.burst(SparkParticle.FACTORY, 10);</span>
+<span class="nc" id="L655">					Sample.INSTANCE.play(Assets.Sounds.CHARGEUP);</span>
+<span class="nc bnc" id="L656" title="All 2 branches missed.">				} else if (summon == DKWarlock.class){</span>
+<span class="nc" id="L657">					particles.burst(ShadowParticle.CURSE, 10);</span>
+<span class="nc" id="L658">					Sample.INSTANCE.play(Assets.Sounds.CURSED);</span>
+<span class="nc bnc" id="L659" title="All 2 branches missed.">				} else if (summon == DKMonk.class){</span>
+<span class="nc" id="L660">					particles.burst(ElmoParticle.FACTORY, 10);</span>
+<span class="nc" id="L661">					Sample.INSTANCE.play(Assets.Sounds.BURNING);</span>
+				} else {
+<span class="nc" id="L663">					particles.burst(Speck.factory(Speck.BONE), 10);</span>
+<span class="nc" id="L664">					Sample.INSTANCE.play(Assets.Sounds.BONES);</span>
+				}
+<span class="nc" id="L666">				particles = null;</span>
+
+<span class="nc bnc" id="L668" title="All 2 branches missed.">				if (Actor.findChar(pos) != null){</span>
+<span class="nc" id="L669">					ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L670" title="All 2 branches missed.">					for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L671" title="All 4 branches missed.">						if (Dungeon.level.passable[pos+i] &amp;&amp; Actor.findChar(pos+i) == null){</span>
+<span class="nc" id="L672">							candidates.add(pos+i);</span>
+						}
+					}
+<span class="nc bnc" id="L675" title="All 2 branches missed.">					if (!candidates.isEmpty()){</span>
+<span class="nc" id="L676">						pos = Random.element(candidates);</span>
+					}
+				}
+
+				//kill sheep that are right on top of the spawner instead of failing to spawn
+<span class="nc bnc" id="L681" title="All 2 branches missed.">				if (Actor.findChar(pos) instanceof Sheep){</span>
+<span class="nc" id="L682">					Actor.findChar(pos).die(null);</span>
+				}
+
+<span class="nc bnc" id="L685" title="All 2 branches missed.">				if (Actor.findChar(pos) == null) {</span>
+<span class="nc" id="L686">					Mob m = Reflection.newInstance(summon);</span>
+<span class="nc" id="L687">					m.pos = pos;</span>
+<span class="nc" id="L688">					m.maxLvl = -2;</span>
+<span class="nc" id="L689">					GameScene.add(m);</span>
+<span class="nc" id="L690">					Dungeon.level.occupyCell(m);</span>
+<span class="nc" id="L691">					m.state = m.HUNTING;</span>
+<span class="nc bnc" id="L692" title="All 2 branches missed.">					if (((DwarfKing)target).phase == 2){</span>
+<span class="nc" id="L693">						Buff.affect(m, KingDamager.class);</span>
+					}
+<span class="nc" id="L695">				} else {</span>
+<span class="nc" id="L696">					Char ch = Actor.findChar(pos);</span>
+<span class="nc" id="L697">					ch.damage(Random.NormalIntRange(20, 40), this);</span>
+<span class="nc bnc" id="L698" title="All 2 branches missed.">					if (((DwarfKing)target).phase == 2){</span>
+<span class="nc bnc" id="L699" title="All 2 branches missed.">						if (Dungeon.isChallenged(Challenges.STRONGER_BOSSES)){</span>
+<span class="nc" id="L700">							target.damage(target.HT/18, new KingDamager());</span>
+						} else {
+<span class="nc" id="L702">							target.damage(target.HT/12, new KingDamager());</span>
+						}
+					}
+<span class="nc bnc" id="L705" title="All 4 branches missed.">					if (!ch.isAlive() &amp;&amp; ch == Dungeon.hero) {</span>
+<span class="nc" id="L706">						Dungeon.fail(DwarfKing.class);</span>
+<span class="nc" id="L707">						GLog.n( Messages.capitalize(Messages.get(Char.class, &quot;kill&quot;, Messages.get(DwarfKing.class, &quot;name&quot;))));</span>
+					}
+				}
+
+<span class="nc" id="L711">				detach();</span>
+			}
+
+<span class="nc" id="L714">			spend(TICK);</span>
+<span class="nc" id="L715">			return true;</span>
+		}
+
+		@Override
+		public void fx(boolean on) {
+<span class="nc bnc" id="L720" title="All 6 branches missed.">			if (on &amp;&amp; (particles == null || particles.parent == null)) {</span>
+<span class="nc" id="L721">				particles = CellEmitter.get(pos);</span>
+
+<span class="nc bnc" id="L723" title="All 2 branches missed.">				if (summon == DKGolem.class){</span>
+<span class="nc" id="L724">					particles.pour(SparkParticle.STATIC, 0.05f);</span>
+<span class="nc bnc" id="L725" title="All 2 branches missed.">				} else if (summon == DKWarlock.class){</span>
+<span class="nc" id="L726">					particles.pour(ShadowParticle.UP, 0.1f);</span>
+<span class="nc bnc" id="L727" title="All 2 branches missed.">				} else if (summon == DKMonk.class){</span>
+<span class="nc" id="L728">					particles.pour(ElmoParticle.FACTORY, 0.1f);</span>
+				} else {
+<span class="nc" id="L730">					particles.pour(Speck.factory(Speck.RATTLE), 0.1f);</span>
+				}
+
+<span class="nc bnc" id="L733" title="All 4 branches missed.">			} else if (!on &amp;&amp; particles != null) {</span>
+<span class="nc" id="L734">				particles.on = false;</span>
+			}
+<span class="nc" id="L736">		}</span>
+
+		private static final String DELAY = &quot;delay&quot;;
+		private static final String POS = &quot;pos&quot;;
+		private static final String SUMMON = &quot;summon&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L744">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L745">			bundle.put(DELAY, delay);</span>
+<span class="nc" id="L746">			bundle.put(POS, pos);</span>
+<span class="nc" id="L747">			bundle.put(SUMMON, summon);</span>
+<span class="nc" id="L748">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L752">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L753">			delay = bundle.getInt(DELAY);</span>
+<span class="nc" id="L754">			pos = bundle.getInt(POS);</span>
+<span class="nc" id="L755">			summon = bundle.getClass(SUMMON);</span>
+<span class="nc" id="L756">		}</span>
+	}
+
+<span class="nc" id="L759">	public static class KingDamager extends Buff {</span>
+
+		{
+<span class="nc" id="L762">			revivePersists = true;</span>
+<span class="nc" id="L763">		}</span>
+
+		@Override
+		public boolean act() {
+<span class="nc bnc" id="L767" title="All 2 branches missed.">			if (target.alignment != Alignment.ENEMY){</span>
+<span class="nc" id="L768">				detach();</span>
+			}
+<span class="nc" id="L770">			spend( TICK );</span>
+<span class="nc" id="L771">			return true;</span>
+		}
+
+		@Override
+		public void detach() {
+<span class="nc" id="L776">			super.detach();</span>
+<span class="nc bnc" id="L777" title="All 2 branches missed.">			for (Mob m : Dungeon.level.mobs){</span>
+<span class="nc bnc" id="L778" title="All 2 branches missed.">				if (m instanceof DwarfKing){</span>
+<span class="nc bnc" id="L779" title="All 2 branches missed.">					int damage = m.HT / (Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? 18 : 12);</span>
+<span class="nc" id="L780">					m.damage(damage, this);</span>
+				}
+<span class="nc" id="L782">			}</span>
+<span class="nc" id="L783">		}</span>
+	}
+
+<span class="nc" id="L786">	public static class DKBarrior extends Barrier{</span>
+
+		@Override
+		public boolean act() {
+<span class="nc" id="L790">			incShield();</span>
+<span class="nc" id="L791">			return super.act();</span>
+		}
+
+		@Override
+		public int icon() {
+<span class="nc" id="L796">			return BuffIndicator.NONE;</span>
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

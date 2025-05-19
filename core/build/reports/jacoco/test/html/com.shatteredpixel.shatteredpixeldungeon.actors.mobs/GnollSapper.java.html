@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GnollSapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">GnollSapper.java</span></div><h1>GnollSapper.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.GnollSapperSprite;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L36">public class GnollSapper extends Mob {</span>
+
+	{
+		//always acts after guards, makes it easier to kite them into attacks
+<span class="nc" id="L40">		actPriority = Actor.MOB_PRIO-1;</span>
+
+<span class="nc" id="L42">		spriteClass = GnollSapperSprite.class;</span>
+
+<span class="nc" id="L44">		HP = HT = 45;</span>
+<span class="nc" id="L45">		defenseSkill = 15;</span>
+
+<span class="nc" id="L47">		EXP = 10;</span>
+<span class="nc" id="L48">		maxLvl = -2;</span>
+
+<span class="nc" id="L50">		properties.add(Property.MINIBOSS);</span>
+
+<span class="nc" id="L52">		HUNTING = new Hunting();</span>
+<span class="nc" id="L53">		WANDERING = new Wandering();</span>
+<span class="nc" id="L54">		state = SLEEPING;</span>
+	}
+
+	public int spawnPos;
+<span class="nc" id="L58">	private int partnerID = -1;</span>
+
+<span class="nc" id="L60">	private int abilityCooldown = Random.NormalIntRange(4, 6);</span>
+<span class="nc" id="L61">	private boolean lastAbilityWasRockfall = false;</span>
+
+<span class="nc" id="L63">	public int throwingRockFromPos = -1;</span>
+<span class="nc" id="L64">	public int throwingRockToPos = -1;</span>
+
+	public void linkPartner(Char c){
+<span class="nc" id="L67">		losePartner();</span>
+<span class="nc" id="L68">		partnerID = c.id();</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		if (c instanceof GnollGuard) {</span>
+<span class="nc" id="L70">			((GnollGuard) c).linkSapper(this);</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		} else if (c instanceof GnollGeomancer){</span>
+<span class="nc" id="L72">			((GnollGeomancer) c).linkSapper(this);</span>
+		}
+<span class="nc" id="L74">	}</span>
+
+	public void losePartner(){
+<span class="nc bnc" id="L77" title="All 2 branches missed.">		if (partnerID != -1){</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">			if (Actor.findById(partnerID) instanceof GnollGuard) {</span>
+<span class="nc" id="L79">				((GnollGuard) Actor.findById(partnerID)).loseSapper();</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">			} else if (Actor.findById(partnerID) instanceof GnollGeomancer) {</span>
+<span class="nc" id="L81">				((GnollGeomancer) Actor.findById(partnerID)).loseSapper();</span>
+			}
+<span class="nc" id="L83">			partnerID = -1;</span>
+		}
+<span class="nc" id="L85">	}</span>
+
+	public Actor getPartner(){
+<span class="nc" id="L88">		return Actor.findById(partnerID);</span>
+	}
+
+	@Override
+	public void die(Object cause) {
+<span class="nc" id="L93">		super.die(cause);</span>
+<span class="nc" id="L94">		losePartner();</span>
+<span class="nc" id="L95">	}</span>
+
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L99">		return Random.NormalIntRange( 1, 6 );</span>
+	}
+
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L104">		return 18;</span>
+	}
+
+	@Override
+	public void damage(int dmg, Object src) {
+<span class="nc" id="L109">		super.damage(dmg, src);</span>
+<span class="nc" id="L110">		abilityCooldown -= dmg/10f;</span>
+<span class="nc" id="L111">	}</span>
+
+	@Override
+	public int drRoll() {
+<span class="nc" id="L115">		return super.drRoll() + Random.NormalIntRange(0, 6);</span>
+	}
+
+	@Override
+	public boolean reset() {
+<span class="nc" id="L120">		return true;</span>
+	}
+
+	@Override
+	public float spawningWeight() {
+<span class="nc" id="L125">		return 0;</span>
+	}
+
+	@Override
+	protected boolean act() {
+<span class="nc bnc" id="L130" title="All 2 branches missed.">		if (throwingRockFromPos != -1){</span>
+
+<span class="nc bnc" id="L132" title="All 2 branches missed.">			boolean attacked = Dungeon.level.map[throwingRockFromPos] == Terrain.MINE_BOULDER;</span>
+
+<span class="nc bnc" id="L134" title="All 2 branches missed.">			if (attacked) {</span>
+<span class="nc" id="L135">				GnollGeomancer.doRockThrowAttack(this, throwingRockFromPos, throwingRockToPos);</span>
+			}
+
+<span class="nc" id="L138">			throwingRockFromPos = -1;</span>
+<span class="nc" id="L139">			throwingRockToPos = -1;</span>
+
+<span class="nc" id="L141">			spend(TICK);</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">			return !attacked;</span>
+		} else {
+<span class="nc" id="L144">			return super.act();</span>
+		}
+
+	}
+
+<span class="nc" id="L149">	public class Hunting extends Mob.Hunting {</span>
+		@Override
+		public boolean act(boolean enemyInFOV, boolean justAlerted) {
+<span class="nc bnc" id="L152" title="All 2 branches missed.">			if (!enemyInFOV) {</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">				if (Dungeon.level.distance(spawnPos, target) &gt; 3){</span>
+					//don't chase something more than a few tiles out of spawning position
+<span class="nc" id="L155">					target = pos;</span>
+				}
+<span class="nc" id="L157">				return super.act(enemyInFOV, justAlerted);</span>
+			} else {
+<span class="nc" id="L159">				enemySeen = true;</span>
+
+<span class="nc bnc" id="L161" title="All 2 branches missed.">				if (getPartner() != null</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">						&amp;&amp; getPartner() instanceof Mob</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">						&amp;&amp; ((Mob) getPartner()).alignment != alignment){</span>
+<span class="nc" id="L164">					losePartner();</span>
+				}
+
+<span class="nc bnc" id="L167" title="All 2 branches missed.">				if (Actor.findById(partnerID) != null</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">						&amp;&amp; Dungeon.level.distance(pos, enemy.pos) &lt;= 3){</span>
+<span class="nc" id="L169">					Mob partner = (Mob) Actor.findById(partnerID);</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">					if (partner.state == partner.SLEEPING){</span>
+<span class="nc" id="L171">						partner.notice();</span>
+					}
+<span class="nc bnc" id="L173" title="All 2 branches missed.">					if (enemy != partner) {</span>
+<span class="nc" id="L174">						partner.target = enemy.pos;</span>
+<span class="nc" id="L175">						partner.aggro(enemy);</span>
+					}
+				}
+
+<span class="nc bnc" id="L179" title="All 2 branches missed.">				if (abilityCooldown-- &lt;= 0){</span>
+<span class="nc" id="L180">					boolean targetNextToBarricade = false;</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">					for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L182" title="All 4 branches missed.">						if (Dungeon.level.map[enemy.pos+i] == Terrain.BARRICADE</span>
+							|| Dungeon.level.map[enemy.pos+i] == Terrain.ENTRANCE){
+<span class="nc" id="L184">							targetNextToBarricade = true;</span>
+<span class="nc" id="L185">							break;</span>
+						}
+					}
+
+					// 50/50 to either throw a rock or do rockfall, but never do rockfall twice
+					// unless target is next to a barricade, then always try to throw
+					// unless nothing to throw, then always rockfall
+<span class="nc" id="L192">					Ballistica aim = GnollGeomancer.prepRockThrowAttack(enemy, GnollSapper.this);</span>
+<span class="nc bnc" id="L193" title="All 8 branches missed.">					if (aim != null &amp;&amp; (targetNextToBarricade || lastAbilityWasRockfall || Random.Int(2) == 0)) {</span>
+
+<span class="nc" id="L195">						lastAbilityWasRockfall = false;</span>
+<span class="nc" id="L196">						throwingRockFromPos = aim.sourcePos;</span>
+<span class="nc" id="L197">						throwingRockToPos = aim.collisionPos;</span>
+
+<span class="nc" id="L199">						Ballistica warnPath = new Ballistica(aim.sourcePos, aim.collisionPos, Ballistica.STOP_SOLID);</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">						for (int i : warnPath.subPath(0, warnPath.dist)){</span>
+<span class="nc" id="L201">							sprite.parent.add(new TargetedCell(i, 0xFF0000));</span>
+<span class="nc" id="L202">						}</span>
+
+<span class="nc" id="L204">						Dungeon.hero.interrupt();</span>
+<span class="nc" id="L205">						abilityCooldown = Random.NormalIntRange(4, 6);</span>
+<span class="nc" id="L206">						spend(GameMath.gate(TICK, (int)Math.ceil(enemy.cooldown()), 3*TICK));</span>
+<span class="nc" id="L207">						return true;</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">					} else if (GnollGeomancer.prepRockFallAttack(enemy, GnollSapper.this, 2, true)) {</span>
+<span class="nc" id="L209">						lastAbilityWasRockfall = true;</span>
+<span class="nc" id="L210">						Dungeon.hero.interrupt();</span>
+<span class="nc" id="L211">						spend(GameMath.gate(TICK, (int)Math.ceil(enemy.cooldown()), 3*TICK));</span>
+<span class="nc" id="L212">						abilityCooldown = Random.NormalIntRange(4, 6);</span>
+<span class="nc" id="L213">						return true;</span>
+					}
+				}
+
+				//does not approach an enemy it can see, but does melee if in range
+<span class="nc bnc" id="L218" title="All 2 branches missed.">				if (canAttack(enemy)){</span>
+<span class="nc" id="L219">					return super.act(enemyInFOV, justAlerted);</span>
+				} else {
+<span class="nc" id="L221">					spend(TICK);</span>
+<span class="nc" id="L222">					return true;</span>
+				}
+			}
+		}
+	}
+
+<span class="nc" id="L228">	public class Wandering extends Mob.Wandering {</span>
+		@Override
+		protected int randomDestination() {
+<span class="nc" id="L231">			return spawnPos;</span>
+		}
+	}
+
+	private static final String SPAWN_POS = &quot;spawn_pos&quot;;
+	private static final String PARTNER_ID = &quot;partner_id&quot;;
+
+	private static final String ABILITY_COOLDOWN = &quot;ability_cooldown&quot;;
+	private static final String LAST_ABILITY_WAS_ROCKFALL = &quot;last_ability_was_rockfall&quot;;
+
+	private static final String ROCK_FROM_POS = &quot;rock_from_pos&quot;;
+	private static final String ROCK_TO_POS = &quot;rock_to_pos&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L246">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L247">		bundle.put(PARTNER_ID, partnerID);</span>
+<span class="nc" id="L248">		bundle.put(SPAWN_POS, spawnPos);</span>
+
+<span class="nc" id="L250">		bundle.put(ABILITY_COOLDOWN, abilityCooldown);</span>
+<span class="nc" id="L251">		bundle.put(LAST_ABILITY_WAS_ROCKFALL, lastAbilityWasRockfall);</span>
+
+<span class="nc" id="L253">		bundle.put(ROCK_FROM_POS, throwingRockFromPos);</span>
+<span class="nc" id="L254">		bundle.put(ROCK_TO_POS, throwingRockToPos);</span>
+<span class="nc" id="L255">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L259">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L260">		partnerID = bundle.getInt(PARTNER_ID);</span>
+<span class="nc" id="L261">		spawnPos = bundle.getInt(SPAWN_POS);</span>
+
+<span class="nc" id="L263">		abilityCooldown = bundle.getInt(ABILITY_COOLDOWN);</span>
+<span class="nc" id="L264">		lastAbilityWasRockfall = bundle.getBoolean(LAST_ABILITY_WAS_ROCKFALL);</span>
+
+<span class="nc" id="L266">		throwingRockFromPos = bundle.getInt(ROCK_FROM_POS);</span>
+<span class="nc" id="L267">		throwingRockToPos = bundle.getInt(ROCK_TO_POS);</span>
+<span class="nc" id="L268">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

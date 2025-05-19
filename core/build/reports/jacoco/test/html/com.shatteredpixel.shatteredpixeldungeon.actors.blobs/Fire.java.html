@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Fire.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.blobs</a> &gt; <span class="el_source">Fire.java</span></div><h1>Fire.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.blobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.effects.BlobEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.FlameParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+
+<span class="nc" id="L36">public class Fire extends Blob {</span>
+
+	@Override
+	protected void evolve() {
+
+<span class="nc" id="L41">		boolean[] flamable = Dungeon.level.flamable;</span>
+		int cell;
+		int fire;
+		
+<span class="nc" id="L45">		Freezing freeze = (Freezing)Dungeon.level.blobs.get( Freezing.class );</span>
+
+<span class="nc" id="L47">		boolean observe = false;</span>
+
+<span class="nc bnc" id="L49" title="All 2 branches missed.">		for (int i = area.left-1; i &lt;= area.right; i++) {</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">			for (int j = area.top-1; j &lt;= area.bottom; j++) {</span>
+<span class="nc" id="L51">				cell = i + j*Dungeon.level.width();</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">				if (cur[cell] &gt; 0) {</span>
+					
+<span class="nc bnc" id="L54" title="All 6 branches missed.">					if (freeze != null &amp;&amp; freeze.volume &gt; 0 &amp;&amp; freeze.cur[cell] &gt; 0){</span>
+<span class="nc" id="L55">						freeze.clear(cell);</span>
+<span class="nc" id="L56">						off[cell] = cur[cell] = 0;</span>
+<span class="nc" id="L57">						continue;</span>
+					}
+
+<span class="nc" id="L60">					burn( cell );</span>
+
+<span class="nc" id="L62">					fire = cur[cell] - 1;</span>
+<span class="nc bnc" id="L63" title="All 4 branches missed.">					if (fire &lt;= 0 &amp;&amp; flamable[cell]) {</span>
+
+<span class="nc" id="L65">						Dungeon.level.destroy( cell );</span>
+
+<span class="nc" id="L67">						observe = true;</span>
+<span class="nc" id="L68">						GameScene.updateMap( cell );</span>
+
+					}
+
+<span class="nc bnc" id="L72" title="All 6 branches missed.">				} else if (freeze == null || freeze.volume &lt;= 0 || freeze.cur[cell] &lt;= 0) {</span>
+
+<span class="nc bnc" id="L74" title="All 6 branches missed.">					if (flamable[cell]</span>
+							&amp;&amp; (cur[cell-1] &gt; 0
+							|| cur[cell+1] &gt; 0
+<span class="nc bnc" id="L77" title="All 2 branches missed.">							|| cur[cell-Dungeon.level.width()] &gt; 0</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">							|| cur[cell+Dungeon.level.width()] &gt; 0)) {</span>
+<span class="nc" id="L79">						fire = 4;</span>
+<span class="nc" id="L80">						burn( cell );</span>
+<span class="nc" id="L81">						area.union(i, j);</span>
+					} else {
+<span class="nc" id="L83">						fire = 0;</span>
+					}
+
+				} else {
+<span class="nc" id="L87">					fire = 0;</span>
+				}
+
+<span class="nc" id="L90">				volume += (off[cell] = fire);</span>
+			}
+		}
+
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		if (observe) {</span>
+<span class="nc" id="L95">			Dungeon.observe();</span>
+		}
+<span class="nc" id="L97">	}</span>
+	
+	public static void burn( int pos ) {
+<span class="nc" id="L100">		Char ch = Actor.findChar( pos );</span>
+<span class="nc bnc" id="L101" title="All 4 branches missed.">		if (ch != null &amp;&amp; !ch.isImmune(Fire.class)) {</span>
+<span class="nc" id="L102">			Buff.affect( ch, Burning.class ).reignite( ch );</span>
+		}
+		
+<span class="nc" id="L105">		Heap heap = Dungeon.level.heaps.get( pos );</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">		if (heap != null) {</span>
+<span class="nc" id="L107">			heap.burn();</span>
+		}
+
+<span class="nc" id="L110">		Plant plant = Dungeon.level.plants.get( pos );</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		if (plant != null){</span>
+<span class="nc" id="L112">			plant.wither();</span>
+		}
+<span class="nc" id="L114">	}</span>
+	
+	@Override
+	public void use( BlobEmitter emitter ) {
+<span class="nc" id="L118">		super.use( emitter );</span>
+<span class="nc" id="L119">		emitter.pour( FlameParticle.FACTORY, 0.03f );</span>
+<span class="nc" id="L120">	}</span>
+	
+	@Override
+	public String tileDesc() {
+<span class="nc" id="L124">		return Messages.get(this, &quot;desc&quot;);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

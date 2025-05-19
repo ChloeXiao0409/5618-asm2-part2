@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HolyLance.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells</a> &gt; <span class="el_source">HolyLance.java</span></div><h1>HolyLance.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SparkParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.utils.Callback;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L51">public class HolyLance extends TargetedClericSpell {</span>
+
+<span class="nc" id="L53">	public static final HolyLance INSTANCE = new HolyLance();</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L57">		return HeroIcon.HOLY_LANCE;</span>
+	}
+
+	@Override
+	public String desc() {
+<span class="nc" id="L62">		int min = 15 + 15*Dungeon.hero.pointsInTalent(Talent.HOLY_LANCE);</span>
+<span class="nc" id="L63">		int max = Math.round(27.5f + 27.5f*Dungeon.hero.pointsInTalent(Talent.HOLY_LANCE));</span>
+<span class="nc" id="L64">		return Messages.get(this, &quot;desc&quot;, min, max) + &quot;\n\n&quot; + Messages.get(this, &quot;charge_cost&quot;, (int)chargeUse(Dungeon.hero));</span>
+	}
+
+	@Override
+	public boolean canCast(Hero hero) {
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		return super.canCast(hero)</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">				&amp;&amp; hero.hasTalent(Talent.HOLY_LANCE)</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">				&amp;&amp; hero.buff(LanceCooldown.class) == null;</span>
+	}
+
+	@Override
+	public float chargeUse(Hero hero) {
+<span class="nc" id="L76">		return 4;</span>
+	}
+
+	@Override
+	public int targetingFlags() {
+<span class="nc" id="L81">		return Ballistica.PROJECTILE;</span>
+	}
+
+	@Override
+	protected void onTargetSelected(HolyTome tome, Hero hero, Integer target) {
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		if (target == null){</span>
+<span class="nc" id="L87">			return;</span>
+		}
+
+<span class="nc" id="L90">		Ballistica aim = new Ballistica(hero.pos, target, targetingFlags());</span>
+
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		if (Actor.findChar( aim.collisionPos ) == hero){</span>
+<span class="nc" id="L93">			GLog.i( Messages.get(Wand.class, &quot;self_target&quot;) );</span>
+<span class="nc" id="L94">			return;</span>
+		}
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">		if (Actor.findChar(aim.collisionPos) != null) {</span>
+<span class="nc" id="L98">			QuickSlotButton.target(Actor.findChar(aim.collisionPos));</span>
+		} else {
+<span class="nc" id="L100">			QuickSlotButton.target(Actor.findChar(target));</span>
+		}
+
+<span class="nc" id="L103">		hero.sprite.zap( target );</span>
+<span class="nc" id="L104">		hero.busy();</span>
+
+<span class="nc" id="L106">		Sample.INSTANCE.play(Assets.Sounds.ZAP);</span>
+
+<span class="nc" id="L108">		Char enemy = Actor.findChar(aim.collisionPos);</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		if (enemy != null) {</span>
+<span class="nc" id="L110">			((MissileSprite) hero.sprite.parent.recycle(MissileSprite.class)).</span>
+<span class="nc" id="L111">					reset(hero.sprite,</span>
+							enemy.sprite,
+							new HolyLanceVFX(),
+<span class="nc" id="L114">							new Callback() {</span>
+								@Override
+								public void call() {
+<span class="nc" id="L117">									int min = 15 + 15*Dungeon.hero.pointsInTalent(Talent.HOLY_LANCE);</span>
+<span class="nc" id="L118">									int max = Math.round(27.5f + 27.5f*Dungeon.hero.pointsInTalent(Talent.HOLY_LANCE));</span>
+<span class="nc bnc" id="L119" title="All 4 branches missed.">									if (Char.hasProp(enemy, Char.Property.UNDEAD) || Char.hasProp(enemy, Char.Property.DEMONIC)){</span>
+<span class="nc" id="L120">										min = max;</span>
+									}
+<span class="nc" id="L122">									enemy.damage(Random.NormalIntRange(min, max), HolyLance.this);</span>
+<span class="nc" id="L123">									Sample.INSTANCE.play( Assets.Sounds.HIT_MAGIC, 1, Random.Float(0.8f, 1f) );</span>
+<span class="nc" id="L124">									Sample.INSTANCE.play( Assets.Sounds.HIT_STAB, 1, Random.Float(0.8f, 1f) );</span>
+
+<span class="nc" id="L126">									enemy.sprite.burst(0xFFFFFFFF, 10);</span>
+<span class="nc" id="L127">									hero.spendAndNext(1f);</span>
+<span class="nc" id="L128">									onSpellCast(tome, hero);</span>
+<span class="nc" id="L129">									FlavourBuff.affect(hero, LanceCooldown.class, 50f);</span>
+<span class="nc" id="L130">								}</span>
+							});
+		} else {
+<span class="nc" id="L133">			((MissileSprite) hero.sprite.parent.recycle(MissileSprite.class)).</span>
+<span class="nc" id="L134">					reset(hero.sprite,</span>
+<span class="nc" id="L135">							target,</span>
+							new HolyLanceVFX(),
+<span class="nc" id="L137">							new Callback() {</span>
+								@Override
+								public void call() {
+<span class="nc" id="L140">									Splash.at(target, 0xFFFFFFFF, 10);</span>
+<span class="nc" id="L141">									Dungeon.level.pressCell(aim.collisionPos);</span>
+<span class="nc" id="L142">									hero.spendAndNext(1f);</span>
+<span class="nc" id="L143">									onSpellCast(tome, hero);</span>
+<span class="nc" id="L144">									FlavourBuff.affect(hero, LanceCooldown.class, 50f);</span>
+<span class="nc" id="L145">								}</span>
+							});
+		}
+
+<span class="nc" id="L149">	}</span>
+
+<span class="nc" id="L151">	public static class HolyLanceVFX extends Item {</span>
+
+		{
+<span class="nc" id="L154">			image = ItemSpriteSheet.THROWING_SPIKE;</span>
+<span class="nc" id="L155">		}</span>
+
+		@Override
+		public ItemSprite.Glowing glowing() {
+<span class="nc" id="L159">			return new ItemSprite.Glowing(0xFFFFFF, 0.1f);</span>
+		}
+
+		@Override
+		public Emitter emitter() {
+<span class="nc" id="L164">			Emitter emitter = new Emitter();</span>
+<span class="nc" id="L165">			emitter.pos( 5, 5, 0, 0);</span>
+<span class="nc" id="L166">			emitter.fillTarget = false;</span>
+<span class="nc" id="L167">			emitter.pour(SparkParticle.FACTORY, 0.025f);</span>
+<span class="nc" id="L168">			return emitter;</span>
+		}
+	}
+
+<span class="nc" id="L172">	public static class LanceCooldown extends FlavourBuff {</span>
+
+		@Override
+		public int icon() {
+<span class="nc" id="L176">			return BuffIndicator.TIME;</span>
+		}
+
+		@Override
+		public void tintIcon(Image icon) {
+<span class="nc" id="L181">			icon.hardlight(0.67f, 0.67f, 0);</span>
+<span class="nc" id="L182">		}</span>
+
+<span class="nc" id="L184">		public float iconFadePercent() { return Math.max(0, visualcooldown() / 50); }</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

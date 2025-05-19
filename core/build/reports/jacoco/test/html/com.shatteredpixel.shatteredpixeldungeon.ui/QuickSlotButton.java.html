@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QuickSlotButton.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">QuickSlotButton.java</span></div><h1>QuickSlotButton.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.QuickSlot;
+import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.Waterskin;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndKeyBindings;
+import com.watabou.input.GameAction;
+import com.watabou.noosa.Image;
+import com.watabou.utils.BArray;
+import com.watabou.utils.PathFinder;
+
+public class QuickSlotButton extends Button {
+	
+<span class="nc" id="L46">	private static QuickSlotButton[] instance = new QuickSlotButton[QuickSlot.SIZE];</span>
+	private int slotNum;
+
+	private ItemSlot slot;
+	
+	private Image crossB;
+	private Image crossM;
+	
+<span class="nc" id="L54">	public static int targetingSlot = -1;</span>
+<span class="nc" id="L55">	public static Char lastTarget = null;</span>
+	
+	public QuickSlotButton( int slotNum ) {
+<span class="nc" id="L58">		super();</span>
+<span class="nc" id="L59">		this.slotNum = slotNum;</span>
+<span class="nc" id="L60">		item( select( slotNum ) );</span>
+		
+<span class="nc" id="L62">		instance[slotNum] = this;</span>
+<span class="nc" id="L63">	}</span>
+	
+	@Override
+	public void destroy() {
+<span class="nc" id="L67">		super.destroy();</span>
+		
+<span class="nc" id="L69">		reset();</span>
+<span class="nc" id="L70">	}</span>
+
+	public static void reset() {
+<span class="nc" id="L73">		instance = new QuickSlotButton[QuickSlot.SIZE];</span>
+
+<span class="nc" id="L75">		lastTarget = null;</span>
+<span class="nc" id="L76">	}</span>
+	
+	@Override
+	protected void createChildren() {
+<span class="nc" id="L80">		super.createChildren();</span>
+		
+<span class="nc" id="L82">		slot = new ItemSlot() {</span>
+			@Override
+			protected void onClick() {
+<span class="nc bnc" id="L85" title="All 4 branches missed.">				if (!Dungeon.hero.isAlive() || !Dungeon.hero.ready){</span>
+<span class="nc" id="L86">					return;</span>
+				}
+<span class="nc bnc" id="L88" title="All 2 branches missed.">				if (targetingSlot == slotNum) {</span>
+<span class="nc" id="L89">					int cell = autoAim(lastTarget, select(slotNum));</span>
+
+<span class="nc bnc" id="L91" title="All 2 branches missed.">					if (cell != -1){</span>
+<span class="nc" id="L92">						GameScene.handleCell(cell);</span>
+					} else {
+						//couldn't auto-aim, just target the position and hope for the best.
+<span class="nc" id="L95">						GameScene.handleCell( lastTarget.pos );</span>
+					}
+<span class="nc" id="L97">				} else {</span>
+<span class="nc" id="L98">					Item item = select(slotNum);</span>
+<span class="nc bnc" id="L99" title="All 4 branches missed.">					if (Dungeon.hero.belongings.contains(item) &amp;&amp; !GameScene.cancel()) {</span>
+<span class="nc" id="L100">						GameScene.centerNextWndOnInvPane();</span>
+<span class="nc" id="L101">						item.execute(Dungeon.hero);</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">						if (item.usesTargeting) {</span>
+<span class="nc" id="L103">							useTargeting();</span>
+						}
+					}
+				}
+<span class="nc" id="L107">			}</span>
+
+			@Override
+			protected void onRightClick() {
+<span class="nc" id="L111">				QuickSlotButton.this.onLongClick();</span>
+<span class="nc" id="L112">			}</span>
+
+			@Override
+			protected void onMiddleClick() {
+<span class="nc" id="L116">				onClick();</span>
+<span class="nc" id="L117">			}</span>
+
+			@Override
+			public GameAction keyAction() {
+<span class="nc" id="L121">				return QuickSlotButton.this.keyAction();</span>
+			}
+			@Override
+			public GameAction secondaryTooltipAction(){
+<span class="nc" id="L125">				return QuickSlotButton.this.secondaryTooltipAction();</span>
+			}
+			@Override
+			protected boolean onLongClick() {
+<span class="nc" id="L129">				return QuickSlotButton.this.onLongClick();</span>
+			}
+			@Override
+			protected void onPointerDown() {
+<span class="nc" id="L133">				sprite.lightness( 0.7f );</span>
+<span class="nc" id="L134">			}</span>
+			@Override
+			protected void onPointerUp() {
+<span class="nc" id="L137">				sprite.resetColor();</span>
+<span class="nc" id="L138">			}</span>
+
+			@Override
+			protected String hoverText() {
+<span class="nc bnc" id="L142" title="All 2 branches missed.">				if (item == null){</span>
+<span class="nc" id="L143">					return Messages.titleCase(Messages.get(WndKeyBindings.class, &quot;quickslot_&quot; + (slotNum+1)));</span>
+				} else {
+<span class="nc" id="L145">					return super.hoverText();</span>
+				}
+			}
+		};
+<span class="nc" id="L149">		slot.showExtraInfo( false );</span>
+<span class="nc" id="L150">		add( slot );</span>
+		
+<span class="nc" id="L152">		crossB = Icons.TARGET.get();</span>
+<span class="nc" id="L153">		crossB.visible = false;</span>
+<span class="nc" id="L154">		add( crossB );</span>
+		
+<span class="nc" id="L156">		crossM = new Image();</span>
+<span class="nc" id="L157">		crossM.copy( crossB );</span>
+<span class="nc" id="L158">	}</span>
+	
+	@Override
+	protected void layout() {
+<span class="nc" id="L162">		super.layout();</span>
+		
+<span class="nc" id="L164">		slot.fill( this );</span>
+		
+<span class="nc" id="L166">		crossB.x = x + (width - crossB.width) / 2;</span>
+<span class="nc" id="L167">		crossB.y = y + (height - crossB.height) / 2;</span>
+<span class="nc" id="L168">		PixelScene.align(crossB);</span>
+<span class="nc" id="L169">	}</span>
+
+	public void alpha( float value ){
+<span class="nc" id="L172">		slot.alpha(value);</span>
+<span class="nc" id="L173">	}</span>
+
+	@Override
+	public void update() {
+<span class="nc" id="L177">		super.update();</span>
+<span class="nc bnc" id="L178" title="All 6 branches missed.">		if (targetingSlot != -1 &amp;&amp; lastTarget != null &amp;&amp; lastTarget.sprite != null){</span>
+<span class="nc" id="L179">			crossM.point(lastTarget.sprite.center(crossM));</span>
+		}
+<span class="nc" id="L181">	}</span>
+
+	@Override
+	public GameAction keyAction() {
+<span class="nc bnc" id="L185" title="All 7 branches missed.">		switch (slotNum){</span>
+			case 0:
+<span class="nc" id="L187">				return SPDAction.QUICKSLOT_1;</span>
+			case 1:
+<span class="nc" id="L189">				return SPDAction.QUICKSLOT_2;</span>
+			case 2:
+<span class="nc" id="L191">				return SPDAction.QUICKSLOT_3;</span>
+			case 3:
+<span class="nc" id="L193">				return SPDAction.QUICKSLOT_4;</span>
+			case 4:
+<span class="nc" id="L195">				return SPDAction.QUICKSLOT_5;</span>
+			case 5:
+<span class="nc" id="L197">				return SPDAction.QUICKSLOT_6;</span>
+			default:
+<span class="nc" id="L199">				return super.keyAction();</span>
+		}
+	}
+
+	@Override
+	public GameAction secondaryTooltipAction() {
+<span class="nc" id="L205">		return SPDAction.QUICKSLOT_SELECTOR;</span>
+	}
+
+	@Override
+	protected String hoverText() {
+<span class="nc bnc" id="L210" title="All 2 branches missed.">		if (slot.item == null){</span>
+<span class="nc" id="L211">			return Messages.titleCase(Messages.get(WndKeyBindings.class, &quot;quickslot_&quot; + (slotNum+1)));</span>
+		} else {
+<span class="nc" id="L213">			return super.hoverText();</span>
+		}
+	}
+	
+	@Override
+	protected void onClick() {
+<span class="nc bnc" id="L219" title="All 4 branches missed.">		if (Dungeon.hero.ready &amp;&amp; !GameScene.cancel()) {</span>
+<span class="nc" id="L220">			GameScene.selectItem(itemSelector);</span>
+		}
+<span class="nc" id="L222">	}</span>
+
+	@Override
+	protected void onRightClick() {
+<span class="nc" id="L226">		onClick();</span>
+<span class="nc" id="L227">	}</span>
+
+	@Override
+	protected void onMiddleClick() {
+<span class="nc" id="L231">		onClick();</span>
+<span class="nc" id="L232">	}</span>
+
+	@Override
+	protected boolean onLongClick() {
+<span class="nc" id="L236">		onClick();</span>
+<span class="nc" id="L237">		return true;</span>
+	}
+
+<span class="nc" id="L240">	private WndBag.ItemSelector itemSelector = new WndBag.ItemSelector() {</span>
+
+		@Override
+		public String textPrompt() {
+<span class="nc" id="L244">			return Messages.get(QuickSlotButton.class, &quot;select_item&quot;);</span>
+		}
+
+		@Override
+		public boolean itemSelectable(Item item) {
+<span class="nc bnc" id="L249" title="All 2 branches missed.">			return item.defaultAction() != null;</span>
+		}
+
+		@Override
+		public void onSelect(Item item) {
+<span class="nc bnc" id="L254" title="All 2 branches missed.">			if (item != null) {</span>
+<span class="nc" id="L255">				set( slotNum , item );</span>
+			}
+<span class="nc" id="L257">		}</span>
+	};
+
+<span class="nc" id="L260">	public static int lastVisible = instance.length;</span>
+
+	public static void set(Item item){
+<span class="nc bnc" id="L263" title="All 2 branches missed.">		for (int i = 0; i &lt; lastVisible; i++) {</span>
+<span class="nc bnc" id="L264" title="All 4 branches missed.">			if (select(i) == null || select(i) == item) {</span>
+<span class="nc" id="L265">				set(i, item);</span>
+<span class="nc" id="L266">				return;</span>
+			}
+		}
+<span class="nc" id="L269">		set(0, item);</span>
+<span class="nc" id="L270">	}</span>
+
+	public static void set(int slotNum, Item item){
+<span class="nc" id="L273">		Dungeon.quickslot.setSlot( slotNum , item );</span>
+<span class="nc" id="L274">		refresh();</span>
+
+		//Remember if the player adds the waterskin as one of their first actions.
+<span class="nc bnc" id="L277" title="All 2 branches missed.">		if (Statistics.duration + Actor.now() &lt;= 10){</span>
+<span class="nc" id="L278">			boolean containsWaterskin = false;</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">			for (int i = 0; i &lt; instance.length; i++) {</span>
+<span class="nc bnc" id="L280" title="All 2 branches missed.">				if (select(i) instanceof Waterskin) containsWaterskin = true;</span>
+			}
+<span class="nc bnc" id="L282" title="All 2 branches missed.">			if (containsWaterskin) SPDSettings.quickslotWaterskin(true);</span>
+		}
+<span class="nc" id="L284">	}</span>
+
+	private static Item select(int slotNum){
+<span class="nc" id="L287">		return Dungeon.quickslot.getItem( slotNum );</span>
+	}
+	
+	public void item( Item item ) {
+<span class="nc" id="L291">		slot.item( item );</span>
+<span class="nc" id="L292">		enableSlot();</span>
+<span class="nc" id="L293">	}</span>
+
+	public void enable( boolean value ) {
+<span class="nc" id="L296">		active = value;</span>
+<span class="nc bnc" id="L297" title="All 2 branches missed.">		if (value) {</span>
+<span class="nc" id="L298">			enableSlot();</span>
+		} else {
+<span class="nc" id="L300">			slot.enable( false );</span>
+		}
+<span class="nc" id="L302">	}</span>
+	
+	private void enableSlot() {
+<span class="nc bnc" id="L305" title="All 2 branches missed.">		slot.enable(Dungeon.quickslot.isNonePlaceholder( slotNum )</span>
+<span class="nc bnc" id="L306" title="All 4 branches missed.">				&amp;&amp; (!Dungeon.hero.belongings.lostInventory() || Dungeon.quickslot.getItem(slotNum).keptThroughLostInventory()));</span>
+<span class="nc" id="L307">	}</span>
+
+	public void slotMargins( int left, int top, int right, int bottom){
+<span class="nc" id="L310">		slot.setMargins(left, top, right, bottom);</span>
+<span class="nc" id="L311">	}</span>
+
+	public static void useTargeting(int idx){
+<span class="nc" id="L314">		instance[idx].useTargeting();</span>
+<span class="nc" id="L315">	}</span>
+
+	private void useTargeting() {
+
+<span class="nc bnc" id="L319" title="All 2 branches missed.">		if (lastTarget != null &amp;&amp;</span>
+<span class="nc bnc" id="L320" title="All 2 branches missed.">				Actor.chars().contains( lastTarget ) &amp;&amp;</span>
+<span class="nc bnc" id="L321" title="All 6 branches missed.">				lastTarget.isAlive() &amp;&amp;</span>
+				lastTarget.alignment != Char.Alignment.ALLY &amp;&amp;
+				Dungeon.level.heroFOV[lastTarget.pos]) {
+
+<span class="nc" id="L325">			targetingSlot = slotNum;</span>
+<span class="nc" id="L326">			CharSprite sprite = lastTarget.sprite;</span>
+
+<span class="nc bnc" id="L328" title="All 2 branches missed.">			if (sprite.parent != null) {</span>
+<span class="nc" id="L329">				sprite.parent.addToFront(crossM);</span>
+<span class="nc" id="L330">				crossM.point(sprite.center(crossM));</span>
+			}
+
+<span class="nc" id="L333">			crossB.point(slot.sprite.center(crossB));</span>
+<span class="nc" id="L334">			crossB.visible = true;</span>
+
+<span class="nc" id="L336">		} else {</span>
+
+<span class="nc" id="L338">			lastTarget = null;</span>
+<span class="nc" id="L339">			targetingSlot = -1;</span>
+
+		}
+
+<span class="nc" id="L343">	}</span>
+
+	public static int autoAim(Char target){
+		//will use generic projectile logic if no item is specified
+<span class="nc" id="L347">		return autoAim(target, new Item());</span>
+	}
+
+	//FIXME: this is currently very expensive, should either optimize ballistica or this, or both
+	public static int autoAim(Char target, Item item){
+
+		//first try to directly target
+<span class="nc bnc" id="L354" title="All 2 branches missed.">		if (item.targetingPos(Dungeon.hero, target.pos) == target.pos) {</span>
+<span class="nc" id="L355">			return target.pos;</span>
+		}
+
+		//Otherwise pick nearby tiles to try and 'angle' the shot, auto-aim basically.
+<span class="nc" id="L359">		PathFinder.buildDistanceMap( target.pos, BArray.not( new boolean[Dungeon.level.length()], null ), 2 );</span>
+<span class="nc bnc" id="L360" title="All 2 branches missed.">		for (int i = 0; i &lt; PathFinder.distance.length; i++) {</span>
+<span class="nc bnc" id="L361" title="All 2 branches missed.">			if (PathFinder.distance[i] &lt; Integer.MAX_VALUE</span>
+<span class="nc bnc" id="L362" title="All 2 branches missed.">					&amp;&amp; item.targetingPos(Dungeon.hero, i) == target.pos)</span>
+<span class="nc" id="L363">				return i;</span>
+		}
+
+		//couldn't find a cell, give up.
+<span class="nc" id="L367">		return -1;</span>
+	}
+
+	public static void refresh() {
+<span class="nc bnc" id="L371" title="All 2 branches missed.">		for (int i = 0; i &lt; instance.length; i++) {</span>
+<span class="nc bnc" id="L372" title="All 2 branches missed.">			if (instance[i] != null) {</span>
+<span class="nc" id="L373">				instance[i].item(select(i));</span>
+<span class="nc" id="L374">				instance[i].enable(instance[i].active);</span>
+			}
+		}
+<span class="nc bnc" id="L377" title="All 2 branches missed.">		if (Toolbar.SWAP_INSTANCE != null){</span>
+<span class="nc" id="L378">			Toolbar.SWAP_INSTANCE.updateVisuals();</span>
+		}
+		//Remember if the player removes the waterskin as one of their first actions.
+<span class="nc bnc" id="L381" title="All 2 branches missed.">		if (Statistics.duration + Actor.now() &lt;= 10){</span>
+<span class="nc" id="L382">			boolean containsWaterskin = false;</span>
+<span class="nc bnc" id="L383" title="All 2 branches missed.">			for (int i = 0; i &lt; instance.length; i++) {</span>
+<span class="nc bnc" id="L384" title="All 2 branches missed.">				if (select(i) instanceof Waterskin) containsWaterskin = true;</span>
+			}
+<span class="nc bnc" id="L386" title="All 2 branches missed.">			if (!containsWaterskin) SPDSettings.quickslotWaterskin(false);</span>
+		}
+<span class="nc" id="L388">	}</span>
+	
+	public static void target( Char target ) {
+<span class="nc bnc" id="L391" title="All 4 branches missed.">		if (target != null &amp;&amp; target.alignment != Char.Alignment.ALLY) {</span>
+<span class="nc" id="L392">			lastTarget = target;</span>
+			
+<span class="nc" id="L394">			TargetHealthIndicator.instance.target( target );</span>
+<span class="nc" id="L395">			InventoryPane.lastTarget = target;</span>
+		}
+<span class="nc" id="L397">	}</span>
+	
+	public static void cancel() {
+<span class="nc bnc" id="L400" title="All 2 branches missed.">		if (targetingSlot != -1) {</span>
+<span class="nc bnc" id="L401" title="All 2 branches missed.">			for (QuickSlotButton btn : instance) {</span>
+<span class="nc" id="L402">				btn.crossB.visible = false;</span>
+<span class="nc" id="L403">				btn.crossM.remove();</span>
+<span class="nc" id="L404">				targetingSlot = -1;</span>
+			}
+		}
+<span class="nc" id="L407">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

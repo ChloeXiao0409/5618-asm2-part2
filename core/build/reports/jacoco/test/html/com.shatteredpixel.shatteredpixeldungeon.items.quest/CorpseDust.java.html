@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CorpseDust.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.quest</a> &gt; <span class="el_source">CorpseDust.java</span></div><h1>CorpseDust.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.quest;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Wraith;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.audio.Music;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L44">public class CorpseDust extends Item {</span>
+	
+	{
+<span class="nc" id="L47">		image = ItemSpriteSheet.DUST;</span>
+		
+<span class="nc" id="L49">		cursed = true;</span>
+<span class="nc" id="L50">		cursedKnown = true;</span>
+		
+<span class="nc" id="L52">		unique = true;</span>
+<span class="nc" id="L53">	}</span>
+
+	@Override
+	public ArrayList&lt;String&gt; actions(Hero hero) {
+<span class="nc" id="L57">		return new ArrayList&lt;&gt;(); //yup, no dropping this one</span>
+	}
+
+	@Override
+	public boolean isUpgradable() {
+<span class="nc" id="L62">		return false;</span>
+	}
+	
+	@Override
+	public boolean isIdentified() {
+<span class="nc" id="L67">		return true;</span>
+	}
+
+	@Override
+	public boolean doPickUp(Hero hero, int pos) {
+<span class="nc bnc" id="L72" title="All 2 branches missed.">		if (super.doPickUp(hero, pos)){</span>
+<span class="nc" id="L73">			GLog.n( Messages.get( this, &quot;chill&quot;) );</span>
+<span class="nc" id="L74">			Buff.affect(hero, DustGhostSpawner.class);</span>
+<span class="nc" id="L75">			return true;</span>
+		}
+<span class="nc" id="L77">		return false;</span>
+	}
+
+	@Override
+	protected void onDetach() {
+<span class="nc" id="L82">		DustGhostSpawner spawner = Dungeon.hero.buff(DustGhostSpawner.class);</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if (spawner != null){</span>
+<span class="nc" id="L84">			spawner.dispel();</span>
+		}
+<span class="nc" id="L86">	}</span>
+
+<span class="nc" id="L88">	public static class DustGhostSpawner extends Buff {</span>
+
+<span class="nc" id="L90">		int spawnPower = 0;</span>
+
+		{
+			//not cleansed by reviving, but does check to ensure the dust is still present
+<span class="nc" id="L94">			revivePersists = true;</span>
+<span class="nc" id="L95">		}</span>
+
+		@Override
+		public boolean act() {
+<span class="nc bnc" id="L99" title="All 4 branches missed.">			if (target instanceof Hero &amp;&amp; ((Hero) target).belongings.getItem(CorpseDust.class) == null){</span>
+<span class="nc" id="L100">				spawnPower = 0;</span>
+<span class="nc" id="L101">				spend(TICK);</span>
+<span class="nc" id="L102">				return true;</span>
+			}
+
+<span class="nc" id="L105">			spawnPower++;</span>
+<span class="nc" id="L106">			int wraiths = 1; //we include the wraith we're trying to spawn</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">			for (Mob mob : Dungeon.level.mobs){</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">				if (mob instanceof DustWraith){</span>
+<span class="nc" id="L109">					wraiths++;</span>
+				}
+<span class="nc" id="L111">			}</span>
+
+			//summoning a new wraith requires 1/4/9/16/25/36/49/49/... turns of energy
+			//note that logic for summoning wraiths kind of has an odd, undocumented balance history:
+			//v0.3.1-v0.6.5: wraith every 1/4/9/16/25/25... turns, basically guaranteed
+			//v0.7.0-v2.1.4: bugged, same rate as above but high (often &gt;50%) chance that spawning fails. failed spawning resets delay!
+			//v2.2.0+: fixed bug, increased summon delay cap to counteract a bit, wraiths also now have to spawn at a slight distance
+<span class="nc" id="L118">			int powerNeeded = Math.min(49, wraiths*wraiths);</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">			if (powerNeeded &lt;= spawnPower){</span>
+<span class="nc" id="L120">				ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+				//min distance scales based on hero's view distance
+				// wraiths must spawn at least 4/3/2/1 tiles away at view distance of 8(default)/7/4/1
+<span class="nc" id="L123">				int minDist = Math.round(Dungeon.hero.viewDistance/3f);</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">				for (int i = 0; i &lt; Dungeon.level.length(); i++){</span>
+<span class="nc bnc" id="L125" title="All 4 branches missed.">					if (Dungeon.level.heroFOV[i]</span>
+							&amp;&amp; !Dungeon.level.solid[i]
+<span class="nc bnc" id="L127" title="All 2 branches missed.">							&amp;&amp; Actor.findChar( i ) == null</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">							&amp;&amp; Dungeon.level.distance(i, Dungeon.hero.pos) &gt; minDist){</span>
+<span class="nc" id="L129">						candidates.add(i);</span>
+					}
+				}
+<span class="nc bnc" id="L132" title="All 2 branches missed.">				if (!candidates.isEmpty()){</span>
+<span class="nc" id="L133">					Wraith.spawnAt(Random.element(candidates), DustWraith.class);</span>
+<span class="nc" id="L134">					Sample.INSTANCE.play(Assets.Sounds.CURSED);</span>
+<span class="nc" id="L135">					spawnPower -= powerNeeded;</span>
+				} else {
+					//prevents excessive spawn power buildup
+<span class="nc" id="L138">					spawnPower = Math.min(spawnPower, 2*wraiths);</span>
+				}
+			}
+
+<span class="nc" id="L142">			spend(TICK);</span>
+<span class="nc" id="L143">			return true;</span>
+		}
+
+		public void dispel(){
+<span class="nc" id="L147">			detach();</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">			for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])){</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">				if (mob instanceof DustWraith){</span>
+<span class="nc" id="L150">					mob.die(null);</span>
+				}
+			}
+<span class="nc" id="L153">			Game.runOnRenderThread(new Callback() {</span>
+				@Override
+				public void call() {
+<span class="nc" id="L156">					Music.INSTANCE.fadeOut(1f, new Callback() {</span>
+						@Override
+						public void call() {
+<span class="nc bnc" id="L159" title="All 2 branches missed.">							if (Dungeon.level != null) {</span>
+<span class="nc" id="L160">								Dungeon.level.playLevelMusic();</span>
+							}
+<span class="nc" id="L162">						}</span>
+					});
+<span class="nc" id="L164">				}</span>
+			});
+<span class="nc" id="L166">		}</span>
+
+<span class="nc" id="L168">		private static String SPAWNPOWER = &quot;spawnpower&quot;;</span>
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L172">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L173">			bundle.put( SPAWNPOWER, spawnPower );</span>
+<span class="nc" id="L174">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L178">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L179">			spawnPower = bundle.getInt( SPAWNPOWER );</span>
+<span class="nc" id="L180">		}</span>
+	}
+
+<span class="nc" id="L183">	public static class DustWraith extends Wraith{};</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

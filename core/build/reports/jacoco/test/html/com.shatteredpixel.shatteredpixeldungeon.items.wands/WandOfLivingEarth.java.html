@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WandOfLivingEarth.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.wands</a> &gt; <span class="el_source">WandOfLivingEarth.java</span></div><h1>WandOfLivingEarth.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.wands;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AllyBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Amok;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.PowerOfMany;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.Stasis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.NPC;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.EarthGuardianSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.ColorMath;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L56">public class WandOfLivingEarth extends DamageWand {</span>
+	
+	{
+<span class="nc" id="L59">		image = ItemSpriteSheet.WAND_LIVING_EARTH;</span>
+<span class="nc" id="L60">	}</span>
+	
+	@Override
+	public int min(int lvl) {
+<span class="nc" id="L64">		return 4;</span>
+	}
+	
+	@Override
+	public int max(int lvl) {
+<span class="nc" id="L69">		return 6 + 2*lvl;</span>
+	}
+	
+	@Override
+	public void onZap(Ballistica bolt) {
+<span class="nc" id="L74">		Char ch = Actor.findChar(bolt.collisionPos);</span>
+<span class="nc" id="L75">		int damage = damageRoll();</span>
+<span class="nc" id="L76">		int armorToAdd = damage;</span>
+
+<span class="nc" id="L78">		EarthGuardian guardian = null;</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		for (Mob m : Dungeon.level.mobs){</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">			if (m instanceof EarthGuardian){</span>
+<span class="nc" id="L81">				guardian = (EarthGuardian) m;</span>
+<span class="nc" id="L82">				break;</span>
+			}
+<span class="nc" id="L84">		}</span>
+
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		if (Stasis.getStasisAlly() instanceof EarthGuardian){</span>
+<span class="nc" id="L87">			guardian = (EarthGuardian)Stasis.getStasisAlly();</span>
+		}
+
+<span class="nc" id="L90">		RockArmor buff = curUser.buff(RockArmor.class);</span>
+		//only grant armor if we are shooting at an enemy, a hiding mimic, or the guardian
+<span class="nc bnc" id="L92" title="All 12 branches missed.">		if ((guardian == null || ch != guardian) &amp;&amp; (ch == null</span>
+				|| ch.alignment == Char.Alignment.ALLY
+				|| ch.alignment == Char.Alignment.NEUTRAL &amp;&amp; !(ch instanceof Mimic))){
+<span class="nc" id="L95">			armorToAdd = 0;</span>
+		} else {
+<span class="nc bnc" id="L97" title="All 4 branches missed.">			if (buff == null &amp;&amp; guardian == null) {</span>
+<span class="nc" id="L98">				buff = Buff.affect(curUser, RockArmor.class);</span>
+			}
+<span class="nc bnc" id="L100" title="All 2 branches missed.">			if (buff != null) {</span>
+<span class="nc" id="L101">				buff.addArmor( buffedLvl(), armorToAdd);</span>
+			}
+		}
+
+		//shooting at the guardian
+<span class="nc bnc" id="L106" title="All 4 branches missed.">		if (guardian != null &amp;&amp; guardian == ch){</span>
+<span class="nc" id="L107">			guardian.sprite.centerEmitter().burst(MagicMissile.EarthParticle.ATTRACT, 8 + buffedLvl() / 2);</span>
+<span class="nc" id="L108">			guardian.setInfo(curUser, buffedLvl(), armorToAdd);</span>
+<span class="nc" id="L109">			wandProc(guardian, chargesPerCast());</span>
+<span class="nc" id="L110">			Sample.INSTANCE.play( Assets.Sounds.HIT_MAGIC, 1, 0.9f * Random.Float(0.87f, 1.15f) );</span>
+
+		//shooting the guardian at a location
+<span class="nc bnc" id="L113" title="All 6 branches missed.">		} else if ( guardian == null &amp;&amp; buff != null &amp;&amp; buff.armor &gt;= buff.armorToGuardian()){</span>
+
+			//create a new guardian
+<span class="nc" id="L116">			guardian = new EarthGuardian();</span>
+<span class="nc" id="L117">			guardian.setInfo(curUser, buffedLvl(), buff.armor);</span>
+
+<span class="nc bnc" id="L119" title="All 2 branches missed.">			if (buff.powerOfManyTurns &gt; 0){</span>
+<span class="nc" id="L120">				Buff.affect(guardian, PowerOfMany.PowerBuff.class, buff.powerOfManyTurns);</span>
+			}
+
+			//if the collision pos is occupied (likely will be), then spawn the guardian in the
+			//adjacent cell which is closes to the user of the wand.
+<span class="nc bnc" id="L125" title="All 2 branches missed.">			if (ch != null){</span>
+
+<span class="nc" id="L127">				ch.sprite.centerEmitter().burst(MagicMissile.EarthParticle.BURST, 5 + buffedLvl()/2);</span>
+
+<span class="nc" id="L129">				wandProc(ch, chargesPerCast());</span>
+<span class="nc" id="L130">				ch.damage(damage, this);</span>
+
+<span class="nc" id="L132">				int closest = -1;</span>
+<span class="nc" id="L133">				boolean[] passable = Dungeon.level.passable;</span>
+
+<span class="nc bnc" id="L135" title="All 2 branches missed.">				for (int n : PathFinder.NEIGHBOURS9) {</span>
+<span class="nc" id="L136">					int c = bolt.collisionPos + n;</span>
+<span class="nc bnc" id="L137" title="All 6 branches missed.">					if (passable[c] &amp;&amp; Actor.findChar( c ) == null</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">						&amp;&amp; (closest == -1 || (Dungeon.level.trueDistance(c, curUser.pos) &lt; (Dungeon.level.trueDistance(closest, curUser.pos))))) {</span>
+<span class="nc" id="L139">						closest = c;</span>
+					}
+				}
+
+<span class="nc bnc" id="L143" title="All 2 branches missed.">				if (closest == -1){</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">					if (armorToAdd &gt; 0) {</span>
+<span class="nc" id="L145">						curUser.sprite.centerEmitter().burst(MagicMissile.EarthParticle.ATTRACT, 8 + buffedLvl() / 2);</span>
+					}
+<span class="nc" id="L147">					return; //do not spawn guardian or detach buff</span>
+				} else {
+<span class="nc" id="L149">					guardian.pos = closest;</span>
+<span class="nc" id="L150">					GameScene.add(guardian, 1);</span>
+<span class="nc" id="L151">					Dungeon.level.occupyCell(guardian);</span>
+				}
+
+<span class="nc bnc" id="L154" title="All 4 branches missed.">				if (ch.alignment == Char.Alignment.ENEMY || ch.buff(Amok.class) != null) {</span>
+<span class="nc" id="L155">					guardian.aggro(ch);</span>
+				}
+
+<span class="nc" id="L158">			} else {</span>
+<span class="nc" id="L159">				guardian.pos = bolt.collisionPos;</span>
+<span class="nc" id="L160">				GameScene.add(guardian, 1);</span>
+<span class="nc" id="L161">				Dungeon.level.occupyCell(guardian);</span>
+			}
+
+<span class="nc" id="L164">			guardian.sprite.centerEmitter().burst(MagicMissile.EarthParticle.ATTRACT, 8 + buffedLvl()/2);</span>
+<span class="nc" id="L165">			buff.detach();</span>
+<span class="nc" id="L166">			Sample.INSTANCE.play( Assets.Sounds.HIT_MAGIC, 1, 0.9f * Random.Float(0.87f, 1.15f) );</span>
+
+		//shooting at a location/enemy with no guardian being shot
+		} else {
+
+<span class="nc bnc" id="L171" title="All 2 branches missed.">			if (ch != null) {</span>
+
+<span class="nc" id="L173">				ch.sprite.centerEmitter().burst(MagicMissile.EarthParticle.BURST, 5 + buffedLvl() / 2);</span>
+
+<span class="nc" id="L175">				wandProc(ch, chargesPerCast());</span>
+<span class="nc" id="L176">				ch.damage(damage, this);</span>
+<span class="nc" id="L177">				Sample.INSTANCE.play( Assets.Sounds.HIT_MAGIC, 1, 0.8f * Random.Float(0.87f, 1.15f) );</span>
+				
+<span class="nc bnc" id="L179" title="All 2 branches missed.">				if (guardian == null) {</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">					if (armorToAdd &gt; 0) {</span>
+<span class="nc" id="L181">						curUser.sprite.centerEmitter().burst(MagicMissile.EarthParticle.ATTRACT, 8 + buffedLvl() / 2);</span>
+					}
+				} else {
+<span class="nc bnc" id="L184" title="All 2 branches missed.">					if (guardian.sprite != null) { //may be in stasis</span>
+<span class="nc" id="L185">						guardian.sprite.centerEmitter().burst(MagicMissile.EarthParticle.ATTRACT, 8 + buffedLvl() / 2);</span>
+					}
+<span class="nc" id="L187">					guardian.setInfo(curUser, buffedLvl(), armorToAdd);</span>
+<span class="nc bnc" id="L188" title="All 4 branches missed.">					if (ch.alignment == Char.Alignment.ENEMY || ch.buff(Amok.class) != null) {</span>
+<span class="nc" id="L189">						guardian.aggro(ch);</span>
+					}
+				}
+
+			} else {
+<span class="nc" id="L194">				Dungeon.level.pressCell(bolt.collisionPos);</span>
+			}
+		}
+
+<span class="nc" id="L198">	}</span>
+
+	@Override
+	public String upgradeStat2(int level) {
+<span class="nc" id="L202">		return Integer.toString(16 + 8*level);</span>
+	}
+
+	@Override
+	public String upgradeStat3(int level) {
+<span class="nc bnc" id="L207" title="All 2 branches missed.">		if (Dungeon.isChallenged(Challenges.NO_ARMOR)){</span>
+<span class="nc" id="L208">			return level + &quot;-&quot; + (2+level);</span>
+		} else {
+<span class="nc" id="L210">			return level + &quot;-&quot; + (3+(3*level));</span>
+		}
+	}
+
+	@Override
+	public void fx(Ballistica bolt, Callback callback) {
+<span class="nc" id="L216">		MagicMissile.boltFromChar(curUser.sprite.parent,</span>
+				MagicMissile.EARTH,
+				curUser.sprite,
+<span class="nc" id="L219">				bolt.collisionPos,</span>
+				callback);
+<span class="nc" id="L221">		Sample.INSTANCE.play(Assets.Sounds.ZAP);</span>
+<span class="nc" id="L222">	}</span>
+	
+	@Override
+	public void onHit(MagesStaff staff, Char attacker, Char defender, int damage) {
+<span class="nc" id="L226">		EarthGuardian guardian = null;</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">		for (Mob m : Dungeon.level.mobs){</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">			if (m instanceof EarthGuardian){</span>
+<span class="nc" id="L229">				guardian = (EarthGuardian) m;</span>
+<span class="nc" id="L230">				break;</span>
+			}
+<span class="nc" id="L232">		}</span>
+		
+<span class="nc" id="L234">		int armor = Math.round(damage*0.33f*procChanceMultiplier(attacker));</span>
+
+<span class="nc bnc" id="L236" title="All 2 branches missed.">		if (guardian != null){</span>
+<span class="nc" id="L237">			guardian.sprite.centerEmitter().burst(MagicMissile.EarthParticle.ATTRACT, 8 + buffedLvl() / 2);</span>
+<span class="nc" id="L238">			guardian.setInfo(Dungeon.hero, buffedLvl(), armor);</span>
+		} else {
+<span class="nc" id="L240">			attacker.sprite.centerEmitter().burst(MagicMissile.EarthParticle.ATTRACT, 8 + buffedLvl() / 2);</span>
+<span class="nc" id="L241">			Buff.affect(attacker, RockArmor.class).addArmor( buffedLvl(), armor);</span>
+		}
+<span class="nc" id="L243">	}</span>
+	
+	@Override
+	public void staffFx(MagesStaff.StaffParticle particle) {
+<span class="nc bnc" id="L247" title="All 2 branches missed.">		if (Random.Int(10) == 0){</span>
+<span class="nc" id="L248">			particle.color(ColorMath.random(0xFFF568, 0x80791A));</span>
+		} else {
+<span class="nc" id="L250">			particle.color(ColorMath.random(0x805500, 0x332500));</span>
+		}
+<span class="nc" id="L252">		particle.am = 1f;</span>
+<span class="nc" id="L253">		particle.setLifespan(2f);</span>
+<span class="nc" id="L254">		particle.setSize( 1f, 2f);</span>
+<span class="nc" id="L255">		particle.shuffleXY(0.5f);</span>
+<span class="nc" id="L256">		float dst = Random.Float(11f);</span>
+<span class="nc" id="L257">		particle.x -= dst;</span>
+<span class="nc" id="L258">		particle.y += dst;</span>
+<span class="nc" id="L259">	}</span>
+
+<span class="nc" id="L261">	public static class RockArmor extends Buff {</span>
+
+		{
+<span class="nc" id="L264">			type = buffType.POSITIVE;</span>
+		}
+
+		private int wandLevel;
+		private int armor;
+
+<span class="nc" id="L270">		private float powerOfManyTurns = 0;</span>
+
+		@Override
+		public boolean act() {
+<span class="nc bnc" id="L274" title="All 2 branches missed.">			if (powerOfManyTurns &gt; 0){</span>
+<span class="nc" id="L275">				powerOfManyTurns--;</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">				if (powerOfManyTurns &lt;= 0){</span>
+<span class="nc" id="L277">					powerOfManyTurns = 0;</span>
+<span class="nc" id="L278">					BuffIndicator.refreshHero();</span>
+				}
+			}
+<span class="nc" id="L281">			spend(TICK);</span>
+<span class="nc" id="L282">			return true;</span>
+		}
+
+		private void addArmor(int wandLevel, int toAdd ){
+<span class="nc" id="L286">			this.wandLevel = Math.max(this.wandLevel, wandLevel);</span>
+<span class="nc" id="L287">			armor += toAdd;</span>
+<span class="nc" id="L288">			armor = Math.min(armor, 2*armorToGuardian());</span>
+<span class="nc" id="L289">		}</span>
+
+		private int armorToGuardian(){
+<span class="nc" id="L292">			return 8 + wandLevel*4;</span>
+		}
+
+		public int absorb( int damage ) {
+<span class="nc" id="L296">			int block = damage - damage/2;</span>
+<span class="nc bnc" id="L297" title="All 2 branches missed.">			if (armor &lt;= block) {</span>
+<span class="nc" id="L298">				detach();</span>
+<span class="nc" id="L299">				return damage - armor;</span>
+			} else {
+<span class="nc" id="L301">				armor -= block;</span>
+<span class="nc" id="L302">				return damage - block;</span>
+			}
+		}
+
+		public boolean isEmpowered(){
+<span class="nc bnc" id="L307" title="All 2 branches missed.">			return powerOfManyTurns &gt; 0;</span>
+		}
+
+		@Override
+		public int icon() {
+<span class="nc" id="L312">			return BuffIndicator.ARMOR;</span>
+		}
+
+		@Override
+		public void tintIcon(Image icon) {
+<span class="nc bnc" id="L317" title="All 2 branches missed.">			if (isEmpowered()){</span>
+<span class="nc" id="L318">				icon.hardlight(1.8f, 1.8f, 0.6f);</span>
+			} else {
+<span class="nc" id="L320">				icon.brightness(0.6f);</span>
+			}
+<span class="nc" id="L322">		}</span>
+
+		@Override
+		public float iconFadePercent() {
+<span class="nc" id="L326">			return Math.max(0, (armorToGuardian() - armor) / (float)armorToGuardian());</span>
+		}
+
+		@Override
+		public String iconTextDisplay() {
+<span class="nc" id="L331">			return Integer.toString(armor);</span>
+		}
+
+		@Override
+		public String desc() {
+<span class="nc" id="L336">			String desc = Messages.get( this, &quot;desc&quot;, armor, armorToGuardian());</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">			if (isEmpowered()){</span>
+<span class="nc" id="L338">				desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_many&quot;, (int)powerOfManyTurns);</span>
+			}
+<span class="nc" id="L340">			return desc;</span>
+		}
+
+		private static final String WAND_LEVEL = &quot;wand_level&quot;;
+		private static final String ARMOR = &quot;armor&quot;;
+
+		private static final String POWER_TURNS = &quot;power_turns&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L350">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L351">			bundle.put(WAND_LEVEL, wandLevel);</span>
+<span class="nc" id="L352">			bundle.put(ARMOR, armor);</span>
+<span class="nc" id="L353">			bundle.put(POWER_TURNS, powerOfManyTurns);</span>
+<span class="nc" id="L354">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L358">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L359">			wandLevel = bundle.getInt(WAND_LEVEL);</span>
+<span class="nc" id="L360">			armor = bundle.getInt(ARMOR);</span>
+<span class="nc" id="L361">			powerOfManyTurns = bundle.getFloat(POWER_TURNS);</span>
+<span class="nc" id="L362">		}</span>
+	}
+
+<span class="nc" id="L365">	public static class EarthGuardian extends NPC {</span>
+
+		{
+<span class="nc" id="L368">			spriteClass = EarthGuardianSprite.class;</span>
+
+<span class="nc" id="L370">			alignment = Alignment.ALLY;</span>
+<span class="nc" id="L371">			state = HUNTING;</span>
+<span class="nc" id="L372">			intelligentAlly = true;</span>
+
+<span class="nc" id="L374">			properties.add(Property.INORGANIC);</span>
+
+<span class="nc" id="L376">			WANDERING = new Wandering();</span>
+
+			//before other mobs
+<span class="nc" id="L379">			actPriority = MOB_PRIO + 1;</span>
+
+<span class="nc" id="L381">			HP = HT = 0;</span>
+		}
+
+<span class="nc" id="L384">		private int wandLevel = -1;</span>
+
+		public void setInfo(Hero hero, int wandLevel, int healthToAdd){
+<span class="nc bnc" id="L387" title="All 2 branches missed.">			if (wandLevel &gt; this.wandLevel) {</span>
+<span class="nc" id="L388">				this.wandLevel = wandLevel;</span>
+<span class="nc" id="L389">				HT = 16 + 8 * wandLevel;</span>
+			}
+<span class="nc bnc" id="L391" title="All 4 branches missed.">			if (HP != 0 &amp;&amp; sprite != null){</span>
+<span class="nc" id="L392">				sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(healthToAdd), FloatingText.HEALING);</span>
+			}
+<span class="nc" id="L394">			HP = Math.min(HT, HP + healthToAdd);</span>
+			//half of hero's evasion
+<span class="nc" id="L396">			defenseSkill = (hero.lvl + 4)/2;</span>
+<span class="nc" id="L397">		}</span>
+
+		@Override
+		public int attackSkill(Char target) {
+			//same as the hero
+<span class="nc" id="L402">			return 2*defenseSkill + 5;</span>
+		}
+
+		@Override
+		public int attackProc(Char enemy, int damage) {
+<span class="nc bnc" id="L407" title="All 2 branches missed.">			if (enemy instanceof Mob) ((Mob)enemy).aggro(this);</span>
+<span class="nc" id="L408">			return super.attackProc(enemy, damage);</span>
+		}
+
+		@Override
+		public int damageRoll() {
+<span class="nc" id="L413">			return Random.NormalIntRange(2, 4 + Dungeon.scalingDepth()/2);</span>
+		}
+
+		@Override
+		public int drRoll() {
+<span class="nc" id="L418">			int dr = super.drRoll();</span>
+<span class="nc bnc" id="L419" title="All 2 branches missed.">			if (Dungeon.isChallenged(Challenges.NO_ARMOR)){</span>
+<span class="nc" id="L420">				return dr + Random.NormalIntRange(wandLevel, 2 + wandLevel);</span>
+			} else {
+<span class="nc" id="L422">				return dr + Random.NormalIntRange(wandLevel, 3 + 3 * wandLevel);</span>
+			}
+		}
+
+		@Override
+		public String description() {
+<span class="nc" id="L428">			String desc = Messages.get(this, &quot;desc&quot;);</span>
+
+<span class="nc bnc" id="L430" title="All 2 branches missed.">			if (Actor.chars().contains(this)) {</span>
+<span class="nc bnc" id="L431" title="All 2 branches missed.">				if (Dungeon.isChallenged(Challenges.NO_ARMOR)) {</span>
+<span class="nc" id="L432">					desc += &quot;\n\n&quot; + Messages.get(this, &quot;wand_info&quot;, wandLevel, 2 + wandLevel);</span>
+				} else {
+<span class="nc" id="L434">					desc += &quot;\n\n&quot; + Messages.get(this, &quot;wand_info&quot;, wandLevel, 3 + 3 * wandLevel);</span>
+				}
+			}
+
+<span class="nc" id="L438">			return desc;</span>
+			
+		}
+		
+		{
+<span class="nc" id="L443">			immunities.add( AllyBuff.class );</span>
+<span class="nc" id="L444">		}</span>
+
+		private static final String DEFENSE = &quot;defense&quot;;
+		private static final String WAND_LEVEL = &quot;wand_level&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L451">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L452">			bundle.put(DEFENSE, defenseSkill);</span>
+<span class="nc" id="L453">			bundle.put(WAND_LEVEL, wandLevel);</span>
+<span class="nc" id="L454">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L458">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L459">			defenseSkill = bundle.getInt(DEFENSE);</span>
+<span class="nc" id="L460">			wandLevel = bundle.getInt(WAND_LEVEL);</span>
+<span class="nc" id="L461">		}</span>
+
+<span class="nc" id="L463">		private class Wandering extends Mob.Wandering{</span>
+
+			@Override
+			public boolean act(boolean enemyInFOV, boolean justAlerted) {
+<span class="nc bnc" id="L467" title="All 2 branches missed.">				if (!enemyInFOV){</span>
+<span class="nc" id="L468">					Buff.affect(Dungeon.hero, RockArmor.class).addArmor(wandLevel, HP);</span>
+<span class="nc bnc" id="L469" title="All 2 branches missed.">					if (buff(PowerOfMany.PowerBuff.class) != null){</span>
+<span class="nc" id="L470">						Buff.affect(Dungeon.hero, RockArmor.class).powerOfManyTurns = buff(PowerOfMany.PowerBuff.class).cooldown()+1;</span>
+					}
+<span class="nc" id="L472">					Dungeon.hero.sprite.centerEmitter().burst(MagicMissile.EarthParticle.ATTRACT, 8 + wandLevel/2);</span>
+<span class="nc" id="L473">					destroy();</span>
+<span class="nc" id="L474">					sprite.die();</span>
+<span class="nc" id="L475">					return true;</span>
+				} else {
+<span class="nc" id="L477">					return super.act(enemyInFOV, justAlerted);</span>
+				}
+			}
+
+		}
+
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,1 @@
+{"EquipmentManager":{"name":"EquipmentManager","packages":{"com.shatteredpixel.shatteredpixeldungeon.equipment":{"packageName":"com.shatteredpixel.shatteredpixeldungeon.equipment","isAll":false,"classes":["Lcom.shatteredpixel.shatteredpixeldungeon.equipment.EquipmentManager"]}}}}

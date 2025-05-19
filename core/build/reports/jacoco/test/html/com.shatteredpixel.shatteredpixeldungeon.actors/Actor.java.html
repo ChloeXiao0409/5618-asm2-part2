@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Actor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors</a> &gt; <span class="el_source">Actor.java</span></div><h1>Actor.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.watabou.noosa.Game;
+import com.watabou.utils.Bundlable;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.SparseArray;
+
+import java.util.HashSet;
+
+<span class="nc" id="L36">public abstract class Actor implements Bundlable {</span>
+	
+	public static final float TICK	= 1f;
+
+	private float time;
+
+<span class="nc" id="L42">	private int id = 0;</span>
+
+	//default priority values for general actor categories
+	//note that some specific actors pick more specific values
+	//e.g. a buff acting after all normal buffs might have priority BUFF_PRIO + 1
+	protected static final int VFX_PRIO    = 100;   //visual effects take priority
+	protected static final int HERO_PRIO   = 0;     //positive is before hero, negative after
+	protected static final int BLOB_PRIO   = -10;   //blobs act after hero, before mobs
+	protected static final int MOB_PRIO    = -20;   //mobs act between buffs and blobs
+	protected static final int BUFF_PRIO   = -30;   //buffs act last in a turn
+	private static final int   DEFAULT     = -100;  //if no priority is given, act after all else
+
+	//used to determine what order actors act in if their time is equal. Higher values act earlier.
+<span class="nc" id="L55">	protected int actPriority = DEFAULT;</span>
+
+	protected abstract boolean act();
+
+	//Always spends exactly the specified amount of time, regardless of time-influencing factors
+	protected void spendConstant( float time ){
+<span class="nc" id="L61">		this.time += time;</span>
+		//if time is very close to a whole number, round to a whole number to fix errors
+<span class="nc" id="L63">		float ex = Math.abs(this.time % 1f);</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">		if (ex &lt; .001f){</span>
+<span class="nc" id="L65">			this.time = Math.round(this.time);</span>
+		}
+<span class="nc" id="L67">	}</span>
+
+	//sends time, but the amount can be influenced
+	protected void spend( float time ) {
+<span class="nc" id="L71">		spendConstant( time );</span>
+<span class="nc" id="L72">	}</span>
+
+	public void spendToWhole(){
+<span class="nc" id="L75">		time = (float)Math.ceil(time);</span>
+<span class="nc" id="L76">	}</span>
+	
+	protected void postpone( float time ) {
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if (this.time &lt; now + time) {</span>
+<span class="nc" id="L80">			this.time = now + time;</span>
+			//if time is very close to a whole number, round to a whole number to fix errors
+<span class="nc" id="L82">			float ex = Math.abs(this.time % 1f);</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">			if (ex &lt; .001f){</span>
+<span class="nc" id="L84">				this.time = Math.round(this.time);</span>
+			}
+		}
+<span class="nc" id="L87">	}</span>
+	
+	public float cooldown() {
+<span class="nc" id="L90">		return time - now;</span>
+	}
+
+	public void clearTime() {
+<span class="nc" id="L94">		spendConstant(-Actor.now());</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		if (this instanceof Char){</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">			for (Buff b : ((Char) this).buffs()){</span>
+<span class="nc" id="L97">				b.spendConstant(-Actor.now());</span>
+<span class="nc" id="L98">			}</span>
+		}
+<span class="nc" id="L100">	}</span>
+
+	public void timeToNow() {
+<span class="nc" id="L103">		time = now;</span>
+<span class="nc" id="L104">	}</span>
+	
+	protected void diactivate() {
+<span class="nc" id="L107">		time = Float.MAX_VALUE;</span>
+<span class="nc" id="L108">	}</span>
+	
+<span class="nc" id="L110">	protected void onAdd() {}</span>
+	
+<span class="nc" id="L112">	protected void onRemove() {}</span>
+
+	private static final String TIME    = &quot;time&quot;;
+	private static final String ID      = &quot;id&quot;;
+
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L119">		bundle.put( TIME, time );</span>
+<span class="nc" id="L120">		bundle.put( ID, id );</span>
+<span class="nc" id="L121">	}</span>
+
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L125">		time = bundle.getFloat( TIME );</span>
+<span class="nc" id="L126">		int incomingID = bundle.getInt( ID );</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		if (Actor.findById(incomingID) == null){</span>
+<span class="nc" id="L128">			id = incomingID;</span>
+		} else {
+<span class="nc" id="L130">			id = nextID++;</span>
+		}
+<span class="nc" id="L132">	}</span>
+
+	public int id() {
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		if (id &gt; 0) {</span>
+<span class="nc" id="L136">			return id;</span>
+		} else {
+<span class="nc" id="L138">			return (id = nextID++);</span>
+		}
+	}
+
+	// **********************
+	// *** Static members ***
+	// **********************
+	
+<span class="nc" id="L146">	private static HashSet&lt;Actor&gt; all = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L147">	private static HashSet&lt;Char&gt; chars = new HashSet&lt;&gt;();</span>
+	private static volatile Actor current;
+
+<span class="nc" id="L150">	private static SparseArray&lt;Actor&gt; ids = new SparseArray&lt;&gt;();</span>
+<span class="nc" id="L151">	private static int nextID = 1;</span>
+
+<span class="nc" id="L153">	private static float now = 0;</span>
+	
+	public static float now(){
+<span class="nc" id="L156">		return now;</span>
+	}
+	
+	public static synchronized void clear() {
+		
+<span class="nc" id="L161">		now = 0;</span>
+
+<span class="nc" id="L163">		all.clear();</span>
+<span class="nc" id="L164">		chars.clear();</span>
+
+<span class="nc" id="L166">		ids.clear();</span>
+<span class="nc" id="L167">	}</span>
+
+	public static synchronized void fixTime() {
+		
+<span class="nc bnc" id="L171" title="All 2 branches missed.">		if (all.isEmpty()) return;</span>
+		
+<span class="nc" id="L173">		float min = Float.MAX_VALUE;</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">		for (Actor a : all) {</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">			if (a.time &lt; min) {</span>
+<span class="nc" id="L176">				min = a.time;</span>
+			}
+<span class="nc" id="L178">		}</span>
+
+		//Only pull everything back by whole numbers
+		//So that turns always align with a whole number
+<span class="nc" id="L182">		min = (int)min;</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">		for (Actor a : all) {</span>
+<span class="nc" id="L184">			a.time -= min;</span>
+<span class="nc" id="L185">		}</span>
+
+<span class="nc bnc" id="L187" title="All 4 branches missed.">		if (Dungeon.hero != null &amp;&amp; all.contains( Dungeon.hero )) {</span>
+<span class="nc" id="L188">			Statistics.duration += min;</span>
+		}
+<span class="nc" id="L190">		now -= min;</span>
+<span class="nc" id="L191">	}</span>
+	
+	public static void init() {
+		
+<span class="nc" id="L195">		add( Dungeon.hero );</span>
+		
+<span class="nc bnc" id="L197" title="All 2 branches missed.">		for (Mob mob : Dungeon.level.mobs) {</span>
+<span class="nc" id="L198">			add( mob );</span>
+<span class="nc" id="L199">		}</span>
+
+		//mobs need to remember their targets after every actor is added
+<span class="nc bnc" id="L202" title="All 2 branches missed.">		for (Mob mob : Dungeon.level.mobs) {</span>
+<span class="nc" id="L203">			mob.restoreEnemy();</span>
+<span class="nc" id="L204">		}</span>
+		
+<span class="nc bnc" id="L206" title="All 2 branches missed.">		for (Blob blob : Dungeon.level.blobs.values()) {</span>
+<span class="nc" id="L207">			add( blob );</span>
+<span class="nc" id="L208">		}</span>
+		
+<span class="nc" id="L210">		current = null;</span>
+<span class="nc" id="L211">	}</span>
+
+	private static final String NEXTID = &quot;nextid&quot;;
+
+	public static void storeNextID( Bundle bundle){
+<span class="nc" id="L216">		bundle.put( NEXTID, nextID );</span>
+<span class="nc" id="L217">	}</span>
+
+	public static void restoreNextID( Bundle bundle){
+<span class="nc" id="L220">		nextID = bundle.getInt( NEXTID );</span>
+<span class="nc" id="L221">	}</span>
+
+	public static void resetNextID(){
+<span class="nc" id="L224">		nextID = 1;</span>
+<span class="nc" id="L225">	}</span>
+
+	/*protected*/public void next() {
+<span class="nc bnc" id="L228" title="All 2 branches missed.">		if (current == this) {</span>
+<span class="nc" id="L229">			current = null;</span>
+		}
+<span class="nc" id="L231">	}</span>
+
+	public static boolean processing(){
+<span class="nc bnc" id="L234" title="All 2 branches missed.">		return current != null;</span>
+	}
+
+	public static int curActorPriority() {
+<span class="nc bnc" id="L238" title="All 2 branches missed.">		return current != null ? current.actPriority : HERO_PRIO;</span>
+	}
+	
+<span class="nc" id="L241">	public static boolean keepActorThreadAlive = true;</span>
+	
+	public static void process() {
+		
+		boolean doNext;
+<span class="nc" id="L246">		boolean interrupted = false;</span>
+
+		do {
+			
+<span class="nc" id="L250">			current = null;</span>
+<span class="nc bnc" id="L251" title="All 4 branches missed.">			if (!interrupted &amp;&amp; !Game.switchingScene()) {</span>
+<span class="nc" id="L252">				float earliest = Float.MAX_VALUE;</span>
+
+<span class="nc bnc" id="L254" title="All 2 branches missed.">				for (Actor actor : all) {</span>
+					
+					//some actors will always go before others if time is equal.
+<span class="nc bnc" id="L257" title="All 8 branches missed.">					if (actor.time &lt; earliest ||</span>
+							actor.time == earliest &amp;&amp; (current == null || actor.actPriority &gt; current.actPriority)) {
+<span class="nc" id="L259">						earliest = actor.time;</span>
+<span class="nc" id="L260">						current = actor;</span>
+					}
+					
+<span class="nc" id="L263">				}</span>
+			}
+
+<span class="nc bnc" id="L266" title="All 2 branches missed.">			if  (current != null) {</span>
+
+<span class="nc" id="L268">				now = current.time;</span>
+<span class="nc" id="L269">				Actor acting = current;</span>
+
+<span class="nc bnc" id="L271" title="All 4 branches missed.">				if (acting instanceof Char &amp;&amp; ((Char) acting).sprite != null) {</span>
+					// If it's character's turn to act, but its sprite
+					// is moving, wait till the movement is over
+					try {
+<span class="nc" id="L275">						synchronized (((Char)acting).sprite) {</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">							if (((Char)acting).sprite.isMoving) {</span>
+<span class="nc" id="L277">								((Char) acting).sprite.wait();</span>
+							}
+<span class="nc" id="L279">						}</span>
+<span class="nc" id="L280">					} catch (InterruptedException e) {</span>
+<span class="nc" id="L281">						interrupted = true;</span>
+<span class="nc" id="L282">					}</span>
+				}
+				
+<span class="nc bnc" id="L285" title="All 4 branches missed.">				interrupted = interrupted || Thread.interrupted();</span>
+				
+<span class="nc bnc" id="L287" title="All 2 branches missed.">				if (interrupted){</span>
+<span class="nc" id="L288">					doNext = false;</span>
+<span class="nc" id="L289">					current = null;</span>
+				} else {
+<span class="nc" id="L291">					doNext = acting.act();</span>
+<span class="nc bnc" id="L292" title="All 6 branches missed.">					if (doNext &amp;&amp; (Dungeon.hero == null || !Dungeon.hero.isAlive())) {</span>
+<span class="nc" id="L293">						doNext = false;</span>
+<span class="nc" id="L294">						current = null;</span>
+					}
+				}
+<span class="nc" id="L297">			} else {</span>
+<span class="nc" id="L298">				doNext = false;</span>
+			}
+
+<span class="nc bnc" id="L301" title="All 2 branches missed.">			if (!doNext){</span>
+<span class="nc" id="L302">				synchronized (Thread.currentThread()) {</span>
+					
+<span class="nc bnc" id="L304" title="All 4 branches missed.">					interrupted = interrupted || Thread.interrupted();</span>
+					
+<span class="nc bnc" id="L306" title="All 2 branches missed.">					if (interrupted){</span>
+<span class="nc" id="L307">						current = null;</span>
+<span class="nc" id="L308">						interrupted = false;</span>
+					}
+
+					//signals to the gamescene that actor processing is finished for now
+<span class="nc" id="L312">					Thread.currentThread().notify();</span>
+					
+					try {
+<span class="nc" id="L315">						Thread.currentThread().wait();</span>
+<span class="nc" id="L316">					} catch (InterruptedException e) {</span>
+<span class="nc" id="L317">						interrupted = true;</span>
+<span class="nc" id="L318">					}</span>
+<span class="nc" id="L319">				}</span>
+			}
+
+<span class="nc bnc" id="L322" title="All 2 branches missed.">		} while (keepActorThreadAlive);</span>
+<span class="nc" id="L323">	}</span>
+	
+	public static void add( Actor actor ) {
+<span class="nc" id="L326">		add( actor, now );</span>
+<span class="nc" id="L327">	}</span>
+	
+	public static void addDelayed( Actor actor, float delay ) {
+<span class="nc" id="L330">		add( actor, now + Math.max(delay, 0) );</span>
+<span class="nc" id="L331">	}</span>
+	
+	private static synchronized void add( Actor actor, float time ) {
+		
+<span class="nc bnc" id="L335" title="All 2 branches missed.">		if (all.contains( actor )) {</span>
+<span class="nc" id="L336">			return;</span>
+		}
+
+<span class="nc" id="L339">		ids.put( actor.id(),  actor );</span>
+
+<span class="nc" id="L341">		all.add( actor );</span>
+<span class="nc" id="L342">		actor.time += time;</span>
+<span class="nc" id="L343">		actor.onAdd();</span>
+		
+<span class="nc bnc" id="L345" title="All 2 branches missed.">		if (actor instanceof Char) {</span>
+<span class="nc" id="L346">			Char ch = (Char)actor;</span>
+<span class="nc" id="L347">			chars.add( ch );</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">			for (Buff buff : ch.buffs()) {</span>
+<span class="nc" id="L349">				add(buff);</span>
+<span class="nc" id="L350">			}</span>
+		}
+<span class="nc" id="L352">	}</span>
+	
+	public static synchronized void remove( Actor actor ) {
+		
+<span class="nc bnc" id="L356" title="All 2 branches missed.">		if (actor != null) {</span>
+<span class="nc" id="L357">			all.remove( actor );</span>
+<span class="nc" id="L358">			chars.remove( actor );</span>
+<span class="nc" id="L359">			actor.onRemove();</span>
+
+<span class="nc bnc" id="L361" title="All 2 branches missed.">			if (actor.id &gt; 0) {</span>
+<span class="nc" id="L362">				ids.remove( actor.id );</span>
+			}
+		}
+<span class="nc" id="L365">	}</span>
+
+	//'freezes' a character in time for a specified amount of time
+	//USE CAREFULLY! Manipulating time like this is useful for some gameplay effects but is tricky
+	public static void delayChar( Char ch, float time ){
+<span class="nc" id="L370">		ch.spendConstant(time);</span>
+<span class="nc bnc" id="L371" title="All 2 branches missed.">		for (Buff b : ch.buffs()){</span>
+<span class="nc" id="L372">			b.spendConstant(time);</span>
+<span class="nc" id="L373">		}</span>
+<span class="nc" id="L374">	}</span>
+	
+	public static synchronized Char findChar( int pos ) {
+<span class="nc bnc" id="L377" title="All 2 branches missed.">		for (Char ch : chars){</span>
+<span class="nc bnc" id="L378" title="All 2 branches missed.">			if (ch.pos == pos)</span>
+<span class="nc" id="L379">				return ch;</span>
+<span class="nc" id="L380">		}</span>
+<span class="nc" id="L381">		return null;</span>
+	}
+
+	public static synchronized Actor findById( int id ) {
+<span class="nc" id="L385">		return ids.get( id );</span>
+	}
+
+	public static synchronized HashSet&lt;Actor&gt; all() {
+<span class="nc" id="L389">		return new HashSet&lt;&gt;(all);</span>
+	}
+
+<span class="nc" id="L392">	public static synchronized HashSet&lt;Char&gt; chars() { return new HashSet&lt;&gt;(chars); }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

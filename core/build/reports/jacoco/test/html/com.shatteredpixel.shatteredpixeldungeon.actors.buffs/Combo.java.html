@@ -1,0 +1,547 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Combo.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.buffs</a> &gt; <span class="el_source">Combo.java</span></div><h1>Combo.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.buffs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DwarfKing;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfBlastWave;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ActionIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.AttackIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.watabou.utils.BArray;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndCombo;
+import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.Visual;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.PathFinder;
+
+<span class="nc" id="L56">public class Combo extends Buff implements ActionIndicator.Action {</span>
+
+	{
+<span class="nc" id="L59">		type = buffType.POSITIVE;</span>
+	}
+	
+<span class="nc" id="L62">	private int count = 0;</span>
+<span class="nc" id="L63">	private float comboTime = 0f;</span>
+<span class="nc" id="L64">	private float initialComboTime = 5f;</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L68">		return BuffIndicator.COMBO;</span>
+	}
+	
+	@Override
+	public void tintIcon(Image icon) {
+<span class="nc" id="L73">		ComboMove move = getHighestMove();</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		if (move != null){</span>
+<span class="nc" id="L75">			icon.hardlight(move.tintColor);</span>
+		} else {
+<span class="nc" id="L77">			icon.resetColor();</span>
+		}
+<span class="nc" id="L79">	}</span>
+
+	@Override
+	public float iconFadePercent() {
+<span class="nc" id="L83">		return Math.max(0, (initialComboTime - comboTime)/ initialComboTime);</span>
+	}
+
+	@Override
+	public String iconTextDisplay() {
+<span class="nc" id="L88">		return Integer.toString((int)comboTime);</span>
+	}
+	
+	public void hit( Char enemy ) {
+
+<span class="nc" id="L93">		count++;</span>
+<span class="nc" id="L94">		comboTime = 5f;</span>
+
+<span class="nc bnc" id="L96" title="All 6 branches missed.">		if (!enemy.isAlive() || (enemy.buff(Corruption.class) != null &amp;&amp; enemy.HP == enemy.HT)){</span>
+<span class="nc" id="L97">			comboTime = Math.max(comboTime, 15*((Hero)target).pointsInTalent(Talent.CLEAVE));</span>
+		}
+
+<span class="nc" id="L100">		initialComboTime = comboTime;</span>
+
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if ((getHighestMove() != null)) {</span>
+
+<span class="nc" id="L104">			ActionIndicator.setAction( this );</span>
+<span class="nc" id="L105">			Badges.validateMasteryCombo( count );</span>
+
+<span class="nc" id="L107">			GLog.p( Messages.get(this, &quot;combo&quot;, count) );</span>
+			
+		}
+
+<span class="nc" id="L111">		BuffIndicator.refreshHero(); //refresh the buff visually on-hit</span>
+
+<span class="nc" id="L113">	}</span>
+
+	public void addTime( float time ){
+<span class="nc" id="L116">		comboTime += time;</span>
+<span class="nc" id="L117">	}</span>
+
+	@Override
+	public void detach() {
+<span class="nc" id="L121">		super.detach();</span>
+<span class="nc" id="L122">		ActionIndicator.clearAction(this);</span>
+<span class="nc" id="L123">	}</span>
+
+	@Override
+	public boolean act() {
+<span class="nc" id="L127">		comboTime-=TICK;</span>
+<span class="nc" id="L128">		spend(TICK);</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">		if (comboTime &lt;= 0) {</span>
+<span class="nc" id="L130">			detach();</span>
+		}
+<span class="nc" id="L132">		return true;</span>
+	}
+
+	@Override
+	public String desc() {
+<span class="nc" id="L137">		return Messages.get(this, &quot;desc&quot;, count, dispTurns(comboTime));</span>
+	}
+
+	private static final String COUNT = &quot;count&quot;;
+	private static final String TIME  = &quot;combotime&quot;;
+	private static final String INITIAL_TIME  = &quot;initialComboTime&quot;;
+
+	private static final String CLOBBER_USED = &quot;clobber_used&quot;;
+	private static final String PARRY_USED   = &quot;parry_used&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L149">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L150">		bundle.put(COUNT, count);</span>
+<span class="nc" id="L151">		bundle.put(TIME, comboTime);</span>
+<span class="nc" id="L152">		bundle.put(INITIAL_TIME, initialComboTime);</span>
+
+<span class="nc" id="L154">		bundle.put(CLOBBER_USED, clobberUsed);</span>
+<span class="nc" id="L155">		bundle.put(PARRY_USED, parryUsed);</span>
+<span class="nc" id="L156">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L160">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L161">		count = bundle.getInt( COUNT );</span>
+<span class="nc" id="L162">		comboTime = bundle.getFloat( TIME );</span>
+
+<span class="nc" id="L164">		initialComboTime = bundle.getFloat( INITIAL_TIME );</span>
+
+<span class="nc" id="L166">		clobberUsed = bundle.getBoolean(CLOBBER_USED);</span>
+<span class="nc" id="L167">		parryUsed = bundle.getBoolean(PARRY_USED);</span>
+
+<span class="nc bnc" id="L169" title="All 2 branches missed.">		if (getHighestMove() != null) ActionIndicator.setAction(this);</span>
+<span class="nc" id="L170">	}</span>
+
+	@Override
+	public String actionName() {
+<span class="nc" id="L174">		return Messages.get(this, &quot;action_name&quot;);</span>
+	}
+
+	@Override
+	public int actionIcon() {
+<span class="nc" id="L179">		return HeroIcon.COMBO;</span>
+	}
+
+	@Override
+	public Visual secondaryVisual() {
+<span class="nc" id="L184">		BitmapText txt = new BitmapText(PixelScene.pixelFont);</span>
+<span class="nc" id="L185">		txt.text( Integer.toString(count) );</span>
+<span class="nc" id="L186">		txt.hardlight(CharSprite.POSITIVE);</span>
+<span class="nc" id="L187">		txt.measure();</span>
+<span class="nc" id="L188">		return txt;</span>
+	}
+
+	@Override
+	public int indicatorColor() {
+<span class="nc" id="L193">		ComboMove best = getHighestMove();</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">		if (best == null) {</span>
+<span class="nc" id="L195">			return 0xDFDFDF;</span>
+		} else {
+			//take the tint color and darken slightly to match buff icon
+<span class="nc" id="L198">			int r = (int) ((best.tintColor &gt;&gt; 16) * 0.875f);</span>
+<span class="nc" id="L199">			int g = (int) (((best.tintColor &gt;&gt; 8) &amp; 0xFF) * 0.875f);</span>
+<span class="nc" id="L200">			int b = (int) ((best.tintColor &amp; 0xFF) * 0.875f);</span>
+<span class="nc" id="L201">			return (r &lt;&lt; 16) + (g &lt;&lt; 8) + b;</span>
+		}
+	}
+
+	@Override
+	public void doAction() {
+<span class="nc" id="L207">		GameScene.show(new WndCombo(this));</span>
+<span class="nc" id="L208">	}</span>
+
+<span class="nc" id="L210">	public enum ComboMove {</span>
+<span class="nc" id="L211">		CLOBBER(2, 0x00FF00),</span>
+<span class="nc" id="L212">		SLAM   (4, 0xCCFF00),</span>
+<span class="nc" id="L213">		PARRY  (6, 0xFFFF00),</span>
+<span class="nc" id="L214">		CRUSH  (8, 0xFFCC00),</span>
+<span class="nc" id="L215">		FURY   (10, 0xFF0000);</span>
+
+		public int comboReq, tintColor;
+
+<span class="nc" id="L219">		ComboMove(int comboReq, int tintColor){</span>
+<span class="nc" id="L220">			this.comboReq = comboReq;</span>
+<span class="nc" id="L221">			this.tintColor = tintColor;</span>
+<span class="nc" id="L222">		}</span>
+
+		public String title(){
+<span class="nc" id="L225">			return Messages.get(this, name() + &quot;.name&quot;);</span>
+		}
+
+		public String desc(int count){
+<span class="nc bnc" id="L229" title="All 5 branches missed.">			switch (this){</span>
+				case CLOBBER: default:
+<span class="nc bnc" id="L231" title="All 4 branches missed.">					if (count &gt;= 7 &amp;&amp; Dungeon.hero.pointsInTalent(Talent.ENHANCED_COMBO) &gt;= 1){</span>
+<span class="nc" id="L232">						return Messages.get(this, name() + &quot;.empower_desc&quot;);</span>
+					} else {
+<span class="nc" id="L234">						return Messages.get(this, name() + &quot;.desc&quot;);</span>
+					}
+				case SLAM:
+<span class="nc bnc" id="L237" title="All 4 branches missed.">					if (count &gt;= 3 &amp;&amp; Dungeon.hero.pointsInTalent(Talent.ENHANCED_COMBO) &gt;= 3){</span>
+<span class="nc" id="L238">						return Messages.get(this, name() + &quot;.empower_desc&quot;, count/3, count*20);</span>
+					} else {
+<span class="nc" id="L240">						return Messages.get(this, name() + &quot;.desc&quot;, count*20);</span>
+					}
+				case PARRY:
+<span class="nc bnc" id="L243" title="All 4 branches missed.">					if (count &gt;= 9 &amp;&amp; Dungeon.hero.pointsInTalent(Talent.ENHANCED_COMBO) &gt;= 2){</span>
+<span class="nc" id="L244">						return Messages.get(this, name() + &quot;.empower_desc&quot;);</span>
+					} else {
+<span class="nc" id="L246">						return Messages.get(this, name() + &quot;.desc&quot;);</span>
+					}
+				case CRUSH:
+<span class="nc bnc" id="L249" title="All 4 branches missed.">					if (count &gt;= 3 &amp;&amp; Dungeon.hero.pointsInTalent(Talent.ENHANCED_COMBO) &gt;= 3){</span>
+<span class="nc" id="L250">						return Messages.get(this, name() + &quot;.empower_desc&quot;, count/3, count*25);</span>
+					} else {
+<span class="nc" id="L252">						return Messages.get(this,  name() + &quot;.desc&quot;, count*25);</span>
+					}
+				case FURY:
+<span class="nc bnc" id="L255" title="All 4 branches missed.">					if (count &gt;= 3 &amp;&amp; Dungeon.hero.pointsInTalent(Talent.ENHANCED_COMBO) &gt;= 3){</span>
+<span class="nc" id="L256">						return Messages.get(this, name() + &quot;.empower_desc&quot;, count/3);</span>
+					} else {
+<span class="nc" id="L258">						return Messages.get(this,  name() + &quot;.desc&quot;);</span>
+					}
+			}
+		}
+
+	}
+
+<span class="nc" id="L265">	private boolean clobberUsed = false;</span>
+<span class="nc" id="L266">	private boolean parryUsed = false;</span>
+
+	public ComboMove getHighestMove(){
+<span class="nc" id="L269">		ComboMove best = null;</span>
+<span class="nc bnc" id="L270" title="All 2 branches missed.">		for (ComboMove move : ComboMove.values()){</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">			if (count &gt;= move.comboReq){</span>
+<span class="nc" id="L272">				best = move;</span>
+			}
+		}
+<span class="nc" id="L275">		return best;</span>
+	}
+
+	public int getComboCount(){
+<span class="nc" id="L279">		return count;</span>
+	}
+
+	public boolean canUseMove(ComboMove move){
+<span class="nc bnc" id="L283" title="All 4 branches missed.">		if (move == ComboMove.CLOBBER &amp;&amp; clobberUsed)   return false;</span>
+<span class="nc bnc" id="L284" title="All 4 branches missed.">		if (move == ComboMove.PARRY &amp;&amp; parryUsed)       return false;</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">		return move.comboReq &lt;= count;</span>
+	}
+
+	public void useMove(ComboMove move){
+<span class="nc bnc" id="L289" title="All 2 branches missed.">		if (move == ComboMove.PARRY){</span>
+<span class="nc" id="L290">			parryUsed = true;</span>
+<span class="nc" id="L291">			comboTime = 5f;</span>
+<span class="nc" id="L292">			Invisibility.dispel();</span>
+<span class="nc" id="L293">			Buff.affect(target, ParryTracker.class, Actor.TICK);</span>
+<span class="nc" id="L294">			((Hero)target).spendAndNext(Actor.TICK);</span>
+<span class="nc" id="L295">			Dungeon.hero.busy();</span>
+		} else {
+<span class="nc" id="L297">			moveBeingUsed = move;</span>
+<span class="nc" id="L298">			GameScene.selectCell(listener);</span>
+		}
+<span class="nc" id="L300">	}</span>
+
+<span class="nc" id="L302">	public static class ParryTracker extends FlavourBuff{</span>
+<span class="nc" id="L303">		{ actPriority = HERO_PRIO+1;}</span>
+
+		public boolean parried;
+
+		@Override
+		public void detach() {
+<span class="nc bnc" id="L309" title="All 4 branches missed.">			if (!parried &amp;&amp; target.buff(Combo.class) != null) target.buff(Combo.class).detach();</span>
+<span class="nc" id="L310">			super.detach();</span>
+<span class="nc" id="L311">		}</span>
+	}
+
+<span class="nc" id="L314">	public static class RiposteTracker extends Buff{</span>
+<span class="nc" id="L315">		{ actPriority = VFX_PRIO;}</span>
+
+		public Char enemy;
+
+		@Override
+		public boolean act() {
+<span class="nc bnc" id="L321" title="All 2 branches missed.">			if (target.buff(Combo.class) != null) {</span>
+<span class="nc" id="L322">				moveBeingUsed = ComboMove.PARRY;</span>
+<span class="nc" id="L323">				target.sprite.attack(enemy.pos, new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L326">						target.buff(Combo.class).doAttack(enemy);</span>
+<span class="nc" id="L327">						next();</span>
+<span class="nc" id="L328">					}</span>
+				});
+<span class="nc" id="L330">				detach();</span>
+<span class="nc" id="L331">				return false;</span>
+			} else {
+<span class="nc" id="L333">				detach();</span>
+<span class="nc" id="L334">				return true;</span>
+			}
+		}
+	}
+
+	private static ComboMove moveBeingUsed;
+
+	private void doAttack(final Char enemy) {
+
+<span class="nc" id="L343">		AttackIndicator.target(enemy);</span>
+
+<span class="nc bnc" id="L345" title="All 2 branches missed.">		boolean wasAlly = enemy.alignment == target.alignment;</span>
+<span class="nc" id="L346">		Hero hero = (Hero) target;</span>
+
+<span class="nc" id="L348">		float dmgMulti = 1f;</span>
+<span class="nc" id="L349">		int dmgBonus = 0;</span>
+
+		//variance in damage dealt
+<span class="nc bnc" id="L352" title="All 5 branches missed.">		switch (moveBeingUsed) {</span>
+			case CLOBBER:
+<span class="nc" id="L354">				dmgMulti = 0;</span>
+<span class="nc" id="L355">				break;</span>
+			case SLAM:
+<span class="nc" id="L357">				dmgBonus = Math.round(target.drRoll() * count / 5f);</span>
+<span class="nc" id="L358">				break;</span>
+			case CRUSH:
+<span class="nc" id="L360">				dmgMulti = 0.25f * count;</span>
+<span class="nc" id="L361">				break;</span>
+			case FURY:
+<span class="nc" id="L363">				dmgMulti = 0.6f;</span>
+				break;
+		}
+
+<span class="nc" id="L367">		int oldPos = enemy.pos;</span>
+<span class="nc bnc" id="L368" title="All 2 branches missed.">		if (hero.attack(enemy, dmgMulti, dmgBonus, Char.INFINITE_ACCURACY)){</span>
+			//special on-hit effects
+<span class="nc bnc" id="L370" title="All 4 branches missed.">			switch (moveBeingUsed) {</span>
+				case CLOBBER:
+<span class="nc bnc" id="L372" title="All 2 branches missed.">					if (!wasAlly) hit(enemy);</span>
+					//trace a ballistica to our target (which will also extend past them
+<span class="nc" id="L374">					Ballistica trajectory = new Ballistica(target.pos, enemy.pos, Ballistica.STOP_TARGET);</span>
+					//trim it to just be the part that goes past them
+<span class="nc" id="L376">					trajectory = new Ballistica(trajectory.collisionPos, trajectory.path.get(trajectory.path.size() - 1), Ballistica.PROJECTILE);</span>
+					//knock them back along that ballistica, ensuring they don't fall into a pit
+<span class="nc" id="L378">					int dist = 2;</span>
+<span class="nc bnc" id="L379" title="All 6 branches missed.">					if (enemy.isAlive() &amp;&amp; count &gt;= 7 &amp;&amp; hero.pointsInTalent(Talent.ENHANCED_COMBO) &gt;= 1) {</span>
+<span class="nc" id="L380">						dist++;</span>
+<span class="nc" id="L381">						Buff.prolong(enemy, Vertigo.class, 3);</span>
+<span class="nc bnc" id="L382" title="All 2 branches missed.">					} else if (!enemy.flying) {</span>
+<span class="nc bnc" id="L383" title="All 4 branches missed.">						while (dist &gt; trajectory.dist ||</span>
+<span class="nc bnc" id="L384" title="All 2 branches missed.">								(dist &gt; 0 &amp;&amp; Dungeon.level.pit[trajectory.path.get(dist)])) {</span>
+<span class="nc" id="L385">							dist--;</span>
+						}
+					}
+<span class="nc bnc" id="L388" title="All 2 branches missed.">					if (enemy.pos == oldPos) {</span>
+<span class="nc" id="L389">						WandOfBlastWave.throwChar(enemy, trajectory, dist, true, false, hero);</span>
+					}
+					break;
+				case PARRY:
+<span class="nc" id="L393">					hit(enemy);</span>
+<span class="nc" id="L394">					break;</span>
+				case CRUSH:
+<span class="nc" id="L396">					WandOfBlastWave.BlastWave.blast(enemy.pos);</span>
+<span class="nc" id="L397">					PathFinder.buildDistanceMap(target.pos, BArray.not(Dungeon.level.solid, null), 3);</span>
+<span class="nc bnc" id="L398" title="All 2 branches missed.">					for (Char ch : Actor.chars()) {</span>
+<span class="nc bnc" id="L399" title="All 6 branches missed.">						if (ch != enemy &amp;&amp; ch.alignment == Char.Alignment.ENEMY</span>
+								&amp;&amp; PathFinder.distance[ch.pos] &lt; Integer.MAX_VALUE) {
+<span class="nc" id="L401">							int aoeHit = Math.round(target.damageRoll() * 0.25f * count);</span>
+<span class="nc" id="L402">							aoeHit /= 2;</span>
+<span class="nc" id="L403">							aoeHit -= ch.drRoll();</span>
+<span class="nc bnc" id="L404" title="All 2 branches missed.">							if (ch.buff(Vulnerable.class) != null) aoeHit *= 1.33f;</span>
+<span class="nc bnc" id="L405" title="All 2 branches missed.">							if (ch instanceof DwarfKing){</span>
+								//change damage type for DK so that crush AOE doesn't count for DK's challenge badge
+<span class="nc" id="L407">								ch.damage(aoeHit, this);</span>
+							} else {
+<span class="nc" id="L409">								ch.damage(aoeHit, target);</span>
+							}
+<span class="nc" id="L411">							ch.sprite.bloodBurstA(target.sprite.center(), aoeHit);</span>
+<span class="nc" id="L412">							ch.sprite.flash();</span>
+
+<span class="nc bnc" id="L414" title="All 2 branches missed.">							if (!ch.isAlive()) {</span>
+<span class="nc bnc" id="L415" title="All 4 branches missed.">								if (hero.hasTalent(Talent.LETHAL_DEFENSE) &amp;&amp; hero.buff(BrokenSeal.WarriorShield.class) != null) {</span>
+<span class="nc" id="L416">									BrokenSeal.WarriorShield shield = hero.buff(BrokenSeal.WarriorShield.class);</span>
+<span class="nc" id="L417">									int shieldAmt = Math.round(shield.maxShield() * hero.pointsInTalent(Talent.LETHAL_DEFENSE) / 3f);</span>
+<span class="nc" id="L418">									shield.supercharge(shieldAmt);</span>
+<span class="nc" id="L419">									hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shieldAmt), FloatingText.SHIELDING);</span>
+								}
+							}
+						}
+<span class="nc" id="L423">					}</span>
+<span class="nc" id="L424">					break;</span>
+				default:
+					//nothing
+					break;
+			}
+		}
+
+<span class="nc" id="L431">		Invisibility.dispel();</span>
+
+		//Post-attack behaviour
+<span class="nc bnc" id="L434" title="All 4 branches missed.">		switch(moveBeingUsed){</span>
+			case CLOBBER:
+<span class="nc" id="L436">				clobberUsed = true;</span>
+<span class="nc bnc" id="L437" title="All 2 branches missed.">				if (getHighestMove() == null) ActionIndicator.clearAction(Combo.this);</span>
+<span class="nc" id="L438">				hero.spendAndNext(hero.attackDelay());</span>
+<span class="nc" id="L439">				break;</span>
+
+			case PARRY:
+				//do nothing
+<span class="nc" id="L443">				break;</span>
+
+			case FURY:
+<span class="nc" id="L446">				count--;</span>
+				//fury attacks as many times as you have combo count
+<span class="nc bnc" id="L448" title="All 10 branches missed.">				if (count &gt; 0 &amp;&amp; enemy.isAlive() &amp;&amp; hero.canAttack(enemy) &amp;&amp;</span>
+						(wasAlly || enemy.alignment != target.alignment)){
+<span class="nc" id="L450">					target.sprite.attack(enemy.pos, new Callback() {</span>
+						@Override
+						public void call() {
+<span class="nc" id="L453">							doAttack(enemy);</span>
+<span class="nc" id="L454">						}</span>
+					});
+				} else {
+<span class="nc" id="L457">					detach();</span>
+<span class="nc" id="L458">					Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);</span>
+<span class="nc" id="L459">					ActionIndicator.clearAction(Combo.this);</span>
+<span class="nc" id="L460">					hero.spendAndNext(hero.attackDelay());</span>
+				}
+<span class="nc" id="L462">				break;</span>
+
+			default:
+<span class="nc" id="L465">				detach();</span>
+<span class="nc" id="L466">				ActionIndicator.clearAction(Combo.this);</span>
+<span class="nc" id="L467">				hero.spendAndNext(hero.attackDelay());</span>
+				break;
+		}
+
+<span class="nc bnc" id="L471" title="All 6 branches missed.">		if (!enemy.isAlive() || (!wasAlly &amp;&amp; enemy.alignment == target.alignment)) {</span>
+<span class="nc bnc" id="L472" title="All 4 branches missed.">			if (hero.hasTalent(Talent.LETHAL_DEFENSE) &amp;&amp; hero.buff(BrokenSeal.WarriorShield.class) != null){</span>
+<span class="nc" id="L473">				BrokenSeal.WarriorShield shield = hero.buff(BrokenSeal.WarriorShield.class);</span>
+<span class="nc" id="L474">				int shieldAmt = Math.round(shield.maxShield() * hero.pointsInTalent(Talent.LETHAL_DEFENSE) / 3f);</span>
+<span class="nc" id="L475">				shield.supercharge(shieldAmt);</span>
+<span class="nc" id="L476">				hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shieldAmt), FloatingText.SHIELDING);</span>
+			}
+		}
+
+<span class="nc" id="L480">	}</span>
+
+<span class="nc" id="L482">	private CellSelector.Listener listener = new CellSelector.Listener() {</span>
+
+		@Override
+		public void onSelect(Integer cell) {
+<span class="nc bnc" id="L486" title="All 2 branches missed.">			if (cell == null) return;</span>
+<span class="nc" id="L487">			final Char enemy = Actor.findChar( cell );</span>
+<span class="nc bnc" id="L488" title="All 4 branches missed.">			if (enemy == null</span>
+					|| enemy == target
+<span class="nc bnc" id="L490" title="All 2 branches missed.">					|| !Dungeon.level.heroFOV[cell]</span>
+<span class="nc bnc" id="L491" title="All 2 branches missed.">					|| target.isCharmedBy( enemy )) {</span>
+<span class="nc" id="L492">				GLog.w(Messages.get(Combo.class, &quot;bad_target&quot;));</span>
+
+<span class="nc bnc" id="L494" title="All 2 branches missed.">			} else if (!((Hero)target).canAttack(enemy)){</span>
+<span class="nc bnc" id="L495" title="All 2 branches missed.">				if (((Hero) target).pointsInTalent(Talent.ENHANCED_COMBO) &lt; 3</span>
+<span class="nc bnc" id="L496" title="All 2 branches missed.">					|| Dungeon.level.distance(target.pos, enemy.pos) &gt; 1 + target.buff(Combo.class).count/3){</span>
+<span class="nc" id="L497">					GLog.w(Messages.get(Combo.class, &quot;bad_target&quot;));</span>
+				} else {
+<span class="nc" id="L499">					Ballistica c = new Ballistica(target.pos, enemy.pos, Ballistica.PROJECTILE);</span>
+<span class="nc bnc" id="L500" title="All 2 branches missed.">					if (c.collisionPos == enemy.pos){</span>
+<span class="nc" id="L501">						final int leapPos = c.path.get(c.dist-1);</span>
+<span class="nc bnc" id="L502" title="All 6 branches missed.">						if (!Dungeon.level.passable[leapPos] &amp;&amp; !(target.flying &amp;&amp; Dungeon.level.avoid[leapPos])){</span>
+<span class="nc" id="L503">							GLog.w(Messages.get(Combo.class, &quot;bad_target&quot;));</span>
+<span class="nc bnc" id="L504" title="All 2 branches missed.">						} else if (Dungeon.hero.rooted) {</span>
+<span class="nc" id="L505">							PixelScene.shake( 1, 1f );</span>
+<span class="nc" id="L506">							GLog.w(Messages.get(Combo.class, &quot;bad_target&quot;));</span>
+						} else {
+<span class="nc" id="L508">							Dungeon.hero.busy();</span>
+<span class="nc" id="L509">							target.sprite.jump(target.pos, leapPos, new Callback() {</span>
+								@Override
+								public void call() {
+<span class="nc" id="L512">									target.move(leapPos);</span>
+<span class="nc" id="L513">									Dungeon.level.occupyCell(target);</span>
+<span class="nc" id="L514">									Dungeon.observe();</span>
+<span class="nc" id="L515">									GameScene.updateFog();</span>
+<span class="nc" id="L516">									target.sprite.attack(cell, new Callback() {</span>
+										@Override
+										public void call() {
+<span class="nc" id="L519">											doAttack(enemy);</span>
+<span class="nc" id="L520">										}</span>
+									});
+<span class="nc" id="L522">								}</span>
+							});
+						}
+<span class="nc" id="L525">					} else {</span>
+<span class="nc" id="L526">						GLog.w(Messages.get(Combo.class, &quot;bad_target&quot;));</span>
+					}
+<span class="nc" id="L528">				}</span>
+
+			} else {
+<span class="nc" id="L531">				Dungeon.hero.busy();</span>
+<span class="nc" id="L532">				target.sprite.attack(cell, new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L535">						doAttack(enemy);</span>
+<span class="nc" id="L536">					}</span>
+				});
+			}
+<span class="nc" id="L539">		}</span>
+
+		@Override
+		public String prompt() {
+<span class="nc" id="L543">			return Messages.get(Combo.class, &quot;prompt&quot;);</span>
+		}
+	};
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

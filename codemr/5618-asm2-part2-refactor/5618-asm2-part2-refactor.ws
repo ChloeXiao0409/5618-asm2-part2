@@ -1,0 +1,1 @@
+{"Hero":{"name":"Hero","packages":{"com.shatteredpixel.shatteredpixeldungeon.actors.hero":{"packageName":"com.shatteredpixel.shatteredpixeldungeon.actors.hero","isAll":false,"classes":["Lcom.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero"]}}}}

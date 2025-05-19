@@ -1,0 +1,478 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SurfaceScene.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.scenes</a> &gt; <span class="el_source">SurfaceScene.java</span></div><h1>SurfaceScene.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.scenes;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.Ratmogrify;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose;
+import com.shatteredpixel.shatteredpixeldungeon.items.remains.RemainsItem;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfLivingEarth;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfWarding;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.EarthGuardianSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.GhostSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.RatSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.WardSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Archs;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
+import com.watabou.gltextures.SmartTexture;
+import com.watabou.gltextures.TextureCache;
+import com.watabou.glwrap.Matrix;
+import com.watabou.glwrap.Quad;
+import com.watabou.input.PointerEvent;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.ColorBlock;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Group;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.NoosaScript;
+import com.watabou.noosa.PointerArea;
+import com.watabou.noosa.TextureFilm;
+import com.watabou.noosa.Visual;
+import com.watabou.noosa.audio.Music;
+import com.watabou.utils.Point;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+
+import java.nio.Buffer;
+import java.nio.FloatBuffer;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+
+<span class="nc" id="L65">public class SurfaceScene extends PixelScene {</span>
+
+	private static final int FRAME_WIDTH    = 88;
+	private static final int FRAME_HEIGHT    = 125;
+
+	private static final int FRAME_MARGIN_TOP    = 9;
+	private static final int FRAME_MARGIN_X        = 4;
+
+	private static final int BUTTON_HEIGHT    = 20;
+
+	private static final int SKY_WIDTH    = 80;
+	private static final int SKY_HEIGHT    = 112;
+
+	private static final int NSTARS		= 100;
+	private static final int NCLOUDS	= 5;
+
+	private Pet[] rats;
+
+	private Camera viewport;
+	@Override
+	public void create() {
+		
+<span class="nc" id="L87">		super.create();</span>
+
+<span class="nc" id="L89">		Music.INSTANCE.playTracks(</span>
+				new String[]{Assets.Music.THEME_2, Assets.Music.THEME_1},
+				new float[]{1, 1},
+				false);
+		
+<span class="nc" id="L94">		uiCamera.visible = false;</span>
+		
+<span class="nc" id="L96">		int w = Camera.main.width;</span>
+<span class="nc" id="L97">		int h = Camera.main.height;</span>
+		
+<span class="nc" id="L99">		Archs archs = new Archs();</span>
+<span class="nc" id="L100">		archs.reversed = true;</span>
+<span class="nc" id="L101">		archs.setSize( w, h );</span>
+<span class="nc" id="L102">		add( archs );</span>
+
+<span class="nc" id="L104">		float vx = align((w - SKY_WIDTH) / 2f);</span>
+<span class="nc" id="L105">		float vy = align((h - SKY_HEIGHT - BUTTON_HEIGHT) / 2f);</span>
+
+<span class="nc" id="L107">		Point s = Camera.main.cameraToScreen( vx, vy );</span>
+<span class="nc" id="L108">		viewport = new Camera( s.x, s.y, SKY_WIDTH, SKY_HEIGHT, defaultZoom );</span>
+<span class="nc" id="L109">		Camera.add( viewport );</span>
+		
+<span class="nc" id="L111">		Group window = new Group();</span>
+<span class="nc" id="L112">		window.camera = viewport;</span>
+<span class="nc" id="L113">		add( window );</span>
+
+<span class="nc" id="L115">		Calendar cal = GregorianCalendar.getInstance();</span>
+<span class="nc bnc" id="L116" title="All 4 branches missed.">		boolean dayTime = cal.get(Calendar.HOUR_OF_DAY) &gt;= 8 &amp;&amp; cal.get(Calendar.HOUR_OF_DAY) &lt;= 19;</span>
+		
+<span class="nc" id="L118">		Sky sky = new Sky( dayTime );</span>
+<span class="nc" id="L119">		sky.scale.set( SKY_WIDTH, SKY_HEIGHT );</span>
+<span class="nc" id="L120">		window.add( sky );</span>
+		
+<span class="nc bnc" id="L122" title="All 2 branches missed.">		if (!dayTime) {</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">			for (int i=0; i &lt; NSTARS; i++) {</span>
+<span class="nc" id="L124">				float size = Random.Float();</span>
+<span class="nc" id="L125">				ColorBlock star = new ColorBlock( size, size, 0xFFFFFFFF );</span>
+<span class="nc" id="L126">				star.x = Random.Float( SKY_WIDTH ) - size / 2;</span>
+<span class="nc" id="L127">				star.y = Random.Float( SKY_HEIGHT ) - size / 2;</span>
+<span class="nc" id="L128">				star.am = size * (1 - star.y / SKY_HEIGHT);</span>
+<span class="nc" id="L129">				window.add( star );</span>
+			}
+		}
+		
+<span class="nc" id="L133">		float range = SKY_HEIGHT * 2 / 3;</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">		for (int i=0; i &lt; NCLOUDS; i++) {</span>
+<span class="nc" id="L135">			Cloud cloud = new Cloud( (NCLOUDS - 1 - i) * (range / NCLOUDS) + Random.Float( range / NCLOUDS ), dayTime );</span>
+<span class="nc" id="L136">			window.add( cloud );</span>
+		}
+		
+<span class="nc" id="L139">		int nPatches = (int)(sky.width() / GrassPatch.WIDTH + 1);</span>
+		
+<span class="nc bnc" id="L141" title="All 2 branches missed.">		for (int i=0; i &lt; nPatches * 4; i++) {</span>
+<span class="nc" id="L142">			GrassPatch patch = new GrassPatch( (i - 0.75f) * GrassPatch.WIDTH / 4, SKY_HEIGHT + 1, dayTime );</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">			patch.brightness( dayTime ? 0.7f : 0.4f );</span>
+<span class="nc" id="L144">			window.add( patch );</span>
+		}
+		
+<span class="nc" id="L147">		Avatar a = new Avatar( Dungeon.hero.heroClass );</span>
+		// Removing semitransparent contour
+<span class="nc" id="L149">		a.am = 2; a.aa = -1;</span>
+<span class="nc" id="L150">		a.x = (SKY_WIDTH - a.width) / 2;</span>
+<span class="nc" id="L151">		a.y = SKY_HEIGHT - a.height;</span>
+<span class="nc" id="L152">		align(a);</span>
+
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		if (Dungeon.hero.armorAbility instanceof Ratmogrify) {</span>
+<span class="nc" id="L155">			rats = new Pet[30];</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">			for (int i = 0; i &lt; rats.length; i++){</span>
+<span class="nc" id="L157">				Pet pet = new Pet();</span>
+<span class="nc" id="L158">				pet.rm = pet.gm = pet.bm = 1.2f;</span>
+<span class="nc" id="L159">				pet.x = Random.Int(SKY_WIDTH)-10;</span>
+<span class="nc" id="L160">				pet.y = SKY_HEIGHT - pet.height;</span>
+<span class="nc" id="L161">				window.add(pet);</span>
+<span class="nc" id="L162">				rats[i] = pet;</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">				if (dayTime) pet.brightness( 1.2f );</span>
+			}
+		}
+
+<span class="nc" id="L167">		final Pet pet = new Pet();</span>
+<span class="nc" id="L168">		pet.rm = pet.gm = pet.bm = 1.2f;</span>
+<span class="nc" id="L169">		pet.x = SKY_WIDTH / 2 + 2;</span>
+<span class="nc" id="L170">		pet.y = SKY_HEIGHT - pet.height;</span>
+<span class="nc" id="L171">		align(pet);</span>
+		
+		//allies. Attempts to pick highest level, but prefers rose &gt; earth &gt; ward.
+		//Rose level is halved because it's easier to upgrade
+<span class="nc" id="L175">		CharSprite allySprite = null;</span>
+		
+		//picks the highest between ghost's weapon, armor, and rose level/2
+<span class="nc" id="L178">		int roseLevel = 0;</span>
+<span class="nc" id="L179">		DriedRose rose = Dungeon.hero.belongings.getItem(DriedRose.class);</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">		if (rose != null){</span>
+<span class="nc" id="L181">			roseLevel = rose.level()/2;</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">			if (rose.ghostWeapon() != null){</span>
+<span class="nc" id="L183">				roseLevel = Math.max(roseLevel, rose.ghostWeapon().level());</span>
+			}
+<span class="nc bnc" id="L185" title="All 2 branches missed.">			if (rose.ghostArmor() != null){</span>
+<span class="nc" id="L186">				roseLevel = Math.max(roseLevel, rose.ghostArmor().level());</span>
+			}
+		}
+		
+<span class="nc bnc" id="L190" title="All 2 branches missed.">		int earthLevel = Dungeon.hero.belongings.getItem(WandOfLivingEarth.class) == null ? 0 : Dungeon.hero.belongings.getItem(WandOfLivingEarth.class).level();</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">		int wardLevel = Dungeon.hero.belongings.getItem(WandOfWarding.class) == null ? 0 : Dungeon.hero.belongings.getItem(WandOfWarding.class).level();</span>
+		
+<span class="nc" id="L193">		MagesStaff staff = Dungeon.hero.belongings.getItem(MagesStaff.class);</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">		if (staff != null){</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">			if (staff.wandClass() == WandOfLivingEarth.class){</span>
+<span class="nc" id="L196">				earthLevel = Math.max(earthLevel, staff.level());</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">			} else if (staff.wandClass() == WandOfWarding.class){</span>
+<span class="nc" id="L198">				wardLevel = Math.max(wardLevel, staff.level());</span>
+			}
+		}
+		
+<span class="nc bnc" id="L202" title="All 6 branches missed.">		if (roseLevel &gt;= 3 &amp;&amp; roseLevel &gt;= earthLevel &amp;&amp; roseLevel &gt;= wardLevel){</span>
+<span class="nc" id="L203">			allySprite = new GhostSprite();</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">			if (dayTime) allySprite.alpha(0.4f);</span>
+<span class="nc bnc" id="L205" title="All 4 branches missed.">		} else if (earthLevel &gt;= 3 &amp;&amp; earthLevel &gt;= wardLevel){</span>
+<span class="nc" id="L206">			allySprite = new EarthGuardianSprite();</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">		} else if (wardLevel &gt;= 3){</span>
+<span class="nc" id="L208">			allySprite = new WardSprite();</span>
+<span class="nc" id="L209">			((WardSprite) allySprite).updateTier(Math.min(wardLevel+2, 6));</span>
+		}
+		
+<span class="nc bnc" id="L212" title="All 2 branches missed.">		if (allySprite != null){</span>
+<span class="nc" id="L213">			allySprite.add(CharSprite.State.PARALYSED);</span>
+<span class="nc" id="L214">			allySprite.scale = new PointF(2, 2);</span>
+<span class="nc" id="L215">			allySprite.x = a.x - allySprite.width()*0.75f;</span>
+<span class="nc" id="L216">			allySprite.y = SKY_HEIGHT - allySprite.height();</span>
+<span class="nc" id="L217">			align(allySprite);</span>
+<span class="nc" id="L218">			window.add(allySprite);</span>
+		}
+
+<span class="nc bnc" id="L221" title="All 2 branches missed.">		if (Dungeon.hero.belongings.getItem(RemainsItem.class) != null){</span>
+<span class="nc" id="L222">			Image grave = new Image(Assets.Interfaces.SURFACE, 88, 74, 16, 22);</span>
+
+<span class="nc" id="L224">			grave.x = a.x + a.width() + 10;</span>
+<span class="nc" id="L225">			grave.y = a.y + a.height() - grave.height();</span>
+<span class="nc" id="L226">			window.add(grave);</span>
+		}
+		
+<span class="nc" id="L229">		window.add( a );</span>
+<span class="nc" id="L230">		window.add( pet );</span>
+		
+<span class="nc" id="L232">		window.add( new PointerArea( sky ) {</span>
+			protected void onClick( PointerEvent event ) {
+<span class="nc" id="L234">				pet.jump();</span>
+<span class="nc" id="L235">			}</span>
+		} );
+		
+<span class="nc bnc" id="L238" title="All 2 branches missed.">		for (int i=0; i &lt; nPatches; i++) {</span>
+<span class="nc" id="L239">			GrassPatch patch = new GrassPatch( (i - 0.5f) * GrassPatch.WIDTH, SKY_HEIGHT, dayTime );</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">			patch.brightness( dayTime ? 1.0f : 0.8f );</span>
+<span class="nc" id="L241">			window.add( patch );</span>
+		}
+		
+<span class="nc" id="L244">		Image frame = new Image( Assets.Interfaces.SURFACE );</span>
+
+<span class="nc" id="L246">		frame.frame( 0, 0, FRAME_WIDTH, FRAME_HEIGHT );</span>
+<span class="nc" id="L247">		frame.x = vx - FRAME_MARGIN_X;</span>
+<span class="nc" id="L248">		frame.y = vy - FRAME_MARGIN_TOP;</span>
+<span class="nc" id="L249">		add( frame );</span>
+
+<span class="nc bnc" id="L251" title="All 2 branches missed.">		if (dayTime) {</span>
+<span class="nc" id="L252">			a.brightness( 1.2f );</span>
+<span class="nc" id="L253">			pet.brightness( 1.2f );</span>
+		} else {
+<span class="nc" id="L255">			frame.hardlight( 0xDDEEFF );</span>
+		}
+
+<span class="nc" id="L258">		RedButton gameOver = new RedButton( Messages.get(this, &quot;exit&quot;) ) {</span>
+			protected void onClick() {
+<span class="nc" id="L260">				Game.switchScene( RankingsScene.class );</span>
+<span class="nc" id="L261">			}</span>
+		};
+<span class="nc" id="L263">		gameOver.setSize( SKY_WIDTH - FRAME_MARGIN_X * 2, BUTTON_HEIGHT );</span>
+<span class="nc" id="L264">		gameOver.setPos( frame.x + FRAME_MARGIN_X * 2, frame.y + frame.height + 4 );</span>
+<span class="nc" id="L265">		add( gameOver );</span>
+		
+<span class="nc" id="L267">		fadeIn();</span>
+<span class="nc" id="L268">	}</span>
+
+<span class="nc" id="L270">	private float ratJumpTimer = 0.02f;</span>
+	@Override
+	public void update() {
+<span class="nc bnc" id="L273" title="All 2 branches missed.">		if (rats != null) {</span>
+<span class="nc" id="L274">			ratJumpTimer -= Game.elapsed;</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">			while (ratJumpTimer &lt;= 0f) {</span>
+<span class="nc" id="L276">				ratJumpTimer += 0.02f;</span>
+<span class="nc" id="L277">				Random.element(rats).jump();</span>
+			}
+		}
+
+<span class="nc" id="L281">		super.update();</span>
+
+<span class="nc" id="L283">	}</span>
+
+	@Override
+	public void destroy() {
+<span class="nc" id="L287">		Camera.remove( viewport );</span>
+<span class="nc" id="L288">		super.destroy();</span>
+<span class="nc" id="L289">	}</span>
+	
+	@Override
+	protected void onBackPressed() {
+<span class="nc" id="L293">	}</span>
+	
+	private static class Sky extends Visual {
+		
+<span class="nc" id="L297">		private static final int[] day		= {0xFF4488FF, 0xFFCCEEFF};</span>
+<span class="nc" id="L298">		private static final int[] night	= {0xFF001155, 0xFF335980};</span>
+		
+		private SmartTexture texture;
+		private FloatBuffer verticesBuffer;
+		
+		public Sky( boolean dayTime ) {
+<span class="nc" id="L304">			super( 0, 0, 1, 1 );</span>
+
+<span class="nc bnc" id="L306" title="All 2 branches missed.">			texture = TextureCache.createGradient( dayTime ? day : night );</span>
+			
+<span class="nc" id="L308">			float[] vertices = new float[16];</span>
+<span class="nc" id="L309">			verticesBuffer = Quad.create();</span>
+			
+<span class="nc" id="L311">			vertices[2]		= 0.25f;</span>
+<span class="nc" id="L312">			vertices[6]		= 0.25f;</span>
+<span class="nc" id="L313">			vertices[10]	= 0.75f;</span>
+<span class="nc" id="L314">			vertices[14]	= 0.75f;</span>
+			
+<span class="nc" id="L316">			vertices[3]		= 0;</span>
+<span class="nc" id="L317">			vertices[7]		= 1;</span>
+<span class="nc" id="L318">			vertices[11]	= 1;</span>
+<span class="nc" id="L319">			vertices[15]	= 0;</span>
+			
+			
+<span class="nc" id="L322">			vertices[0] 	= 0;</span>
+<span class="nc" id="L323">			vertices[1] 	= 0;</span>
+			
+<span class="nc" id="L325">			vertices[4] 	= 1;</span>
+<span class="nc" id="L326">			vertices[5] 	= 0;</span>
+			
+<span class="nc" id="L328">			vertices[8] 	= 1;</span>
+<span class="nc" id="L329">			vertices[9] 	= 1;</span>
+			
+<span class="nc" id="L331">			vertices[12]	= 0;</span>
+<span class="nc" id="L332">			vertices[13]	= 1;</span>
+
+<span class="nc" id="L334">			((Buffer)verticesBuffer).position( 0 );</span>
+<span class="nc" id="L335">			verticesBuffer.put( vertices );</span>
+<span class="nc" id="L336">		}</span>
+		
+		@Override
+		public void draw() {
+			
+<span class="nc" id="L341">			super.draw();</span>
+
+<span class="nc" id="L343">			NoosaScript script = NoosaScript.get();</span>
+			
+<span class="nc" id="L345">			texture.bind();</span>
+			
+<span class="nc" id="L347">			script.camera( camera() );</span>
+			
+<span class="nc" id="L349">			script.uModel.valueM4( matrix );</span>
+<span class="nc" id="L350">			script.lighting(</span>
+				rm, gm, bm, am,
+				ra, ga, ba, aa );
+			
+<span class="nc" id="L354">			script.drawQuad( verticesBuffer );</span>
+<span class="nc" id="L355">		}</span>
+	}
+	
+	private static class Cloud extends Image {
+		
+<span class="nc" id="L360">		private static int lastIndex = -1;</span>
+		
+		public Cloud( float y, boolean dayTime ) {
+<span class="nc" id="L363">			super( Assets.Interfaces.SURFACE );</span>
+			
+			int index;
+			do {
+<span class="nc" id="L367">				index = Random.Int( 3 );</span>
+<span class="nc bnc" id="L368" title="All 2 branches missed.">			} while (index == lastIndex);</span>
+			
+<span class="nc bnc" id="L370" title="All 4 branches missed.">			switch (index) {</span>
+			case 0:
+<span class="nc" id="L372">				frame( 88, 0, 49, 20 );</span>
+<span class="nc" id="L373">				break;</span>
+			case 1:
+<span class="nc" id="L375">				frame( 88, 20, 49, 22 );</span>
+<span class="nc" id="L376">				break;</span>
+			case 2:
+<span class="nc" id="L378">				frame( 88, 42, 50, 18 );</span>
+				break;
+			}
+			
+<span class="nc" id="L382">			lastIndex = index;</span>
+			
+<span class="nc" id="L384">			this.y = y;</span>
+
+<span class="nc" id="L386">			scale.set( 1 - y / SKY_HEIGHT );</span>
+<span class="nc" id="L387">			x = Random.Float( SKY_WIDTH + width() ) - width();</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">			speed.x = scale.x * (dayTime ? +8 : -8);</span>
+			
+<span class="nc bnc" id="L390" title="All 2 branches missed.">			if (dayTime) {</span>
+<span class="nc" id="L391">				tint( 0xCCEEFF, 1 - scale.y );</span>
+			} else {
+<span class="nc" id="L393">				rm = gm = bm = +3.0f;</span>
+<span class="nc" id="L394">				ra = ga = ba = -2.1f;</span>
+			}
+<span class="nc" id="L396">		}</span>
+		
+		@Override
+		public void update() {
+<span class="nc" id="L400">			super.update();</span>
+<span class="nc bnc" id="L401" title="All 4 branches missed.">			if (speed.x &gt; 0 &amp;&amp; x &gt; SKY_WIDTH) {</span>
+<span class="nc" id="L402">				x = -width();</span>
+<span class="nc bnc" id="L403" title="All 4 branches missed.">			} else if (speed.x &lt; 0 &amp;&amp; x &lt; -width()) {</span>
+<span class="nc" id="L404">				x = SKY_WIDTH;</span>
+			}
+<span class="nc" id="L406">		}</span>
+	}
+
+	private static class Avatar extends Image {
+		
+		private static final int WIDTH	= 24;
+		private static final int HEIGHT	= 32;
+		
+		public Avatar( HeroClass cl ) {
+<span class="nc" id="L415">			super( Assets.Sprites.AVATARS );</span>
+<span class="nc" id="L416">			frame( new TextureFilm( texture, WIDTH, HEIGHT ).get( cl.ordinal() ) );</span>
+<span class="nc" id="L417">		}</span>
+	}
+	
+	private static class Pet extends RatSprite {
+		
+		public void jump() {
+<span class="nc" id="L423">			play( run );</span>
+<span class="nc" id="L424">		}</span>
+		
+		@Override
+		public void onComplete( Animation anim ) {
+<span class="nc bnc" id="L428" title="All 2 branches missed.">			if (anim == run) {</span>
+<span class="nc" id="L429">				idle();</span>
+			}
+<span class="nc" id="L431">		}</span>
+	}
+	
+	private static class GrassPatch extends Image {
+		
+		public static final int WIDTH	= 16;
+		public static final int HEIGHT	= 14;
+		
+		private float tx;
+		private float ty;
+		
+<span class="nc" id="L442">		private double a = Random.Float( 5 );</span>
+		private double angle;
+		
+		private boolean forward;
+		
+		public GrassPatch( float tx, float ty, boolean forward ) {
+			
+<span class="nc" id="L449">			super( Assets.Interfaces.SURFACE );</span>
+			
+<span class="nc" id="L451">			frame( 88 + Random.Int( 4 ) * WIDTH, 60, WIDTH, HEIGHT );</span>
+			
+<span class="nc" id="L453">			this.tx = tx;</span>
+<span class="nc" id="L454">			this.ty = ty;</span>
+			
+<span class="nc" id="L456">			this.forward = forward;</span>
+<span class="nc" id="L457">		}</span>
+		
+		@Override
+		public void update() {
+<span class="nc" id="L461">			super.update();</span>
+<span class="nc" id="L462">			a += Random.Float( Game.elapsed * 5 );</span>
+<span class="nc bnc" id="L463" title="All 2 branches missed.">			angle = (2 + Math.cos( a )) * (forward ? +0.2 : -0.2);</span>
+			
+<span class="nc" id="L465">			scale.y = (float)Math.cos( angle );</span>
+			
+<span class="nc" id="L467">			x = tx + (float)Math.tan( angle ) * width;</span>
+<span class="nc" id="L468">			y = ty - scale.y * height;</span>
+<span class="nc" id="L469">		}</span>
+		
+		@Override
+		protected void updateMatrix() {
+<span class="nc" id="L473">			super.updateMatrix();</span>
+<span class="nc" id="L474">			Matrix.skewX( matrix, (float)(angle / Matrix.G2RAD) );</span>
+<span class="nc" id="L475">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

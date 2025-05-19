@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Sunray.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells</a> &gt; <span class="el_source">Sunray.java</span></div><h1>Sunray.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Blindness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Beam;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L46">public class Sunray extends TargetedClericSpell {</span>
+
+<span class="nc" id="L48">	public static final Sunray INSTANCE = new Sunray();</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L52">		return HeroIcon.SUNRAY;</span>
+	}
+
+	@Override
+	public String desc() {
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		int min = Dungeon.hero.pointsInTalent(Talent.SUNRAY) == 2 ? 6 : 4;</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">		int max = Dungeon.hero.pointsInTalent(Talent.SUNRAY) == 2 ? 12 : 8;</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		int dur = Dungeon.hero.pointsInTalent(Talent.SUNRAY) == 2 ? 6 : 4;</span>
+<span class="nc" id="L60">		return Messages.get(this, &quot;desc&quot;, min, max, dur) + &quot;\n\n&quot; + Messages.get(this, &quot;charge_cost&quot;, (int)chargeUse(Dungeon.hero));</span>
+	}
+
+	@Override
+	public boolean canCast(Hero hero) {
+<span class="nc bnc" id="L65" title="All 4 branches missed.">		return super.canCast(hero) &amp;&amp; hero.hasTalent(Talent.SUNRAY);</span>
+	}
+
+	@Override
+	protected void onTargetSelected(HolyTome tome, Hero hero, Integer target) {
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		if (target == null){</span>
+<span class="nc" id="L71">			return;</span>
+		}
+
+<span class="nc" id="L74">		Ballistica aim = new Ballistica(hero.pos, target,  targetingFlags());</span>
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		if (Actor.findChar( aim.collisionPos ) == hero){</span>
+<span class="nc" id="L77">			GLog.i( Messages.get(Wand.class, &quot;self_target&quot;) );</span>
+<span class="nc" id="L78">			return;</span>
+		}
+
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		if (Actor.findChar(aim.collisionPos) != null) {</span>
+<span class="nc" id="L82">			QuickSlotButton.target(Actor.findChar(aim.collisionPos));</span>
+		} else {
+<span class="nc" id="L84">			QuickSlotButton.target(Actor.findChar(target));</span>
+		}
+
+<span class="nc" id="L87">		hero.busy();</span>
+<span class="nc" id="L88">		Sample.INSTANCE.play( Assets.Sounds.RAY );</span>
+<span class="nc" id="L89">		hero.sprite.zap(target);</span>
+
+<span class="nc" id="L91">		hero.sprite.parent.add(</span>
+<span class="nc" id="L92">				new Beam.SunRay(hero.sprite.center(), DungeonTilemap.raisedTileCenterToWorld(aim.collisionPos)));</span>
+
+<span class="nc" id="L94">		Char ch = Actor.findChar( aim.collisionPos );</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		if (ch != null) {</span>
+<span class="nc" id="L96">			ch.sprite.burst(0xFFFFFF44, 5);</span>
+
+<span class="nc bnc" id="L98" title="All 4 branches missed.">			if (Char.hasProp(ch, Char.Property.UNDEAD) || Char.hasProp(ch, Char.Property.DEMONIC)){</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">				if (hero.pointsInTalent(Talent.SUNRAY) == 2) {</span>
+<span class="nc" id="L100">					ch.damage(12, Sunray.this);</span>
+				} else {
+<span class="nc" id="L102">					ch.damage(8, Sunray.this);</span>
+				}
+			} else {
+<span class="nc bnc" id="L105" title="All 2 branches missed.">				if (hero.pointsInTalent(Talent.SUNRAY) == 2) {</span>
+<span class="nc" id="L106">					ch.damage(Random.NormalIntRange(6, 12), Sunray.this);</span>
+				} else {
+<span class="nc" id="L108">					ch.damage(Random.NormalIntRange(4, 8), Sunray.this);</span>
+				}
+			}
+
+<span class="nc bnc" id="L112" title="All 2 branches missed.">			if (ch.isAlive()) {</span>
+<span class="nc bnc" id="L113" title="All 4 branches missed.">				if (ch.buff(Blindness.class) != null &amp;&amp; ch.buff(SunRayRecentlyBlindedTracker.class) != null) {</span>
+<span class="nc" id="L114">					Buff.prolong(ch, Paralysis.class, 2f + 2f*hero.pointsInTalent(Talent.SUNRAY));</span>
+<span class="nc" id="L115">					ch.buff(SunRayRecentlyBlindedTracker.class).detach();</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">				} else if (ch.buff(SunRayUsedTracker.class) == null) {</span>
+<span class="nc" id="L117">					Buff.prolong(ch, Blindness.class, 2f + 2f*hero.pointsInTalent(Talent.SUNRAY));</span>
+<span class="nc" id="L118">					Buff.prolong(ch, SunRayRecentlyBlindedTracker.class, 2f + 2f*hero.pointsInTalent(Talent.SUNRAY));</span>
+<span class="nc" id="L119">					Buff.affect(ch, SunRayUsedTracker.class);</span>
+				}
+			}
+		}
+
+<span class="nc" id="L124">		hero.spend( 1f );</span>
+<span class="nc" id="L125">		hero.next();</span>
+
+<span class="nc" id="L127">		onSpellCast(tome, hero);</span>
+
+<span class="nc" id="L129">	}</span>
+
+<span class="nc" id="L131">	public static class SunRayUsedTracker extends Buff {}</span>
+<span class="nc" id="L132">	public static class SunRayRecentlyBlindedTracker extends FlavourBuff {}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

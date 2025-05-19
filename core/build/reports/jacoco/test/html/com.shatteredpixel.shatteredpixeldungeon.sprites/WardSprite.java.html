@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WardSprite.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.sprites</a> &gt; <span class="el_source">WardSprite.java</span></div><h1>WardSprite.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.sprites;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Beam;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfWarding;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.tweeners.AlphaTweener;
+
+public class WardSprite extends MobSprite {
+
+<span class="nc" id="L36">	private Animation tierIdles[] = new Animation[7];</span>
+
+	public WardSprite(){
+<span class="nc" id="L39">		super();</span>
+
+<span class="nc" id="L41">		texture(Assets.Sprites.WARDS);</span>
+
+<span class="nc" id="L43">		tierIdles[1] = new Animation( 1, true );</span>
+<span class="nc" id="L44">		tierIdles[1].frames(texture.uvRect(0, 0, 9, 10));</span>
+
+<span class="nc" id="L46">		tierIdles[2] = new Animation( 1, true );</span>
+<span class="nc" id="L47">		tierIdles[2].frames(texture.uvRect(10, 0, 21, 12));</span>
+
+<span class="nc" id="L49">		tierIdles[3] = new Animation( 1, true );</span>
+<span class="nc" id="L50">		tierIdles[3].frames(texture.uvRect(22, 0, 37, 16));</span>
+
+<span class="nc" id="L52">		tierIdles[4] = new Animation( 1, true );</span>
+<span class="nc" id="L53">		tierIdles[4].frames(texture.uvRect(38, 0, 44, 13));</span>
+
+<span class="nc" id="L55">		tierIdles[5] = new Animation( 1, true );</span>
+<span class="nc" id="L56">		tierIdles[5].frames(texture.uvRect(45, 0, 51, 15));</span>
+
+<span class="nc" id="L58">		tierIdles[6] = new Animation( 1, true );</span>
+<span class="nc" id="L59">		tierIdles[6].frames(texture.uvRect(52, 0, 60, 15));</span>
+
+<span class="nc" id="L61">	}</span>
+
+	@Override
+	public void zap( int pos ) {
+<span class="nc" id="L65">		idle();</span>
+<span class="nc" id="L66">		flash();</span>
+<span class="nc" id="L67">		emitter().burst(MagicMissile.WardParticle.UP, 2);</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		if (Actor.findChar(pos) != null){</span>
+<span class="nc" id="L69">			parent.add(new Beam.DeathRay(center(), Actor.findChar(pos).sprite.center()));</span>
+		} else {
+<span class="nc" id="L71">			parent.add(new Beam.DeathRay(center(), DungeonTilemap.raisedTileCenterToWorld(pos)));</span>
+		}
+<span class="nc" id="L73">		((WandOfWarding.Ward)ch).onZapComplete();</span>
+<span class="nc" id="L74">	}</span>
+	
+	@Override
+	public void turnTo(int from, int to) {
+		//do nothing
+<span class="nc" id="L79">	}</span>
+	
+	@Override
+	public void die() {
+<span class="nc" id="L83">		super.die();</span>
+		//cancels die animation and fades out immediately
+<span class="nc" id="L85">		play(idle, true);</span>
+<span class="nc" id="L86">		emitter().burst(MagicMissile.WardParticle.UP, 10);</span>
+<span class="nc" id="L87">		parent.add( new AlphaTweener( this, 0, 2f ) {</span>
+			@Override
+			protected void onComplete() {
+<span class="nc" id="L90">				WardSprite.this.killAndErase();</span>
+<span class="nc" id="L91">				parent.erase( this );</span>
+<span class="nc" id="L92">			}</span>
+		} );
+<span class="nc" id="L94">	}</span>
+
+	@Override
+	public void resetColor() {
+<span class="nc" id="L98">		super.resetColor();</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		if (ch instanceof WandOfWarding.Ward){</span>
+<span class="nc" id="L100">			WandOfWarding.Ward ward = (WandOfWarding.Ward) ch;</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">			if (ward.tier &lt;= 3){</span>
+<span class="nc" id="L102">				brightness(Math.max(0.2f, 1f - (ward.totalZaps / (float)(2*ward.tier-1))));</span>
+			}
+		}
+<span class="nc" id="L105">	}</span>
+
+	public void linkVisuals(Char ch ){
+		
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		if (ch == null) return;</span>
+		
+<span class="nc" id="L111">		updateTier( ((WandOfWarding.Ward)ch).tier );</span>
+		
+<span class="nc" id="L113">	}</span>
+
+	public void updateTier(int tier){
+
+<span class="nc" id="L117">		idle = tierIdles[tier];</span>
+<span class="nc" id="L118">		run = idle.clone();</span>
+<span class="nc" id="L119">		attack = idle.clone();</span>
+<span class="nc" id="L120">		die = idle.clone();</span>
+
+		//always render first
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		if (parent != null) {</span>
+<span class="nc" id="L124">			parent.sendToBack(this);</span>
+		}
+
+<span class="nc" id="L127">		resetColor();</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		if (ch != null) place(ch.pos);</span>
+<span class="nc" id="L129">		idle();</span>
+
+<span class="nc bnc" id="L131" title="All 2 branches missed.">		if (tier &lt;= 3){</span>
+<span class="nc" id="L132">			shadowWidth     = shadowHeight    = 1f;</span>
+<span class="nc" id="L133">			perspectiveRaise = (16 - height()) / 32f; //center of the cell</span>
+		} else {
+<span class="nc" id="L135">			shadowWidth     = 1.2f;</span>
+<span class="nc" id="L136">			shadowHeight    = 0.25f;</span>
+<span class="nc" id="L137">			perspectiveRaise = 6 / 16f; //6 pixels</span>
+		}
+
+<span class="nc" id="L140">	}</span>
+
+<span class="nc" id="L142">	private float baseY = Float.NaN;</span>
+
+	@Override
+	public void place(int cell) {
+<span class="nc" id="L146">		super.place(cell);</span>
+<span class="nc" id="L147">		baseY = y;</span>
+<span class="nc" id="L148">	}</span>
+
+	@Override
+	public void update() {
+<span class="nc" id="L152">		super.update();</span>
+		//if tier is greater than 3
+<span class="nc bnc" id="L154" title="All 4 branches missed.">		if (perspectiveRaise &gt;= 6 / 16f &amp;&amp; !paused){</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">			if (Float.isNaN(baseY)) baseY = y;</span>
+<span class="nc" id="L156">			y = baseY + (float) Math.sin(Game.timeTotal);</span>
+<span class="nc" id="L157">			shadowOffset = 0.25f - 0.8f*(float) Math.sin(Game.timeTotal);</span>
+		}
+<span class="nc" id="L159">	}</span>
+
+	@Override
+	public int blood() {
+<span class="nc" id="L163">		return 0xFFCC33FF;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

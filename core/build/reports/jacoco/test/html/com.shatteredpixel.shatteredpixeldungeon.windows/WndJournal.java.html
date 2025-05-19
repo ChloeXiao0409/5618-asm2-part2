@@ -1,0 +1,1138 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WndJournal.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.windows</a> &gt; <span class="el_source">WndJournal.java</span></div><h1>WndJournal.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.windows;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.CrystalSpire;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Pylon;
+import com.shatteredpixel.shatteredpixeldungeon.items.EnergyCrystal;
+import com.shatteredpixel.shatteredpixeldungeon.items.Gold;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.Trinket;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfWarding;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Bestiary;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Document;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.TerrainFeaturesTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BadgesGrid;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BadgesList;
+import com.shatteredpixel.shatteredpixeldungeon.ui.CustomNoteButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.QuickRecipe;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ScrollPane;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ScrollingGridPane;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ScrollingListPane;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.watabou.input.KeyBindings;
+import com.watabou.input.KeyEvent;
+import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.ColorBlock;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.Visual;
+import com.watabou.noosa.ui.Component;
+import com.watabou.utils.RectF;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+public class WndJournal extends WndTabbed {
+	
+	public static final int WIDTH_P     = 126;
+	public static final int HEIGHT_P    = 180;
+	
+	public static final int WIDTH_L     = 216;
+	public static final int HEIGHT_L    = 130;
+	
+	private static final int ITEM_HEIGHT	= 18;
+	
+	private GuideTab guideTab;
+	private AlchemyTab alchemyTab;
+	private NotesTab notesTab;
+	private CatalogTab catalogTab;
+	private BadgesTab badgesTab;
+	
+<span class="nc" id="L102">	public static int last_index = 0;</span>
+
+<span class="nc" id="L104">	private static WndJournal INSTANCE = null;</span>
+	
+<span class="nc" id="L106">	public WndJournal(){</span>
+
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		if (INSTANCE != null){</span>
+<span class="nc" id="L109">			INSTANCE.hide();</span>
+		}
+		
+<span class="nc bnc" id="L112" title="All 2 branches missed.">		int width = PixelScene.landscape() ? WIDTH_L : WIDTH_P;</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		int height = PixelScene.landscape() ? HEIGHT_L : HEIGHT_P;</span>
+		
+<span class="nc" id="L115">		resize(width, height);</span>
+		
+<span class="nc" id="L117">		guideTab = new GuideTab();</span>
+<span class="nc" id="L118">		add(guideTab);</span>
+<span class="nc" id="L119">		guideTab.setRect(0, 0, width, height);</span>
+<span class="nc" id="L120">		guideTab.updateList();</span>
+		
+<span class="nc" id="L122">		alchemyTab = new AlchemyTab();</span>
+<span class="nc" id="L123">		add(alchemyTab);</span>
+<span class="nc" id="L124">		alchemyTab.setRect(0, 0, width, height);</span>
+		
+<span class="nc" id="L126">		notesTab = new NotesTab();</span>
+<span class="nc" id="L127">		add(notesTab);</span>
+<span class="nc" id="L128">		notesTab.setRect(0, 0, width, height);</span>
+<span class="nc" id="L129">		notesTab.updateList();</span>
+		
+<span class="nc" id="L131">		catalogTab = new CatalogTab();</span>
+<span class="nc" id="L132">		add(catalogTab);</span>
+<span class="nc" id="L133">		catalogTab.setRect(0, 0, width, height);</span>
+<span class="nc" id="L134">		catalogTab.updateList();</span>
+
+<span class="nc" id="L136">		badgesTab = new BadgesTab();</span>
+<span class="nc" id="L137">		add(badgesTab);</span>
+<span class="nc" id="L138">		badgesTab.setRect(0, 0, width, height);</span>
+<span class="nc" id="L139">		badgesTab.updateList();</span>
+		
+<span class="nc" id="L141">		Tab[] tabs = {</span>
+<span class="nc" id="L142">				new IconTab( Icons.JOURNAL.get() ) {</span>
+					protected void select( boolean value ) {
+<span class="nc" id="L144">						super.select( value );</span>
+<span class="nc" id="L145">						notesTab.active = notesTab.visible = value;</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">						if (value) last_index = 0;</span>
+<span class="nc" id="L147">					}</span>
+
+					@Override
+					protected String hoverText() {
+<span class="nc" id="L151">						return Messages.get(notesTab, &quot;title&quot;);</span>
+					}
+				},
+<span class="nc" id="L154">				new IconTab( new ItemSprite(ItemSpriteSheet.MASTERY, null) ) {</span>
+					protected void select( boolean value ) {
+<span class="nc" id="L156">						super.select( value );</span>
+<span class="nc" id="L157">						guideTab.active = guideTab.visible = value;</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">						if (value) last_index = 1;</span>
+<span class="nc" id="L159">					}</span>
+
+					@Override
+					protected String hoverText() {
+<span class="nc" id="L163">						return Messages.get(guideTab, &quot;title&quot;);</span>
+					}
+				},
+<span class="nc" id="L166">				new IconTab( Icons.ALCHEMY.get() ) {</span>
+					protected void select( boolean value ) {
+<span class="nc" id="L168">						super.select( value );</span>
+<span class="nc" id="L169">						alchemyTab.active = alchemyTab.visible = value;</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">						if (value) last_index = 2;</span>
+<span class="nc" id="L171">					}</span>
+
+					@Override
+					protected String hoverText() {
+<span class="nc" id="L175">						return Messages.get(alchemyTab, &quot;title&quot;);</span>
+					}
+				},
+<span class="nc" id="L178">				new IconTab( Icons.CATALOG.get() ) {</span>
+					protected void select( boolean value ) {
+<span class="nc" id="L180">						super.select( value );</span>
+<span class="nc" id="L181">						catalogTab.active = catalogTab.visible = value;</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">						if (value) last_index = 3;</span>
+<span class="nc" id="L183">					}</span>
+
+					@Override
+					protected String hoverText() {
+<span class="nc" id="L187">						return Messages.get(catalogTab, &quot;title&quot;);</span>
+					}
+				},
+<span class="nc" id="L190">				new IconTab( Icons.BADGES.get() ) {</span>
+					protected void select( boolean value ) {
+<span class="nc" id="L192">						super.select( value );</span>
+<span class="nc" id="L193">						badgesTab.active = badgesTab.visible = value;</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">						if (value) last_index = 4;</span>
+<span class="nc" id="L195">					}</span>
+
+					@Override
+					protected String hoverText() {
+<span class="nc" id="L199">						return Messages.get(badgesTab, &quot;title&quot;);</span>
+					}
+				}
+		};
+
+<span class="nc bnc" id="L204" title="All 2 branches missed.">		for (Tab tab : tabs) {</span>
+<span class="nc" id="L205">			add( tab );</span>
+		}
+		
+<span class="nc" id="L208">		layoutTabs();</span>
+		
+<span class="nc" id="L210">		select(last_index);</span>
+
+<span class="nc" id="L212">		INSTANCE = this;</span>
+<span class="nc" id="L213">	}</span>
+
+	@Override
+	public boolean onSignal(KeyEvent event) {
+<span class="nc bnc" id="L217" title="All 4 branches missed.">		if (event.pressed &amp;&amp; KeyBindings.getActionForKey( event ) == SPDAction.JOURNAL) {</span>
+<span class="nc" id="L218">			onBackPressed();</span>
+<span class="nc" id="L219">			return true;</span>
+		} else {
+<span class="nc" id="L221">			return super.onSignal(event);</span>
+		}
+	}
+
+	@Override
+	public void offset(int xOffset, int yOffset) {
+<span class="nc" id="L227">		super.offset(xOffset, yOffset);</span>
+<span class="nc" id="L228">		guideTab.layout();</span>
+<span class="nc" id="L229">		alchemyTab.layout();</span>
+<span class="nc" id="L230">		notesTab.layout();</span>
+<span class="nc" id="L231">		catalogTab.layout();</span>
+<span class="nc" id="L232">	}</span>
+	
+<span class="nc" id="L234">	public static class GuideTab extends Component {</span>
+
+		private ScrollingListPane list;
+		
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L240">			list = new ScrollingListPane();</span>
+<span class="nc" id="L241">			add( list );</span>
+<span class="nc" id="L242">		}</span>
+		
+		@Override
+		protected void layout() {
+<span class="nc" id="L246">			super.layout();</span>
+<span class="nc" id="L247">			list.setRect( x, y, width, height);</span>
+<span class="nc" id="L248">		}</span>
+		
+		public void updateList(){
+<span class="nc" id="L251">			list.addTitle(Document.ADVENTURERS_GUIDE.title());</span>
+
+<span class="nc bnc" id="L253" title="All 2 branches missed.">			for (String page : Document.ADVENTURERS_GUIDE.pageNames()){</span>
+<span class="nc" id="L254">				boolean found = Document.ADVENTURERS_GUIDE.isPageFound(page);</span>
+<span class="nc" id="L255">				ScrollingListPane.ListItem item = new ScrollingListPane.ListItem(</span>
+<span class="nc" id="L256">						Document.ADVENTURERS_GUIDE.pageSprite(page),</span>
+						null,
+<span class="nc bnc" id="L258" title="All 2 branches missed.">						found ? Messages.titleCase(Document.ADVENTURERS_GUIDE.pageTitle(page)) : Messages.titleCase(Messages.get( this, &quot;missing&quot; ))</span>
+<span class="nc" id="L259">				){</span>
+					@Override
+					public boolean onClick(float x, float y) {
+<span class="nc bnc" id="L262" title="All 4 branches missed.">						if (inside( x, y ) &amp;&amp; found) {</span>
+<span class="nc" id="L263">							ShatteredPixelDungeon.scene().addToFront( new WndStory( Document.ADVENTURERS_GUIDE.pageSprite(page),</span>
+<span class="nc" id="L264">									Document.ADVENTURERS_GUIDE.pageTitle(page),</span>
+<span class="nc" id="L265">									Document.ADVENTURERS_GUIDE.pageBody(page) ));</span>
+<span class="nc" id="L266">							Document.ADVENTURERS_GUIDE.readPage(page);</span>
+<span class="nc" id="L267">							return true;</span>
+						} else {
+<span class="nc" id="L269">							return false;</span>
+						}
+					}
+				};
+<span class="nc bnc" id="L273" title="All 2 branches missed.">				if (!found){</span>
+<span class="nc" id="L274">					item.hardlight(0x999999);</span>
+<span class="nc" id="L275">					item.hardlightIcon(0x999999);</span>
+				}
+<span class="nc" id="L277">				list.addItem(item);</span>
+<span class="nc" id="L278">			}</span>
+
+<span class="nc" id="L280">			list.setRect(x, y, width, height);</span>
+<span class="nc" id="L281">		}</span>
+
+	}
+	
+<span class="nc" id="L285">	public static class AlchemyTab extends Component {</span>
+		
+		private RedButton[] pageButtons;
+		private static final int NUM_BUTTONS = 9;
+		
+<span class="nc" id="L290">		private static final int[] sprites = {</span>
+				ItemSpriteSheet.SEED_HOLDER,
+				ItemSpriteSheet.STONE_HOLDER,
+				ItemSpriteSheet.FOOD_HOLDER,
+				ItemSpriteSheet.POTION_HOLDER,
+				ItemSpriteSheet.SCROLL_HOLDER,
+				ItemSpriteSheet.BOMB_HOLDER,
+				ItemSpriteSheet.MISSILE_HOLDER,
+				ItemSpriteSheet.ELIXIR_HOLDER,
+				ItemSpriteSheet.SPELL_HOLDER
+		};
+		
+<span class="nc" id="L302">		public static int currentPageIdx   = 0;</span>
+		
+		private IconTitle title;
+		private RenderedTextBlock body;
+		
+		private ScrollPane list;
+<span class="nc" id="L308">		private ArrayList&lt;QuickRecipe&gt; recipes = new ArrayList&lt;&gt;();</span>
+		
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L312">			pageButtons = new RedButton[NUM_BUTTONS];</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">			for (int i = 0; i &lt; NUM_BUTTONS; i++){</span>
+<span class="nc" id="L314">				final int idx = i;</span>
+<span class="nc" id="L315">				pageButtons[i] = new RedButton( &quot;&quot; ){</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L318">						currentPageIdx = idx;</span>
+<span class="nc" id="L319">						updateList();</span>
+<span class="nc" id="L320">					}</span>
+				};
+<span class="nc bnc" id="L322" title="All 2 branches missed.">				if (Document.ALCHEMY_GUIDE.isPageFound(i)) {</span>
+<span class="nc" id="L323">					pageButtons[i].icon(new ItemSprite(sprites[i], null));</span>
+				} else {
+<span class="nc" id="L325">					pageButtons[i].icon(new ItemSprite(ItemSpriteSheet.SOMETHING, null));</span>
+<span class="nc" id="L326">					pageButtons[i].enable(false);</span>
+				}
+<span class="nc" id="L328">				add( pageButtons[i] );</span>
+			}
+			
+<span class="nc" id="L331">			title = new IconTitle();</span>
+<span class="nc" id="L332">			title.icon( new ItemSprite(ItemSpriteSheet.ALCH_PAGE));</span>
+<span class="nc" id="L333">			title.visible = false;</span>
+
+<span class="nc" id="L335">			body = PixelScene.renderTextBlock(6);</span>
+			
+<span class="nc" id="L337">			list = new ScrollPane(new Component());</span>
+<span class="nc" id="L338">			add(list);</span>
+<span class="nc" id="L339">		}</span>
+		
+		@Override
+		protected void layout() {
+<span class="nc" id="L343">			super.layout();</span>
+			
+<span class="nc bnc" id="L345" title="All 2 branches missed.">			if (width() &gt;= 180){</span>
+<span class="nc" id="L346">				float buttonWidth = width()/pageButtons.length;</span>
+<span class="nc bnc" id="L347" title="All 2 branches missed.">				for (int i = 0; i &lt; NUM_BUTTONS; i++) {</span>
+<span class="nc" id="L348">					pageButtons[i].setRect(x + i*buttonWidth, y, buttonWidth, ITEM_HEIGHT);</span>
+<span class="nc" id="L349">					PixelScene.align(pageButtons[i]);</span>
+				}
+<span class="nc" id="L351">			} else {</span>
+				//for first row
+<span class="nc" id="L353">				float buttonWidth = width()/5;</span>
+<span class="nc" id="L354">				float y = 0;</span>
+<span class="nc" id="L355">				float x = 0;</span>
+<span class="nc bnc" id="L356" title="All 2 branches missed.">				for (int i = 0; i &lt; NUM_BUTTONS; i++) {</span>
+<span class="nc" id="L357">					pageButtons[i].setRect(this.x + x, this.y + y, buttonWidth, ITEM_HEIGHT);</span>
+<span class="nc" id="L358">					PixelScene.align(pageButtons[i]);</span>
+<span class="nc" id="L359">					x += buttonWidth;</span>
+<span class="nc bnc" id="L360" title="All 2 branches missed.">					if (i == 4){</span>
+<span class="nc" id="L361">						y += ITEM_HEIGHT;</span>
+<span class="nc" id="L362">						x = 0;</span>
+<span class="nc" id="L363">						buttonWidth = width()/4;</span>
+					}
+				}
+			}
+			
+<span class="nc" id="L368">			list.setRect(x, pageButtons[NUM_BUTTONS-1].bottom() + 1, width,</span>
+<span class="nc" id="L369">					height - pageButtons[NUM_BUTTONS-1].bottom() + y - 1);</span>
+			
+<span class="nc" id="L371">			updateList();</span>
+<span class="nc" id="L372">		}</span>
+		
+		public void updateList() {
+
+<span class="nc bnc" id="L376" title="All 4 branches missed.">			if (currentPageIdx != -1 &amp;&amp; !Document.ALCHEMY_GUIDE.isPageFound(currentPageIdx)){</span>
+<span class="nc" id="L377">				currentPageIdx = -1;</span>
+			}
+
+<span class="nc bnc" id="L380" title="All 2 branches missed.">			for (int i = 0; i &lt; NUM_BUTTONS; i++) {</span>
+<span class="nc bnc" id="L381" title="All 2 branches missed.">				if (i == currentPageIdx) {</span>
+<span class="nc" id="L382">					pageButtons[i].icon().color(TITLE_COLOR);</span>
+				} else {
+<span class="nc" id="L384">					pageButtons[i].icon().resetColor();</span>
+				}
+			}
+			
+<span class="nc bnc" id="L388" title="All 2 branches missed.">			if (currentPageIdx == -1){</span>
+<span class="nc" id="L389">				return;</span>
+			}
+			
+<span class="nc bnc" id="L392" title="All 2 branches missed.">			for (QuickRecipe r : recipes){</span>
+<span class="nc bnc" id="L393" title="All 2 branches missed.">				if (r != null) {</span>
+<span class="nc" id="L394">					r.killAndErase();</span>
+<span class="nc" id="L395">					r.destroy();</span>
+				}
+<span class="nc" id="L397">			}</span>
+<span class="nc" id="L398">			recipes.clear();</span>
+			
+<span class="nc" id="L400">			Component content = list.content();</span>
+			
+<span class="nc" id="L402">			content.clear();</span>
+			
+<span class="nc" id="L404">			title.visible = true;</span>
+<span class="nc" id="L405">			title.label(Document.ALCHEMY_GUIDE.pageTitle(currentPageIdx));</span>
+<span class="nc" id="L406">			title.setRect(0, 0, width(), 10);</span>
+<span class="nc" id="L407">			content.add(title);</span>
+			
+<span class="nc" id="L409">			body.maxWidth((int)width());</span>
+<span class="nc" id="L410">			body.text(Document.ALCHEMY_GUIDE.pageBody(currentPageIdx));</span>
+<span class="nc" id="L411">			body.setPos(0, title.bottom());</span>
+<span class="nc" id="L412">			content.add(body);</span>
+
+<span class="nc" id="L414">			Document.ALCHEMY_GUIDE.readPage(currentPageIdx);</span>
+			
+<span class="nc" id="L416">			ArrayList&lt;QuickRecipe&gt; toAdd = QuickRecipe.getRecipes(currentPageIdx);</span>
+			
+			float left;
+<span class="nc" id="L419">			float top = body.bottom()+2;</span>
+			int w;
+<span class="nc" id="L421">			ArrayList&lt;QuickRecipe&gt; toAddThisRow = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L422" title="All 2 branches missed.">			while (!toAdd.isEmpty()){</span>
+<span class="nc bnc" id="L423" title="All 2 branches missed.">				if (toAdd.get(0) == null){</span>
+<span class="nc" id="L424">					toAdd.remove(0);</span>
+<span class="nc" id="L425">					top += 6;</span>
+				}
+				
+<span class="nc" id="L428">				w = 0;</span>
+<span class="nc bnc" id="L429" title="All 4 branches missed.">				while(!toAdd.isEmpty() &amp;&amp; toAdd.get(0) != null</span>
+<span class="nc bnc" id="L430" title="All 2 branches missed.">						&amp;&amp; w + toAdd.get(0).width() &lt;= width()){</span>
+<span class="nc" id="L431">					toAddThisRow.add(toAdd.remove(0));</span>
+<span class="nc" id="L432">					w += toAddThisRow.get(0).width();</span>
+				}
+				
+<span class="nc" id="L435">				float spacing = (width() - w)/(toAddThisRow.size() + 1);</span>
+<span class="nc" id="L436">				left = spacing;</span>
+<span class="nc bnc" id="L437" title="All 2 branches missed.">				while (!toAddThisRow.isEmpty()){</span>
+<span class="nc" id="L438">					QuickRecipe r = toAddThisRow.remove(0);</span>
+<span class="nc" id="L439">					r.setPos(left, top);</span>
+<span class="nc" id="L440">					left += r.width() + spacing;</span>
+<span class="nc bnc" id="L441" title="All 2 branches missed.">					if (!toAddThisRow.isEmpty()) {</span>
+<span class="nc" id="L442">						ColorBlock spacer = new ColorBlock(1, 16, 0xFF222222);</span>
+<span class="nc" id="L443">						spacer.y = top;</span>
+<span class="nc" id="L444">						spacer.x = left - spacing / 2 - 0.5f;</span>
+<span class="nc" id="L445">						PixelScene.align(spacer);</span>
+<span class="nc" id="L446">						content.add(spacer);</span>
+					}
+<span class="nc" id="L448">					recipes.add(r);</span>
+<span class="nc" id="L449">					content.add(r);</span>
+<span class="nc" id="L450">				}</span>
+				
+<span class="nc bnc" id="L452" title="All 4 branches missed.">				if (!toAdd.isEmpty() &amp;&amp; toAdd.get(0) == null){</span>
+<span class="nc" id="L453">					toAdd.remove(0);</span>
+				}
+				
+<span class="nc bnc" id="L456" title="All 4 branches missed.">				if (!toAdd.isEmpty() &amp;&amp; toAdd.get(0) != null) {</span>
+<span class="nc" id="L457">					ColorBlock spacer = new ColorBlock(width(), 1, 0xFF222222);</span>
+<span class="nc" id="L458">					spacer.y = top + 16;</span>
+<span class="nc" id="L459">					spacer.x = 0;</span>
+<span class="nc" id="L460">					content.add(spacer);</span>
+				}
+<span class="nc" id="L462">				top += 17;</span>
+<span class="nc" id="L463">				toAddThisRow.clear();</span>
+<span class="nc" id="L464">			}</span>
+<span class="nc" id="L465">			top -= 1;</span>
+<span class="nc" id="L466">			content.setSize(width(), top);</span>
+<span class="nc" id="L467">			list.setSize(list.width(), list.height());</span>
+<span class="nc" id="L468">			list.scrollTo(0, 0);</span>
+<span class="nc" id="L469">		}</span>
+	}
+	
+	private static class NotesTab extends Component {
+		
+		private ScrollingGridPane grid;
+		private CustomNoteButton custom;
+		
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L479">			grid = new ScrollingGridPane();</span>
+<span class="nc" id="L480">			add(grid);</span>
+<span class="nc" id="L481">		}</span>
+		
+		@Override
+		protected void layout() {
+<span class="nc" id="L485">			super.layout();</span>
+<span class="nc" id="L486">			grid.setRect( x, y, width, height);</span>
+<span class="nc" id="L487">		}</span>
+		
+		private void updateList(){
+
+<span class="nc" id="L491">			grid.addHeader(&quot;_&quot; + Messages.get(this, &quot;title&quot;) + &quot;_&quot;, 9, true);</span>
+
+<span class="nc" id="L493">			grid.addHeader(Messages.get(this, &quot;desc&quot;), 6, true);</span>
+
+<span class="nc" id="L495">			ArrayList&lt;Notes.CustomRecord&gt; customRecs = Notes.getRecords(Notes.CustomRecord.class);</span>
+
+<span class="nc bnc" id="L497" title="All 2 branches missed.">			if (!customRecs.isEmpty()){</span>
+<span class="nc" id="L498">				grid.addHeader(&quot;_&quot; + Messages.get(this, &quot;custom_notes&quot;) + &quot;_ (&quot; + customRecs.size() + &quot;/&quot; + Notes.customRecordLimit() + &quot;)&quot;);</span>
+
+<span class="nc bnc" id="L500" title="All 2 branches missed.">				for (Notes.CustomRecord rec : customRecs){</span>
+<span class="nc" id="L501">					ScrollingGridPane.GridItem gridItem = new ScrollingGridPane.GridItem(rec.icon()){</span>
+						@Override
+						public boolean onClick(float x, float y) {
+<span class="nc bnc" id="L504" title="All 2 branches missed.">							if (inside(x, y)) {</span>
+<span class="nc" id="L505">								GameScene.show(new CustomNoteButton.CustomNoteWindow(rec));</span>
+<span class="nc" id="L506">								return true;</span>
+							} else {
+<span class="nc" id="L508">								return false;</span>
+							}
+						}
+					};
+
+<span class="nc" id="L513">					Visual secondIcon = rec.secondIcon();</span>
+<span class="nc bnc" id="L514" title="All 2 branches missed.">					if (secondIcon != null){</span>
+<span class="nc" id="L515">						gridItem.addSecondIcon( secondIcon );</span>
+					}
+
+<span class="nc" id="L518">					grid.addItem(gridItem);</span>
+<span class="nc" id="L519">				}</span>
+			}
+
+<span class="nc bnc" id="L522" title="All 2 branches missed.">			for (int i = Statistics.deepestFloor; i &gt; 0; i--){</span>
+
+<span class="nc" id="L524">				ArrayList&lt;Notes.Record&gt; recs = Notes.getRecords(i);</span>
+
+<span class="nc bnc" id="L526" title="All 2 branches missed.">				if (i == Dungeon.depth) {</span>
+<span class="nc" id="L527">					grid.addHeader(&quot;_&quot; + Messages.get(this, &quot;floor_header&quot;, i) + &quot;_&quot;);</span>
+				} else {
+<span class="nc" id="L529">					grid.addHeader(Messages.get(this, &quot;floor_header&quot;, i));</span>
+				}
+<span class="nc bnc" id="L531" title="All 2 branches missed.">				for( Notes.Record rec : recs){</span>
+
+<span class="nc" id="L533">					ScrollingGridPane.GridItem gridItem = new ScrollingGridPane.GridItem(rec.icon()){</span>
+						@Override
+						public boolean onClick(float x, float y) {
+<span class="nc bnc" id="L536" title="All 2 branches missed.">							if (inside(x, y)) {</span>
+<span class="nc" id="L537">								GameScene.show(new WndJournalItem(rec.icon(),</span>
+<span class="nc" id="L538">										Messages.titleCase(rec.title()),</span>
+<span class="nc" id="L539">										rec.desc()));</span>
+<span class="nc" id="L540">								return true;</span>
+							} else {
+<span class="nc" id="L542">								return false;</span>
+							}
+						}
+					};
+
+<span class="nc" id="L547">					Visual secondIcon = rec.secondIcon();</span>
+<span class="nc bnc" id="L548" title="All 2 branches missed.">					if (secondIcon != null){</span>
+<span class="nc" id="L549">						gridItem.addSecondIcon( secondIcon );</span>
+					}
+
+<span class="nc" id="L552">					grid.addItem(gridItem);</span>
+<span class="nc" id="L553">				}</span>
+			}
+
+<span class="nc" id="L556">			custom = new CustomNoteButton();</span>
+<span class="nc" id="L557">			grid.content().add(custom);</span>
+<span class="nc" id="L558">			custom.setPos(width-custom.width()-1, 0);</span>
+
+<span class="nc" id="L560">			grid.setRect(x, y, width, height);</span>
+
+<span class="nc" id="L562">		}</span>
+		
+	}
+	
+<span class="nc" id="L566">	public static class CatalogTab extends Component{</span>
+		
+		private RedButton[] itemButtons;
+		private static final int NUM_BUTTONS = 4;
+
+<span class="nc" id="L571">		public static int currentItemIdx   = 0;</span>
+<span class="nc" id="L572">		private static float[] scrollPositions = new float[NUM_BUTTONS];</span>
+		
+		//sprite locations
+		private static final int EQUIP_IDX = 0;
+		private static final int CONSUM_IDX = 1;
+		private static final int BESTIARY_IDX = 2;
+		private static final int LORE_IDX = 3;
+
+		private ScrollingGridPane grid;
+		
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L584">			itemButtons = new RedButton[NUM_BUTTONS];</span>
+<span class="nc bnc" id="L585" title="All 2 branches missed.">			for (int i = 0; i &lt; NUM_BUTTONS; i++){</span>
+<span class="nc" id="L586">				final int idx = i;</span>
+<span class="nc" id="L587">				itemButtons[i] = new RedButton( &quot;&quot; ){</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L590">						currentItemIdx = idx;</span>
+<span class="nc" id="L591">						updateList();</span>
+<span class="nc" id="L592">					}</span>
+				};
+<span class="nc" id="L594">				add( itemButtons[i] );</span>
+			}
+<span class="nc" id="L596">			itemButtons[EQUIP_IDX].icon(new ItemSprite(ItemSpriteSheet.WEAPON_HOLDER));</span>
+<span class="nc" id="L597">			itemButtons[CONSUM_IDX].icon(new ItemSprite(ItemSpriteSheet.POTION_HOLDER));</span>
+<span class="nc" id="L598">			itemButtons[BESTIARY_IDX].icon(new ItemSprite(ItemSpriteSheet.MOB_HOLDER));</span>
+<span class="nc" id="L599">			itemButtons[LORE_IDX].icon(new ItemSprite(ItemSpriteSheet.DOCUMENT_HOLDER));</span>
+
+<span class="nc" id="L601">			grid = new ScrollingGridPane(){</span>
+				@Override
+				public synchronized void update() {
+<span class="nc" id="L604">					super.update();</span>
+<span class="nc" id="L605">					scrollPositions[currentItemIdx] = content.camera.scroll.y;</span>
+<span class="nc" id="L606">				}</span>
+			};
+<span class="nc" id="L608">			add( grid );</span>
+<span class="nc" id="L609">		}</span>
+		
+		@Override
+		protected void layout() {
+<span class="nc" id="L613">			super.layout();</span>
+			
+<span class="nc" id="L615">			int perRow = NUM_BUTTONS;</span>
+<span class="nc" id="L616">			float buttonWidth = width()/perRow;</span>
+			
+<span class="nc bnc" id="L618" title="All 2 branches missed.">			for (int i = 0; i &lt; NUM_BUTTONS; i++) {</span>
+<span class="nc" id="L619">				itemButtons[i].setRect(x +(i%perRow) * (buttonWidth),</span>
+						y + (i/perRow) * (ITEM_HEIGHT ),
+						buttonWidth, ITEM_HEIGHT);
+<span class="nc" id="L622">				PixelScene.align(itemButtons[i]);</span>
+			}
+			
+<span class="nc" id="L625">			grid.setRect(x,</span>
+<span class="nc" id="L626">					itemButtons[NUM_BUTTONS-1].bottom() + 1,</span>
+					width,
+<span class="nc" id="L628">					height - itemButtons[NUM_BUTTONS-1].height() - 1);</span>
+<span class="nc" id="L629">		}</span>
+		
+		public void updateList() {
+			
+<span class="nc" id="L633">			grid.clear();</span>
+			
+<span class="nc bnc" id="L635" title="All 2 branches missed.">			for (int i = 0; i &lt; NUM_BUTTONS; i++){</span>
+<span class="nc bnc" id="L636" title="All 2 branches missed.">				if (i == currentItemIdx){</span>
+<span class="nc" id="L637">					itemButtons[i].icon().color(TITLE_COLOR);</span>
+				} else {
+<span class="nc" id="L639">					itemButtons[i].icon().resetColor();</span>
+				}
+			}
+			
+<span class="nc" id="L643">			grid.scrollTo( 0, 0 );</span>
+
+<span class="nc bnc" id="L645" title="All 2 branches missed.">			if (currentItemIdx == EQUIP_IDX) {</span>
+<span class="nc" id="L646">				int totalItems = 0;</span>
+<span class="nc" id="L647">				int totalSeen = 0;</span>
+<span class="nc bnc" id="L648" title="All 2 branches missed.">				for (Catalog catalog : Catalog.equipmentCatalogs){</span>
+<span class="nc" id="L649">					totalItems += catalog.totalItems();</span>
+<span class="nc" id="L650">					totalSeen += catalog.totalSeen();</span>
+<span class="nc" id="L651">				}</span>
+<span class="nc" id="L652">				grid.addHeader(&quot;_&quot; + Messages.get(this, &quot;title_equipment&quot;) + &quot;_ (&quot; + totalSeen + &quot;/&quot; + totalItems + &quot;)&quot;, 9, true);</span>
+
+<span class="nc bnc" id="L654" title="All 2 branches missed.">				for (Catalog catalog : Catalog.equipmentCatalogs){</span>
+<span class="nc" id="L655">					grid.addHeader(&quot;_&quot; + Messages.titleCase(catalog.title()) + &quot;_ (&quot; + catalog.totalSeen() + &quot;/&quot; + catalog.totalItems() + &quot;):&quot;);</span>
+<span class="nc" id="L656">					addGridItems(grid, catalog.items());</span>
+<span class="nc" id="L657">				}</span>
+
+<span class="nc bnc" id="L659" title="All 2 branches missed.">			} else if (currentItemIdx == CONSUM_IDX){</span>
+<span class="nc" id="L660">				int totalItems = 0;</span>
+<span class="nc" id="L661">				int totalSeen = 0;</span>
+<span class="nc bnc" id="L662" title="All 2 branches missed.">				for (Catalog catalog : Catalog.consumableCatalogs){</span>
+<span class="nc" id="L663">					totalItems += catalog.totalItems();</span>
+<span class="nc" id="L664">					totalSeen += catalog.totalSeen();</span>
+<span class="nc" id="L665">				}</span>
+<span class="nc" id="L666">				grid.addHeader(&quot;_&quot; + Messages.get(this, &quot;title_consumables&quot;) + &quot;_ (&quot; + totalSeen + &quot;/&quot; + totalItems + &quot;)&quot;, 9, true);</span>
+
+<span class="nc bnc" id="L668" title="All 2 branches missed.">				for (Catalog catalog : Catalog.consumableCatalogs){</span>
+<span class="nc" id="L669">					grid.addHeader(&quot;_&quot; + Messages.titleCase(catalog.title()) + &quot;_ (&quot; + catalog.totalSeen() + &quot;/&quot; + catalog.totalItems() + &quot;):&quot;);</span>
+<span class="nc" id="L670">					addGridItems(grid, catalog.items());</span>
+<span class="nc" id="L671">				}</span>
+
+<span class="nc bnc" id="L673" title="All 2 branches missed.">			} else if (currentItemIdx == BESTIARY_IDX){</span>
+<span class="nc" id="L674">				int totalItems = 0;</span>
+<span class="nc" id="L675">				int totalSeen = 0;</span>
+<span class="nc bnc" id="L676" title="All 2 branches missed.">				for (Bestiary bestiary : Bestiary.values()){</span>
+<span class="nc" id="L677">					totalItems += bestiary.totalEntities();</span>
+<span class="nc" id="L678">					totalSeen += bestiary.totalSeen();</span>
+				}
+<span class="nc" id="L680">				grid.addHeader(&quot;_&quot; + Messages.get(this, &quot;title_bestiary&quot;) + &quot;_ (&quot; + totalSeen + &quot;/&quot; + totalItems + &quot;)&quot;, 9, true);</span>
+
+<span class="nc bnc" id="L682" title="All 2 branches missed.">				for (Bestiary bestiary : Bestiary.values()){</span>
+<span class="nc" id="L683">					grid.addHeader(&quot;_&quot; + Messages.titleCase(bestiary.title()) + &quot;_ (&quot; + bestiary.totalSeen() + &quot;/&quot; + bestiary.totalEntities() + &quot;):&quot;);</span>
+<span class="nc" id="L684">					addGridEntities(grid, bestiary.entities());</span>
+				}
+
+<span class="nc" id="L687">			} else {</span>
+<span class="nc" id="L688">				int totalItems = 0;</span>
+<span class="nc" id="L689">				int totalSeen = 0;</span>
+<span class="nc bnc" id="L690" title="All 2 branches missed.">				for (Document doc : Document.values()){</span>
+<span class="nc bnc" id="L691" title="All 2 branches missed.">					if (!doc.isLoreDoc()){</span>
+<span class="nc" id="L692">						continue;</span>
+					}
+<span class="nc bnc" id="L694" title="All 2 branches missed.">					for (String page : doc.pageNames()){</span>
+<span class="nc" id="L695">						totalItems++;</span>
+<span class="nc bnc" id="L696" title="All 2 branches missed.">						if (doc.isPageFound(page)){</span>
+<span class="nc" id="L697">							totalSeen++;</span>
+						}
+<span class="nc" id="L699">					}</span>
+				}
+<span class="nc" id="L701">				grid.addHeader(&quot;_&quot; + Messages.get(this, &quot;title_lore&quot;) + &quot;_ (&quot; + totalSeen + &quot;/&quot; + totalItems + &quot;)&quot;, 9, true);</span>
+
+<span class="nc bnc" id="L703" title="All 2 branches missed.">				for (Document doc : Document.values()){</span>
+<span class="nc bnc" id="L704" title="All 2 branches missed.">					if (!doc.isLoreDoc()){</span>
+<span class="nc" id="L705">						continue;</span>
+					}
+
+<span class="nc bnc" id="L708" title="All 2 branches missed.">					for (String page : doc.pageNames()){</span>
+<span class="nc" id="L709">						totalItems++;</span>
+<span class="nc bnc" id="L710" title="All 2 branches missed.">						if (doc.isPageFound(page)){</span>
+<span class="nc" id="L711">							totalSeen++;</span>
+						}
+<span class="nc" id="L713">					}</span>
+				}
+<span class="nc bnc" id="L715" title="All 2 branches missed.">				for (Document doc : Document.values()){</span>
+<span class="nc bnc" id="L716" title="All 2 branches missed.">					if (!doc.isLoreDoc()){</span>
+<span class="nc" id="L717">						continue;</span>
+					}
+<span class="nc" id="L719">					totalItems = totalSeen = 0;</span>
+<span class="nc bnc" id="L720" title="All 2 branches missed.">					for (String page : doc.pageNames()){</span>
+<span class="nc" id="L721">						totalItems++;</span>
+<span class="nc bnc" id="L722" title="All 2 branches missed.">						if (doc.isPageFound(page)){</span>
+<span class="nc" id="L723">							totalSeen++;</span>
+						}
+<span class="nc" id="L725">					}</span>
+<span class="nc bnc" id="L726" title="All 2 branches missed.">					if (!doc.anyPagesFound()){</span>
+<span class="nc" id="L727">						grid.addHeader(&quot;_???_ (&quot; + totalSeen + &quot;/&quot; + totalItems + &quot;):&quot;);</span>
+					} else {
+<span class="nc" id="L729">						grid.addHeader(&quot;_&quot; + Messages.titleCase(doc.title()) + &quot;_ (&quot; + totalSeen + &quot;/&quot; + totalItems + &quot;):&quot;);</span>
+					}
+<span class="nc" id="L731">					addGridDocuments(grid, doc);</span>
+				}
+			}
+
+<span class="nc" id="L735">			grid.setRect(x, itemButtons[NUM_BUTTONS-1].bottom() + 1, width,</span>
+<span class="nc" id="L736">					height - itemButtons[NUM_BUTTONS-1].height() - 1);</span>
+
+<span class="nc" id="L738">			grid.scrollTo(0, scrollPositions[currentItemIdx]);</span>
+<span class="nc" id="L739">		}</span>
+		
+	}
+
+	//also includes item-like things such as enchantments, glyphs, curses.
+	private static void addGridItems( ScrollingGridPane grid, Collection&lt;Class&lt;?&gt;&gt; classes) {
+<span class="nc bnc" id="L745" title="All 2 branches missed.">		for (Class&lt;?&gt; itemClass : classes) {</span>
+
+<span class="nc" id="L747">			boolean seen = Catalog.isSeen(itemClass);;</span>
+<span class="nc" id="L748">			ItemSprite sprite = null;</span>
+<span class="nc" id="L749">			Image secondIcon = null;</span>
+<span class="nc" id="L750">			String title = &quot;&quot;;</span>
+<span class="nc" id="L751">			String desc = &quot;&quot;;</span>
+
+<span class="nc bnc" id="L753" title="All 2 branches missed.">			if (Item.class.isAssignableFrom(itemClass)) {</span>
+
+<span class="nc" id="L755">				Item item = (Item) Reflection.newInstance(itemClass);</span>
+
+<span class="nc bnc" id="L757" title="All 2 branches missed.">				if (seen) {</span>
+<span class="nc bnc" id="L758" title="All 2 branches missed.">					if (item instanceof Ring) {</span>
+<span class="nc" id="L759">						((Ring) item).anonymize();</span>
+<span class="nc bnc" id="L760" title="All 2 branches missed.">					} else if (item instanceof Potion) {</span>
+<span class="nc" id="L761">						((Potion) item).anonymize();</span>
+<span class="nc bnc" id="L762" title="All 2 branches missed.">					} else if (item instanceof Scroll) {</span>
+<span class="nc" id="L763">						((Scroll) item).anonymize();</span>
+					}
+				}
+
+<span class="nc bnc" id="L767" title="All 2 branches missed.">				sprite = new ItemSprite(item.image, seen ? item.glowing() : null);</span>
+<span class="nc bnc" id="L768" title="All 2 branches missed.">				if (!seen)  {</span>
+<span class="nc" id="L769">					sprite.lightness(0);</span>
+<span class="nc" id="L770">					title = &quot;???&quot;;</span>
+<span class="nc" id="L771">					desc = Messages.get(CatalogTab.class, &quot;not_seen_item&quot;);</span>
+				} else {
+<span class="nc" id="L773">					title = Messages.titleCase( item.name() );</span>
+					//some items don't include direct stats, generally when they're not applicable
+<span class="nc bnc" id="L775" title="All 4 branches missed.">					if (item instanceof ClassArmor || item instanceof SpiritBow){</span>
+<span class="nc" id="L776">						desc += item.desc();</span>
+					} else {
+<span class="nc" id="L778">						desc += item.info();</span>
+					}
+
+<span class="nc bnc" id="L781" title="All 2 branches missed.">					if (Catalog.useCount(itemClass) &gt; 1) {</span>
+<span class="nc bnc" id="L782" title="All 4 branches missed.">						if (item.isUpgradable() || item instanceof Artifact) {</span>
+<span class="nc" id="L783">							desc += &quot;\n\n&quot; + Messages.get(CatalogTab.class, &quot;upgrade_count&quot;, Catalog.useCount(itemClass));</span>
+<span class="nc bnc" id="L784" title="All 2 branches missed.">						} else if (item instanceof Trinket) {</span>
+<span class="nc" id="L785">							desc += &quot;\n\n&quot; + Messages.get(CatalogTab.class, &quot;trinket_count&quot;, Catalog.useCount(itemClass));</span>
+<span class="nc bnc" id="L786" title="All 2 branches missed.">						} else if (item instanceof Gold) {</span>
+<span class="nc" id="L787">							desc += &quot;\n\n&quot; + Messages.get(CatalogTab.class, &quot;gold_count&quot;, Catalog.useCount(itemClass));</span>
+<span class="nc bnc" id="L788" title="All 2 branches missed.">						} else if (item instanceof EnergyCrystal) {</span>
+<span class="nc" id="L789">							desc += &quot;\n\n&quot; + Messages.get(CatalogTab.class, &quot;energy_count&quot;, Catalog.useCount(itemClass));</span>
+						} else {
+<span class="nc" id="L791">							desc += &quot;\n\n&quot; + Messages.get(CatalogTab.class, &quot;use_count&quot;, Catalog.useCount(itemClass));</span>
+						}
+					}
+
+					//mage's staff normally has 2 pixels extra at the top for particle effects, we chop that off here
+<span class="nc bnc" id="L796" title="All 2 branches missed.">					if (item instanceof MagesStaff){</span>
+<span class="nc" id="L797">						RectF frame = sprite.frame();</span>
+<span class="nc" id="L798">						frame.top += frame.height()/8f;</span>
+<span class="nc" id="L799">						sprite.frame(frame);</span>
+					}
+
+<span class="nc bnc" id="L802" title="All 2 branches missed.">					if (item.icon != -1) {</span>
+<span class="nc" id="L803">						secondIcon = new Image(Assets.Sprites.ITEM_ICONS);</span>
+<span class="nc" id="L804">						secondIcon.frame(ItemSpriteSheet.Icons.film.get(item.icon));</span>
+					}
+				}
+
+<span class="nc bnc" id="L808" title="All 2 branches missed.">			} else if (Weapon.Enchantment.class.isAssignableFrom(itemClass)){</span>
+
+<span class="nc" id="L810">				Weapon.Enchantment ench = (Weapon.Enchantment) Reflection.newInstance(itemClass);</span>
+
+<span class="nc bnc" id="L812" title="All 2 branches missed.">				if (seen){</span>
+<span class="nc" id="L813">					sprite = new ItemSprite(ItemSpriteSheet.WORN_SHORTSWORD, ench.glowing());</span>
+<span class="nc" id="L814">					title = Messages.titleCase(ench.name());</span>
+<span class="nc" id="L815">					desc = ench.desc();</span>
+				} else {
+<span class="nc" id="L817">					sprite = new ItemSprite(ItemSpriteSheet.WORN_SHORTSWORD);</span>
+<span class="nc" id="L818">					sprite.lightness(0f);</span>
+<span class="nc" id="L819">					title = &quot;???&quot;;</span>
+<span class="nc" id="L820">					desc = Messages.get(CatalogTab.class, &quot;not_seen_enchantment&quot;);</span>
+				}
+
+<span class="nc bnc" id="L823" title="All 2 branches missed.">			} else if (Armor.Glyph.class.isAssignableFrom(itemClass)){</span>
+
+<span class="nc" id="L825">				Armor.Glyph glyph = (Armor.Glyph) Reflection.newInstance(itemClass);</span>
+
+<span class="nc bnc" id="L827" title="All 2 branches missed.">				if (seen){</span>
+<span class="nc" id="L828">					sprite = new ItemSprite(ItemSpriteSheet.ARMOR_CLOTH, glyph.glowing());</span>
+<span class="nc" id="L829">					title = Messages.titleCase(glyph.name());</span>
+<span class="nc" id="L830">					desc = glyph.desc();</span>
+				} else {
+<span class="nc" id="L832">					sprite = new ItemSprite(ItemSpriteSheet.ARMOR_CLOTH);</span>
+<span class="nc" id="L833">					sprite.lightness(0f);</span>
+<span class="nc" id="L834">					title = &quot;???&quot;;</span>
+<span class="nc" id="L835">					desc = Messages.get(CatalogTab.class, &quot;not_seen_glyph&quot;);</span>
+				}
+
+			}
+
+<span class="nc" id="L840">			String finalTitle = title;</span>
+<span class="nc" id="L841">			String finalDesc = desc;</span>
+<span class="nc" id="L842">			ScrollingGridPane.GridItem gridItem = new ScrollingGridPane.GridItem(sprite) {</span>
+				@Override
+				public boolean onClick(float x, float y) {
+<span class="nc bnc" id="L845" title="All 2 branches missed.">					if (inside(x, y)) {</span>
+<span class="nc" id="L846">						Image sprite = new ItemSprite();</span>
+<span class="nc" id="L847">						sprite.copy(icon);</span>
+<span class="nc bnc" id="L848" title="All 2 branches missed.">						if (ShatteredPixelDungeon.scene() instanceof GameScene){</span>
+<span class="nc" id="L849">							GameScene.show(new WndJournalItem(sprite, finalTitle, finalDesc));</span>
+						} else {
+<span class="nc" id="L851">							ShatteredPixelDungeon.scene().addToFront(new WndJournalItem(sprite, finalTitle, finalDesc));</span>
+						}
+<span class="nc" id="L853">						return true;</span>
+					} else {
+<span class="nc" id="L855">						return false;</span>
+					}
+				}
+			};
+<span class="nc bnc" id="L859" title="All 2 branches missed.">			if (secondIcon != null){</span>
+<span class="nc" id="L860">				gridItem.addSecondIcon(secondIcon);</span>
+			}
+<span class="nc bnc" id="L862" title="All 2 branches missed.">			if (!seen) {</span>
+<span class="nc" id="L863">				gridItem.hardLightBG(2f, 1f, 2f);</span>
+			}
+<span class="nc" id="L865">			grid.addItem(gridItem);</span>
+<span class="nc" id="L866">		}</span>
+<span class="nc" id="L867">	}</span>
+
+	private static void addGridEntities(ScrollingGridPane grid, Collection&lt;Class&lt;?&gt;&gt; classes) {
+<span class="nc bnc" id="L870" title="All 2 branches missed.">		for (Class&lt;?&gt; entityCls : classes){</span>
+
+<span class="nc" id="L872">			boolean seen = Bestiary.isSeen(entityCls);</span>
+<span class="nc" id="L873">			Mob mob = null;</span>
+<span class="nc" id="L874">			Image icon = null;</span>
+<span class="nc" id="L875">			String title = null;</span>
+<span class="nc" id="L876">			String desc = null;</span>
+
+<span class="nc bnc" id="L878" title="All 2 branches missed.">			if (Mob.class.isAssignableFrom(entityCls)) {</span>
+
+<span class="nc" id="L880">				mob = (Mob) Reflection.newInstance(entityCls);</span>
+
+<span class="nc bnc" id="L882" title="All 6 branches missed.">				if (mob instanceof Mimic || mob instanceof Pylon || mob instanceof CrystalSpire) {</span>
+<span class="nc" id="L883">					mob.alignment = Char.Alignment.ENEMY;</span>
+				}
+<span class="nc bnc" id="L885" title="All 2 branches missed.">				if (mob instanceof WandOfWarding.Ward){</span>
+<span class="nc bnc" id="L886" title="All 2 branches missed.">					if (mob instanceof WandOfWarding.Ward.WardSentry){</span>
+<span class="nc" id="L887">						((WandOfWarding.Ward) mob).upgrade(3);</span>
+<span class="nc" id="L888">						((WandOfWarding.Ward) mob).upgrade(3);</span>
+<span class="nc" id="L889">						((WandOfWarding.Ward) mob).upgrade(3);</span>
+<span class="nc" id="L890">						((WandOfWarding.Ward) mob).upgrade(3);</span>
+					} else {
+<span class="nc" id="L892">						((WandOfWarding.Ward) mob).upgrade(0);</span>
+					}
+				}
+
+<span class="nc" id="L896">				CharSprite sprite = mob.sprite();</span>
+<span class="nc" id="L897">				sprite.idle();</span>
+
+<span class="nc" id="L899">				icon = new Image(sprite);</span>
+<span class="nc bnc" id="L900" title="All 2 branches missed.">				if (seen) {</span>
+<span class="nc" id="L901">					title = Messages.titleCase(mob.name());</span>
+<span class="nc" id="L902">					desc = mob.description();</span>
+<span class="nc bnc" id="L903" title="All 2 branches missed.">					if (Bestiary.encounterCount(entityCls) &gt; 1){</span>
+<span class="nc" id="L904">						desc += &quot;\n\n&quot; + Messages.get(CatalogTab.class, &quot;enemy_count&quot;, Bestiary.encounterCount(entityCls));</span>
+					}
+				} else {
+<span class="nc" id="L907">					icon.lightness(0f);</span>
+<span class="nc" id="L908">					title = &quot;???&quot;;</span>
+<span class="nc bnc" id="L909" title="All 2 branches missed.">					desc = mob.alignment == Char.Alignment.ENEMY ? Messages.get(CatalogTab.class, &quot;not_seen_enemy&quot;) : Messages.get(CatalogTab.class, &quot;not_seen_ally&quot;);</span>
+				}
+
+				//we have to clip the bounds of the sprite if it's too large
+<span class="nc bnc" id="L913" title="All 4 branches missed.">				if (icon.width() &gt;= 17 || icon.height() &gt;= 17) {</span>
+<span class="nc" id="L914">					RectF frame = icon.frame();</span>
+
+<span class="nc" id="L916">					float wShrink = frame.width() * (1f - 17f / icon.width());</span>
+<span class="nc bnc" id="L917" title="All 2 branches missed.">					if (wShrink &gt; 0) {</span>
+<span class="nc" id="L918">						frame.left += wShrink / 2f;</span>
+<span class="nc" id="L919">						frame.right -= wShrink / 2f;</span>
+					}
+<span class="nc" id="L921">					float hShrink = frame.height() * (1f - 17f / icon.height());</span>
+<span class="nc bnc" id="L922" title="All 2 branches missed.">					if (hShrink &gt; 0) {</span>
+<span class="nc" id="L923">						frame.top += hShrink / 2f;</span>
+<span class="nc" id="L924">						frame.bottom -= hShrink / 2f;</span>
+					}
+<span class="nc" id="L926">					icon.frame(frame);</span>
+				}
+<span class="nc bnc" id="L928" title="All 2 branches missed.">			} else if (Trap.class.isAssignableFrom(entityCls)){</span>
+
+<span class="nc" id="L930">				Trap trap = (Trap) Reflection.newInstance(entityCls);</span>
+<span class="nc" id="L931">				icon = TerrainFeaturesTilemap.getTrapVisual(trap);</span>
+
+<span class="nc bnc" id="L933" title="All 2 branches missed.">				if (seen) {</span>
+<span class="nc" id="L934">					title = Messages.titleCase(trap.name());</span>
+<span class="nc" id="L935">					desc = trap.desc();</span>
+<span class="nc bnc" id="L936" title="All 2 branches missed.">					if (Bestiary.encounterCount(entityCls) &gt; 1){</span>
+<span class="nc" id="L937">						desc += &quot;\n\n&quot; + Messages.get(CatalogTab.class, &quot;trap_count&quot;, Bestiary.encounterCount(entityCls));</span>
+					}
+				} else {
+<span class="nc" id="L940">					icon.lightness(0f);</span>
+<span class="nc" id="L941">					title = &quot;???&quot;;</span>
+<span class="nc" id="L942">					desc = Messages.get(CatalogTab.class, &quot;not_seen_trap&quot;);</span>
+				}
+
+<span class="nc bnc" id="L945" title="All 2 branches missed.">			} else if (Plant.class.isAssignableFrom(entityCls)){</span>
+
+<span class="nc" id="L947">				Plant plant = (Plant) Reflection.newInstance(entityCls);</span>
+<span class="nc" id="L948">				icon = TerrainFeaturesTilemap.getPlantVisual(plant);</span>
+
+<span class="nc bnc" id="L950" title="All 2 branches missed.">				if (seen) {</span>
+<span class="nc" id="L951">					title = Messages.titleCase(plant.name());</span>
+<span class="nc" id="L952">					desc = plant.desc();</span>
+<span class="nc bnc" id="L953" title="All 2 branches missed.">					if (Bestiary.encounterCount(entityCls) &gt; 1){</span>
+<span class="nc" id="L954">						desc += &quot;\n\n&quot; + Messages.get(CatalogTab.class, &quot;plant_count&quot;, Bestiary.encounterCount(entityCls));</span>
+					}
+				} else {
+<span class="nc" id="L957">					icon.lightness(0f);</span>
+<span class="nc" id="L958">					title = &quot;???&quot;;</span>
+<span class="nc" id="L959">					desc = Messages.get(CatalogTab.class, &quot;not_seen_plant&quot;);</span>
+				}
+
+			}
+
+<span class="nc" id="L964">			Mob finalMob = mob;</span>
+<span class="nc" id="L965">			String finalTitle = title;</span>
+<span class="nc" id="L966">			String finalDesc = desc;</span>
+<span class="nc" id="L967">			ScrollingGridPane.GridItem gridItem = new ScrollingGridPane.GridItem(icon) {</span>
+				@Override
+				public boolean onClick(float x, float y) {
+<span class="nc bnc" id="L970" title="All 2 branches missed.">					if (inside(x, y)) {</span>
+						Image image;
+<span class="nc bnc" id="L972" title="All 4 branches missed.">						if (seen &amp;&amp; finalMob != null){</span>
+<span class="nc" id="L973">							image = finalMob.sprite();</span>
+						} else {
+<span class="nc" id="L975">							image = new Image(icon);</span>
+						}
+
+<span class="nc bnc" id="L978" title="All 2 branches missed.">						if (ShatteredPixelDungeon.scene() instanceof GameScene){</span>
+<span class="nc" id="L979">							GameScene.show(new WndJournalItem(image, finalTitle, finalDesc));</span>
+						} else {
+<span class="nc" id="L981">							ShatteredPixelDungeon.scene().addToFront(new WndJournalItem(image, finalTitle, finalDesc));</span>
+						}
+
+<span class="nc" id="L984">						return true;</span>
+					} else {
+<span class="nc" id="L986">						return false;</span>
+					}
+				}
+			};
+<span class="nc bnc" id="L990" title="All 2 branches missed.">			if (!seen) {</span>
+<span class="nc" id="L991">				gridItem.hardLightBG(2f, 1f, 2f);</span>
+			}
+<span class="nc" id="L993">			grid.addItem(gridItem);</span>
+<span class="nc" id="L994">		}</span>
+<span class="nc" id="L995">	};</span>
+
+	private static void addGridDocuments( ScrollingGridPane grid, Document doc ){
+<span class="nc bnc" id="L998" title="All 2 branches missed.">		for (String page : doc.pageNames()){</span>
+
+<span class="nc" id="L1000">			Image sprite = doc.pageSprite(page);</span>
+
+<span class="nc" id="L1002">			boolean seen = doc.isPageFound(page);</span>
+<span class="nc" id="L1003">			boolean read = doc.isPageRead(page);</span>
+
+<span class="nc bnc" id="L1005" title="All 2 branches missed.">			if (!seen){</span>
+<span class="nc" id="L1006">				sprite.lightness(0f);</span>
+			}
+
+<span class="nc" id="L1009">			ScrollingGridPane.GridItem gridItem = new ScrollingGridPane.GridItem(sprite) {</span>
+				@Override
+				public boolean onClick(float x, float y) {
+<span class="nc bnc" id="L1012" title="All 2 branches missed.">					if (inside(x, y)) {</span>
+<span class="nc" id="L1013">						Image sprite = new Image(icon);</span>
+<span class="nc bnc" id="L1014" title="All 2 branches missed.">						if (seen) {</span>
+<span class="nc bnc" id="L1015" title="All 2 branches missed.">							if (ShatteredPixelDungeon.scene() instanceof GameScene){</span>
+<span class="nc" id="L1016">								GameScene.show(new WndStory(sprite, doc.pageTitle(page), doc.pageBody(page)));</span>
+							} else {
+<span class="nc" id="L1018">								ShatteredPixelDungeon.scene().addToFront(new WndStory(sprite, doc.pageTitle(page), doc.pageBody(page)));</span>
+							}
+
+<span class="nc" id="L1021">							doc.readPage(page);</span>
+<span class="nc" id="L1022">							hardLightBG(1, 1, 1);</span>
+						} else {
+<span class="nc bnc" id="L1024" title="All 2 branches missed.">							if (ShatteredPixelDungeon.scene() instanceof GameScene){</span>
+<span class="nc" id="L1025">								GameScene.show(new WndJournalItem(sprite, &quot;???&quot;, Messages.get(CatalogTab.class, &quot;not_seen_lore&quot;)));</span>
+							} else {
+<span class="nc" id="L1027">								ShatteredPixelDungeon.scene().addToFront(new WndJournalItem(sprite, &quot;???&quot;, Messages.get(CatalogTab.class, &quot;not_seen_lore&quot;)));</span>
+							}
+
+						}
+<span class="nc" id="L1031">						return true;</span>
+					} else {
+<span class="nc" id="L1033">						return false;</span>
+					}
+				}
+			};
+
+<span class="nc bnc" id="L1038" title="All 2 branches missed.">			if (seen){</span>
+<span class="nc" id="L1039">				BitmapText text = new BitmapText(Integer.toString(doc.pageIdx(page)+1), PixelScene.pixelFont);</span>
+<span class="nc" id="L1040">				text.measure();</span>
+<span class="nc" id="L1041">				gridItem.addSecondIcon( text );</span>
+<span class="nc bnc" id="L1042" title="All 2 branches missed.">				if (!read) {</span>
+<span class="nc" id="L1043">					gridItem.hardLightBG(1f, 1f, 2f);</span>
+				}
+<span class="nc" id="L1045">			} else {</span>
+<span class="nc" id="L1046">				gridItem.hardLightBG(2f, 1f, 2f);</span>
+			}
+<span class="nc" id="L1048">			grid.addItem(gridItem);</span>
+<span class="nc" id="L1049">		}</span>
+<span class="nc" id="L1050">	}</span>
+
+<span class="nc" id="L1052">	public static class BadgesTab extends Component {</span>
+
+		private RedButton btnLocal;
+		private RedButton btnGlobal;
+
+		private RenderedTextBlock title;
+
+		private Component badgesLocal;
+		private Component badgesGlobal;
+
+<span class="nc" id="L1062">		public static boolean global = false;</span>
+
+		@Override
+		protected void createChildren() {
+
+<span class="nc bnc" id="L1067" title="All 2 branches missed.">			if (Dungeon.hero != null) {</span>
+<span class="nc" id="L1068">				btnLocal = new RedButton(Messages.get(this, &quot;this_run&quot;)) {</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L1071">						super.onClick();</span>
+<span class="nc" id="L1072">						global = false;</span>
+<span class="nc" id="L1073">						updateList();</span>
+<span class="nc" id="L1074">					}</span>
+				};
+<span class="nc" id="L1076">				btnLocal.icon(Icons.BADGES.get());</span>
+<span class="nc" id="L1077">				add(btnLocal);</span>
+
+<span class="nc" id="L1079">				btnGlobal = new RedButton(Messages.get(this, &quot;overall&quot;)) {</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L1082">						super.onClick();</span>
+<span class="nc" id="L1083">						global = true;</span>
+<span class="nc" id="L1084">						updateList();</span>
+<span class="nc" id="L1085">					}</span>
+				};
+<span class="nc" id="L1087">				btnGlobal.icon(Icons.BADGES.get());</span>
+<span class="nc" id="L1088">				add(btnGlobal);</span>
+
+<span class="nc bnc" id="L1090" title="All 2 branches missed.">				if (Badges.filterReplacedBadges(false).size() &lt;= 8){</span>
+<span class="nc" id="L1091">					badgesLocal = new BadgesList(false);</span>
+				} else {
+<span class="nc" id="L1093">					badgesLocal = new BadgesGrid(false);</span>
+				}
+<span class="nc" id="L1095">				add( badgesLocal );</span>
+			} else {
+<span class="nc" id="L1097">				title = PixelScene.renderTextBlock(Messages.get(this, &quot;title_main_menu&quot;), 9);</span>
+<span class="nc" id="L1098">				title.hardlight(Window.TITLE_COLOR);</span>
+<span class="nc" id="L1099">				add(title);</span>
+			}
+
+<span class="nc" id="L1102">			badgesGlobal = new BadgesGrid(true);</span>
+<span class="nc" id="L1103">			add( badgesGlobal );</span>
+<span class="nc" id="L1104">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L1108">			super.layout();</span>
+
+<span class="nc bnc" id="L1110" title="All 2 branches missed.">			if (btnLocal != null) {</span>
+<span class="nc" id="L1111">				btnLocal.setRect(x, y, width / 2, 18);</span>
+<span class="nc" id="L1112">				btnGlobal.setRect(x + width / 2, y, width / 2, 18);</span>
+
+<span class="nc" id="L1114">				badgesLocal.setRect(x, y + 20, width, height-20);</span>
+<span class="nc" id="L1115">				badgesGlobal.setRect( x, y + 20, width, height-20);</span>
+			} else {
+<span class="nc" id="L1117">				title.setPos( x + (width - title.width())/2, y + (12-title.height())/2);</span>
+
+<span class="nc" id="L1119">				badgesGlobal.setRect( x, y + 14, width, height-14);</span>
+			}
+<span class="nc" id="L1121">		}</span>
+
+		private void updateList(){
+<span class="nc bnc" id="L1124" title="All 2 branches missed.">			if (btnLocal != null) {</span>
+<span class="nc bnc" id="L1125" title="All 2 branches missed.">				badgesLocal.visible = badgesLocal.active = !global;</span>
+<span class="nc" id="L1126">				badgesGlobal.visible = badgesGlobal.active = global;</span>
+
+<span class="nc bnc" id="L1128" title="All 2 branches missed.">				btnLocal.textColor(global ? Window.WHITE : Window.TITLE_COLOR);</span>
+<span class="nc bnc" id="L1129" title="All 2 branches missed.">				btnGlobal.textColor(global ? Window.TITLE_COLOR : Window.WHITE);</span>
+			} else {
+<span class="nc" id="L1131">				badgesGlobal.visible = badgesGlobal.active = true;</span>
+			}
+<span class="nc" id="L1133">		}</span>
+
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

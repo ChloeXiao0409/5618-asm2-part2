@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Corruption.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.buffs</a> &gt; <span class="el_source">Corruption.java</span></div><h1>Corruption.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.buffs;
+
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+
+<span class="nc" id="L29">public class Corruption extends AllyBuff {</span>
+
+	{
+<span class="nc" id="L32">		type = buffType.NEGATIVE;</span>
+<span class="nc" id="L33">		announced = true;</span>
+	}
+
+<span class="nc" id="L36">	private float buildToDamage = 0f;</span>
+
+	//corrupted enemies are usually fully healed and cleansed of most debuffs
+	public static void corruptionHeal(Char target){
+<span class="nc" id="L40">		target.HP = target.HT;</span>
+<span class="nc" id="L41">		target.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(target.HT), FloatingText.HEALING);</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">		for (Buff buff : target.buffs()) {</span>
+<span class="nc bnc" id="L43" title="All 4 branches missed.">			if (buff.type == Buff.buffType.NEGATIVE</span>
+					&amp;&amp; !(buff instanceof SoulMark)) {
+<span class="nc" id="L45">				buff.detach();</span>
+			}
+<span class="nc" id="L47">		}</span>
+<span class="nc" id="L48">	}</span>
+	
+	@Override
+	public boolean act() {
+<span class="nc" id="L52">		buildToDamage += target.HT/100f;</span>
+
+<span class="nc" id="L54">		int damage = (int)buildToDamage;</span>
+<span class="nc" id="L55">		buildToDamage -= damage;</span>
+
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		if (damage &gt; 0)</span>
+<span class="nc" id="L58">			target.damage(damage, this);</span>
+
+<span class="nc" id="L60">		spend(TICK);</span>
+
+<span class="nc" id="L62">		return true;</span>
+	}
+
+	@Override
+	public void fx(boolean on) {
+<span class="nc bnc" id="L67" title="All 2 branches missed.">		if (on) target.sprite.add( CharSprite.State.DARKENED );</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		else if (target.invisible == 0) target.sprite.remove( CharSprite.State.DARKENED );</span>
+<span class="nc" id="L69">	}</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L73">		return BuffIndicator.CORRUPT;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

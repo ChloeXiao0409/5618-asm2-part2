@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Pasty.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.food</a> &gt; <span class="el_source">Pasty.java</span></div><h1>Pasty.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.food;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ArtifactRecharge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Charm;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Hunger;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.RainbowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfExperience;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRecharging;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.TargetHealthIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.utils.Holiday;
+import com.watabou.noosa.audio.Sample;
+
+<span class="nc" id="L45">public class Pasty extends Food {</span>
+
+	{
+<span class="nc" id="L48">		reset();</span>
+
+<span class="nc" id="L50">		energy = Hunger.STARVING;</span>
+
+<span class="nc" id="L52">		bones = true;</span>
+<span class="nc" id="L53">	}</span>
+	
+	@Override
+	public void reset() {
+<span class="nc" id="L57">		super.reset();</span>
+<span class="nc bnc" id="L58" title="All 10 branches missed.">		switch(Holiday.getCurrentHoliday()){</span>
+			case NONE: default:
+<span class="nc" id="L60">				image = ItemSpriteSheet.PASTY;</span>
+<span class="nc" id="L61">				break;</span>
+			case LUNAR_NEW_YEAR:
+<span class="nc" id="L63">				image = ItemSpriteSheet.STEAMED_FISH;</span>
+<span class="nc" id="L64">				break;</span>
+			case APRIL_FOOLS:
+<span class="nc" id="L66">				image = ItemSpriteSheet.CHOC_AMULET;</span>
+<span class="nc" id="L67">				break;</span>
+			case EASTER:
+<span class="nc" id="L69">				image = ItemSpriteSheet.EASTER_EGG;</span>
+<span class="nc" id="L70">				break;</span>
+			case PRIDE:
+<span class="nc" id="L72">				image = ItemSpriteSheet.RAINBOW_POTION;</span>
+<span class="nc" id="L73">				break;</span>
+			case SHATTEREDPD_BIRTHDAY:
+<span class="nc" id="L75">				image = ItemSpriteSheet.SHATTERED_CAKE;</span>
+<span class="nc" id="L76">				break;</span>
+			case HALLOWEEN:
+<span class="nc" id="L78">				image = ItemSpriteSheet.PUMPKIN_PIE;</span>
+<span class="nc" id="L79">				break;</span>
+			case PD_BIRTHDAY:
+<span class="nc" id="L81">				image = ItemSpriteSheet.VANILLA_CAKE;</span>
+<span class="nc" id="L82">				break;</span>
+			case WINTER_HOLIDAYS:
+<span class="nc" id="L84">				image = ItemSpriteSheet.CANDY_CANE;</span>
+<span class="nc" id="L85">				break;</span>
+			case NEW_YEARS:
+<span class="nc" id="L87">				image = ItemSpriteSheet.SPARKLING_POTION;</span>
+				break;
+		}
+<span class="nc" id="L90">	}</span>
+
+	@Override
+	protected void eatSFX() {
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		switch(Holiday.getCurrentHoliday()){</span>
+			case PRIDE:
+			case NEW_YEARS:
+<span class="nc" id="L97">				Sample.INSTANCE.play( Assets.Sounds.DRINK );</span>
+<span class="nc" id="L98">				return;</span>
+		}
+<span class="nc" id="L100">		super.eatSFX();</span>
+<span class="nc" id="L101">	}</span>
+
+	@Override
+	protected void satisfy(Hero hero) {
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		if (Holiday.getCurrentHoliday() == Holiday.LUNAR_NEW_YEAR){</span>
+			//main item only clears 300 hunger on lunar new year...
+<span class="nc" id="L107">			energy = Hunger.HUNGRY;</span>
+		}
+
+<span class="nc" id="L110">		super.satisfy(hero);</span>
+		
+<span class="nc bnc" id="L112" title="All 9 branches missed.">		switch(Holiday.getCurrentHoliday()){</span>
+			default:
+<span class="nc" id="L114">				break; //do nothing extra</span>
+			case LUNAR_NEW_YEAR:
+				//...but it also awards an extra item that restores 150 hunger
+<span class="nc" id="L117">				FishLeftover left = new FishLeftover();</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">				if (!left.collect()){</span>
+<span class="nc" id="L119">					Dungeon.level.drop(left, hero.pos).sprite.drop();</span>
+				}
+				break;
+			case APRIL_FOOLS:
+<span class="nc" id="L123">				Sample.INSTANCE.play(Assets.Sounds.MIMIC);</span>
+			case EASTER:
+<span class="nc" id="L125">				ArtifactRecharge.chargeArtifacts(hero, 2f);</span>
+<span class="nc" id="L126">				ScrollOfRecharging.charge( hero );</span>
+<span class="nc" id="L127">				break;</span>
+			case PRIDE:
+<span class="nc" id="L129">				Char target = null;</span>
+
+				//charms an adjacent non-boss enemy, prioritizing the one the hero is focusing on
+<span class="nc bnc" id="L132" title="All 2 branches missed.">				for (Char ch : Actor.chars()){</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">					if (!Char.hasProp(ch, Char.Property.BOSS)</span>
+<span class="nc bnc" id="L134" title="All 4 branches missed.">							&amp;&amp; !Char.hasProp(ch, Char.Property.MINIBOSS)</span>
+							&amp;&amp; ch.alignment == Char.Alignment.ENEMY
+<span class="nc bnc" id="L136" title="All 2 branches missed.">							&amp;&amp; Dungeon.level.adjacent(hero.pos, ch.pos)){</span>
+<span class="nc bnc" id="L137" title="All 4 branches missed.">						if (target == null || ch == TargetHealthIndicator.instance.target()){</span>
+<span class="nc" id="L138">							target = ch;</span>
+						}
+					}
+<span class="nc" id="L141">				}</span>
+
+<span class="nc bnc" id="L143" title="All 2 branches missed.">				if (target != null){</span>
+<span class="nc" id="L144">					Buff.affect(target, Charm.class, 5f).object = hero.id();</span>
+				}
+<span class="nc" id="L146">				hero.sprite.emitter().burst(RainbowParticle.BURST, 15);</span>
+<span class="nc" id="L147">				break;</span>
+			case SHATTEREDPD_BIRTHDAY:
+			case PD_BIRTHDAY:
+				//gives 10% of level in exp, min of 2
+<span class="nc" id="L151">				int expToGive = Math.max(2, hero.maxExp()/10);</span>
+<span class="nc" id="L152">				hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(expToGive), FloatingText.EXPERIENCE);</span>
+<span class="nc" id="L153">				hero.earnExp(expToGive, PotionOfExperience.class);</span>
+<span class="nc" id="L154">				break;</span>
+			case HALLOWEEN:
+				//heals for 5% max hp, min of 3
+<span class="nc" id="L157">				int toHeal = Math.max(3, hero.HT/20);</span>
+<span class="nc" id="L158">				hero.HP = Math.min(hero.HP + toHeal, hero.HT);</span>
+<span class="nc" id="L159">				hero.sprite.showStatusWithIcon( CharSprite.POSITIVE, Integer.toString(toHeal), FloatingText.HEALING );</span>
+<span class="nc" id="L160">				break;</span>
+			case WINTER_HOLIDAYS:
+<span class="nc" id="L162">				hero.belongings.charge(0.5f); //2 turns worth</span>
+<span class="nc" id="L163">				ScrollOfRecharging.charge( hero );</span>
+<span class="nc" id="L164">				break;</span>
+			case NEW_YEARS:
+				//shields for 10% of max hp, min of 5
+<span class="nc" id="L167">				int toShield = Math.max(5, hero.HT/10);</span>
+<span class="nc" id="L168">				Buff.affect(hero, Barrier.class).setShield(toShield);</span>
+<span class="nc" id="L169">				hero.sprite.showStatusWithIcon( CharSprite.POSITIVE, Integer.toString(toShield), FloatingText.SHIELDING );</span>
+				break;
+		}
+<span class="nc" id="L172">	}</span>
+
+	@Override
+	public String name() {
+<span class="nc bnc" id="L176" title="All 10 branches missed.">		switch(Holiday.getCurrentHoliday()){</span>
+			case NONE: default:
+<span class="nc" id="L178">				return super.name();</span>
+			case LUNAR_NEW_YEAR:
+<span class="nc" id="L180">				return Messages.get(this, &quot;fish_name&quot;);</span>
+			case APRIL_FOOLS:
+<span class="nc" id="L182">				return Messages.get(this, &quot;amulet_name&quot;);</span>
+			case EASTER:
+<span class="nc" id="L184">				return Messages.get(this, &quot;egg_name&quot;);</span>
+			case PRIDE:
+<span class="nc" id="L186">				return Messages.get(this, &quot;rainbow_name&quot;);</span>
+			case SHATTEREDPD_BIRTHDAY:
+<span class="nc" id="L188">				return Messages.get(this, &quot;shattered_name&quot;);</span>
+			case HALLOWEEN:
+<span class="nc" id="L190">				return Messages.get(this, &quot;pie_name&quot;);</span>
+			case PD_BIRTHDAY:
+<span class="nc" id="L192">				return Messages.get(this, &quot;vanilla_name&quot;);</span>
+			case WINTER_HOLIDAYS:
+<span class="nc" id="L194">				return Messages.get(this, &quot;cane_name&quot;);</span>
+			case NEW_YEARS:
+<span class="nc" id="L196">				return Messages.get(this, &quot;sparkling_name&quot;);</span>
+		}
+	}
+
+	@Override
+	public String desc() {
+<span class="nc bnc" id="L202" title="All 10 branches missed.">		switch(Holiday.getCurrentHoliday()){</span>
+			case NONE: default:
+<span class="nc" id="L204">				return super.desc();</span>
+			case LUNAR_NEW_YEAR:
+<span class="nc" id="L206">				return Messages.get(this, &quot;fish_desc&quot;);</span>
+			case APRIL_FOOLS:
+<span class="nc" id="L208">				return Messages.get(this, &quot;amulet_desc&quot;);</span>
+			case EASTER:
+<span class="nc" id="L210">				return Messages.get(this, &quot;egg_desc&quot;);</span>
+			case PRIDE:
+<span class="nc" id="L212">				return Messages.get(this, &quot;rainbow_desc&quot;);</span>
+			case SHATTEREDPD_BIRTHDAY:
+<span class="nc" id="L214">				return Messages.get(this, &quot;shattered_desc&quot;);</span>
+			case HALLOWEEN:
+<span class="nc" id="L216">				return Messages.get(this, &quot;pie_desc&quot;);</span>
+			case PD_BIRTHDAY:
+<span class="nc" id="L218">				return Messages.get(this, &quot;vanilla_desc&quot;);</span>
+			case WINTER_HOLIDAYS:
+<span class="nc" id="L220">				return Messages.get(this, &quot;cane_desc&quot;);</span>
+			case NEW_YEARS:
+<span class="nc" id="L222">				return Messages.get(this, &quot;sparkling_desc&quot;);</span>
+		}
+	}
+	
+	@Override
+	public int value() {
+<span class="nc" id="L228">		return 20 * quantity;</span>
+	}
+
+<span class="nc" id="L231">	public static class FishLeftover extends Food {</span>
+
+		{
+<span class="nc" id="L234">			image = ItemSpriteSheet.FISH_LEFTOVER;</span>
+<span class="nc" id="L235">			energy = Hunger.HUNGRY/2;</span>
+<span class="nc" id="L236">		}</span>
+
+		@Override
+		public int value() {
+<span class="nc" id="L240">			return 10 * quantity;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

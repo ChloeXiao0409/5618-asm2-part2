@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CrystalGuardianSprite.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.sprites</a> &gt; <span class="el_source">CrystalGuardianSprite.java</span></div><h1>CrystalGuardianSprite.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.sprites;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.CrystalGuardian;
+import com.watabou.noosa.MovieClip;
+import com.watabou.noosa.TextureFilm;
+
+public abstract class CrystalGuardianSprite extends MobSprite {
+
+	private Animation crumple;
+
+	public CrystalGuardianSprite() {
+<span class="nc" id="L35">		super();</span>
+
+<span class="nc" id="L37">		texture( Assets.Sprites.CRYSTAL_GUARDIAN );</span>
+
+<span class="nc" id="L39">		TextureFilm frames = new TextureFilm( texture, 12, 15 );</span>
+
+<span class="nc" id="L41">		int c = texOffset();</span>
+
+<span class="nc" id="L43">		idle = new MovieClip.Animation( 2, true );</span>
+<span class="nc" id="L44">		idle.frames( frames, 0+c, 0+c, 0+c, 0+c, 0+c, 1+c, 1+c );</span>
+
+<span class="nc" id="L46">		run = new MovieClip.Animation( 15, true );</span>
+<span class="nc" id="L47">		run.frames( frames, 2+c, 3+c, 4+c, 5+c, 6+c, 7+c );</span>
+
+<span class="nc" id="L49">		attack = new MovieClip.Animation( 12, false );</span>
+<span class="nc" id="L50">		attack.frames( frames, 8+c, 9+c, 10+c );</span>
+
+<span class="nc" id="L52">		die = new MovieClip.Animation( 5, false );</span>
+<span class="nc" id="L53">		die.frames( frames, 11+c, 12+c, 13+c, 14+c, 15+c, 15+c );</span>
+
+<span class="nc" id="L55">		crumple = die.clone();</span>
+
+		//this is temporary, as ideally the sprite itself should be scaled to 15x19 or so
+<span class="nc" id="L58">		scale.set(1.25f);</span>
+
+<span class="nc" id="L60">		play( idle );</span>
+<span class="nc" id="L61">	}</span>
+
+	public void crumple(){
+<span class="nc" id="L64">		play(crumple);</span>
+<span class="nc" id="L65">	}</span>
+
+	public void endCrumple(){
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		if (curAnim == crumple){</span>
+<span class="nc" id="L69">			idle();</span>
+		}
+<span class="nc" id="L71">	}</span>
+
+	@Override
+	public void link(Char ch) {
+<span class="nc" id="L75">		super.link(ch);</span>
+<span class="nc bnc" id="L76" title="All 4 branches missed.">		if (ch instanceof CrystalGuardian &amp;&amp; ((CrystalGuardian) ch).recovering()){</span>
+<span class="nc" id="L77">			crumple();</span>
+		}
+<span class="nc" id="L79">	}</span>
+
+	protected abstract int texOffset();
+
+<span class="nc" id="L83">	public static class Blue extends CrystalGuardianSprite {</span>
+		@Override
+		protected int texOffset() {
+<span class="nc" id="L86">			return 0;</span>
+		}
+		@Override
+		public int blood() {
+<span class="nc" id="L90">			return 0xFF8EE3FF;</span>
+		}
+	}
+
+<span class="nc" id="L94">	public static class Green extends CrystalGuardianSprite {</span>
+		@Override
+		protected int texOffset() {
+<span class="nc" id="L97">			return 21;</span>
+		}
+		@Override
+		public int blood() {
+<span class="nc" id="L101">			return 0xFF85FFC8;</span>
+		}
+	}
+
+<span class="nc" id="L105">	public static class Red extends CrystalGuardianSprite {</span>
+		@Override
+		protected int texOffset() {
+<span class="nc" id="L108">			return 42;</span>
+		}
+		@Override
+		public int blood() {
+<span class="nc" id="L112">			return 0xFFFFBB33;</span>
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

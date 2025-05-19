@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Foliage.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.blobs</a> &gt; <span class="el_source">Foliage.java</span></div><h1>Foliage.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.blobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Shadows;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.effects.BlobEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShaftParticle;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+
+<span class="nc" id="L35">public class Foliage extends Blob {</span>
+
+	@Override
+	public Notes.Landmark landmark() {
+<span class="nc" id="L39">		return Notes.Landmark.GARDEN;</span>
+	}
+
+	@Override
+	protected void evolve() {
+
+<span class="nc" id="L45">		int[] map = Dungeon.level.map;</span>
+		
+<span class="nc" id="L47">		boolean seen = false;</span>
+
+		int cell;
+<span class="nc bnc" id="L50" title="All 2 branches missed.">		for (int i = area.left; i &lt; area.right; i++) {</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">			for (int j = area.top; j &lt; area.bottom; j++) {</span>
+<span class="nc" id="L52">				cell = i + j*Dungeon.level.width();</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">				if (cur[cell] &gt; 0) {</span>
+
+<span class="nc" id="L55">					off[cell] = cur[cell];</span>
+<span class="nc" id="L56">					volume += off[cell];</span>
+
+<span class="nc bnc" id="L58" title="All 2 branches missed.">					if (map[cell] == Terrain.EMBERS) {</span>
+<span class="nc" id="L59">						map[cell] = Terrain.GRASS;</span>
+<span class="nc" id="L60">						GameScene.updateMap(cell);</span>
+					}
+
+<span class="nc bnc" id="L63" title="All 4 branches missed.">					seen = seen || Dungeon.level.visited[cell];</span>
+
+				} else {
+<span class="nc" id="L66">					off[cell] = 0;</span>
+				}
+			}
+		}
+		
+<span class="nc" id="L71">		Hero hero = Dungeon.hero;</span>
+<span class="nc bnc" id="L72" title="All 4 branches missed.">		if (hero.isAlive() &amp;&amp; cur[hero.pos] &gt; 0) {</span>
+<span class="nc" id="L73">			Shadows s = Buff.affect( hero, Shadows.class );</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">			if (s != null){</span>
+<span class="nc" id="L75">				s.prolong();</span>
+			}
+		}
+<span class="nc" id="L78">	}</span>
+	
+	@Override
+	public void use( BlobEmitter emitter ) {
+<span class="nc" id="L82">		super.use( emitter );</span>
+<span class="nc" id="L83">		emitter.start( ShaftParticle.FACTORY, 0.9f, 0 );</span>
+<span class="nc" id="L84">	}</span>
+	
+	@Override
+	public String tileDesc() {
+<span class="nc" id="L88">		return Messages.get(this, &quot;desc&quot;);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

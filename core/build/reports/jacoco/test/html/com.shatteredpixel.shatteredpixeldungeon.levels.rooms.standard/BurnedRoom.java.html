@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BurnedRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard</a> &gt; <span class="el_source">BurnedRoom.java</span></div><h1>BurnedRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard;
+
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.TrapMechanism;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.BurningTrap;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L33">public class BurnedRoom extends PatchRoom {</span>
+	
+	@Override
+	public float[] sizeCatProbs() {
+<span class="nc" id="L37">		return new float[]{4, 1, 0};</span>
+	}
+
+	@Override
+	public boolean canMerge(Level l, Room other, Point p, int mergeTerrain) {
+<span class="nc" id="L42">		int cell = l.pointToCell(pointInside(p, 1));</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">		return l.map[cell] == Terrain.EMPTY;</span>
+	}
+
+	@Override
+	protected float fill() {
+		//past 8x8 each point of width/height decreases fill by 3%
+		// e.g. a 14x14 burned room has a fill of 54%
+<span class="nc" id="L50">		return Math.min( 1f, 1.48f - (width()+height())*0.03f);</span>
+	}
+
+	@Override
+	protected int clustering() {
+<span class="nc" id="L55">		return 2;</span>
+	}
+
+	@Override
+	protected boolean ensurePath() {
+<span class="nc" id="L60">		return false;</span>
+	}
+
+	@Override
+	protected boolean cleanEdges() {
+<span class="nc" id="L65">		return false;</span>
+	}
+
+	@Override
+	public void paint(Level level) {
+<span class="nc" id="L70">		Painter.fill( level, this, Terrain.WALL );</span>
+<span class="nc" id="L71">		Painter.fill( level, this, 1, Terrain.EMPTY );</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">		for (Door door : connected.values()) {</span>
+<span class="nc" id="L73">			door.set( Door.Type.REGULAR );</span>
+<span class="nc" id="L74">		}</span>
+		
+<span class="nc" id="L76">		setupPatch(level);</span>
+
+<span class="nc" id="L78">		float revealedChance = TrapMechanism.revealHiddenTrapChance();</span>
+<span class="nc" id="L79">		float revealInc = 0;</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		for (int i=top + 1; i &lt; bottom; i++) {</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">			for (int j=left + 1; j &lt; right; j++) {</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">				if (!patch[xyToPatchCoords(j, i)])</span>
+<span class="nc" id="L83">					continue;</span>
+<span class="nc" id="L84">				int cell = i * level.width() + j;</span>
+				int t;
+<span class="nc bnc" id="L86" title="All 5 branches missed.">				switch (Random.Int( 5 )) {</span>
+					case 0: default:
+<span class="nc" id="L88">						t = Terrain.EMPTY;</span>
+<span class="nc" id="L89">						break;</span>
+					case 1:
+<span class="nc" id="L91">						t = Terrain.EMBERS;</span>
+<span class="nc" id="L92">						break;</span>
+					case 2:
+<span class="nc" id="L94">						t = Terrain.TRAP;</span>
+<span class="nc" id="L95">						level.setTrap(new BurningTrap().reveal(), cell);</span>
+<span class="nc" id="L96">						break;</span>
+					case 3:
+<span class="nc" id="L98">						revealInc += revealedChance;</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">						if (revealInc &gt;= 1){</span>
+<span class="nc" id="L100">							t = Terrain.TRAP;</span>
+<span class="nc" id="L101">							level.setTrap(new BurningTrap().reveal(), cell);</span>
+<span class="nc" id="L102">							revealInc--;</span>
+						} else {
+<span class="nc" id="L104">							t = Terrain.SECRET_TRAP;</span>
+<span class="nc" id="L105">							level.setTrap(new BurningTrap().hide(), cell);</span>
+						}
+<span class="nc" id="L107">						break;</span>
+					case 4:
+<span class="nc" id="L109">						t = Terrain.INACTIVE_TRAP;</span>
+<span class="nc" id="L110">						BurningTrap trap = new BurningTrap();</span>
+<span class="nc" id="L111">						trap.reveal().active = false;</span>
+<span class="nc" id="L112">						level.setTrap(trap, cell);</span>
+						break;
+				}
+<span class="nc" id="L115">				level.map[cell] = t;</span>
+			}
+		}
+<span class="nc" id="L118">	}</span>
+	
+	@Override
+	public boolean canPlaceWater(Point p) {
+<span class="nc bnc" id="L122" title="All 4 branches missed.">		return !inside(p) || !patch[xyToPatchCoords(p.x, p.y)];</span>
+	}
+
+	@Override
+	public boolean canPlaceGrass(Point p) {
+<span class="nc bnc" id="L127" title="All 4 branches missed.">		return !inside(p) || !patch[xyToPatchCoords(p.x, p.y)];</span>
+	}
+
+	@Override
+	public boolean canPlaceTrap(Point p) {
+<span class="nc bnc" id="L132" title="All 4 branches missed.">		return !inside(p) || !patch[xyToPatchCoords(p.x, p.y)];</span>
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

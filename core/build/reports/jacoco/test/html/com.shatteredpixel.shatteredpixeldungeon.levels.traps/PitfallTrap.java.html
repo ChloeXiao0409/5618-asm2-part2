@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PitfallTrap.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.traps</a> &gt; <span class="el_source">PitfallTrap.java</span></div><h1>PitfallTrap.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.traps;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.PitfallParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.levels.features.Chasm;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L43">public class PitfallTrap extends Trap {</span>
+
+	{
+<span class="nc" id="L46">		color = RED;</span>
+<span class="nc" id="L47">		shape = DIAMOND;</span>
+<span class="nc" id="L48">	}</span>
+
+	@Override
+	public void activate() {
+		
+<span class="nc bnc" id="L53" title="All 6 branches missed.">		if( Dungeon.bossLevel() || Dungeon.depth &gt; 25 || Dungeon.branch != 0){</span>
+<span class="nc" id="L54">			GLog.w(Messages.get(this, &quot;no_pit&quot;));</span>
+<span class="nc" id="L55">			return;</span>
+		}
+
+<span class="nc" id="L58">		DelayedPit p = Buff.append(Dungeon.hero, DelayedPit.class, 1);</span>
+<span class="nc" id="L59">		p.depth = Dungeon.depth;</span>
+<span class="nc" id="L60">		p.branch = Dungeon.branch;</span>
+
+<span class="nc" id="L62">		ArrayList&lt;Integer&gt; positions = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">		for (int i : PathFinder.NEIGHBOURS9){</span>
+<span class="nc bnc" id="L64" title="All 4 branches missed.">			if (!Dungeon.level.solid[pos+i] || Dungeon.level.passable[pos+i]){</span>
+<span class="nc" id="L65">				CellEmitter.floor(pos+i).burst(PitfallParticle.FACTORY4, 8);</span>
+<span class="nc" id="L66">				positions.add(pos+i);</span>
+			}
+		}
+<span class="nc" id="L69">		p.setPositions(positions);</span>
+
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		if (pos == Dungeon.hero.pos){</span>
+<span class="nc" id="L72">			GLog.n(Messages.get(this, &quot;triggered_hero&quot;));</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">		} else if (Dungeon.level.heroFOV[pos]){</span>
+<span class="nc" id="L74">			GLog.n(Messages.get(this, &quot;triggered&quot;));</span>
+		}
+
+<span class="nc" id="L77">	}</span>
+
+<span class="nc" id="L79">	public static class DelayedPit extends FlavourBuff {</span>
+
+		{
+<span class="nc" id="L82">			revivePersists = true;</span>
+		}
+
+<span class="nc" id="L85">		public int[] positions = new int[0];</span>
+		public int depth;
+		public int branch;
+
+<span class="nc" id="L89">		public boolean ignoreAllies = false;</span>
+
+		@Override
+		public boolean act() {
+
+<span class="nc" id="L94">			boolean herofell = false;</span>
+<span class="nc bnc" id="L95" title="All 6 branches missed.">			if (depth == Dungeon.depth &amp;&amp; branch == Dungeon.branch &amp;&amp; positions != null) {</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">				for (int cell : positions) {</span>
+
+<span class="nc bnc" id="L98" title="All 6 branches missed.">					if (!Dungeon.level.insideMap(cell)</span>
+							|| (Dungeon.level.solid[cell] &amp;&amp; !Dungeon.level.passable[cell])){
+<span class="nc" id="L100">						continue;</span>
+					}
+
+<span class="nc" id="L103">					CellEmitter.floor(cell).burst(PitfallParticle.FACTORY8, 12);</span>
+
+<span class="nc" id="L105">					Char ch = Actor.findChar(cell);</span>
+					//don't trigger on flying chars, or immovable neutral chars
+<span class="nc bnc" id="L107" title="All 6 branches missed.">					if (ch != null &amp;&amp; !ch.flying</span>
+<span class="nc bnc" id="L108" title="All 6 branches missed.">							&amp;&amp; !(ch.alignment == Char.Alignment.NEUTRAL &amp;&amp; Char.hasProp(ch, Char.Property.IMMOVABLE))</span>
+							&amp;&amp; !(ch.alignment == Char.Alignment.ALLY &amp;&amp; ignoreAllies)) {
+<span class="nc bnc" id="L110" title="All 2 branches missed.">						if (ch == Dungeon.hero) {</span>
+<span class="nc" id="L111">							herofell = true;</span>
+						} else {
+<span class="nc" id="L113">							Chasm.mobFall((Mob) ch);</span>
+						}
+					}
+
+<span class="nc" id="L117">					Heap heap = Dungeon.level.heaps.get(cell);</span>
+<span class="nc bnc" id="L118" title="All 10 branches missed.">					if (heap != null &amp;&amp; !ignoreAllies</span>
+							&amp;&amp; heap.type != Heap.Type.FOR_SALE
+							&amp;&amp; heap.type != Heap.Type.LOCKED_CHEST
+							&amp;&amp; heap.type != Heap.Type.CRYSTAL_CHEST) {
+<span class="nc bnc" id="L122" title="All 2 branches missed.">						for (Item item : heap.items) {</span>
+<span class="nc" id="L123">							Dungeon.dropToChasm(item);</span>
+<span class="nc" id="L124">						}</span>
+<span class="nc" id="L125">						heap.sprite.kill();</span>
+<span class="nc" id="L126">						GameScene.discard(heap);</span>
+<span class="nc" id="L127">						heap.sprite.drop();</span>
+<span class="nc" id="L128">						Dungeon.level.heaps.remove(cell);</span>
+					}
+
+				}
+			}
+
+			//process hero falling last
+<span class="nc bnc" id="L135" title="All 2 branches missed.">			if (herofell){</span>
+<span class="nc" id="L136">				Chasm.heroFall(Dungeon.hero.pos);</span>
+			}
+
+<span class="nc" id="L139">			detach();</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">			return !herofell;</span>
+		}
+
+		public void setPositions(ArrayList&lt;Integer&gt; positions){
+<span class="nc" id="L144">			this.positions = new int[positions.size()];</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">			for (int i = 0; i &lt; this.positions.length; i++){</span>
+<span class="nc" id="L146">				this.positions[i] = positions.get(i);</span>
+			}
+<span class="nc" id="L148">		}</span>
+
+		private static final String POSITIONS = &quot;positions&quot;;
+		private static final String DEPTH = &quot;depth&quot;;
+		private static final String BRANCH = &quot;branch&quot;;
+
+		private static final String IGNORE_ALLIES = &quot;ignore_allies&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L158">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L159">			bundle.put(POSITIONS, positions);</span>
+<span class="nc" id="L160">			bundle.put(DEPTH, depth);</span>
+<span class="nc" id="L161">			bundle.put(BRANCH, branch);</span>
+<span class="nc" id="L162">			bundle.put(IGNORE_ALLIES, ignoreAllies);</span>
+<span class="nc" id="L163">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L167">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L168">			positions = bundle.getIntArray(POSITIONS);</span>
+<span class="nc" id="L169">			depth = bundle.getInt(DEPTH);</span>
+<span class="nc" id="L170">			branch = bundle.getInt(BRANCH);</span>
+<span class="nc" id="L171">			ignoreAllies = bundle.getBoolean(IGNORE_ALLIES);</span>
+<span class="nc" id="L172">		}</span>
+
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

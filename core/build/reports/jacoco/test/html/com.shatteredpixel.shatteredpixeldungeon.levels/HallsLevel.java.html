@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HallsLevel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels</a> &gt; <span class="el_source">HallsLevel.java</span></div><h1>HallsLevel.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.items.Torch;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.HallsPainter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.DemonSpawnerRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.BlazingTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.CorrosionTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.CursingTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.DisarmingTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.DisintegrationTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.DistortionTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.FlashingTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.FrostTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.GatewayTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.GeyserTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.GrimTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.GuardianTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.PitfallTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.RockfallTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.StormTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.SummoningTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.WarpingTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.WeakeningTrap;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.watabou.glwrap.Blending;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Group;
+import com.watabou.noosa.audio.Music;
+import com.watabou.noosa.particles.PixelParticle;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L62">public class HallsLevel extends RegularLevel {</span>
+
+	{
+		
+<span class="nc" id="L66">		viewDistance = Math.min( 26 - Dungeon.depth, viewDistance );</span>
+		
+<span class="nc" id="L68">		color1 = 0x801500;</span>
+<span class="nc" id="L69">		color2 = 0xa68521;</span>
+<span class="nc" id="L70">	}</span>
+
+<span class="nc" id="L72">	public static final String[] HALLS_TRACK_LIST</span>
+			= new String[]{Assets.Music.HALLS_1, Assets.Music.HALLS_2, Assets.Music.HALLS_2,
+			Assets.Music.HALLS_1, Assets.Music.HALLS_3, Assets.Music.HALLS_3};
+<span class="nc" id="L75">	public static final float[] HALLS_TRACK_CHANCES = new float[]{1f, 1f, 0.5f, 0.25f, 1f, 0.5f};</span>
+
+
+	@Override
+	public void playLevelMusic() {
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		if (Statistics.amuletObtained){</span>
+<span class="nc" id="L81">			Music.INSTANCE.play(Assets.Music.HALLS_TENSE, true);</span>
+		} else {
+<span class="nc" id="L83">			Music.INSTANCE.playTracks(HALLS_TRACK_LIST, HALLS_TRACK_CHANCES, false);</span>
+		}
+<span class="nc" id="L85">	}</span>
+
+	@Override
+	protected ArrayList&lt;Room&gt; initRooms() {
+<span class="nc" id="L89">		ArrayList&lt;Room&gt; rooms = super.initRooms();</span>
+
+<span class="nc" id="L91">		rooms.add(new DemonSpawnerRoom());</span>
+
+<span class="nc" id="L93">		return rooms;</span>
+	}
+
+	@Override
+	protected int standardRooms(boolean forceMax) {
+<span class="nc bnc" id="L98" title="All 2 branches missed.">		if (forceMax) return 9;</span>
+		//8 to 9, average 8.33
+<span class="nc" id="L100">		return 8+Random.chances(new float[]{2, 1});</span>
+	}
+	
+	@Override
+	protected int specialRooms(boolean forceMax) {
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		if (forceMax) return 3;</span>
+		//2 to 3, average 2.5
+<span class="nc" id="L107">		return 2 + Random.chances(new float[]{1, 1});</span>
+	}
+	
+	@Override
+	protected Painter painter() {
+<span class="nc" id="L112">		return new HallsPainter()</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">				.setWater(feeling == Feeling.WATER ? 0.70f : 0.15f, 6)</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">				.setGrass(feeling == Feeling.GRASS ? 0.65f : 0.10f, 3)</span>
+<span class="nc" id="L115">				.setTraps(nTraps(), trapClasses(), trapChances());</span>
+	}
+	
+	@Override
+	public void create() {
+<span class="nc" id="L120">		addItemToSpawn( new Torch() );</span>
+<span class="nc" id="L121">		addItemToSpawn( new Torch() );</span>
+<span class="nc" id="L122">		super.create();</span>
+<span class="nc" id="L123">	}</span>
+	
+	@Override
+	public String tilesTex() {
+<span class="nc" id="L127">		return Assets.Environment.TILES_HALLS;</span>
+	}
+	
+	@Override
+	public String waterTex() {
+<span class="nc" id="L132">		return Assets.Environment.WATER_HALLS;</span>
+	}
+	
+	@Override
+	protected Class&lt;?&gt;[] trapClasses() {
+<span class="nc" id="L137">		return new Class[]{</span>
+				FrostTrap.class, StormTrap.class, CorrosionTrap.class, BlazingTrap.class, DisintegrationTrap.class,
+				RockfallTrap.class, FlashingTrap.class, GuardianTrap.class, WeakeningTrap.class,
+				DisarmingTrap.class, SummoningTrap.class, WarpingTrap.class, CursingTrap.class, GrimTrap.class, PitfallTrap.class, DistortionTrap.class, GatewayTrap.class, GeyserTrap.class };
+	}
+
+	@Override
+	protected float[] trapChances() {
+<span class="nc" id="L145">		return new float[]{</span>
+				4, 4, 4, 4, 4,
+				2, 2, 2, 2,
+				1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	}
+	
+	@Override
+	public String tileName( int tile ) {
+<span class="nc bnc" id="L153" title="All 5 branches missed.">		switch (tile) {</span>
+			case Terrain.WATER:
+<span class="nc" id="L155">				return Messages.get(HallsLevel.class, &quot;water_name&quot;);</span>
+			case Terrain.GRASS:
+<span class="nc" id="L157">				return Messages.get(HallsLevel.class, &quot;grass_name&quot;);</span>
+			case Terrain.HIGH_GRASS:
+<span class="nc" id="L159">				return Messages.get(HallsLevel.class, &quot;high_grass_name&quot;);</span>
+			case Terrain.STATUE:
+			case Terrain.STATUE_SP:
+<span class="nc" id="L162">				return Messages.get(HallsLevel.class, &quot;statue_name&quot;);</span>
+			default:
+<span class="nc" id="L164">				return super.tileName( tile );</span>
+		}
+	}
+	
+	@Override
+	public String tileDesc(int tile) {
+<span class="nc bnc" id="L170" title="All 4 branches missed.">		switch (tile) {</span>
+			case Terrain.WATER:
+<span class="nc" id="L172">				return Messages.get(HallsLevel.class, &quot;water_desc&quot;);</span>
+			case Terrain.STATUE:
+			case Terrain.STATUE_SP:
+<span class="nc" id="L175">				return Messages.get(HallsLevel.class, &quot;statue_desc&quot;);</span>
+			case Terrain.BOOKSHELF:
+<span class="nc" id="L177">				return Messages.get(HallsLevel.class, &quot;bookshelf_desc&quot;);</span>
+			default:
+<span class="nc" id="L179">				return super.tileDesc( tile );</span>
+		}
+	}
+	
+	@Override
+	public Group addVisuals() {
+<span class="nc" id="L185">		super.addVisuals();</span>
+<span class="nc" id="L186">		addHallsVisuals( this, visuals );</span>
+<span class="nc" id="L187">		return visuals;</span>
+	}
+	
+	public static void addHallsVisuals( Level level, Group group ) {
+<span class="nc bnc" id="L191" title="All 2 branches missed.">		for (int i=0; i &lt; level.length(); i++) {</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">			if (level.map[i] == Terrain.WATER) {</span>
+<span class="nc" id="L193">				group.add( new Stream( i ) );</span>
+			}
+		}
+<span class="nc" id="L196">	}</span>
+	
+	private static class Stream extends Group {
+		
+		private int pos;
+		
+		private float delay;
+		
+		public Stream( int pos ) {
+<span class="nc" id="L205">			super();</span>
+			
+<span class="nc" id="L207">			this.pos = pos;</span>
+			
+<span class="nc" id="L209">			delay = Random.Float( 2 );</span>
+<span class="nc" id="L210">		}</span>
+		
+		@Override
+		public void update() {
+
+<span class="nc bnc" id="L215" title="All 2 branches missed.">			if (!Dungeon.level.water[pos]){</span>
+<span class="nc" id="L216">				killAndErase();</span>
+<span class="nc" id="L217">				return;</span>
+			}
+			
+<span class="nc bnc" id="L220" title="All 6 branches missed.">			if (visible = (pos &lt; Dungeon.level.heroFOV.length &amp;&amp; Dungeon.level.heroFOV[pos])) {</span>
+				
+<span class="nc" id="L222">				super.update();</span>
+				
+<span class="nc bnc" id="L224" title="All 2 branches missed.">				if ((delay -= Game.elapsed) &lt;= 0) {</span>
+					
+<span class="nc" id="L226">					delay = Random.Float( 2 );</span>
+					
+<span class="nc" id="L228">					PointF p = DungeonTilemap.tileToWorld( pos );</span>
+<span class="nc" id="L229">					((FireParticle)recycle( FireParticle.class )).reset(</span>
+<span class="nc" id="L230">						p.x + Random.Float( DungeonTilemap.SIZE ),</span>
+<span class="nc" id="L231">						p.y + Random.Float( DungeonTilemap.SIZE ) );</span>
+				}
+			}
+<span class="nc" id="L234">		}</span>
+		
+		@Override
+		public void draw() {
+<span class="nc" id="L238">			Blending.setLightMode();</span>
+<span class="nc" id="L239">			super.draw();</span>
+<span class="nc" id="L240">			Blending.setNormalMode();</span>
+<span class="nc" id="L241">		}</span>
+	}
+	
+	public static class FireParticle extends PixelParticle.Shrinking {
+		
+		public FireParticle() {
+<span class="nc" id="L247">			super();</span>
+			
+<span class="nc" id="L249">			color( 0xEE7722 );</span>
+<span class="nc" id="L250">			lifespan = 1f;</span>
+			
+<span class="nc" id="L252">			acc.set( 0, +80 );</span>
+<span class="nc" id="L253">		}</span>
+		
+		public void reset( float x, float y ) {
+<span class="nc" id="L256">			revive();</span>
+			
+<span class="nc" id="L258">			this.x = x;</span>
+<span class="nc" id="L259">			this.y = y;</span>
+			
+<span class="nc" id="L261">			left = lifespan;</span>
+			
+<span class="nc" id="L263">			speed.set( 0, -40 );</span>
+<span class="nc" id="L264">			size = 4;</span>
+<span class="nc" id="L265">		}</span>
+		
+		@Override
+		public void update() {
+<span class="nc" id="L269">			super.update();</span>
+<span class="nc" id="L270">			float p = left / lifespan;</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">			am = p &gt; 0.8f ? (1 - p) * 5 : 1;</span>
+<span class="nc" id="L272">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

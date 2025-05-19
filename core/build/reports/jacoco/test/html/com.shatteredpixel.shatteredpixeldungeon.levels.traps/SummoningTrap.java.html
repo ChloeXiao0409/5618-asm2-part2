@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SummoningTrap.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.traps</a> &gt; <span class="el_source">SummoningTrap.java</span></div><h1>SummoningTrap.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.traps;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Bestiary;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L36">public class SummoningTrap extends Trap {</span>
+
+	private static final float DELAY = 2f;
+
+	{
+<span class="nc" id="L41">		color = TEAL;</span>
+<span class="nc" id="L42">		shape = WAVES;</span>
+<span class="nc" id="L43">	}</span>
+
+	@Override
+	public void activate() {
+
+<span class="nc" id="L48">		int nMobs = 1;</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">		if (Random.Int( 2 ) == 0) {</span>
+<span class="nc" id="L50">			nMobs++;</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">			if (Random.Int( 2 ) == 0) {</span>
+<span class="nc" id="L52">				nMobs++;</span>
+			}
+		}
+
+<span class="nc" id="L56">		ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L58" title="All 2 branches missed.">		for (int i = 0; i &lt; PathFinder.NEIGHBOURS8.length; i++) {</span>
+<span class="nc" id="L59">			int p = pos + PathFinder.NEIGHBOURS8[i];</span>
+<span class="nc bnc" id="L60" title="All 6 branches missed.">			if (Actor.findChar( p ) == null &amp;&amp; (Dungeon.level.passable[p] || Dungeon.level.avoid[p])) {</span>
+<span class="nc" id="L61">				candidates.add( p );</span>
+			}
+		}
+
+<span class="nc" id="L65">		ArrayList&lt;Integer&gt; respawnPoints = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L67" title="All 4 branches missed.">		while (nMobs &gt; 0 &amp;&amp; candidates.size() &gt; 0) {</span>
+<span class="nc" id="L68">			int index = Random.index( candidates );</span>
+
+<span class="nc" id="L70">			respawnPoints.add( candidates.remove( index ) );</span>
+<span class="nc" id="L71">			nMobs--;</span>
+<span class="nc" id="L72">		}</span>
+
+<span class="nc" id="L74">		ArrayList&lt;Mob&gt; mobs = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		for (Integer point : respawnPoints) {</span>
+<span class="nc" id="L77">			Mob mob = Dungeon.level.createMob();</span>
+<span class="nc bnc" id="L78" title="All 4 branches missed.">			while (Char.hasProp(mob, Char.Property.LARGE) &amp;&amp; !Dungeon.level.openSpace[point]){</span>
+<span class="nc" id="L79">				mob = Dungeon.level.createMob();</span>
+			}
+<span class="nc bnc" id="L81" title="All 2 branches missed.">			if (mob != null) {</span>
+<span class="nc" id="L82">				mob.state = mob.WANDERING;</span>
+<span class="nc" id="L83">				mob.pos = point;</span>
+<span class="nc" id="L84">				GameScene.add(mob, DELAY);</span>
+<span class="nc" id="L85">				mobs.add(mob);</span>
+			}
+<span class="nc" id="L87">		}</span>
+
+		//important to process the visuals and pressing of cells last, so spawned mobs have a chance to occupy cells first
+		Trap t;
+<span class="nc bnc" id="L91" title="All 2 branches missed.">		for (Mob mob : mobs){</span>
+			//manually trigger traps first to avoid sfx spam
+<span class="nc bnc" id="L93" title="All 4 branches missed.">			if ((t = Dungeon.level.traps.get(mob.pos)) != null &amp;&amp; t.active){</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">				if (t.disarmedByActivation) t.disarm();</span>
+<span class="nc" id="L95">				t.reveal();</span>
+<span class="nc" id="L96">				Bestiary.setSeen(t.getClass());</span>
+<span class="nc" id="L97">				Bestiary.countEncounter(t.getClass());</span>
+<span class="nc" id="L98">				t.activate();</span>
+			}
+<span class="nc" id="L100">			ScrollOfTeleportation.appear(mob, mob.pos);</span>
+<span class="nc" id="L101">			Dungeon.level.occupyCell(mob);</span>
+<span class="nc" id="L102">		}</span>
+
+<span class="nc" id="L104">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

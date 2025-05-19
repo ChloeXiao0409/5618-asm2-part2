@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WandOfMagicMissile.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.wands</a> &gt; <span class="el_source">WandOfMagicMissile.java</span></div><h1>WandOfMagicMissile.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.wands;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L41">public class WandOfMagicMissile extends DamageWand {</span>
+
+	{
+<span class="nc" id="L44">		image = ItemSpriteSheet.WAND_MAGIC_MISSILE;</span>
+<span class="nc" id="L45">	}</span>
+
+	public int min(int lvl){
+<span class="nc" id="L48">		return 2+lvl;</span>
+	}
+
+	public int max(int lvl){
+<span class="nc" id="L52">		return 8+2*lvl;</span>
+	}
+	
+	@Override
+	public void onZap(Ballistica bolt) {
+				
+<span class="nc" id="L58">		Char ch = Actor.findChar( bolt.collisionPos );</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		if (ch != null) {</span>
+
+<span class="nc" id="L61">			wandProc(ch, chargesPerCast());</span>
+<span class="nc" id="L62">			ch.damage(damageRoll(), this);</span>
+<span class="nc" id="L63">			Sample.INSTANCE.play( Assets.Sounds.HIT_MAGIC, 1, Random.Float(0.87f, 1.15f) );</span>
+
+<span class="nc" id="L65">			ch.sprite.burst(0xFFFFFFFF, buffedLvl() / 2 + 2);</span>
+
+			//apply the magic charge buff if we have another wand in inventory of a lower level, or already have the buff
+<span class="nc bnc" id="L68" title="All 2 branches missed.">			for (Wand.Charger wandCharger : curUser.buffs(Wand.Charger.class)){</span>
+<span class="nc bnc" id="L69" title="All 4 branches missed.">				if (wandCharger.wand().buffedLvl() &lt; buffedLvl() || curUser.buff(MagicCharge.class) != null){</span>
+<span class="nc" id="L70">					Buff.prolong(curUser, MagicCharge.class, MagicCharge.DURATION).setup(this);</span>
+<span class="nc" id="L71">					break;</span>
+				}
+<span class="nc" id="L73">			}</span>
+
+		} else {
+<span class="nc" id="L76">			Dungeon.level.pressCell(bolt.collisionPos);</span>
+		}
+<span class="nc" id="L78">	}</span>
+
+	@Override
+	public void onHit(MagesStaff staff, Char attacker, Char defender, int damage) {
+<span class="nc" id="L82">		SpellSprite.show(attacker, SpellSprite.CHARGE);</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		for (Wand.Charger c : attacker.buffs(Wand.Charger.class)){</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">			if (c.wand() != this){</span>
+<span class="nc" id="L85">				c.gainCharge(0.5f * procChanceMultiplier(attacker));</span>
+			}
+<span class="nc" id="L87">		}</span>
+
+<span class="nc" id="L89">	}</span>
+
+	public int initialCharges() {
+<span class="nc" id="L92">		return 3;</span>
+	}
+
+<span class="nc" id="L95">	public static class MagicCharge extends FlavourBuff {</span>
+
+		{
+<span class="nc" id="L98">			type = buffType.POSITIVE;</span>
+<span class="nc" id="L99">			announced = true;</span>
+		}
+
+<span class="nc" id="L102">		public static float DURATION = 4f;</span>
+
+<span class="nc" id="L104">		private int level = 0;</span>
+		private Wand wandJustApplied; //we don't bundle this as it's only used right as the buff is applied
+
+		public void setup(Wand wand){
+<span class="nc bnc" id="L108" title="All 2 branches missed.">			if (level &lt; wand.buffedLvl()){</span>
+<span class="nc" id="L109">				this.level = wand.buffedLvl();</span>
+<span class="nc" id="L110">				this.wandJustApplied = wand;</span>
+			}
+<span class="nc" id="L112">		}</span>
+
+		@Override
+		public void detach() {
+<span class="nc" id="L116">			super.detach();</span>
+<span class="nc" id="L117">			updateQuickslot();</span>
+<span class="nc" id="L118">		}</span>
+
+		public int level(){
+<span class="nc" id="L121">			return this.level;</span>
+		}
+
+		//this is used briefly so that a wand of magic missile can't clear the buff it just applied
+		public Wand wandJustApplied(){
+<span class="nc" id="L126">			Wand result = this.wandJustApplied;</span>
+<span class="nc" id="L127">			this.wandJustApplied = null;</span>
+<span class="nc" id="L128">			return result;</span>
+		}
+
+		@Override
+		public int icon() {
+<span class="nc" id="L133">			return BuffIndicator.UPGRADE;</span>
+		}
+
+		@Override
+		public void tintIcon(Image icon) {
+<span class="nc" id="L138">			icon.hardlight(0.2f, 0.6f, 1f);</span>
+<span class="nc" id="L139">		}</span>
+
+		@Override
+		public float iconFadePercent() {
+<span class="nc" id="L143">			return Math.max(0, (DURATION - visualcooldown()) / DURATION);</span>
+		}
+
+		@Override
+		public String desc() {
+<span class="nc" id="L148">			return Messages.get(this, &quot;desc&quot;, level(), dispTurns());</span>
+		}
+
+		private static final String LEVEL = &quot;level&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L155">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L156">			bundle.put(LEVEL, level);</span>
+<span class="nc" id="L157">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L161">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L162">			level = bundle.getInt(LEVEL);</span>
+<span class="nc" id="L163">		}</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

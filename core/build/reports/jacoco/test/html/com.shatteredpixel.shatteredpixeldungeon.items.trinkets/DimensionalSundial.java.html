@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DimensionalSundial.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.trinkets</a> &gt; <span class="el_source">DimensionalSundial.java</span></div><h1>DimensionalSundial.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.trinkets;
+
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+
+<span class="nc" id="L31">public class DimensionalSundial extends Trinket {</span>
+
+	{
+<span class="nc" id="L34">		image = ItemSpriteSheet.SUNDIAL;</span>
+<span class="nc" id="L35">	}</span>
+
+	@Override
+	protected int upgradeEnergyCost() {
+		//6 -&gt; 8(14) -&gt; 10(24) -&gt; 12(36)
+<span class="nc" id="L40">		return 6+2*level();</span>
+	}
+
+	@Override
+	public String statsDesc() {
+<span class="nc bnc" id="L45" title="All 2 branches missed.">		if (isIdentified()){</span>
+<span class="nc" id="L46">			return Messages.get(this,</span>
+					&quot;stats_desc&quot;,
+<span class="nc" id="L48">					(int)(100*(1f - enemySpawnMultiplierDaytime(buffedLvl()))),</span>
+<span class="nc" id="L49">					(int)(100*(enemySpawnMultiplierNighttime(buffedLvl())-1f)));</span>
+		} else {
+<span class="nc" id="L51">			return Messages.get(this, &quot;typical_stats_desc&quot;,</span>
+<span class="nc" id="L52">					(int)(100*(1f - enemySpawnMultiplierDaytime(0))),</span>
+<span class="nc" id="L53">					(int)(100*(enemySpawnMultiplierNighttime(0)-1f)));</span>
+		}
+	}
+
+<span class="nc" id="L57">	public static boolean sundialWarned = false;</span>
+
+	public static float spawnMultiplierAtCurrentTime(){
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		if (trinketLevel(DimensionalSundial.class) != -1) {</span>
+<span class="nc" id="L61">			Calendar cal = GregorianCalendar.getInstance();</span>
+<span class="nc bnc" id="L62" title="All 4 branches missed.">			if (cal.get(Calendar.HOUR_OF_DAY) &gt;= 20 || cal.get(Calendar.HOUR_OF_DAY) &lt;= 7) {</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">				if (!sundialWarned){</span>
+<span class="nc" id="L64">					GLog.w(Messages.get(DimensionalSundial.class, &quot;warning&quot;));</span>
+<span class="nc" id="L65">					sundialWarned = true;</span>
+				}
+<span class="nc" id="L67">				return enemySpawnMultiplierNighttime();</span>
+			} else {
+<span class="nc" id="L69">				return enemySpawnMultiplierDaytime();</span>
+			}
+		} else {
+<span class="nc" id="L72">			return 1f;</span>
+		}
+	}
+
+	public static float enemySpawnMultiplierDaytime(){
+<span class="nc" id="L77">		return enemySpawnMultiplierDaytime(trinketLevel(DimensionalSundial.class));</span>
+	}
+
+	public static float enemySpawnMultiplierDaytime( int level ){
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		if (level == -1){</span>
+<span class="nc" id="L82">			return 1f;</span>
+		} else {
+<span class="nc" id="L84">			return 0.95f - 0.05f*level;</span>
+		}
+	}
+
+	public static float enemySpawnMultiplierNighttime(){
+<span class="nc" id="L89">		return enemySpawnMultiplierNighttime(trinketLevel(DimensionalSundial.class));</span>
+	}
+
+	public static float enemySpawnMultiplierNighttime( int level ){
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		if (level == -1){</span>
+<span class="nc" id="L94">			return 1f;</span>
+		} else {
+<span class="nc" id="L96">			return 1.25f + 0.25f*level;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

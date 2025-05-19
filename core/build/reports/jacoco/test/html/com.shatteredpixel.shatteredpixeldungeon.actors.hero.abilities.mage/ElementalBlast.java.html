@@ -1,0 +1,470 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ElementalBlast.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.mage</a> &gt; <span class="el_source">ElementalBlast.java</span></div><h1>ElementalBlast.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.mage;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Electricity;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Fire;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Freezing;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Amok;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Blindness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Charm;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Corrosion;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Light;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Recharging;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Roots;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfMagicMapping;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfBlastWave;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfCorrosion;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfCorruption;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfDisintegration;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfFireblast;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfFrost;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfLightning;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfLivingEarth;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfPrismaticLight;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfRegrowth;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfTransfusion;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfWarding;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.ConeAOE;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Callback;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.HashMap;
+
+<span class="nc" id="L90">public class ElementalBlast extends ArmorAbility {</span>
+
+<span class="nc" id="L92">	private static final HashMap&lt;Class&lt;?extends Wand&gt;, Integer&gt; effectTypes = new HashMap&lt;&gt;();</span>
+	static {
+<span class="nc" id="L94">		effectTypes.put(WandOfMagicMissile.class,   MagicMissile.MAGIC_MISS_CONE);</span>
+<span class="nc" id="L95">		effectTypes.put(WandOfLightning.class,      MagicMissile.SPARK_CONE);</span>
+<span class="nc" id="L96">		effectTypes.put(WandOfDisintegration.class, MagicMissile.PURPLE_CONE);</span>
+<span class="nc" id="L97">		effectTypes.put(WandOfFireblast.class,      MagicMissile.FIRE_CONE);</span>
+<span class="nc" id="L98">		effectTypes.put(WandOfCorrosion.class,      MagicMissile.CORROSION_CONE);</span>
+<span class="nc" id="L99">		effectTypes.put(WandOfBlastWave.class,      MagicMissile.FORCE_CONE);</span>
+<span class="nc" id="L100">		effectTypes.put(WandOfLivingEarth.class,    MagicMissile.EARTH_CONE);</span>
+<span class="nc" id="L101">		effectTypes.put(WandOfFrost.class,          MagicMissile.FROST_CONE);</span>
+<span class="nc" id="L102">		effectTypes.put(WandOfPrismaticLight.class, MagicMissile.RAINBOW_CONE);</span>
+<span class="nc" id="L103">		effectTypes.put(WandOfWarding.class,        MagicMissile.WARD_CONE);</span>
+<span class="nc" id="L104">		effectTypes.put(WandOfTransfusion.class,    MagicMissile.BLOOD_CONE);</span>
+<span class="nc" id="L105">		effectTypes.put(WandOfCorruption.class,     MagicMissile.SHADOW_CONE);</span>
+<span class="nc" id="L106">		effectTypes.put(WandOfRegrowth.class,       MagicMissile.FOLIAGE_CONE);</span>
+	}
+
+<span class="nc" id="L109">	private static final HashMap&lt;Class&lt;?extends Wand&gt;, Float&gt; damageFactors = new HashMap&lt;&gt;();</span>
+	static {
+<span class="nc" id="L111">		damageFactors.put(WandOfMagicMissile.class,     0.5f);</span>
+<span class="nc" id="L112">		damageFactors.put(WandOfLightning.class,        1f);</span>
+<span class="nc" id="L113">		damageFactors.put(WandOfDisintegration.class,   1f);</span>
+<span class="nc" id="L114">		damageFactors.put(WandOfFireblast.class,        1f);</span>
+<span class="nc" id="L115">		damageFactors.put(WandOfCorrosion.class,        0f);</span>
+<span class="nc" id="L116">		damageFactors.put(WandOfBlastWave.class,        0.67f);</span>
+<span class="nc" id="L117">		damageFactors.put(WandOfLivingEarth.class,      0.5f);</span>
+<span class="nc" id="L118">		damageFactors.put(WandOfFrost.class,            1f);</span>
+<span class="nc" id="L119">		damageFactors.put(WandOfPrismaticLight.class,   0.67f);</span>
+<span class="nc" id="L120">		damageFactors.put(WandOfWarding.class,          0f);</span>
+<span class="nc" id="L121">		damageFactors.put(WandOfTransfusion.class,      0f);</span>
+<span class="nc" id="L122">		damageFactors.put(WandOfCorruption.class,       0f);</span>
+<span class="nc" id="L123">		damageFactors.put(WandOfRegrowth.class,         0f);</span>
+<span class="nc" id="L124">	}</span>
+
+	{
+<span class="nc" id="L127">		baseChargeUse = 35f;</span>
+<span class="nc" id="L128">	}</span>
+
+	@Override
+	protected void activate(ClassArmor armor, Hero hero, Integer target) {
+		Ballistica aim;
+		//The direction of the aim only matters if it goes outside the map
+		//So we try to aim in the cardinal direction that has the most space
+<span class="nc" id="L135">		int x = hero.pos % Dungeon.level.width();</span>
+<span class="nc" id="L136">		int y = hero.pos / Dungeon.level.width();</span>
+
+<span class="nc bnc" id="L138" title="All 2 branches missed.">		if (Math.max(x, Dungeon.level.width()-x) &gt;= Math.max(y, Dungeon.level.height()-y)){</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">			if (x &gt; Dungeon.level.width()/2){</span>
+<span class="nc" id="L140">				aim = new Ballistica(hero.pos, hero.pos - 1, Ballistica.WONT_STOP);</span>
+			} else {
+<span class="nc" id="L142">				aim = new Ballistica(hero.pos, hero.pos + 1, Ballistica.WONT_STOP);</span>
+			}
+		} else {
+<span class="nc bnc" id="L145" title="All 2 branches missed.">			if (y &gt; Dungeon.level.height()/2){</span>
+<span class="nc" id="L146">				aim = new Ballistica(hero.pos, hero.pos - Dungeon.level.width(), Ballistica.WONT_STOP);</span>
+			} else {
+<span class="nc" id="L148">				aim = new Ballistica(hero.pos, hero.pos + Dungeon.level.width(), Ballistica.WONT_STOP);</span>
+			}
+		}
+
+<span class="nc" id="L152">		Class&lt;? extends Wand&gt; wandCls = null;</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">		if (hero.belongings.getItem(MagesStaff.class) != null) {</span>
+<span class="nc" id="L154">			wandCls = hero.belongings.getItem(MagesStaff.class).wandClass();</span>
+		}
+
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		if (wandCls == null){</span>
+<span class="nc" id="L158">			GLog.w(Messages.get(this, &quot;no_staff&quot;));</span>
+<span class="nc" id="L159">			return;</span>
+		}
+
+<span class="nc" id="L162">		int aoeSize = 4 + hero.pointsInTalent(Talent.BLAST_RADIUS);</span>
+
+<span class="nc" id="L164">		int projectileProps = Ballistica.STOP_SOLID | Ballistica.STOP_TARGET;</span>
+
+		//### Special Projectile Properties ###
+		//*** Wand of Disintegration ***
+<span class="nc bnc" id="L168" title="All 2 branches missed.">		if (wandCls == WandOfDisintegration.class){</span>
+<span class="nc" id="L169">			projectileProps = Ballistica.STOP_TARGET;</span>
+
+		//*** Wand of Fireblast ***
+<span class="nc bnc" id="L172" title="All 2 branches missed.">		} else if (wandCls == WandOfFireblast.class){</span>
+<span class="nc" id="L173">			projectileProps = projectileProps | Ballistica.IGNORE_SOFT_SOLID;</span>
+
+		//*** Wand of Warding ***
+<span class="nc bnc" id="L176" title="All 2 branches missed.">		} else if (wandCls == WandOfWarding.class){</span>
+<span class="nc" id="L177">			projectileProps = Ballistica.STOP_TARGET;</span>
+
+		}
+
+<span class="nc" id="L181">		ConeAOE aoe = new ConeAOE(aim, aoeSize, 360, projectileProps);</span>
+
+<span class="nc bnc" id="L183" title="All 2 branches missed.">		for (Ballistica ray : aoe.outerRays){</span>
+<span class="nc" id="L184">			((MagicMissile)hero.sprite.parent.recycle( MagicMissile.class )).reset(</span>
+<span class="nc" id="L185">					effectTypes.get(wandCls),</span>
+					hero.sprite,
+<span class="nc" id="L187">					ray.path.get(ray.dist),</span>
+					null
+			);
+<span class="nc" id="L190">		}</span>
+
+<span class="nc" id="L192">		final float effectMulti = 1f + 0.25f*hero.pointsInTalent(Talent.ELEMENTAL_POWER);</span>
+
+		//cast a ray 2/3 the way, and do effects
+<span class="nc" id="L195">		Class&lt;? extends Wand&gt; finalWandCls = wandCls;</span>
+<span class="nc" id="L196">		((MagicMissile)hero.sprite.parent.recycle( MagicMissile.class )).reset(</span>
+<span class="nc" id="L197">				effectTypes.get(wandCls),</span>
+				hero.sprite,
+<span class="nc" id="L199">				aim.path.get(Math.min(aoeSize / 2, aim.path.size()-1)),</span>
+<span class="nc" id="L200">				new Callback() {</span>
+					@Override
+					public void call() {
+
+<span class="nc" id="L204">						int charsHit = 0;</span>
+<span class="nc" id="L205">						Freezing freeze = (Freezing)Dungeon.level.blobs.get( Freezing.class );</span>
+<span class="nc" id="L206">						Fire fire = (Fire)Dungeon.level.blobs.get( Fire.class );</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">						for (int cell : aoe.cells) {</span>
+
+							//### Cell effects ###
+							//*** Wand of Lightning ***
+<span class="nc bnc" id="L211" title="All 2 branches missed.">							if (finalWandCls == WandOfLightning.class){</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">								if (Dungeon.level.water[cell]){</span>
+<span class="nc" id="L213">									GameScene.add( Blob.seed( cell, 4, Electricity.class ) );</span>
+								}
+
+							//*** Wand of Fireblast ***
+<span class="nc bnc" id="L217" title="All 2 branches missed.">							} else if (finalWandCls == WandOfFireblast.class){</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">								if (Dungeon.level.map[cell] == Terrain.DOOR){</span>
+<span class="nc" id="L219">									Level.set(cell, Terrain.OPEN_DOOR);</span>
+<span class="nc" id="L220">									GameScene.updateMap(cell);</span>
+								}
+<span class="nc bnc" id="L222" title="All 2 branches missed.">								if (freeze != null){</span>
+<span class="nc" id="L223">									freeze.clear(cell);</span>
+								}
+<span class="nc bnc" id="L225" title="All 2 branches missed.">								if (Dungeon.level.flamable[cell]){</span>
+<span class="nc" id="L226">									GameScene.add( Blob.seed( cell, 4, Fire.class ) );</span>
+								}
+
+							//*** Wand of Frost ***
+<span class="nc bnc" id="L230" title="All 2 branches missed.">							} else if (finalWandCls == WandOfFrost.class){</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">								if (fire != null){</span>
+<span class="nc" id="L232">									fire.clear(cell);</span>
+								}
+
+							//*** Wand of Prismatic Light ***
+<span class="nc bnc" id="L236" title="All 2 branches missed.">							} else if (finalWandCls == WandOfPrismaticLight.class){</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">								for (int n : PathFinder.NEIGHBOURS9) {</span>
+<span class="nc" id="L238">									int c = cell+n;</span>
+
+<span class="nc bnc" id="L240" title="All 2 branches missed.">									if (Dungeon.level.discoverable[c]) {</span>
+<span class="nc" id="L241">										Dungeon.level.mapped[c] = true;</span>
+									}
+
+<span class="nc" id="L244">									int terr = Dungeon.level.map[c];</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">									if ((Terrain.flags[terr] &amp; Terrain.SECRET) != 0) {</span>
+
+<span class="nc" id="L247">										Dungeon.level.discover(c);</span>
+
+<span class="nc" id="L249">										GameScene.discoverTile(c, terr);</span>
+<span class="nc" id="L250">										ScrollOfMagicMapping.discover(c);</span>
+
+									}
+								}
+
+							//*** Wand of Regrowth ***
+<span class="nc bnc" id="L256" title="All 2 branches missed.">							} else if (finalWandCls == WandOfRegrowth.class){</span>
+								//TODO: spend 3 charges worth of regrowth energy from staff?
+<span class="nc" id="L258">								int t = Dungeon.level.map[cell];</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">								if (Random.Float() &lt; 0.33f*effectMulti) {</span>
+<span class="nc bnc" id="L260" title="All 10 branches missed.">									if ((t == Terrain.EMPTY || t == Terrain.EMPTY_DECO || t == Terrain.EMBERS</span>
+											|| t == Terrain.GRASS || t == Terrain.FURROWED_GRASS)
+<span class="nc bnc" id="L262" title="All 2 branches missed.">											&amp;&amp; Dungeon.level.plants.get(cell) == null) {</span>
+<span class="nc" id="L263">										Level.set(cell, Terrain.HIGH_GRASS);</span>
+<span class="nc" id="L264">										GameScene.updateMap(cell);</span>
+									}
+								}
+							}
+
+							//### Deal damage ###
+<span class="nc" id="L270">							Char mob = Actor.findChar(cell);</span>
+<span class="nc" id="L271">							int damage = Math.round(Hero.heroDamageIntRange(15, 25)</span>
+									* effectMulti
+<span class="nc" id="L273">									* damageFactors.get(finalWandCls));</span>
+
+<span class="nc bnc" id="L275" title="All 6 branches missed.">							if (mob != null &amp;&amp; damage &gt; 0 &amp;&amp; mob.alignment != Char.Alignment.ALLY){</span>
+<span class="nc" id="L276">								mob.damage(damage, Reflection.newInstance(finalWandCls));</span>
+<span class="nc" id="L277">								charsHit++;</span>
+							}
+
+							//### Other Char Effects ###
+<span class="nc bnc" id="L281" title="All 4 branches missed.">							if (mob != null &amp;&amp; mob != hero){</span>
+								//*** Wand of Lightning ***
+<span class="nc bnc" id="L283" title="All 2 branches missed.">								if (finalWandCls == WandOfLightning.class){</span>
+<span class="nc bnc" id="L284" title="All 4 branches missed.">									if (mob.isAlive() &amp;&amp; mob.alignment != Char.Alignment.ALLY) {</span>
+<span class="nc" id="L285">										Buff.affect( mob, Paralysis.class, effectMulti*Paralysis.DURATION/2 );</span>
+									}
+
+								//*** Wand of Fireblast ***
+<span class="nc bnc" id="L289" title="All 2 branches missed.">								} else if (finalWandCls == WandOfFireblast.class){</span>
+<span class="nc bnc" id="L290" title="All 4 branches missed.">									if (mob.isAlive() &amp;&amp; mob.alignment != Char.Alignment.ALLY) {</span>
+<span class="nc" id="L291">										Buff.affect( mob, Burning.class ).reignite( mob );</span>
+									}
+
+								//*** Wand of Corrosion ***
+<span class="nc bnc" id="L295" title="All 2 branches missed.">								} else if (finalWandCls == WandOfCorrosion.class){</span>
+<span class="nc bnc" id="L296" title="All 4 branches missed.">									if (mob.isAlive() &amp;&amp; mob.alignment != Char.Alignment.ALLY) {</span>
+<span class="nc" id="L297">										Buff.affect( mob, Corrosion.class ).set(4, Math.round(6*effectMulti));</span>
+<span class="nc" id="L298">										charsHit++;</span>
+									}
+
+								//*** Wand of Blast Wave ***
+<span class="nc bnc" id="L302" title="All 2 branches missed.">								} else if (finalWandCls == WandOfBlastWave.class){</span>
+<span class="nc bnc" id="L303" title="All 2 branches missed.">									if (mob.alignment != Char.Alignment.ALLY) {</span>
+<span class="nc" id="L304">										Ballistica aim = new Ballistica(hero.pos, mob.pos, Ballistica.WONT_STOP);</span>
+<span class="nc" id="L305">										int knockback = aoeSize + 1 - (int)Dungeon.level.trueDistance(hero.pos, mob.pos);</span>
+<span class="nc" id="L306">										knockback *= effectMulti;</span>
+<span class="nc" id="L307">										WandOfBlastWave.throwChar(mob,</span>
+<span class="nc" id="L308">												new Ballistica(mob.pos, aim.collisionPos, Ballistica.MAGIC_BOLT),</span>
+												knockback,
+												true,
+												true,
+												ElementalBlast.this);
+<span class="nc" id="L313">									}</span>
+
+								//*** Wand of Frost ***
+<span class="nc bnc" id="L316" title="All 2 branches missed.">								} else if (finalWandCls == WandOfFrost.class){</span>
+<span class="nc bnc" id="L317" title="All 4 branches missed.">									if (mob.isAlive() &amp;&amp; mob.alignment != Char.Alignment.ALLY) {</span>
+<span class="nc" id="L318">										Buff.affect( mob, Frost.class, effectMulti*Frost.DURATION );</span>
+									}
+
+								//*** Wand of Prismatic Light ***
+<span class="nc bnc" id="L322" title="All 2 branches missed.">								} else if (finalWandCls == WandOfPrismaticLight.class){</span>
+<span class="nc bnc" id="L323" title="All 4 branches missed.">									if (mob.isAlive() &amp;&amp; mob.alignment != Char.Alignment.ALLY) {</span>
+<span class="nc" id="L324">										Buff.prolong(mob, Blindness.class, effectMulti*Blindness.DURATION/2);</span>
+<span class="nc" id="L325">										charsHit++;</span>
+									}
+
+								//*** Wand of Warding ***
+<span class="nc bnc" id="L329" title="All 2 branches missed.">								} else if (finalWandCls == WandOfWarding.class){</span>
+<span class="nc bnc" id="L330" title="All 2 branches missed.">									if (mob instanceof WandOfWarding.Ward){</span>
+<span class="nc" id="L331">										((WandOfWarding.Ward) mob).wandHeal(0, effectMulti);</span>
+<span class="nc" id="L332">										charsHit++;</span>
+									}
+
+								//*** Wand of Transfusion ***
+<span class="nc bnc" id="L336" title="All 2 branches missed.">								} else if (finalWandCls == WandOfTransfusion.class){</span>
+<span class="nc bnc" id="L337" title="All 4 branches missed.">									if(mob.alignment == Char.Alignment.ALLY || mob.buff(Charm.class) != null){</span>
+<span class="nc" id="L338">										int healing = Math.round(10*effectMulti);</span>
+<span class="nc" id="L339">										int shielding = (mob.HP + healing) - mob.HT;</span>
+<span class="nc bnc" id="L340" title="All 2 branches missed.">										if (shielding &gt; 0){</span>
+<span class="nc" id="L341">											healing -= shielding;</span>
+<span class="nc" id="L342">											Buff.affect(mob, Barrier.class).setShield(shielding);</span>
+										} else {
+<span class="nc" id="L344">											shielding = 0;</span>
+										}
+<span class="nc" id="L346">										mob.HP += healing;</span>
+
+<span class="nc" id="L348">										mob.sprite.emitter().burst(Speck.factory(Speck.HEALING), 4);</span>
+
+<span class="nc bnc" id="L350" title="All 2 branches missed.">										if (healing &gt; 0) {</span>
+<span class="nc" id="L351">											mob.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(healing), FloatingText.HEALING);</span>
+										}
+<span class="nc bnc" id="L353" title="All 2 branches missed.">										if (shielding &gt; 0){</span>
+<span class="nc" id="L354">											mob.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shielding), FloatingText.SHIELDING);</span>
+										}
+<span class="nc" id="L356">									} else {</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">										if (!mob.properties().contains(Char.Property.UNDEAD)) {</span>
+<span class="nc" id="L358">											Charm charm = Buff.affect(mob, Charm.class, effectMulti*Charm.DURATION/2f);</span>
+<span class="nc" id="L359">											charm.object = hero.id();</span>
+<span class="nc" id="L360">											charm.ignoreHeroAllies = true;</span>
+<span class="nc" id="L361">											mob.sprite.centerEmitter().start(Speck.factory(Speck.HEART), 0.2f, 3);</span>
+<span class="nc" id="L362">										} else {</span>
+<span class="nc" id="L363">											damage = Math.round(Hero.heroDamageIntRange(15, 25) * effectMulti);</span>
+<span class="nc" id="L364">											mob.damage(damage, Reflection.newInstance(finalWandCls));</span>
+<span class="nc" id="L365">											mob.sprite.emitter().start(ShadowParticle.UP, 0.05f, 10);</span>
+										}
+									}
+<span class="nc" id="L368">									charsHit++;</span>
+
+								//*** Wand of Corruption ***
+<span class="nc bnc" id="L371" title="All 2 branches missed.">								} else if (finalWandCls == WandOfCorruption.class){</span>
+<span class="nc bnc" id="L372" title="All 4 branches missed.">									if (mob.isAlive() &amp;&amp; mob.alignment != Char.Alignment.ALLY) {</span>
+<span class="nc" id="L373">										Buff.prolong(mob, Amok.class, effectMulti*5f);</span>
+<span class="nc" id="L374">										charsHit++;</span>
+									}
+
+								//*** Wand of Regrowth ***
+<span class="nc bnc" id="L378" title="All 2 branches missed.">								} else if (finalWandCls == WandOfRegrowth.class){</span>
+<span class="nc bnc" id="L379" title="All 2 branches missed.">									if (mob.alignment != Char.Alignment.ALLY) {</span>
+<span class="nc" id="L380">										Buff.prolong( mob, Roots.class, effectMulti*Roots.DURATION );</span>
+<span class="nc" id="L381">										charsHit++;</span>
+									}
+								}
+							}
+
+<span class="nc" id="L386">						}</span>
+
+						//### Self-Effects ###
+						//*** Wand of Magic Missile ***
+<span class="nc bnc" id="L390" title="All 2 branches missed.">						if (finalWandCls == WandOfMagicMissile.class) {</span>
+<span class="nc" id="L391">							Buff.affect(hero, Recharging.class, effectMulti* Recharging.DURATION / 2f);</span>
+<span class="nc" id="L392">							SpellSprite.show( hero, SpellSprite.CHARGE );</span>
+
+						//*** Wand of Living Earth ***
+<span class="nc bnc" id="L395" title="All 4 branches missed.">						} else if (finalWandCls == WandOfLivingEarth.class &amp;&amp; charsHit &gt; 0){</span>
+<span class="nc bnc" id="L396" title="All 2 branches missed.">							for (Mob m : Dungeon.level.mobs){</span>
+<span class="nc bnc" id="L397" title="All 2 branches missed.">								if (m instanceof WandOfLivingEarth.EarthGuardian){</span>
+<span class="nc" id="L398">									((WandOfLivingEarth.EarthGuardian) m).setInfo(hero, 0, Math.round(effectMulti*charsHit*5));</span>
+<span class="nc" id="L399">									m.sprite.centerEmitter().burst(MagicMissile.EarthParticle.ATTRACT, 8 + charsHit);</span>
+<span class="nc" id="L400">									break;</span>
+								}
+<span class="nc" id="L402">							}</span>
+
+						//*** Wand of Frost ***
+<span class="nc bnc" id="L405" title="All 2 branches missed.">						} else if (finalWandCls == WandOfFrost.class){</span>
+<span class="nc bnc" id="L406" title="All 2 branches missed.">							if ((hero.buff(Burning.class)) != null) {</span>
+<span class="nc" id="L407">								hero.buff(Burning.class).detach();</span>
+							}
+
+						//*** Wand of Prismatic Light ***
+<span class="nc bnc" id="L411" title="All 2 branches missed.">						} else if (finalWandCls == WandOfPrismaticLight.class){</span>
+<span class="nc bnc" id="L412" title="All 2 branches missed.">							if (Dungeon.isChallenged(Challenges.DARKNESS)){</span>
+<span class="nc" id="L413">								Buff.prolong(hero, Light.class, effectMulti * 10f);</span>
+							} else {
+<span class="nc" id="L415">								Buff.prolong(hero, Light.class, effectMulti * 50f);</span>
+							}
+
+						}
+
+<span class="nc" id="L420">						charsHit = Math.min(4 + hero.pointsInTalent(Talent.REACTIVE_BARRIER), charsHit);</span>
+<span class="nc bnc" id="L421" title="All 4 branches missed.">						if (charsHit &gt; 0 &amp;&amp; hero.hasTalent(Talent.REACTIVE_BARRIER)){</span>
+<span class="nc" id="L422">							int shielding = Math.round(charsHit*2.5f*hero.pointsInTalent(Talent.REACTIVE_BARRIER));</span>
+<span class="nc" id="L423">							hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shielding), FloatingText.SHIELDING);</span>
+<span class="nc" id="L424">							Buff.affect(hero, Barrier.class).setShield(shielding);</span>
+						}
+
+<span class="nc" id="L427">						hero.spendAndNext(Actor.TICK);</span>
+<span class="nc" id="L428">					}</span>
+				}
+		);
+
+<span class="nc" id="L432">		hero.sprite.operate( hero.pos );</span>
+<span class="nc" id="L433">		Invisibility.dispel();</span>
+<span class="nc" id="L434">		hero.busy();</span>
+
+<span class="nc" id="L436">		armor.charge -= chargeUse(hero);</span>
+<span class="nc" id="L437">		armor.updateQuickslot();</span>
+
+<span class="nc" id="L439">		Sample.INSTANCE.play( Assets.Sounds.CHARGEUP );</span>
+
+<span class="nc" id="L441">	}</span>
+
+	@Override
+	public String desc() {
+<span class="nc" id="L445">		String desc = Messages.get(this, &quot;desc&quot;);</span>
+<span class="nc bnc" id="L446" title="All 2 branches missed.">		if (Game.scene() instanceof GameScene){</span>
+<span class="nc" id="L447">			MagesStaff staff = Dungeon.hero.belongings.getItem(MagesStaff.class);</span>
+<span class="nc bnc" id="L448" title="All 4 branches missed.">			if (staff != null &amp;&amp; staff.wandClass() != null){</span>
+<span class="nc" id="L449">				desc += &quot;\n\n&quot; + Messages.get(staff.wandClass(), &quot;eleblast_desc&quot;);</span>
+			} else {
+<span class="nc" id="L451">				desc += &quot;\n\n&quot; + Messages.get(this, &quot;generic_desc&quot;);</span>
+			}
+<span class="nc" id="L453">		} else {</span>
+<span class="nc" id="L454">			desc += &quot;\n\n&quot; + Messages.get(this, &quot;generic_desc&quot;);</span>
+		}
+<span class="nc" id="L456">		desc += &quot;\n\n&quot; + Messages.get(this, &quot;cost&quot;, (int)baseChargeUse);</span>
+<span class="nc" id="L457">		return desc;</span>
+	}
+
+	@Override
+	public int icon() {
+<span class="nc" id="L462">		return HeroIcon.ELEMENTAL_BLAST;</span>
+	}
+
+	@Override
+	public Talent[] talents() {
+<span class="nc" id="L467">		return new Talent[]{Talent.BLAST_RADIUS, Talent.ELEMENTAL_POWER, Talent.REACTIVE_BARRIER, Talent.HEROIC_ENERGY};</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

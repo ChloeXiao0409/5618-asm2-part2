@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Messages.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.messages</a> &gt; <span class="el_source">Messages.java</span></div><h1>Messages.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.messages;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.utils.I18NBundle;
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IllegalFormatException;
+import java.util.Locale;
+
+/*
+	Simple wrapper class for libGDX I18NBundles.
+
+	The core idea here is that each string resource's key is a combination of the class definition and a local value.
+	An object or static method would usually call this with an object/class reference (usually its own) and a local key.
+	This means that an object can just ask for &quot;name&quot; rather than, say, &quot;items.weapon.enchantments.death.name&quot;
+ */
+<span class="nc" id="L46">public class Messages {</span>
+
+	private static ArrayList&lt;I18NBundle&gt; bundles;
+	private static Languages lang;
+	private static Locale locale;
+
+	public static final String NO_TEXT_FOUND = &quot;!!!NO TEXT FOUND!!!&quot;;
+
+	public static Languages lang(){
+<span class="nc" id="L55">		return lang;</span>
+	}
+
+	public static Locale locale(){
+<span class="nc" id="L59">		return locale;</span>
+	}
+
+	/**
+	 * Setup Methods
+	 */
+
+<span class="nc" id="L66">	private static String[] prop_files = new String[]{</span>
+			Assets.Messages.ACTORS,
+			Assets.Messages.ITEMS,
+			Assets.Messages.JOURNAL,
+			Assets.Messages.LEVELS,
+			Assets.Messages.MISC,
+			Assets.Messages.PLANTS,
+			Assets.Messages.SCENES,
+			Assets.Messages.UI,
+			Assets.Messages.WINDOWS
+	};
+
+	static{
+<span class="nc" id="L79">		formatters = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L80">		setup(SPDSettings.language());</span>
+	}
+
+	public static void setup( Languages lang ){
+		//seeing as missing keys are part of our process, this is faster than throwing an exception
+<span class="nc" id="L85">		I18NBundle.setExceptionOnMissingKey(false);</span>
+
+		//store language and locale info for various string logic
+<span class="nc" id="L88">		Messages.lang = lang;</span>
+		Locale bundleLocal;
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		if (lang == Languages.ENGLISH){</span>
+<span class="nc" id="L91">			locale = Locale.ENGLISH;</span>
+<span class="nc" id="L92">			bundleLocal = Locale.ROOT; //english is source, uses root locale for fetching bundle</span>
+		} else {
+<span class="nc" id="L94">			locale = new Locale(lang.code());</span>
+<span class="nc" id="L95">			bundleLocal = locale;</span>
+		}
+<span class="nc" id="L97">		formatters.clear();</span>
+
+		//strictly match the language code when fetching bundles however
+<span class="nc" id="L100">		bundles = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		for (String file : prop_files) {</span>
+<span class="nc" id="L102">			bundles.add(I18NBundle.createBundle(Gdx.files.internal(file), bundleLocal));</span>
+		}
+<span class="nc" id="L104">	}</span>
+
+
+
+	/**
+	 * Resource grabbing methods
+	 */
+
+	public static String get(String key, Object...args){
+<span class="nc" id="L113">		return get(null, key, args);</span>
+	}
+
+	public static String get(Object o, String k, Object...args){
+<span class="nc" id="L117">		return get(o.getClass(), k, args);</span>
+	}
+
+	public static String get(Class c, String k, Object...args){
+		String key;
+<span class="nc bnc" id="L122" title="All 2 branches missed.">		if (c != null){</span>
+<span class="nc" id="L123">			key = c.getName().replace(&quot;com.shatteredpixel.shatteredpixeldungeon.&quot;, &quot;&quot;);</span>
+<span class="nc" id="L124">			key += &quot;.&quot; + k;</span>
+		} else
+<span class="nc" id="L126">			key = k;</span>
+
+<span class="nc" id="L128">		String value = getFromBundle(key.toLowerCase(Locale.ENGLISH));</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">		if (value != null){</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">			if (args.length &gt; 0) return format(value, args);</span>
+<span class="nc" id="L131">			else return value;</span>
+		} else {
+			//this is so child classes can inherit properties from their parents.
+			//in cases where text is commonly grabbed as a utility from classes that aren't mean to be instantiated
+			//(e.g. flavourbuff.dispTurns()) using .class directly is probably smarter to prevent unnecessary recursive calls.
+<span class="nc bnc" id="L136" title="All 4 branches missed.">			if (c != null &amp;&amp; c.getSuperclass() != null){</span>
+<span class="nc" id="L137">				return get(c.getSuperclass(), k, args);</span>
+			} else {
+<span class="nc" id="L139">				return NO_TEXT_FOUND;</span>
+			}
+		}
+	}
+
+	private static String getFromBundle(String key){
+		String result;
+<span class="nc bnc" id="L146" title="All 2 branches missed.">		for (I18NBundle b : bundles){</span>
+<span class="nc" id="L147">			result = b.get(key);</span>
+			//if it isn't the return string for no key found, return it
+<span class="nc bnc" id="L149" title="All 4 branches missed.">			if (result.length() != key.length()+6 || !result.contains(key)){</span>
+<span class="nc" id="L150">				return result;</span>
+			}
+<span class="nc" id="L152">		}</span>
+<span class="nc" id="L153">		return null;</span>
+	}
+
+
+
+	/**
+	 * String Utility Methods
+	 */
+
+	public static String format( String format, Object...args ) {
+		try {
+<span class="nc" id="L164">			return String.format(locale(), format, args);</span>
+<span class="nc" id="L165">		} catch (IllegalFormatException e) {</span>
+<span class="nc" id="L166">			ShatteredPixelDungeon.reportException( new Exception(&quot;formatting error for the string: &quot; + format, e) );</span>
+<span class="nc" id="L167">			return format;</span>
+		}
+	}
+
+	private static HashMap&lt;String, DecimalFormat&gt; formatters;
+
+	public static String decimalFormat( String format, double number ){
+<span class="nc bnc" id="L174" title="All 2 branches missed.">		if (!formatters.containsKey(format)){</span>
+<span class="nc" id="L175">			formatters.put(format, new DecimalFormat(format, DecimalFormatSymbols.getInstance(locale())));</span>
+		}
+<span class="nc" id="L177">		return formatters.get(format).format(number);</span>
+	}
+
+	public static String capitalize( String str ){
+<span class="nc bnc" id="L181" title="All 2 branches missed.">		if (str.length() == 0)  return str;</span>
+<span class="nc" id="L182">		else                    return str.substring( 0, 1 ).toUpperCase(locale) + str.substring( 1 );</span>
+	}
+
+	//Words which should not be capitalized in title case, mostly prepositions which appear ingame
+	//This list is not comprehensive!
+<span class="nc" id="L187">	private static final HashSet&lt;String&gt; noCaps = new HashSet&lt;&gt;(</span>
+<span class="nc" id="L188">			Arrays.asList(&quot;a&quot;, &quot;an&quot;, &quot;and&quot;, &quot;of&quot;, &quot;by&quot;, &quot;to&quot;, &quot;the&quot;, &quot;x&quot;, &quot;for&quot;)</span>
+	);
+
+	public static String titleCase( String str ){
+		//English capitalizes every word except for a few exceptions
+<span class="nc bnc" id="L193" title="All 2 branches missed.">		if (lang == Languages.ENGLISH){</span>
+<span class="nc" id="L194">			String result = &quot;&quot;;</span>
+			//split by any unicode space character
+<span class="nc bnc" id="L196" title="All 2 branches missed.">			for (String word : str.split(&quot;(?&lt;=\\p{Zs})&quot;)){</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">				if (noCaps.contains(word.trim().toLowerCase(Locale.ENGLISH).replaceAll(&quot;:|[0-9]&quot;, &quot;&quot;))){</span>
+<span class="nc" id="L198">					result += word;</span>
+				} else {
+<span class="nc" id="L200">					result += capitalize(word);</span>
+				}
+			}
+			//first character is always capitalized.
+<span class="nc" id="L204">			return capitalize(result);</span>
+		}
+
+		//Otherwise, use sentence case
+<span class="nc" id="L208">		return capitalize(str);</span>
+	}
+
+	public static String upperCase( String str ){
+<span class="nc" id="L212">		return str.toUpperCase(locale);</span>
+	}
+
+	public static String lowerCase( String str ){
+<span class="nc" id="L216">		return str.toLowerCase(locale);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PlatformRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard</a> &gt; <span class="el_source">PlatformRoom.java</span></div><h1>PlatformRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard;
+
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.watabou.utils.Random;
+import com.watabou.utils.Rect;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L33">public class PlatformRoom extends StandardRoom {</span>
+	
+	@Override
+	public int minWidth() {
+<span class="nc" id="L37">		return Math.max(super.minWidth(), 6);</span>
+	}
+	
+	@Override
+	public int minHeight() {
+<span class="nc" id="L42">		return Math.max(super.minHeight(), 6);</span>
+	}
+	
+	@Override
+	public float[] sizeCatProbs() {
+<span class="nc" id="L47">		return new float[]{6, 3, 1};</span>
+	}
+	
+	@Override
+	public void merge(Level l, Room other, Rect merge, int mergeTerrain) {
+<span class="nc bnc" id="L52" title="All 6 branches missed.">		if (mergeTerrain != Terrain.CHASM</span>
+				&amp;&amp; (other instanceof PlatformRoom || other instanceof ChasmRoom)){
+<span class="nc" id="L54">			super.merge(l, other, merge, Terrain.CHASM);</span>
+<span class="nc" id="L55">			Painter.set(l, connected.get(other), Terrain.EMPTY_SP);</span>
+		} else {
+<span class="nc" id="L57">			super.merge(l, other, merge, mergeTerrain);</span>
+		}
+<span class="nc" id="L59">	}</span>
+
+	@Override
+	public void paint(Level level) {
+		
+<span class="nc" id="L64">		Painter.fill( level, this, Terrain.WALL );</span>
+		
+<span class="nc" id="L66">		Painter.fill( level, this, 1, Terrain.CHASM );</span>
+		
+<span class="nc" id="L68">		ArrayList&lt;Rect&gt; platforms = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L69">		splitPlatforms( new Rect(left+2, top+2, right-2, bottom-2), platforms);</span>
+		
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		for (Rect platform : platforms){</span>
+<span class="nc" id="L72">			Painter.fill( level, platform.left, platform.top, platform.width()+1, platform.height()+1, Terrain.EMPTY_SP);</span>
+<span class="nc" id="L73">		}</span>
+		
+<span class="nc bnc" id="L75" title="All 2 branches missed.">		for (Door door : connected.values()) {</span>
+<span class="nc" id="L76">			door.set( Door.Type.REGULAR );</span>
+<span class="nc" id="L77">			Painter.drawInside(level, this, door, 2, Terrain.EMPTY_SP);</span>
+<span class="nc" id="L78">		}</span>
+		
+<span class="nc" id="L80">	}</span>
+	
+	private void splitPlatforms( Rect curPlatform, ArrayList&lt;Rect&gt; allPlatforms ){
+<span class="nc" id="L83">		int curArea = (curPlatform.width()+1) * (curPlatform.height()+1);</span>
+		
+		//chance to split scales between 0% and 100% between areas of 25 and 36
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		if (Random.Float() &lt; (curArea-25)/11f){</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">			if (curPlatform.width() &gt; curPlatform.height() ||</span>
+<span class="nc bnc" id="L88" title="All 4 branches missed.">					(curPlatform.width() == curPlatform.height() &amp;&amp; Random.Int(2) == 0)){</span>
+				
+				//split the platform
+<span class="nc" id="L91">				int splitX = Random.IntRange( curPlatform.left+2, curPlatform.right-2);</span>
+<span class="nc" id="L92">				splitPlatforms( new Rect( curPlatform.left, curPlatform.top, splitX-1, curPlatform.bottom) , allPlatforms);</span>
+<span class="nc" id="L93">				splitPlatforms( new Rect( splitX+1, curPlatform.top, curPlatform.right, curPlatform.bottom) , allPlatforms);</span>
+				
+				//add a bridge between
+<span class="nc" id="L96">				int bridgeY = Random.NormalIntRange(curPlatform.top, curPlatform.bottom);</span>
+<span class="nc" id="L97">				allPlatforms.add( new Rect( splitX - 1, bridgeY, splitX + 1, bridgeY));</span>
+				
+<span class="nc" id="L99">			} else {</span>
+				
+				//split the platform
+<span class="nc" id="L102">				int splitY = Random.IntRange( curPlatform.top+2, curPlatform.bottom-2);</span>
+<span class="nc" id="L103">				splitPlatforms( new Rect( curPlatform.left, curPlatform.top, curPlatform.right, splitY-1) , allPlatforms);</span>
+<span class="nc" id="L104">				splitPlatforms( new Rect( curPlatform.left, splitY+1, curPlatform.right, curPlatform.bottom) , allPlatforms);</span>
+				
+				//add a bridge between
+<span class="nc" id="L107">				int bridgeX = Random.NormalIntRange(curPlatform.left, curPlatform.right);</span>
+<span class="nc" id="L108">				allPlatforms.add( new Rect( bridgeX, splitY-1, bridgeX, splitY+1));</span>
+				
+<span class="nc" id="L110">			}</span>
+		} else {
+<span class="nc" id="L112">			allPlatforms.add(curPlatform);</span>
+		}
+<span class="nc" id="L114">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

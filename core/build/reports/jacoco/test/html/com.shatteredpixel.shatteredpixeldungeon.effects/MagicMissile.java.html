@@ -1,0 +1,692 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MagicMissile.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.effects</a> &gt; <span class="el_source">MagicMissile.java</span></div><h1>MagicMissile.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.effects;
+
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.BloodParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.CorrosionParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ElmoParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.FlameParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.LeafParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.PoisonParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.PurpleParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.RainbowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SparkParticle;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Group;
+import com.watabou.noosa.Visual;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.noosa.particles.PixelParticle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.ColorMath;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L46">public class MagicMissile extends Emitter {</span>
+
+	private static final float SPEED	= 200f;
+	
+	private Callback callback;
+	
+	private PointF to;
+	
+	private float sx;
+	private float sy;
+	private float time;
+
+	//missile types
+	public static final int MAGIC_MISSILE   = 0;
+	public static final int FROST           = 1;
+	public static final int FIRE            = 2;
+	public static final int CORROSION       = 3;
+	public static final int FOLIAGE         = 4;
+	public static final int FORCE           = 5;
+	public static final int BEACON          = 6;
+	public static final int SHADOW          = 7;
+	public static final int RAINBOW         = 8;
+	public static final int EARTH           = 9;
+	public static final int WARD            = 10;
+	public static final int SHAMAN_RED      = 11;
+	public static final int SHAMAN_BLUE     = 12;
+	public static final int SHAMAN_PURPLE   = 13;
+	public static final int ELMO            = 14;
+	public static final int POISON          = 15;
+	public static final int LIGHT_MISSILE   = 16;
+
+	public static final int MAGIC_MISS_CONE = 100;
+	public static final int FROST_CONE      = 101;
+	public static final int FIRE_CONE       = 102;
+	public static final int CORROSION_CONE  = 103;
+	public static final int FOLIAGE_CONE    = 104;
+	public static final int FORCE_CONE      = 105;
+	public static final int SHADOW_CONE     = 107;
+	public static final int RAINBOW_CONE    = 108;
+	public static final int EARTH_CONE      = 109;
+	public static final int WARD_CONE       = 110;
+	public static final int PURPLE_CONE     = 111;
+	public static final int SPARK_CONE      = 112;
+	public static final int BLOOD_CONE      = 113;
+
+	//use SPECK + the constant of the Speck you want. e.g. MagicMissile.SPECK + Speck.TOXIC
+	public static final int SPECK           = 1000;
+	
+	public void reset( int type, int from, int to, Callback callback ) {
+<span class="nc" id="L95">		reset( type,</span>
+<span class="nc" id="L96">				DungeonTilemap.raisedTileCenterToWorld( from ),</span>
+<span class="nc" id="L97">				DungeonTilemap.raisedTileCenterToWorld( to ),</span>
+				callback );
+<span class="nc" id="L99">	}</span>
+
+	public void reset( int type, Visual from, Visual to, Callback callback ) {
+<span class="nc" id="L102">		reset( type,</span>
+<span class="nc" id="L103">				from.center(),</span>
+<span class="nc" id="L104">				to.center(),</span>
+				callback);
+<span class="nc" id="L106">	}</span>
+
+	public void reset( int type, Visual from, int to, Callback callback ) {
+<span class="nc" id="L109">		reset( type,</span>
+<span class="nc" id="L110">				from.center(),</span>
+<span class="nc" id="L111">				DungeonTilemap.raisedTileCenterToWorld( to ),</span>
+				callback);
+<span class="nc" id="L113">	}</span>
+
+	public void reset( int type, PointF from, PointF to, Callback callback ) {
+<span class="nc" id="L116">		this.callback = callback;</span>
+		
+<span class="nc" id="L118">		this.to = to;</span>
+		
+<span class="nc" id="L120">		x = from.x;</span>
+<span class="nc" id="L121">		y = from.y;</span>
+<span class="nc" id="L122">		width = 0;</span>
+<span class="nc" id="L123">		height = 0;</span>
+		
+<span class="nc" id="L125">		PointF d = PointF.diff( to, from );</span>
+<span class="nc" id="L126">		PointF speed = new PointF( d ).normalize().scale( SPEED );</span>
+<span class="nc" id="L127">		sx = speed.x;</span>
+<span class="nc" id="L128">		sy = speed.y;</span>
+<span class="nc" id="L129">		time = d.length() / SPEED;</span>
+
+		//for now all specks share the same size and volume, this can easily be customized later if needed
+<span class="nc bnc" id="L132" title="All 2 branches missed.">		if (type &gt;= SPECK){</span>
+<span class="nc" id="L133">			size( 10 );</span>
+<span class="nc" id="L134">			pour( Speck.factory(type-SPECK), 0.02f);</span>
+<span class="nc" id="L135">			revive();</span>
+<span class="nc" id="L136">			return;</span>
+		}
+
+<span class="nc bnc" id="L139" title="All 30 branches missed.">		switch(type){</span>
+			case MAGIC_MISSILE: default:
+<span class="nc" id="L141">				size( 4 );</span>
+<span class="nc" id="L142">				pour( WhiteParticle.FACTORY, 0.01f );</span>
+<span class="nc" id="L143">				break;</span>
+			case FROST:
+<span class="nc" id="L145">				pour( MagicParticle.FACTORY, 0.01f );</span>
+<span class="nc" id="L146">				break;</span>
+			case FIRE:
+<span class="nc" id="L148">				size( 4 );</span>
+<span class="nc" id="L149">				pour( FlameParticle.FACTORY, 0.01f );</span>
+<span class="nc" id="L150">				break;</span>
+			case CORROSION:
+<span class="nc" id="L152">				size( 3 );</span>
+<span class="nc" id="L153">				pour( CorrosionParticle.MISSILE, 0.01f );</span>
+<span class="nc" id="L154">				break;</span>
+			case FOLIAGE:
+<span class="nc" id="L156">				size( 4 );</span>
+<span class="nc" id="L157">				pour( LeafParticle.GENERAL, 0.01f );</span>
+<span class="nc" id="L158">				break;</span>
+			case FORCE:
+<span class="nc" id="L160">				pour( SlowParticle.FACTORY, 0.01f );</span>
+<span class="nc" id="L161">				break;</span>
+			case BEACON:
+<span class="nc" id="L163">				pour( ForceParticle.FACTORY, 0.01f );</span>
+<span class="nc" id="L164">				break;</span>
+			case SHADOW:
+<span class="nc" id="L166">				size( 4 );</span>
+<span class="nc" id="L167">				pour( ShadowParticle.MISSILE, 0.01f );</span>
+<span class="nc" id="L168">				break;</span>
+			case RAINBOW:
+<span class="nc" id="L170">				size( 4 );</span>
+<span class="nc" id="L171">				pour( RainbowParticle.BURST, 0.01f );</span>
+<span class="nc" id="L172">				break;</span>
+			case EARTH:
+<span class="nc" id="L174">				size( 4 );</span>
+<span class="nc" id="L175">				pour( EarthParticle.FACTORY, 0.01f );</span>
+<span class="nc" id="L176">				break;</span>
+			case WARD:
+<span class="nc" id="L178">				size( 4 );</span>
+<span class="nc" id="L179">				pour( WardParticle.FACTORY, 0.01f );</span>
+<span class="nc" id="L180">				break;</span>
+			case SHAMAN_RED:
+<span class="nc" id="L182">				size( 2 );</span>
+<span class="nc" id="L183">				pour( ShamanParticle.RED, 0.01f );</span>
+<span class="nc" id="L184">				break;</span>
+			case SHAMAN_BLUE:
+<span class="nc" id="L186">				size( 2 );</span>
+<span class="nc" id="L187">				pour( ShamanParticle.BLUE, 0.01f );</span>
+<span class="nc" id="L188">				break;</span>
+			case SHAMAN_PURPLE:
+<span class="nc" id="L190">				size( 2 );</span>
+<span class="nc" id="L191">				pour( ShamanParticle.PURPLE, 0.01f );</span>
+<span class="nc" id="L192">				break;</span>
+			case ELMO:
+<span class="nc" id="L194">				size( 5 );</span>
+<span class="nc" id="L195">				pour( ElmoParticle.FACTORY, 0.01f );</span>
+<span class="nc" id="L196">				break;</span>
+			case POISON:
+<span class="nc" id="L198">				size( 3 );</span>
+<span class="nc" id="L199">				pour( PoisonParticle.MISSILE, 0.01f );</span>
+<span class="nc" id="L200">				break;</span>
+			case LIGHT_MISSILE:
+<span class="nc" id="L202">				size( 4 );</span>
+<span class="nc" id="L203">				pour( WhiteParticle.YELLOW, 0.01f );</span>
+<span class="nc" id="L204">				break;</span>
+
+			case MAGIC_MISS_CONE:
+<span class="nc" id="L207">				size( 10 );</span>
+<span class="nc" id="L208">				pour( WhiteParticle.FACTORY, 0.03f );</span>
+<span class="nc" id="L209">				break;</span>
+			case FROST_CONE:
+<span class="nc" id="L211">				size( 10 );</span>
+<span class="nc" id="L212">				pour( MagicParticle.FACTORY, 0.03f );</span>
+<span class="nc" id="L213">				break;</span>
+			case FIRE_CONE:
+<span class="nc" id="L215">				size( 10 );</span>
+<span class="nc" id="L216">				pour( FlameParticle.FACTORY, 0.03f );</span>
+<span class="nc" id="L217">				break;</span>
+			case CORROSION_CONE:
+<span class="nc" id="L219">				size( 10 );</span>
+<span class="nc" id="L220">				pour( CorrosionParticle.MISSILE, 0.03f );</span>
+<span class="nc" id="L221">				break;</span>
+			case FOLIAGE_CONE:
+<span class="nc" id="L223">				size( 10 );</span>
+<span class="nc" id="L224">				pour( LeafParticle.GENERAL, 0.03f );</span>
+<span class="nc" id="L225">				break;</span>
+			case FORCE_CONE:
+<span class="nc" id="L227">				size( 10 );</span>
+<span class="nc" id="L228">				pour( SlowParticle.FACTORY, 0.02f );</span>
+<span class="nc" id="L229">				break;</span>
+			case SHADOW_CONE:
+<span class="nc" id="L231">				size( 10 );</span>
+<span class="nc" id="L232">				pour( ShadowParticle.MISSILE, 0.03f );</span>
+<span class="nc" id="L233">				break;</span>
+			case RAINBOW_CONE:
+<span class="nc" id="L235">				size( 10 );</span>
+<span class="nc" id="L236">				pour( RainbowParticle.BURST, 0.03f );</span>
+<span class="nc" id="L237">				break;</span>
+			case EARTH_CONE:
+<span class="nc" id="L239">				size( 10 );</span>
+<span class="nc" id="L240">				pour( EarthParticle.FACTORY, 0.03f );</span>
+<span class="nc" id="L241">				break;</span>
+			case WARD_CONE:
+<span class="nc" id="L243">				size( 10 );</span>
+<span class="nc" id="L244">				pour( WardParticle.FACTORY, 0.03f );</span>
+<span class="nc" id="L245">				break;</span>
+			case PURPLE_CONE:
+<span class="nc" id="L247">				size( 10 );</span>
+<span class="nc" id="L248">				pour( PurpleParticle.MISSILE, 0.03f );</span>
+<span class="nc" id="L249">				break;</span>
+			case SPARK_CONE:
+<span class="nc" id="L251">				size( 10 );</span>
+<span class="nc" id="L252">				pour( SparkParticle.FACTORY, 0.03f );</span>
+<span class="nc" id="L253">				break;</span>
+			case BLOOD_CONE:
+<span class="nc" id="L255">				size( 10 );</span>
+<span class="nc" id="L256">				pour( BloodParticle.FACTORY, 0.03f );</span>
+				break;
+		}
+
+<span class="nc" id="L260">		revive();</span>
+<span class="nc" id="L261">	}</span>
+	
+	public void size( float size ) {
+<span class="nc" id="L264">		x -= size / 2;</span>
+<span class="nc" id="L265">		y -= size / 2;</span>
+<span class="nc" id="L266">		width = height = size;</span>
+<span class="nc" id="L267">	}</span>
+	
+	public void setSpeed( float newSpeed ){
+<span class="nc" id="L270">		PointF d = PointF.diff( to, new PointF(x, y) );</span>
+<span class="nc" id="L271">		PointF speed = new PointF( d ).normalize().scale( newSpeed );</span>
+<span class="nc" id="L272">		sx = speed.x;</span>
+<span class="nc" id="L273">		sy = speed.y;</span>
+<span class="nc" id="L274">		time = d.length() / newSpeed;</span>
+<span class="nc" id="L275">	}</span>
+
+	//convenience method for the common case of a bolt going from a character to a tile or enemy
+	public static MagicMissile boltFromChar(Group group, int type, Visual sprite, int to, Callback callback){
+<span class="nc" id="L279">		MagicMissile missile = ((MagicMissile)group.recycle( MagicMissile.class ));</span>
+<span class="nc bnc" id="L280" title="All 2 branches missed.">		if (Actor.findChar(to) != null){</span>
+<span class="nc" id="L281">			missile.reset(type, sprite.center(), Actor.findChar(to).sprite.destinationCenter(), callback);</span>
+		} else {
+<span class="nc" id="L283">			missile.reset(type, sprite, to, callback);</span>
+		}
+<span class="nc" id="L285">		return missile;</span>
+	}
+
+	@Override
+	protected boolean isFrozen() {
+<span class="nc" id="L290">		return false; //cannot be frozen</span>
+	}
+
+	@Override
+	public void update() {
+<span class="nc" id="L295">		super.update();</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">		if (on) {</span>
+<span class="nc" id="L297">			float d = Game.elapsed;</span>
+<span class="nc" id="L298">			x += sx * d;</span>
+<span class="nc" id="L299">			y += sy * d;</span>
+<span class="nc bnc" id="L300" title="All 2 branches missed.">			if ((time -= d) &lt;= 0) {</span>
+<span class="nc" id="L301">				on = false;</span>
+<span class="nc bnc" id="L302" title="All 2 branches missed.">				if (callback != null ) callback.call();</span>
+			}
+		}
+<span class="nc" id="L305">	}</span>
+	
+	public static class MagicParticle extends PixelParticle {
+		
+<span class="nc" id="L309">		public static final Emitter.Factory FACTORY = new Factory() {</span>
+			@Override
+			public void emit( Emitter emitter, int index, float x, float y ) {
+<span class="nc" id="L312">				((MagicParticle)emitter.recycle( MagicParticle.class )).reset( x, y );</span>
+<span class="nc" id="L313">			}</span>
+			@Override
+			public boolean lightMode() {
+<span class="nc" id="L316">				return true;</span>
+			}
+		};
+
+<span class="nc" id="L320">		public static final Emitter.Factory ATTRACTING = new Factory() {</span>
+			@Override
+			public void emit( Emitter emitter, int index, float x, float y ) {
+<span class="nc" id="L323">				((MagicParticle)emitter.recycle( MagicParticle.class )).resetAttract( x, y );</span>
+<span class="nc" id="L324">			}</span>
+			@Override
+			public boolean lightMode() {
+<span class="nc" id="L327">				return true;</span>
+			}
+		};
+		
+		public MagicParticle() {
+<span class="nc" id="L332">			super();</span>
+			
+<span class="nc" id="L334">			color( 0x88CCFF );</span>
+<span class="nc" id="L335">			lifespan = 0.5f;</span>
+			
+<span class="nc" id="L337">			speed.set( Random.Float( -10, +10 ), Random.Float( -10, +10 ) );</span>
+<span class="nc" id="L338">		}</span>
+		
+		public void reset( float x, float y ) {
+<span class="nc" id="L341">			revive();</span>
+			
+<span class="nc" id="L343">			this.x = x;</span>
+<span class="nc" id="L344">			this.y = y;</span>
+			
+<span class="nc" id="L346">			left = lifespan;</span>
+<span class="nc" id="L347">		}</span>
+
+		public void resetAttract( float x, float y) {
+<span class="nc" id="L350">			revive();</span>
+
+			//size = 8;
+<span class="nc" id="L353">			left = lifespan;</span>
+
+<span class="nc" id="L355">			speed.polar( Random.Float( PointF.PI2 ), Random.Float( 16, 32 ) );</span>
+<span class="nc" id="L356">			this.x = x - speed.x * lifespan;</span>
+<span class="nc" id="L357">			this.y = y - speed.y * lifespan;</span>
+<span class="nc" id="L358">		}</span>
+		
+		@Override
+		public void update() {
+<span class="nc" id="L362">			super.update();</span>
+			// alpha: 1 -&gt; 0; size: 1 -&gt; 4
+<span class="nc" id="L364">			size( 4 - (am = left / lifespan) * 3 );</span>
+<span class="nc" id="L365">		}</span>
+	}
+	
+	public static class EarthParticle extends PixelParticle.Shrinking {
+		
+<span class="nc" id="L370">		public static final Emitter.Factory FACTORY = new Factory() {</span>
+			@Override
+			public void emit( Emitter emitter, int index, float x, float y ) {
+<span class="nc" id="L373">				((EarthParticle)emitter.recycle( EarthParticle.class )).reset( x, y );</span>
+<span class="nc" id="L374">			}</span>
+		};
+		
+<span class="nc" id="L377">		public static final Emitter.Factory BURST = new Factory() {</span>
+			@Override
+			public void emit( Emitter emitter, int index, float x, float y ) {
+<span class="nc" id="L380">				((EarthParticle)emitter.recycle( EarthParticle.class )).resetBurst( x, y );</span>
+<span class="nc" id="L381">			}</span>
+		};
+		
+<span class="nc" id="L384">		public static final Emitter.Factory ATTRACT = new Factory() {</span>
+			@Override
+			public void emit( Emitter emitter, int index, float x, float y ) {
+<span class="nc" id="L387">				((EarthParticle)emitter.recycle( EarthParticle.class )).resetAttract( x, y );</span>
+<span class="nc" id="L388">			}</span>
+		};
+		
+		public EarthParticle() {
+<span class="nc" id="L392">			super();</span>
+			
+<span class="nc" id="L394">			lifespan = 0.5f;</span>
+			
+<span class="nc" id="L396">			acc.set( 0, +40 );</span>
+<span class="nc" id="L397">		}</span>
+		
+		public void reset( float x, float y ) {
+<span class="nc" id="L400">			revive();</span>
+			
+<span class="nc" id="L402">			this.x = x;</span>
+<span class="nc" id="L403">			this.y = y;</span>
+			
+<span class="nc" id="L405">			left = lifespan;</span>
+<span class="nc" id="L406">			size = 4;</span>
+			
+<span class="nc bnc" id="L408" title="All 2 branches missed.">			if (Random.Int(10) == 0){</span>
+<span class="nc" id="L409">				color(ColorMath.random(0xFFF266, 0x80771A));</span>
+			} else {
+<span class="nc" id="L411">				color(ColorMath.random(0x805500, 0x332500));</span>
+			}
+			
+<span class="nc" id="L414">			speed.set( Random.Float( -10, +10 ), Random.Float( -10, +10 ) );</span>
+<span class="nc" id="L415">		}</span>
+		
+		public void resetBurst( float x, float y ){
+<span class="nc" id="L418">			reset(x, y);</span>
+			
+<span class="nc" id="L420">			speed.polar( Random.Float( PointF.PI2 ), Random.Float( 40, 60 ) );</span>
+<span class="nc" id="L421">		}</span>
+		
+		public void resetAttract( float x, float y ){
+<span class="nc" id="L424">			reset(x, y);</span>
+			
+<span class="nc" id="L426">			speed.polar( Random.Float( PointF.PI2 ), Random.Float( 24, 32 ) );</span>
+			
+<span class="nc" id="L428">			this.x = x - speed.x * lifespan;</span>
+<span class="nc" id="L429">			this.y = y - speed.y * lifespan;</span>
+			
+<span class="nc" id="L431">			acc.set( 0, 0 );</span>
+<span class="nc" id="L432">		}</span>
+	}
+	
+	public static class ShamanParticle extends EarthParticle{
+		
+<span class="nc" id="L437">		public static final Emitter.Factory RED = new Factory() {</span>
+			@Override
+			public void emit( Emitter emitter, int index, float x, float y ) {
+<span class="nc" id="L440">				((ShamanParticle)emitter.recycle( ShamanParticle.class ))</span>
+<span class="nc" id="L441">						.reset( x, y, ColorMath.random(0xFF4D4D, 0x801A1A) );</span>
+<span class="nc" id="L442">			}</span>
+		};
+		
+<span class="nc" id="L445">		public static final Emitter.Factory BLUE = new Factory() {</span>
+			@Override
+			public void emit( Emitter emitter, int index, float x, float y ) {
+<span class="nc" id="L448">				((ShamanParticle)emitter.recycle( ShamanParticle.class ))</span>
+<span class="nc" id="L449">						.reset( x, y, ColorMath.random(0x6699FF, 0x1A3C80) );</span>
+<span class="nc" id="L450">			}</span>
+		};
+		
+<span class="nc" id="L453">		public static final Emitter.Factory PURPLE = new Factory() {</span>
+			@Override
+			public void emit( Emitter emitter, int index, float x, float y ) {
+<span class="nc" id="L456">				((ShamanParticle)emitter.recycle( ShamanParticle.class ))</span>
+<span class="nc" id="L457">						.reset( x, y, ColorMath.random(0xBB33FF, 0x5E1A80) );</span>
+<span class="nc" id="L458">			}</span>
+		};
+		
+		int startColor;
+		int endColor;
+		
+		public ShamanParticle() {
+<span class="nc" id="L465">			super();</span>
+			
+<span class="nc" id="L467">			lifespan = 0.6f;</span>
+<span class="nc" id="L468">			acc.set( 0, 0 );</span>
+<span class="nc" id="L469">		}</span>
+		
+		public void reset( float x, float y, int endColor ){
+<span class="nc" id="L472">			super.reset( x, y );</span>
+			
+<span class="nc" id="L474">			size( 1 );</span>
+			
+<span class="nc" id="L476">			this.endColor = endColor;</span>
+<span class="nc" id="L477">			startColor = ColorMath.random(0x805500, 0x332500);</span>
+			
+<span class="nc" id="L479">			speed.set( Random.Float( -10, +10 ), Random.Float( -10, +10 ) );</span>
+<span class="nc" id="L480">		}</span>
+		
+		@Override
+		public void update() {
+<span class="nc" id="L484">			super.update();</span>
+<span class="nc" id="L485">			color( ColorMath.interpolate( endColor, startColor, (left / lifespan) ));</span>
+<span class="nc" id="L486">		}</span>
+	}
+	
+	public static class WhiteParticle extends PixelParticle {
+		
+<span class="nc" id="L491">		public static final Emitter.Factory FACTORY = new Factory() {</span>
+			@Override
+			public void emit( Emitter emitter, int index, float x, float y ) {
+<span class="nc" id="L494">				((WhiteParticle)emitter.recycle( WhiteParticle.class )).reset( x, y );</span>
+<span class="nc" id="L495">			}</span>
+			@Override
+			public boolean lightMode() {
+<span class="nc" id="L498">				return true;</span>
+			}
+		};
+
+<span class="nc" id="L502">		public static final Emitter.Factory YELLOW = new Factory() {</span>
+			@Override
+			public void emit( Emitter emitter, int index, float x, float y ) {
+<span class="nc" id="L505">				((WhiteParticle)emitter.recycle( WhiteParticle.class )).reset( x, y, 1f, 1f, 0.25f );</span>
+<span class="nc" id="L506">			}</span>
+			@Override
+			public boolean lightMode() {
+<span class="nc" id="L509">				return true;</span>
+			}
+		};
+
+<span class="nc" id="L513">		public static final Emitter.Factory WALL = new Factory() {</span>
+			@Override
+			public void emit( Emitter emitter, int index, float x, float y ) {
+<span class="nc" id="L516">				((WhiteParticle)emitter.recycle( WhiteParticle.class )).resetWall( x, y );</span>
+<span class="nc" id="L517">			}</span>
+			@Override
+			public boolean lightMode() {
+<span class="nc" id="L520">				return true;</span>
+			}
+		};
+		
+		public WhiteParticle() {
+<span class="nc" id="L525">			super();</span>
+			
+<span class="nc" id="L527">			lifespan = 0.4f;</span>
+			
+<span class="nc" id="L529">			am = 0.5f;</span>
+<span class="nc" id="L530">		}</span>
+		
+		public void reset( float x, float y ) {
+<span class="nc" id="L533">			revive();</span>
+			
+<span class="nc" id="L535">			this.x = x;</span>
+<span class="nc" id="L536">			this.y = y;</span>
+			
+<span class="nc" id="L538">			left = lifespan;</span>
+<span class="nc" id="L539">			hardlight(1, 1, 1);</span>
+<span class="nc" id="L540">		}</span>
+
+		public void reset( float x, float y, float r, float g, float b ) {
+<span class="nc" id="L543">			reset(x, y);</span>
+<span class="nc" id="L544">			hardlight(r, g, b);</span>
+<span class="nc" id="L545">		}</span>
+
+		public void resetWall( float x, float y){
+<span class="nc" id="L548">			reset(x, y);</span>
+
+<span class="nc" id="L550">			left = lifespan = 2f;</span>
+
+<span class="nc" id="L552">			this.x = Math.round(x/4)*4;</span>
+<span class="nc" id="L553">			this.y = Math.round(y/4)*4 - 6;</span>
+<span class="nc" id="L554">			this.x += Math.round(this.y % 16)/4f - 2;</span>
+<span class="nc" id="L555">		}</span>
+		
+		@Override
+		public void update() {
+<span class="nc" id="L559">			super.update();</span>
+			// size: 3 -&gt; 0
+<span class="nc" id="L561">			size( (left / lifespan) * 3 );</span>
+<span class="nc" id="L562">		}</span>
+	}
+
+	public static class SlowParticle extends PixelParticle {
+		
+		private Emitter emitter;
+		
+<span class="nc" id="L569">		public static final Emitter.Factory FACTORY = new Factory() {</span>
+			@Override
+			public void emit( Emitter emitter, int index, float x, float y ) {
+<span class="nc" id="L572">				((SlowParticle)emitter.recycle( SlowParticle.class )).reset( x, y, emitter );</span>
+<span class="nc" id="L573">			}</span>
+			@Override
+			public boolean lightMode() {
+<span class="nc" id="L576">				return true;</span>
+			}
+		};
+		
+		public SlowParticle() {
+<span class="nc" id="L581">			super();</span>
+			
+<span class="nc" id="L583">			lifespan = 0.6f;</span>
+			
+<span class="nc" id="L585">			color( 0x664422 );</span>
+<span class="nc" id="L586">			size( 2 );</span>
+<span class="nc" id="L587">		}</span>
+		
+		public void reset( float x, float y, Emitter emitter ) {
+<span class="nc" id="L590">			revive();</span>
+			
+<span class="nc" id="L592">			this.x = x;</span>
+<span class="nc" id="L593">			this.y = y;</span>
+<span class="nc" id="L594">			this.emitter = emitter;</span>
+			
+<span class="nc" id="L596">			left = lifespan;</span>
+			
+<span class="nc" id="L598">			acc.set( 0 );</span>
+<span class="nc" id="L599">			speed.set( Random.Float( -20, +20 ), Random.Float( -20, +20 ) );</span>
+<span class="nc" id="L600">		}</span>
+		
+		@Override
+		public void update() {
+<span class="nc" id="L604">			super.update();</span>
+			
+<span class="nc" id="L606">			am = left / lifespan;</span>
+<span class="nc" id="L607">			acc.set( (emitter.x - x) * 10, (emitter.y - y) * 10 );</span>
+<span class="nc" id="L608">		}</span>
+	}
+
+<span class="nc" id="L611">	public static class ForceParticle extends PixelParticle.Shrinking {</span>
+
+<span class="nc" id="L613">		public static final Emitter.Factory FACTORY = new Factory() {</span>
+			@Override
+			public void emit( Emitter emitter, int index, float x, float y ) {
+<span class="nc" id="L616">				((ForceParticle)emitter.recycle( ForceParticle.class )).reset( index, x, y );</span>
+<span class="nc" id="L617">			}</span>
+		};
+
+		public void reset( int index, float x, float y ) {
+<span class="nc" id="L621">			super.reset( x, y, 0xFFFFFF, 8, 0.5f );</span>
+
+<span class="nc" id="L623">			speed.polar( PointF.PI2 / 8 * index, 12 );</span>
+<span class="nc" id="L624">			this.x -= speed.x * lifespan;</span>
+<span class="nc" id="L625">			this.y -= speed.y * lifespan;</span>
+<span class="nc" id="L626">		}</span>
+
+		@Override
+		public void update() {
+<span class="nc" id="L630">			super.update();</span>
+
+<span class="nc" id="L632">			am = (1 - left / lifespan) / 2;</span>
+<span class="nc" id="L633">		}</span>
+	}
+
+	public static class WardParticle extends PixelParticle.Shrinking {
+		
+<span class="nc" id="L638">		public static final Emitter.Factory FACTORY = new Factory() {</span>
+			@Override
+			public void emit( Emitter emitter, int index, float x, float y ) {
+<span class="nc" id="L641">				((WardParticle)emitter.recycle( WardParticle.class )).reset( x, y );</span>
+<span class="nc" id="L642">			}</span>
+			@Override
+			public boolean lightMode() {
+<span class="nc" id="L645">				return true;</span>
+			}
+		};
+
+<span class="nc" id="L649">		public static final Emitter.Factory UP = new Factory() {</span>
+			@Override
+			public void emit( Emitter emitter, int index, float x, float y ) {
+<span class="nc" id="L652">				((WardParticle)emitter.recycle( WardParticle.class )).resetUp( x, y );</span>
+<span class="nc" id="L653">			}</span>
+			@Override
+			public boolean lightMode() {
+<span class="nc" id="L656">				return true;</span>
+			}
+		};
+		
+		public WardParticle() {
+<span class="nc" id="L661">			super();</span>
+			
+<span class="nc" id="L663">			lifespan = 0.6f;</span>
+			
+<span class="nc" id="L665">			color( 0x8822FF );</span>
+<span class="nc" id="L666">		}</span>
+		
+		public void reset( float x, float y ) {
+<span class="nc" id="L669">			revive();</span>
+			
+<span class="nc" id="L671">			this.x = x;</span>
+<span class="nc" id="L672">			this.y = y;</span>
+			
+<span class="nc" id="L674">			left = lifespan;</span>
+<span class="nc" id="L675">			size = 8;</span>
+<span class="nc" id="L676">		}</span>
+
+		public void resetUp( float x, float y){
+<span class="nc" id="L679">			reset(x, y);</span>
+
+<span class="nc" id="L681">			speed.set( Random.Float( -8, +8 ), Random.Float( -32, -48 ) );</span>
+<span class="nc" id="L682">		}</span>
+		
+		@Override
+		public void update() {
+<span class="nc" id="L686">			super.update();</span>
+			
+<span class="nc" id="L688">			am = 1 - left / lifespan;</span>
+<span class="nc" id="L689">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

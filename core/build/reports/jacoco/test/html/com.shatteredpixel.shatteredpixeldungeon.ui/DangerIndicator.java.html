@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DangerIndicator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">DangerIndicator.java</span></div><h1>DangerIndicator.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndKeyBindings;
+import com.watabou.input.GameAction;
+import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.Image;
+
+public class DangerIndicator extends Tag {
+	
+	public static final int COLOR	= 0xC03838;
+	
+	private BitmapText number;
+	private Image icon;
+	
+<span class="nc" id="L42">	private int enemyIndex = 0;</span>
+	
+<span class="nc" id="L44">	private int lastNumber = -1;</span>
+
+<span class="nc" id="L46">	public static int HEIGHT = 16;</span>
+	
+	public DangerIndicator() {
+<span class="nc" id="L49">		super( COLOR );</span>
+		
+<span class="nc" id="L51">		setSize( SIZE, HEIGHT );</span>
+		
+<span class="nc" id="L53">		visible = false;</span>
+<span class="nc" id="L54">	}</span>
+	
+	@Override
+	public GameAction keyAction() {
+<span class="nc" id="L58">		return SPDAction.CYCLE;</span>
+	}
+	
+	@Override
+	protected void createChildren() {
+<span class="nc" id="L63">		super.createChildren();</span>
+		
+<span class="nc" id="L65">		number = new BitmapText( PixelScene.pixelFont);</span>
+<span class="nc" id="L66">		add( number );</span>
+		
+<span class="nc" id="L68">		icon = Icons.SKULL.get();</span>
+<span class="nc" id="L69">		add( icon );</span>
+<span class="nc" id="L70">	}</span>
+	
+	@Override
+	protected void layout() {
+<span class="nc" id="L74">		super.layout();</span>
+		
+<span class="nc" id="L76">		icon.x = right() - 10;</span>
+<span class="nc" id="L77">		icon.y = y + (height - icon.height) / 2;</span>
+		
+<span class="nc" id="L79">		placeNumber();</span>
+<span class="nc" id="L80">	}</span>
+	
+	private void placeNumber() {
+<span class="nc" id="L83">		number.x = right() - 11 - number.width();</span>
+<span class="nc" id="L84">		number.y = y + (height - number.baseLine()) / 2f;</span>
+<span class="nc" id="L85">		PixelScene.align(number);</span>
+<span class="nc" id="L86">	}</span>
+	
+	@Override
+	public void update() {
+		
+<span class="nc bnc" id="L91" title="All 2 branches missed.">		if (Dungeon.hero.isAlive()) {</span>
+<span class="nc" id="L92">			int v =  Dungeon.hero.visibleEnemies();</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">			if (v != lastNumber) {</span>
+<span class="nc" id="L94">				lastNumber = v;</span>
+<span class="nc bnc" id="L95" title="All 4 branches missed.">				if (visible = lastNumber &gt; 0) {</span>
+<span class="nc" id="L96">					number.text( Integer.toString( lastNumber ) );</span>
+<span class="nc" id="L97">					number.measure();</span>
+<span class="nc" id="L98">					placeNumber();</span>
+
+<span class="nc" id="L100">					flash();</span>
+				}
+			}
+<span class="nc" id="L103">		} else {</span>
+<span class="nc" id="L104">			visible = false;</span>
+		}
+		
+<span class="nc" id="L107">		super.update();</span>
+<span class="nc" id="L108">	}</span>
+	
+	@Override
+	protected void onClick() {
+<span class="nc" id="L112">		super.onClick();</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		if (Dungeon.hero.visibleEnemies() &gt; 0) {</span>
+
+<span class="nc" id="L115">			Mob target = Dungeon.hero.visibleEnemy(++enemyIndex);</span>
+
+<span class="nc" id="L117">			QuickSlotButton.target(target);</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">			if (Dungeon.hero.canAttack(target)) AttackIndicator.target(target);</span>
+
+<span class="nc bnc" id="L120" title="All 4 branches missed.">			if (Dungeon.hero.curAction == null &amp;&amp; target.sprite != null) {</span>
+<span class="nc" id="L121">				Camera.main.panFollow(target.sprite, 5f);</span>
+			}
+		}
+<span class="nc" id="L124">	}</span>
+
+	@Override
+	protected String hoverText() {
+<span class="nc" id="L128">		return Messages.titleCase(Messages.get(WndKeyBindings.class, &quot;tag_danger&quot;));</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

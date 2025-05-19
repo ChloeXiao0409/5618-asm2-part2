@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ElementalSprite.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.sprites</a> &gt; <span class="el_source">ElementalSprite.java</span></div><h1>ElementalSprite.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.sprites;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Elemental;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Beam;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ElmoParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.FlameParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.RainbowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SparkParticle;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.watabou.noosa.TextureFilm;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.utils.Callback;
+
+public abstract class ElementalSprite extends MobSprite {
+	
+	protected int boltType;
+	
+	protected abstract int texOffset();
+	
+	private Emitter particles;
+	protected abstract Emitter createEmitter();
+	
+	public ElementalSprite() {
+<span class="nc" id="L49">		super();</span>
+		
+<span class="nc" id="L51">		int c = texOffset();</span>
+		
+<span class="nc" id="L53">		texture( Assets.Sprites.ELEMENTAL );</span>
+		
+<span class="nc" id="L55">		TextureFilm frames = new TextureFilm( texture, 12, 14 );</span>
+		
+<span class="nc" id="L57">		idle = new Animation( 10, true );</span>
+<span class="nc" id="L58">		idle.frames( frames, c+0, c+1, c+2 );</span>
+		
+<span class="nc" id="L60">		run = new Animation( 12, true );</span>
+<span class="nc" id="L61">		run.frames( frames, c+0, c+1, c+3 );</span>
+		
+<span class="nc" id="L63">		attack = new Animation( 15, false );</span>
+<span class="nc" id="L64">		attack.frames( frames, c+4, c+5, c+6 );</span>
+		
+<span class="nc" id="L66">		zap = attack.clone();</span>
+		
+<span class="nc" id="L68">		die = new Animation( 15, false );</span>
+<span class="nc" id="L69">		die.frames( frames, c+7, c+8, c+9, c+10, c+11, c+12, c+13, c+12 );</span>
+		
+<span class="nc" id="L71">		play( idle );</span>
+<span class="nc" id="L72">	}</span>
+	
+	@Override
+	public void link( Char ch ) {
+<span class="nc" id="L76">		super.link( ch );</span>
+		
+<span class="nc bnc" id="L78" title="All 2 branches missed.">		if (particles == null) {</span>
+<span class="nc" id="L79">			particles = createEmitter();</span>
+		}
+<span class="nc" id="L81">	}</span>
+	
+	@Override
+	public void update() {
+<span class="nc" id="L85">		super.update();</span>
+		
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		if (particles != null){</span>
+<span class="nc" id="L88">			particles.visible = visible;</span>
+		}
+<span class="nc" id="L90">	}</span>
+	
+	@Override
+	public void die() {
+<span class="nc" id="L94">		super.die();</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		if (particles != null){</span>
+<span class="nc" id="L96">			particles.on = false;</span>
+		}
+<span class="nc" id="L98">	}</span>
+	
+	@Override
+	public void kill() {
+<span class="nc" id="L102">		super.kill();</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		if (particles != null){</span>
+<span class="nc" id="L104">			particles.killAndErase();</span>
+		}
+<span class="nc" id="L106">	}</span>
+	
+	public void zap( int cell ) {
+<span class="nc" id="L109">		super.zap( cell );</span>
+		
+<span class="nc" id="L111">		MagicMissile.boltFromChar( parent,</span>
+				boltType,
+				this,
+				cell,
+<span class="nc" id="L115">				new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L118">						((Elemental)ch).onZapComplete();</span>
+<span class="nc" id="L119">					}</span>
+				} );
+<span class="nc" id="L121">		Sample.INSTANCE.play( Assets.Sounds.ZAP );</span>
+<span class="nc" id="L122">	}</span>
+	
+	@Override
+	public void onComplete( Animation anim ) {
+<span class="nc bnc" id="L126" title="All 2 branches missed.">		if (anim == zap) {</span>
+<span class="nc" id="L127">			idle();</span>
+		}
+<span class="nc" id="L129">		super.onComplete( anim );</span>
+<span class="nc" id="L130">	}</span>
+	
+<span class="nc" id="L132">	public static class Fire extends ElementalSprite {</span>
+		
+		{
+<span class="nc" id="L135">			boltType = MagicMissile.FIRE;</span>
+<span class="nc" id="L136">		}</span>
+		
+		@Override
+		protected int texOffset() {
+<span class="nc" id="L140">			return 0;</span>
+		}
+		
+		@Override
+		protected Emitter createEmitter() {
+<span class="nc" id="L145">			Emitter emitter = emitter();</span>
+<span class="nc" id="L146">			emitter.pour( FlameParticle.FACTORY, 0.06f );</span>
+<span class="nc" id="L147">			return emitter;</span>
+		}
+		
+		@Override
+		public int blood() {
+<span class="nc" id="L152">			return 0xFFFFBB33;</span>
+		}
+	}
+	
+<span class="nc" id="L156">	public static class NewbornFire extends ElementalSprite {</span>
+		
+		{
+<span class="nc" id="L159">			boltType = MagicMissile.ELMO;</span>
+<span class="nc" id="L160">		}</span>
+		
+		@Override
+		protected int texOffset() {
+<span class="nc" id="L164">			return 14;</span>
+		}
+		
+		@Override
+		protected Emitter createEmitter() {
+<span class="nc" id="L169">			Emitter emitter = emitter();</span>
+<span class="nc" id="L170">			emitter.pour( ElmoParticle.FACTORY, 0.06f );</span>
+<span class="nc" id="L171">			return emitter;</span>
+		}
+		
+		@Override
+		public int blood() {
+<span class="nc" id="L176">			return 0xFF85FFC8;</span>
+		}
+	}
+	
+<span class="nc" id="L180">	public static class Frost extends ElementalSprite {</span>
+		
+		{
+<span class="nc" id="L183">			boltType = MagicMissile.FROST;</span>
+<span class="nc" id="L184">		}</span>
+		
+		@Override
+		protected int texOffset() {
+<span class="nc" id="L188">			return 28;</span>
+		}
+		
+		@Override
+		protected Emitter createEmitter() {
+<span class="nc" id="L193">			Emitter emitter = emitter();</span>
+<span class="nc" id="L194">			emitter.pour( MagicMissile.MagicParticle.FACTORY, 0.06f );</span>
+<span class="nc" id="L195">			return emitter;</span>
+		}
+		
+		@Override
+		public int blood() {
+<span class="nc" id="L200">			return 0xFF8EE3FF;</span>
+		}
+	}
+	
+<span class="nc" id="L204">	public static class Shock extends ElementalSprite {</span>
+		
+		//different bolt, so overrides zap
+		@Override
+		public void zap( int cell ) {
+<span class="nc" id="L209">			super.zap( cell, null );</span>
+			
+<span class="nc" id="L211">			((Elemental)ch).onZapComplete();</span>
+<span class="nc" id="L212">			parent.add( new Beam.LightRay(center(), DungeonTilemap.raisedTileCenterToWorld(cell)));</span>
+<span class="nc" id="L213">		}</span>
+		
+		@Override
+		protected int texOffset() {
+<span class="nc" id="L217">			return 42;</span>
+		}
+		
+		@Override
+		protected Emitter createEmitter() {
+<span class="nc" id="L222">			Emitter emitter = emitter();</span>
+<span class="nc" id="L223">			emitter.pour( SparkParticle.STATIC, 0.06f );</span>
+<span class="nc" id="L224">			return emitter;</span>
+		}
+		
+		@Override
+		public int blood() {
+<span class="nc" id="L229">			return 0xFFFFFF85;</span>
+		}
+	}
+	
+<span class="nc" id="L233">	public static class Chaos extends ElementalSprite {</span>
+
+		@Override
+		public void zap(int cell) {
+<span class="nc" id="L237">			zap( cell, null ); //effectively super.super.zap</span>
+			//relies on cursed wand for effects
+<span class="nc" id="L239">			((Elemental)ch).onZapComplete();</span>
+<span class="nc" id="L240">		}</span>
+
+		@Override
+		protected int texOffset() {
+<span class="nc" id="L244">			return 56;</span>
+		}
+		
+		@Override
+		protected Emitter createEmitter() {
+<span class="nc" id="L249">			Emitter emitter = emitter();</span>
+<span class="nc" id="L250">			emitter.pour( RainbowParticle.BURST, 0.025f );</span>
+<span class="nc" id="L251">			return emitter;</span>
+		}
+		
+		@Override
+		public int blood() {
+<span class="nc" id="L256">			return 0xFFE3E3E3;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

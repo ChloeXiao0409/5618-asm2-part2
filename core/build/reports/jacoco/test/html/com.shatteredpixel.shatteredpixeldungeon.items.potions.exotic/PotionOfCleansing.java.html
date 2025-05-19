@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PotionOfCleansing.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic</a> &gt; <span class="el_source">PotionOfCleansing.java</span></div><h1>PotionOfCleansing.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AllyBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Hunger;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.LostInventory;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Sample;
+
+<span class="nc" id="L40">public class PotionOfCleansing extends ExoticPotion {</span>
+	
+	{
+<span class="nc" id="L43">		icon = ItemSpriteSheet.Icons.POTION_CLEANSE;</span>
+<span class="nc" id="L44">	}</span>
+	
+	@Override
+	public void apply( Hero hero ) {
+<span class="nc" id="L48">		identify();</span>
+		
+<span class="nc" id="L50">		cleanse( hero );</span>
+<span class="nc" id="L51">		new Flare( 6, 32 ).color(0xFF4CD2, true).show( curUser.sprite, 2f );</span>
+<span class="nc" id="L52">	}</span>
+	
+	@Override
+	public void shatter(int cell) {
+<span class="nc bnc" id="L56" title="All 2 branches missed.">		if (Actor.findChar(cell) == null){</span>
+<span class="nc" id="L57">			super.shatter(cell);</span>
+		} else {
+<span class="nc" id="L59">			splash( cell );</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">			if (Dungeon.level.heroFOV[cell]) {</span>
+<span class="nc" id="L61">				Sample.INSTANCE.play(Assets.Sounds.SHATTER);</span>
+<span class="nc" id="L62">				identify();</span>
+			}
+			
+<span class="nc bnc" id="L65" title="All 2 branches missed.">			if (Actor.findChar(cell) != null){</span>
+<span class="nc" id="L66">				cleanse(Actor.findChar(cell));</span>
+			}
+		}
+<span class="nc" id="L69">	}</span>
+
+	public static void cleanse(Char ch){
+<span class="nc" id="L72">		cleanse(ch, Cleanse.DURATION);</span>
+<span class="nc" id="L73">	}</span>
+
+	public static void cleanse(Char ch, float duration){
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		for (Buff b : ch.buffs()){</span>
+<span class="nc bnc" id="L77" title="All 6 branches missed.">			if (b.type == Buff.buffType.NEGATIVE</span>
+					&amp;&amp; !(b instanceof AllyBuff)
+					&amp;&amp; !(b instanceof LostInventory)){
+<span class="nc" id="L80">				b.detach();</span>
+			}
+<span class="nc bnc" id="L82" title="All 2 branches missed.">			if (b instanceof Hunger){</span>
+<span class="nc" id="L83">				((Hunger) b).satisfy(Hunger.STARVING);</span>
+			}
+<span class="nc" id="L85">		}</span>
+<span class="nc" id="L86">		Buff.affect(ch, Cleanse.class, duration);</span>
+<span class="nc" id="L87">	}</span>
+
+<span class="nc" id="L89">	public static class Cleanse extends FlavourBuff {</span>
+
+		{
+<span class="nc" id="L92">			type = buffType.POSITIVE;</span>
+<span class="nc" id="L93">		}</span>
+
+		public static final float DURATION = 5f;
+
+		@Override
+		public int icon() {
+<span class="nc" id="L99">			return BuffIndicator.IMMUNITY;</span>
+		}
+
+		@Override
+		public void tintIcon(Image icon) {
+<span class="nc" id="L104">			icon.hardlight(1f, 0f, 2f);</span>
+<span class="nc" id="L105">		}</span>
+
+		@Override
+		public float iconFadePercent() {
+<span class="nc" id="L109">			return Math.max(0, (DURATION - visualcooldown()) / DURATION);</span>
+		}
+
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

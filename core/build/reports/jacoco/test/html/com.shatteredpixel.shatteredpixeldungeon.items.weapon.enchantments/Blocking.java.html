@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Blocking.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments</a> &gt; <span class="el_source">Blocking.java</span></div><h1>Blocking.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments;
+
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ShieldBuff;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.watabou.noosa.Image;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L38">public class Blocking extends Weapon.Enchantment {</span>
+	
+<span class="nc" id="L40">	private static ItemSprite.Glowing BLUE = new ItemSprite.Glowing( 0x0000FF );</span>
+	
+	@Override
+	public int proc(Weapon weapon, Char attacker, Char defender, int damage) {
+		
+<span class="nc" id="L45">		int level = Math.max( 0, weapon.buffedLvl() );</span>
+
+		// lvl 0 - 10%
+		// lvl 1 ~ 12%
+		// lvl 2 ~ 14%
+<span class="nc" id="L50">		float procChance = (level+4f)/(level+40f) * procChanceMultiplier(attacker);</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">		if (Random.Float() &lt; procChance){</span>
+<span class="nc" id="L52">			float powerMulti = Math.max(1f, procChance);</span>
+
+<span class="nc" id="L54">			BlockBuff b = Buff.affect(attacker, BlockBuff.class);</span>
+<span class="nc" id="L55">			int shield = Math.round(powerMulti * (2 + weapon.buffedLvl()));</span>
+<span class="nc" id="L56">			b.setShield(shield);</span>
+<span class="nc" id="L57">			attacker.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shield), FloatingText.SHIELDING);</span>
+<span class="nc" id="L58">			attacker.sprite.emitter().burst(Speck.factory(Speck.LIGHT), 5);</span>
+		}
+		
+<span class="nc" id="L61">		return damage;</span>
+	}
+	
+	@Override
+	public ItemSprite.Glowing glowing() {
+<span class="nc" id="L66">		return BLUE;</span>
+	}
+	
+<span class="nc" id="L69">	public static class BlockBuff extends ShieldBuff {</span>
+
+		{
+<span class="nc" id="L72">			type = buffType.POSITIVE;</span>
+<span class="nc" id="L73">		}</span>
+
+		@Override
+		public boolean act() {
+<span class="nc" id="L77">			detach();</span>
+<span class="nc" id="L78">			return true;</span>
+		}
+
+		@Override
+		public void setShield(int shield) {
+<span class="nc" id="L83">			super.setShield(shield);</span>
+<span class="nc" id="L84">			postpone(5f);</span>
+<span class="nc" id="L85">		}</span>
+
+		@Override
+		public void fx(boolean on) {
+<span class="nc bnc" id="L89" title="All 2 branches missed.">			if (on) {</span>
+<span class="nc" id="L90">				target.sprite.add(CharSprite.State.SHIELDED);</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">			} else if (target.buff(Barrier.class) == null) {</span>
+<span class="nc" id="L92">				target.sprite.remove(CharSprite.State.SHIELDED);</span>
+			}
+<span class="nc" id="L94">		}</span>
+
+		@Override
+		public int icon() {
+<span class="nc" id="L98">			return BuffIndicator.ARMOR;</span>
+		}
+		
+		@Override
+		public void tintIcon(Image icon) {
+<span class="nc" id="L103">			icon.hardlight(0.5f, 1f, 2f);</span>
+<span class="nc" id="L104">		}</span>
+
+		@Override
+		public float iconFadePercent() {
+<span class="nc" id="L108">			return Math.max(0, (5f - visualcooldown()) / 5f);</span>
+		}
+
+		@Override
+		public String iconTextDisplay() {
+<span class="nc" id="L113">			return Integer.toString((int)visualcooldown());</span>
+		}
+
+		@Override
+		public String desc() {
+<span class="nc" id="L118">			return Messages.get(this, &quot;desc&quot;, shielding(), dispTurns(visualcooldown()));</span>
+		}
+	
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

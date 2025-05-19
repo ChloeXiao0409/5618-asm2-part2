@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LootIndicator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">LootIndicator.java</span></div><h1>LootIndicator.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.watabou.input.GameAction;
+
+public class LootIndicator extends Tag {
+	
+	private ItemSlot slot;
+	
+<span class="nc" id="L34">	private Item lastItem = null;</span>
+<span class="nc" id="L35">	private int lastQuantity = 0;</span>
+	
+	public LootIndicator() {
+<span class="nc" id="L38">		super( 0x185898 );</span>
+		
+<span class="nc" id="L40">		setSize( SIZE, SIZE );</span>
+		
+<span class="nc" id="L42">		visible = false;</span>
+<span class="nc" id="L43">	}</span>
+
+	@Override
+	protected void createChildren() {
+<span class="nc" id="L47">		super.createChildren();</span>
+
+<span class="nc" id="L49">		slot = new ItemSlot() {</span>
+			protected void onClick() {
+<span class="nc" id="L51">				LootIndicator.this.onClick();</span>
+<span class="nc bnc" id="L52" title="All 4 branches missed.">				if (Dungeon.hero.ready &amp;&amp; Dungeon.hero.handle(Dungeon.hero.pos)){</span>
+<span class="nc" id="L53">					Dungeon.hero.next();</span>
+				}
+
+<span class="nc" id="L56">			}</span>
+
+			@Override
+			public GameAction keyAction() {
+<span class="nc" id="L60">				return SPDAction.TAG_LOOT;</span>
+			}
+
+			@Override
+			public GameAction secondaryTooltipAction() {
+<span class="nc" id="L65">				return SPDAction.WAIT_OR_PICKUP;</span>
+			}
+		};
+<span class="nc" id="L68">		slot.showExtraInfo( false );</span>
+<span class="nc" id="L69">		add( slot );</span>
+<span class="nc" id="L70">	}</span>
+	
+	@Override
+	protected void layout() {
+<span class="nc" id="L74">		super.layout();</span>
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		if (!flipped) {</span>
+<span class="nc" id="L77">			slot.setRect( x, y, SIZE, height );</span>
+<span class="nc" id="L78">			slot.setMargins(2, 2, 0, 2);</span>
+		} else {
+<span class="nc" id="L80">			slot.setRect( x+(width()-SIZE), y, SIZE, height );</span>
+<span class="nc" id="L81">			slot.setMargins(0, 2, 2, 2);</span>
+		}
+
+<span class="nc" id="L84">	}</span>
+	
+	@Override
+	public void update() {
+		
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		if (Dungeon.hero.ready) {</span>
+<span class="nc" id="L90">			Heap heap = Dungeon.level.heaps.get( Dungeon.hero.pos );</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">			if (heap != null) {</span>
+				
+				Item item =
+<span class="nc bnc" id="L94" title="All 2 branches missed.">					heap.type == Heap.Type.CHEST ? ItemSlot.CHEST :</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">					heap.type == Heap.Type.LOCKED_CHEST ? ItemSlot.LOCKED_CHEST :</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">					heap.type == Heap.Type.CRYSTAL_CHEST ? ItemSlot.CRYSTAL_CHEST :</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">					heap.type == Heap.Type.TOMB ? ItemSlot.TOMB :</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">					heap.type == Heap.Type.SKELETON ? ItemSlot.SKELETON :</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">					heap.type == Heap.Type.REMAINS ? ItemSlot.REMAINS :</span>
+<span class="nc" id="L100">					heap.peek();</span>
+<span class="nc bnc" id="L101" title="All 4 branches missed.">				if (item != lastItem || item.quantity() != lastQuantity) {</span>
+<span class="nc" id="L102">					lastItem = item;</span>
+<span class="nc" id="L103">					lastQuantity = item.quantity();</span>
+					
+<span class="nc" id="L105">					slot.item( item );</span>
+<span class="nc" id="L106">					flash();</span>
+				}
+<span class="nc" id="L108">				visible = true;</span>
+				
+<span class="nc" id="L110">			} else {</span>
+				
+<span class="nc" id="L112">				lastItem = null;</span>
+<span class="nc" id="L113">				visible = false;</span>
+				
+			}
+		}
+		
+<span class="nc bnc" id="L118" title="All 4 branches missed.">		slot.enable( visible &amp;&amp; Dungeon.hero.ready );</span>
+		
+<span class="nc" id="L120">		super.update();</span>
+<span class="nc" id="L121">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

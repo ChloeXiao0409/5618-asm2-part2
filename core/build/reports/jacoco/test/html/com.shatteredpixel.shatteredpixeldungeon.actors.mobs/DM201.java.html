@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DM201.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">DM201.java</span></div><h1>DM201.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.CorrosiveGas;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.MetalShard;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.DM201Sprite;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L34">public class DM201 extends DM200 {</span>
+
+	{
+<span class="nc" id="L37">		spriteClass = DM201Sprite.class;</span>
+
+<span class="nc" id="L39">		HP = HT = 120;</span>
+
+<span class="nc" id="L41">		properties.add(Property.IMMOVABLE);</span>
+
+<span class="nc" id="L43">		HUNTING = new Hunting();</span>
+	}
+
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L48">		return Random.NormalIntRange( 15, 25 );</span>
+	}
+
+<span class="nc" id="L51">	private boolean threatened = false;</span>
+
+	@Override
+	public void damage(int dmg, Object src) {
+<span class="nc bnc" id="L55" title="All 6 branches missed.">		if ((src instanceof Char &amp;&amp; !Dungeon.level.adjacent(pos, ((Char)src).pos))</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">				|| enemy == null || !Dungeon.level.adjacent(pos, enemy.pos)){</span>
+<span class="nc" id="L57">			threatened = true;</span>
+		}
+<span class="nc" id="L59">		super.damage(dmg, src);</span>
+<span class="nc" id="L60">	}</span>
+
+	public void onZapComplete(){
+<span class="nc" id="L63">		zap();</span>
+<span class="nc" id="L64">		next();</span>
+<span class="nc" id="L65">	}</span>
+
+	private void zap( ){
+<span class="nc" id="L68">		threatened = false;</span>
+<span class="nc" id="L69">		spend(TICK);</span>
+
+<span class="nc" id="L71">		GameScene.add(Blob.seed(enemy.pos, 15, CorrosiveGas.class).setStrength(8));</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">		for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">			if (!Dungeon.level.solid[enemy.pos+i]) {</span>
+<span class="nc" id="L74">				GameScene.add(Blob.seed(enemy.pos + i, 5, CorrosiveGas.class).setStrength(8));</span>
+			}
+		}
+
+<span class="nc" id="L78">	}</span>
+
+	@Override
+	protected boolean canVent(int target) {
+<span class="nc" id="L82">		return false;</span>
+	}
+
+	@Override
+	protected boolean getCloser(int target) {
+<span class="nc" id="L87">		return false;</span>
+	}
+
+	@Override
+	protected boolean getFurther(int target) {
+<span class="nc" id="L92">		return false;</span>
+	}
+
+	@Override
+	public void rollToDropLoot() {
+<span class="nc bnc" id="L97" title="All 2 branches missed.">		if (Dungeon.hero.lvl &gt; maxLvl + 2) return;</span>
+
+<span class="nc" id="L99">		super.rollToDropLoot();</span>
+
+		int ofs;
+		do {
+<span class="nc" id="L103">			ofs = PathFinder.NEIGHBOURS8[Random.Int(8)];</span>
+<span class="nc bnc" id="L104" title="All 4 branches missed.">		} while (Dungeon.level.solid[pos + ofs] &amp;&amp; !Dungeon.level.passable[pos + ofs]);</span>
+<span class="nc" id="L105">		Dungeon.level.drop( new MetalShard(), pos + ofs ).sprite.drop( pos );</span>
+<span class="nc" id="L106">	}</span>
+
+<span class="nc" id="L108">	private class Hunting extends Mob.Hunting {</span>
+
+		@Override
+		public boolean act( boolean enemyInFOV, boolean justAlerted ) {
+
+<span class="nc bnc" id="L113" title="All 4 branches missed.">			if (threatened &amp;&amp; enemyInFOV){</span>
+<span class="nc bnc" id="L114" title="All 6 branches missed.">				if (sprite != null &amp;&amp; (sprite.visible || enemy.sprite.visible)) {</span>
+<span class="nc" id="L115">					sprite.zap( enemy.pos );</span>
+<span class="nc" id="L116">					return false;</span>
+				} else {
+<span class="nc" id="L118">					zap();</span>
+<span class="nc" id="L119">					return true;</span>
+				}
+			} else {
+<span class="nc" id="L122">				return super.act( enemyInFOV, justAlerted );</span>
+			}
+
+		}
+
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

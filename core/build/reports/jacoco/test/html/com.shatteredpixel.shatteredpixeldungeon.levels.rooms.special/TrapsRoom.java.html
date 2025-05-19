@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TrapsRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special</a> &gt; <span class="el_source">TrapsRoom.java</span></div><h1>TrapsRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLevitation;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.DisintegrationTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.ExplosiveTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.FlashingTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.FlockTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.GrimTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.GrippingTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.PoisonDartTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.TeleportationTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.WarpingTrap;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+<span class="nc" id="L48">public class TrapsRoom extends SpecialRoom {</span>
+
+	//size is a bit limited to prevent too many or too few traps
+	@Override
+<span class="nc" id="L52">	public int minWidth() { return 6; }</span>
+<span class="nc" id="L53">	public int maxWidth() { return 8; }</span>
+
+	@Override
+<span class="nc" id="L56">	public int minHeight() { return 6; }</span>
+<span class="nc" id="L57">	public int maxHeight() { return 8; }</span>
+
+	public void paint( Level level ) {
+		 
+<span class="nc" id="L61">		Painter.fill( level, this, Terrain.WALL );</span>
+
+		Class&lt;? extends Trap&gt; trapClass;
+<span class="nc bnc" id="L64" title="All 2 branches missed.">		switch (Random.Int(4)){</span>
+			case 0:
+<span class="nc" id="L66">				trapClass = null;</span>
+<span class="nc" id="L67">				break;</span>
+			default:
+<span class="nc" id="L69">				trapClass = Random.oneOf(levelTraps[Dungeon.depth/5]);</span>
+				break;
+		}
+
+<span class="nc bnc" id="L73" title="All 2 branches missed.">		if (trapClass == null){</span>
+<span class="nc" id="L74">			Painter.fill(level, this, 1, Terrain.CHASM);</span>
+		} else {
+<span class="nc" id="L76">			Painter.fill(level, this, 1, Terrain.TRAP);</span>
+		}
+		
+<span class="nc" id="L79">		Door door = entrance();</span>
+<span class="nc" id="L80">		door.set( Door.Type.REGULAR );</span>
+		
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		int lastRow = level.map[left + 1 + (top + 1) * level.width()] == Terrain.CHASM ? Terrain.CHASM : Terrain.EMPTY;</span>
+
+<span class="nc" id="L84">		int x = -1;</span>
+<span class="nc" id="L85">		int y = -1;</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		if (door.x == left) {</span>
+<span class="nc" id="L87">			x = right - 1;</span>
+<span class="nc" id="L88">			y = top + height() / 2;</span>
+<span class="nc" id="L89">			Painter.fill( level, x, top + 1, 1, height() - 2 , lastRow );</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		} else if (door.x == right) {</span>
+<span class="nc" id="L91">			x = left + 1;</span>
+<span class="nc" id="L92">			y = top + height() / 2;</span>
+<span class="nc" id="L93">			Painter.fill( level, x, top + 1, 1, height() - 2 , lastRow );</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		} else if (door.y == top) {</span>
+<span class="nc" id="L95">			x = left + width() / 2;</span>
+<span class="nc" id="L96">			y = bottom - 1;</span>
+<span class="nc" id="L97">			Painter.fill( level, left + 1, y, width() - 2, 1 , lastRow );</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">		} else if (door.y == bottom) {</span>
+<span class="nc" id="L99">			x = left + width() / 2;</span>
+<span class="nc" id="L100">			y = top + 1;</span>
+<span class="nc" id="L101">			Painter.fill( level, left + 1, y, width() - 2, 1 , lastRow );</span>
+		}
+
+<span class="nc bnc" id="L104" title="All 2 branches missed.">		for(Point p : getPoints()) {</span>
+<span class="nc" id="L105">			int cell = level.pointToCell(p);</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			if (level.map[cell] == Terrain.TRAP){</span>
+<span class="nc" id="L107">				level.setTrap(Reflection.newInstance(trapClass).reveal(), cell);</span>
+			}
+<span class="nc" id="L109">		}</span>
+		
+<span class="nc" id="L111">		int pos = x + y * level.width();</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">		if (Random.Int( 3 ) == 0) {</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">			if (lastRow == Terrain.CHASM) {</span>
+<span class="nc" id="L114">				Painter.set( level, pos, Terrain.EMPTY );</span>
+			}
+<span class="nc" id="L116">			level.drop( prize( level ), pos ).type = Heap.Type.CHEST;</span>
+		} else {
+<span class="nc" id="L118">			Painter.set( level, pos, Terrain.PEDESTAL );</span>
+<span class="nc" id="L119">			level.drop( prize( level ), pos ).type = Heap.Type.CHEST;</span>
+		}
+		
+<span class="nc" id="L122">		level.addItemToSpawn( new PotionOfLevitation() );</span>
+<span class="nc" id="L123">	}</span>
+	
+	private static Item prize( Level level ) {
+
+		Item prize;
+
+		//67% chance for prize item
+<span class="nc bnc" id="L130" title="All 2 branches missed.">		if (Random.Int(3) != 0){</span>
+<span class="nc" id="L131">			prize = level.findPrizeItem();</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">			if (prize != null)</span>
+<span class="nc" id="L133">				return prize;</span>
+		}
+		
+		//1 floor set higher in probability, never cursed
+<span class="nc bnc" id="L137" title="All 2 branches missed.">		if (Random.Int(2) == 0) {</span>
+<span class="nc" id="L138">			prize = Generator.randomWeapon((Dungeon.depth / 5) + 1);</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">			if (((Weapon)prize).hasCurseEnchant()){</span>
+<span class="nc" id="L140">				((Weapon) prize).enchant(null);</span>
+			}
+		} else {
+<span class="nc" id="L143">			prize = Generator.randomArmor((Dungeon.depth / 5) + 1);</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">			if (((Armor)prize).hasCurseGlyph()){</span>
+<span class="nc" id="L145">				((Armor) prize).inscribe(null);</span>
+			}
+		}
+<span class="nc" id="L148">		prize.cursed = false;</span>
+<span class="nc" id="L149">		prize.cursedKnown = true;</span>
+
+		//33% chance for an extra update.
+<span class="nc bnc" id="L152" title="All 2 branches missed.">		if (Random.Int(3) == 0){</span>
+<span class="nc" id="L153">			prize.upgrade();</span>
+		}
+		
+<span class="nc" id="L156">		return prize;</span>
+	}
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L160">	private static Class&lt;?extends Trap&gt;[][] levelTraps = new Class[][]{</span>
+			//sewers
+			{GrippingTrap.class, TeleportationTrap.class, FlockTrap.class},
+			//prison
+			{PoisonDartTrap.class, GrippingTrap.class, ExplosiveTrap.class},
+			//caves
+			{PoisonDartTrap.class, FlashingTrap.class, ExplosiveTrap.class},
+			//city
+			{WarpingTrap.class, FlashingTrap.class, DisintegrationTrap.class},
+			//halls, muahahahaha
+			{GrimTrap.class}
+	};
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

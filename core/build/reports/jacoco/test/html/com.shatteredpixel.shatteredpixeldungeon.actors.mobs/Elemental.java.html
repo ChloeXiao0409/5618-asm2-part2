@@ -1,0 +1,612 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Elemental.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">Elemental.java</span></div><h1>Elemental.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Fire;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Freezing;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Blindness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Chill;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Lightning;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ElmoParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfFrost;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLiquidFlame;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.Embers;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRecharging;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTransmutation;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.RatSkull;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.CursedWand;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Shocking;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ElementalSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.audio.Music;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L67">public abstract class Elemental extends Mob {</span>
+
+	{
+<span class="nc" id="L70">		HP = HT = 60;</span>
+<span class="nc" id="L71">		defenseSkill = 20;</span>
+		
+<span class="nc" id="L73">		EXP = 10;</span>
+<span class="nc" id="L74">		maxLvl = 20;</span>
+		
+<span class="nc" id="L76">		flying = true;</span>
+	}
+
+	protected boolean summonedALly;
+	
+	@Override
+	public int damageRoll() {
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if (!summonedALly) {</span>
+<span class="nc" id="L84">			return Random.NormalIntRange(20, 25);</span>
+		} else {
+<span class="nc" id="L86">			int regionScale = Math.max(2, (1 + Dungeon.scalingDepth()/5));</span>
+<span class="nc" id="L87">			return Random.NormalIntRange(5*regionScale, 5 + 5*regionScale);</span>
+		}
+	}
+	
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		if (!summonedALly) {</span>
+<span class="nc" id="L94">			return 25;</span>
+		} else {
+<span class="nc" id="L96">			int regionScale = Math.max(2, (1 + Dungeon.scalingDepth()/5));</span>
+<span class="nc" id="L97">			return 5 + 5*regionScale;</span>
+		}
+	}
+
+	public void setSummonedALly(){
+<span class="nc" id="L102">		summonedALly = true;</span>
+		//sewers are prison are equivalent, otherwise scales as normal (2/2/3/4/5)
+<span class="nc" id="L104">		int regionScale = Math.max(2, (1 + Dungeon.scalingDepth()/5));</span>
+<span class="nc" id="L105">		defenseSkill = 5*regionScale;</span>
+<span class="nc" id="L106">		HT = 15*regionScale;</span>
+<span class="nc" id="L107">	}</span>
+	
+	@Override
+	public int drRoll() {
+<span class="nc" id="L111">		return super.drRoll() + Random.NormalIntRange(0, 5);</span>
+	}
+	
+<span class="nc" id="L114">	protected int rangedCooldown = Random.NormalIntRange( 3, 5 );</span>
+	
+	@Override
+	protected boolean act() {
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		if (state == HUNTING){</span>
+<span class="nc" id="L119">			rangedCooldown--;</span>
+		}
+		
+<span class="nc" id="L122">		return super.act();</span>
+	}
+
+	@Override
+	public void die(Object cause) {
+<span class="nc" id="L127">		flying = false;</span>
+<span class="nc" id="L128">		super.die(cause);</span>
+<span class="nc" id="L129">	}</span>
+	
+	@Override
+	protected boolean canAttack( Char enemy ) {
+<span class="nc bnc" id="L133" title="All 2 branches missed.">		if (super.canAttack(enemy)){</span>
+<span class="nc" id="L134">			return true;</span>
+		} else {
+<span class="nc bnc" id="L136" title="All 4 branches missed.">			return rangedCooldown &lt; 0 &amp;&amp; new Ballistica( pos, enemy.pos, Ballistica.MAGIC_BOLT ).collisionPos == enemy.pos;</span>
+		}
+	}
+	
+	protected boolean doAttack( Char enemy ) {
+		
+<span class="nc bnc" id="L142" title="All 4 branches missed.">		if (Dungeon.level.adjacent( pos, enemy.pos )</span>
+				|| rangedCooldown &gt; 0
+<span class="nc bnc" id="L144" title="All 2 branches missed.">				|| new Ballistica( pos, enemy.pos, Ballistica.MAGIC_BOLT ).collisionPos != enemy.pos) {</span>
+			
+<span class="nc" id="L146">			return super.doAttack( enemy );</span>
+			
+		} else {
+			
+<span class="nc bnc" id="L150" title="All 6 branches missed.">			if (sprite != null &amp;&amp; (sprite.visible || enemy.sprite.visible)) {</span>
+<span class="nc" id="L151">				sprite.zap( enemy.pos );</span>
+<span class="nc" id="L152">				return false;</span>
+			} else {
+<span class="nc" id="L154">				zap();</span>
+<span class="nc" id="L155">				return true;</span>
+			}
+		}
+	}
+	
+	@Override
+	public int attackProc( Char enemy, int damage ) {
+<span class="nc" id="L162">		damage = super.attackProc( enemy, damage );</span>
+<span class="nc" id="L163">		meleeProc( enemy, damage );</span>
+		
+<span class="nc" id="L165">		return damage;</span>
+	}
+	
+	protected void zap() {
+<span class="nc" id="L169">		spend( 1f );</span>
+
+<span class="nc" id="L171">		Invisibility.dispel(this);</span>
+<span class="nc" id="L172">		Char enemy = this.enemy;</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">		if (hit( this, enemy, true )) {</span>
+			
+<span class="nc" id="L175">			rangedProc( enemy );</span>
+			
+		} else {
+<span class="nc" id="L178">			enemy.sprite.showStatus( CharSprite.NEUTRAL,  enemy.defenseVerb() );</span>
+		}
+
+<span class="nc" id="L181">		rangedCooldown = Random.NormalIntRange( 3, 5 );</span>
+<span class="nc" id="L182">	}</span>
+	
+	public void onZapComplete() {
+<span class="nc" id="L185">		zap();</span>
+<span class="nc" id="L186">		next();</span>
+<span class="nc" id="L187">	}</span>
+	
+	@Override
+	public boolean add( Buff buff ) {
+<span class="nc bnc" id="L191" title="All 2 branches missed.">		if (harmfulBuffs.contains( buff.getClass() )) {</span>
+<span class="nc" id="L192">			damage( Random.NormalIntRange( HT/2, HT * 3/5 ), buff );</span>
+<span class="nc" id="L193">			return false;</span>
+		} else {
+<span class="nc" id="L195">			return super.add( buff );</span>
+		}
+	}
+	
+	protected abstract void meleeProc( Char enemy, int damage );
+	protected abstract void rangedProc( Char enemy );
+	
+<span class="nc" id="L202">	protected ArrayList&lt;Class&lt;? extends Buff&gt;&gt; harmfulBuffs = new ArrayList&lt;&gt;();</span>
+	
+	private static final String COOLDOWN = &quot;cooldown&quot;;
+	private static final String SUMMONED_ALLY = &quot;summoned_ally&quot;;
+	
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L209">		super.storeInBundle( bundle );</span>
+<span class="nc" id="L210">		bundle.put( COOLDOWN, rangedCooldown );</span>
+<span class="nc" id="L211">		bundle.put( SUMMONED_ALLY, summonedALly);</span>
+<span class="nc" id="L212">	}</span>
+	
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L216">		super.restoreFromBundle( bundle );</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">		if (bundle.contains( COOLDOWN )){</span>
+<span class="nc" id="L218">			rangedCooldown = bundle.getInt( COOLDOWN );</span>
+		}
+<span class="nc" id="L220">		summonedALly = bundle.getBoolean( SUMMONED_ALLY );</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">		if (summonedALly){</span>
+<span class="nc" id="L222">			setSummonedALly();</span>
+		}
+<span class="nc" id="L224">	}</span>
+	
+<span class="nc" id="L226">	public static class FireElemental extends Elemental {</span>
+		
+		{
+<span class="nc" id="L229">			spriteClass = ElementalSprite.Fire.class;</span>
+			
+<span class="nc" id="L231">			loot = PotionOfLiquidFlame.class;</span>
+<span class="nc" id="L232">			lootChance = 1/8f;</span>
+			
+<span class="nc" id="L234">			properties.add( Property.FIERY );</span>
+			
+<span class="nc" id="L236">			harmfulBuffs.add( com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost.class );</span>
+<span class="nc" id="L237">			harmfulBuffs.add( Chill.class );</span>
+<span class="nc" id="L238">		}</span>
+		
+		@Override
+		protected void meleeProc( Char enemy, int damage ) {
+<span class="nc bnc" id="L242" title="All 4 branches missed.">			if (Random.Int( 2 ) == 0 &amp;&amp; !Dungeon.level.water[enemy.pos]) {</span>
+<span class="nc" id="L243">				Buff.affect( enemy, Burning.class ).reignite( enemy );</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">				if (enemy.sprite.visible) Splash.at( enemy.sprite.center(), sprite.blood(), 5);</span>
+			}
+<span class="nc" id="L246">		}</span>
+		
+		@Override
+		protected void rangedProc( Char enemy ) {
+<span class="nc bnc" id="L250" title="All 2 branches missed.">			if (!Dungeon.level.water[enemy.pos]) {</span>
+<span class="nc" id="L251">				Buff.affect( enemy, Burning.class ).reignite( enemy, 4f );</span>
+			}
+<span class="nc bnc" id="L253" title="All 2 branches missed.">			if (enemy.sprite.visible) Splash.at( enemy.sprite.center(), sprite.blood(), 5);</span>
+<span class="nc" id="L254">		}</span>
+	}
+	
+	//used in wandmaker quest, a fire elemental with lower ACC/EVA/DMG, no on-hit fire
+	// and a unique 'fireball' style ranged attack, which can be dodged
+<span class="nc" id="L259">	public static class NewbornFireElemental extends FireElemental {</span>
+		
+		{
+<span class="nc" id="L262">			spriteClass = ElementalSprite.NewbornFire.class;</span>
+
+<span class="nc" id="L264">			defenseSkill = 12;</span>
+			
+<span class="nc" id="L266">			properties.add(Property.MINIBOSS);</span>
+		}
+
+<span class="nc" id="L269">		private int targetingPos = -1;</span>
+
+		@Override
+		protected boolean act() {
+			//fire a charged attack instead of any other action, as long as it is possible to do so
+<span class="nc bnc" id="L274" title="All 4 branches missed.">			if (targetingPos != -1 &amp;&amp; state == HUNTING){</span>
+				//account for bolt hitting walls, in case position suddenly changed
+<span class="nc" id="L276">				targetingPos = new Ballistica( pos, targetingPos, Ballistica.STOP_SOLID | Ballistica.STOP_TARGET ).collisionPos;</span>
+<span class="nc bnc" id="L277" title="All 6 branches missed.">				if (sprite != null &amp;&amp; (sprite.visible || Dungeon.level.heroFOV[targetingPos])) {</span>
+<span class="nc" id="L278">					sprite.zap( targetingPos );</span>
+<span class="nc" id="L279">					return false;</span>
+				} else {
+<span class="nc" id="L281">					zap();</span>
+<span class="nc" id="L282">					return true;</span>
+				}
+			} else {
+
+<span class="nc bnc" id="L286" title="All 2 branches missed.">				if (state != HUNTING){</span>
+<span class="nc" id="L287">					targetingPos = -1;</span>
+				}
+
+<span class="nc" id="L290">				return super.act();</span>
+			}
+		}
+
+		@Override
+		protected boolean canAttack( Char enemy ) {
+<span class="nc bnc" id="L296" title="All 2 branches missed.">			if (super.canAttack(enemy)){</span>
+<span class="nc" id="L297">				return true;</span>
+			} else {
+<span class="nc bnc" id="L299" title="All 4 branches missed.">				return rangedCooldown &lt; 0 &amp;&amp; new Ballistica( pos, enemy.pos, Ballistica.STOP_SOLID | Ballistica.STOP_TARGET ).collisionPos == enemy.pos;</span>
+			}
+		}
+
+		protected boolean doAttack( Char enemy ) {
+
+<span class="nc bnc" id="L305" title="All 2 branches missed.">			if (rangedCooldown &gt; 0) {</span>
+
+<span class="nc" id="L307">				return super.doAttack( enemy );</span>
+
+<span class="nc bnc" id="L309" title="All 2 branches missed.">			} else if (new Ballistica( pos, enemy.pos, Ballistica.STOP_SOLID | Ballistica.STOP_TARGET ).collisionPos == enemy.pos) {</span>
+
+				//set up an attack for next turn
+<span class="nc" id="L312">				ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">				for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc" id="L314">					int target = enemy.pos + i;</span>
+<span class="nc bnc" id="L315" title="All 4 branches missed.">					if (target != pos &amp;&amp; new Ballistica(pos, target, Ballistica.STOP_SOLID | Ballistica.STOP_TARGET).collisionPos == target){</span>
+<span class="nc" id="L316">						candidates.add(target);</span>
+					}
+				}
+
+<span class="nc bnc" id="L320" title="All 2 branches missed.">				if (!candidates.isEmpty()){</span>
+<span class="nc" id="L321">					targetingPos = Random.element(candidates);</span>
+
+<span class="nc bnc" id="L323" title="All 2 branches missed.">					for (int i : PathFinder.NEIGHBOURS9){</span>
+<span class="nc bnc" id="L324" title="All 2 branches missed.">						if (!Dungeon.level.solid[targetingPos + i]) {</span>
+<span class="nc" id="L325">							sprite.parent.addToBack(new TargetedCell(targetingPos + i, 0xFF0000));</span>
+						}
+					}
+
+<span class="nc" id="L329">					GLog.n(Messages.get(this, &quot;charging&quot;));</span>
+<span class="nc" id="L330">					spend(GameMath.gate(attackDelay(), (int)Math.ceil(Dungeon.hero.cooldown()), 3*attackDelay()));</span>
+<span class="nc" id="L331">					Dungeon.hero.interrupt();</span>
+<span class="nc" id="L332">					return true;</span>
+				} else {
+<span class="nc" id="L334">					rangedCooldown = 1;</span>
+<span class="nc" id="L335">					return super.doAttack(enemy);</span>
+				}
+
+
+			} else {
+
+<span class="nc bnc" id="L341" title="All 6 branches missed.">				if (sprite != null &amp;&amp; (sprite.visible || Dungeon.level.heroFOV[targetingPos])) {</span>
+<span class="nc" id="L342">					sprite.zap( targetingPos );</span>
+<span class="nc" id="L343">					return false;</span>
+				} else {
+<span class="nc" id="L345">					zap();</span>
+<span class="nc" id="L346">					return true;</span>
+				}
+
+			}
+		}
+
+		@Override
+		protected void zap() {
+<span class="nc bnc" id="L354" title="All 2 branches missed.">			if (targetingPos != -1) {</span>
+<span class="nc" id="L355">				spend(1f);</span>
+
+<span class="nc" id="L357">				Invisibility.dispel(this);</span>
+
+<span class="nc bnc" id="L359" title="All 2 branches missed.">				for (int i : PathFinder.NEIGHBOURS9) {</span>
+<span class="nc bnc" id="L360" title="All 2 branches missed.">					if (!Dungeon.level.solid[targetingPos + i]) {</span>
+<span class="nc" id="L361">						CellEmitter.get(targetingPos + i).burst(ElmoParticle.FACTORY, 5);</span>
+<span class="nc bnc" id="L362" title="All 2 branches missed.">						if (Dungeon.level.water[targetingPos + i]) {</span>
+<span class="nc" id="L363">							GameScene.add(Blob.seed(targetingPos + i, 2, Fire.class));</span>
+						} else {
+<span class="nc" id="L365">							GameScene.add(Blob.seed(targetingPos + i, 8, Fire.class));</span>
+						}
+
+<span class="nc" id="L368">						Char target = Actor.findChar(targetingPos + i);</span>
+<span class="nc bnc" id="L369" title="All 4 branches missed.">						if (target != null &amp;&amp; target != this) {</span>
+<span class="nc" id="L370">							Buff.affect(target, Burning.class).reignite(target);</span>
+						}
+					}
+				}
+<span class="nc" id="L374">				Sample.INSTANCE.play(Assets.Sounds.BURNING);</span>
+			}
+
+<span class="nc" id="L377">			targetingPos = -1;</span>
+<span class="nc" id="L378">			rangedCooldown = Random.NormalIntRange( 3, 5 );</span>
+<span class="nc" id="L379">		}</span>
+
+		@Override
+		public int attackSkill(Char target) {
+<span class="nc bnc" id="L383" title="All 2 branches missed.">			if (!summonedALly) {</span>
+<span class="nc" id="L384">				return 15;</span>
+			} else {
+<span class="nc" id="L386">				return super.attackSkill(target);</span>
+			}
+		}
+
+		@Override
+		public int damageRoll() {
+<span class="nc bnc" id="L392" title="All 2 branches missed.">			if (!summonedALly) {</span>
+<span class="nc" id="L393">				return Random.NormalIntRange(10, 12);</span>
+			} else {
+<span class="nc" id="L395">				return super.damageRoll();</span>
+			}
+		}
+
+		@Override
+		protected void meleeProc(Char enemy, int damage) {
+			//no fiery on-hit unless it is an ally summon
+<span class="nc bnc" id="L402" title="All 2 branches missed.">			if (summonedALly) {</span>
+<span class="nc" id="L403">				super.meleeProc(enemy, damage);</span>
+			}
+<span class="nc" id="L405">		}</span>
+
+		@Override
+		public void die(Object cause) {
+<span class="nc" id="L409">			super.die(cause);</span>
+<span class="nc bnc" id="L410" title="All 2 branches missed.">			if (alignment == Alignment.ENEMY) {</span>
+<span class="nc" id="L411">				Dungeon.level.drop( new Embers(), pos ).sprite.drop();</span>
+<span class="nc" id="L412">				Statistics.questScores[1] = 2000;</span>
+<span class="nc" id="L413">				Game.runOnRenderThread(new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L416">						Music.INSTANCE.fadeOut(1f, new Callback() {</span>
+							@Override
+							public void call() {
+<span class="nc bnc" id="L419" title="All 2 branches missed.">								if (Dungeon.level != null) {</span>
+<span class="nc" id="L420">									Dungeon.level.playLevelMusic();</span>
+								}
+<span class="nc" id="L422">							}</span>
+						});
+<span class="nc" id="L424">					}</span>
+				});
+			}
+<span class="nc" id="L427">		}</span>
+
+		@Override
+		public boolean reset() {
+<span class="nc bnc" id="L431" title="All 2 branches missed.">			return !summonedALly;</span>
+		}
+
+		@Override
+		public String description() {
+<span class="nc" id="L436">			String desc = super.description();</span>
+
+<span class="nc bnc" id="L438" title="All 2 branches missed.">			if (summonedALly){</span>
+<span class="nc" id="L439">				desc += &quot; &quot; + Messages.get(this, &quot;desc_ally&quot;);</span>
+			} else {
+<span class="nc" id="L441">				desc += &quot; &quot; + Messages.get(this, &quot;desc_boss&quot;);</span>
+			}
+
+<span class="nc" id="L444">			return desc;</span>
+		}
+
+		private static final String TARGETING_POS = &quot;targeting_pos&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L451">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L452">			bundle.put(TARGETING_POS, targetingPos);</span>
+<span class="nc" id="L453">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L457">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L458">			targetingPos = bundle.getInt(TARGETING_POS);</span>
+<span class="nc" id="L459">		}</span>
+	}
+
+	//not a miniboss, no ranged attack, otherwise a newborn elemental
+<span class="nc" id="L463">	public static class AllyNewBornElemental extends NewbornFireElemental {</span>
+
+		{
+<span class="nc" id="L466">			rangedCooldown = Integer.MAX_VALUE;</span>
+
+<span class="nc" id="L468">			properties.remove(Property.MINIBOSS);</span>
+<span class="nc" id="L469">		}</span>
+
+	}
+	
+<span class="nc" id="L473">	public static class FrostElemental extends Elemental {</span>
+		
+		{
+<span class="nc" id="L476">			spriteClass = ElementalSprite.Frost.class;</span>
+			
+<span class="nc" id="L478">			loot = PotionOfFrost.class;</span>
+<span class="nc" id="L479">			lootChance = 1/8f;</span>
+			
+<span class="nc" id="L481">			properties.add( Property.ICY );</span>
+			
+<span class="nc" id="L483">			harmfulBuffs.add( Burning.class );</span>
+<span class="nc" id="L484">		}</span>
+		
+		@Override
+		protected void meleeProc( Char enemy, int damage ) {
+<span class="nc bnc" id="L488" title="All 4 branches missed.">			if (Random.Int( 3 ) == 0 || Dungeon.level.water[enemy.pos]) {</span>
+<span class="nc" id="L489">				Freezing.freeze( enemy.pos );</span>
+<span class="nc bnc" id="L490" title="All 2 branches missed.">				if (enemy.sprite.visible) Splash.at( enemy.sprite.center(), sprite.blood(), 5);</span>
+			}
+<span class="nc" id="L492">		}</span>
+		
+		@Override
+		protected void rangedProc( Char enemy ) {
+<span class="nc" id="L496">			Freezing.freeze( enemy.pos );</span>
+<span class="nc bnc" id="L497" title="All 2 branches missed.">			if (enemy.sprite.visible) Splash.at( enemy.sprite.center(), sprite.blood(), 5);</span>
+<span class="nc" id="L498">		}</span>
+	}
+	
+<span class="nc" id="L501">	public static class ShockElemental extends Elemental {</span>
+		
+		{
+<span class="nc" id="L504">			spriteClass = ElementalSprite.Shock.class;</span>
+			
+<span class="nc" id="L506">			loot = ScrollOfRecharging.class;</span>
+<span class="nc" id="L507">			lootChance = 1/4f;</span>
+			
+<span class="nc" id="L509">			properties.add( Property.ELECTRIC );</span>
+<span class="nc" id="L510">		}</span>
+		
+		@Override
+		protected void meleeProc( Char enemy, int damage ) {
+<span class="nc" id="L514">			ArrayList&lt;Char&gt; affected = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L515">			ArrayList&lt;Lightning.Arc&gt; arcs = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L516">			Shocking.arc( this, enemy, 2, affected, arcs );</span>
+			
+<span class="nc bnc" id="L518" title="All 2 branches missed.">			if (!Dungeon.level.water[enemy.pos]) {</span>
+<span class="nc" id="L519">				affected.remove( enemy );</span>
+			}
+			
+<span class="nc bnc" id="L522" title="All 2 branches missed.">			for (Char ch : affected) {</span>
+<span class="nc" id="L523">				ch.damage( Math.round( damage * 0.4f ), new Shocking() );</span>
+<span class="nc bnc" id="L524" title="All 4 branches missed.">				if (ch == Dungeon.hero &amp;&amp; !ch.isAlive()){</span>
+<span class="nc" id="L525">					Dungeon.fail(this);</span>
+<span class="nc" id="L526">					GLog.n( Messages.capitalize(Messages.get(Char.class, &quot;kill&quot;, name())) );</span>
+				}
+<span class="nc" id="L528">			}</span>
+
+<span class="nc bnc" id="L530" title="All 4 branches missed.">			boolean visible = sprite.visible || enemy.sprite.visible;</span>
+<span class="nc bnc" id="L531" title="All 2 branches missed.">			for (Char ch : affected){</span>
+<span class="nc bnc" id="L532" title="All 2 branches missed.">				if (ch.sprite.visible) visible = true;</span>
+<span class="nc" id="L533">			}</span>
+
+<span class="nc bnc" id="L535" title="All 2 branches missed.">			if (visible) {</span>
+<span class="nc" id="L536">				sprite.parent.addToFront(new Lightning(arcs, null));</span>
+<span class="nc" id="L537">				Sample.INSTANCE.play(Assets.Sounds.LIGHTNING);</span>
+			}
+<span class="nc" id="L539">		}</span>
+		
+		@Override
+		protected void rangedProc( Char enemy ) {
+<span class="nc" id="L543">			Buff.affect( enemy, Blindness.class, Blindness.DURATION/2f );</span>
+<span class="nc bnc" id="L544" title="All 2 branches missed.">			if (enemy == Dungeon.hero) {</span>
+<span class="nc" id="L545">				GameScene.flash(0x80FFFFFF);</span>
+			}
+<span class="nc" id="L547">		}</span>
+	}
+	
+<span class="nc" id="L550">	public static class ChaosElemental extends Elemental {</span>
+		
+		{
+<span class="nc" id="L553">			spriteClass = ElementalSprite.Chaos.class;</span>
+			
+<span class="nc" id="L555">			loot = ScrollOfTransmutation.class;</span>
+<span class="nc" id="L556">			lootChance = 1f;</span>
+<span class="nc" id="L557">		}</span>
+		
+		@Override
+		protected void meleeProc( Char enemy, int damage ) {
+<span class="nc" id="L561">			Ballistica aim = new Ballistica(pos, enemy.pos, Ballistica.STOP_TARGET);</span>
+			//TODO shortcutting the fx seems fine for now but may cause problems with new cursed effects
+			//of course, not shortcutting it means actor ordering issues =S
+<span class="nc" id="L564">			CursedWand.randomValidEffect(null, this, aim, false).effect(null, this, aim, false);</span>
+<span class="nc" id="L565">		}</span>
+
+		@Override
+		protected void zap() {
+<span class="nc" id="L569">			spend( 1f );</span>
+
+<span class="nc" id="L571">			Invisibility.dispel(this);</span>
+<span class="nc" id="L572">			Char enemy = this.enemy;</span>
+			//skips accuracy check, always hits
+<span class="nc" id="L574">			rangedProc( enemy );</span>
+
+<span class="nc" id="L576">			rangedCooldown = Random.NormalIntRange( 3, 5 );</span>
+<span class="nc" id="L577">		}</span>
+
+		@Override
+		public void onZapComplete() {
+<span class="nc" id="L581">			zap();</span>
+			//next(); triggers after wand effect
+<span class="nc" id="L583">		}</span>
+
+		@Override
+		protected void rangedProc( Char enemy ) {
+<span class="nc" id="L587">			CursedWand.cursedZap(null, this, new Ballistica(pos, enemy.pos, Ballistica.STOP_TARGET), new Callback() {</span>
+				@Override
+				public void call() {
+<span class="nc" id="L590">					next();</span>
+<span class="nc" id="L591">				}</span>
+			});
+<span class="nc" id="L593">		}</span>
+	}
+	
+	public static Class&lt;? extends Elemental&gt; random(){
+<span class="nc" id="L597">		float altChance = 1/50f * RatSkull.exoticChanceMultiplier();</span>
+<span class="nc bnc" id="L598" title="All 2 branches missed.">		if (Random.Float() &lt; altChance){</span>
+<span class="nc" id="L599">			return ChaosElemental.class;</span>
+		}
+		
+<span class="nc" id="L602">		float roll = Random.Float();</span>
+<span class="nc bnc" id="L603" title="All 2 branches missed.">		if (roll &lt; 0.4f){</span>
+<span class="nc" id="L604">			return FireElemental.class;</span>
+<span class="nc bnc" id="L605" title="All 2 branches missed.">		} else if (roll &lt; 0.8f){</span>
+<span class="nc" id="L606">			return FrostElemental.class;</span>
+		} else {
+<span class="nc" id="L608">			return ShockElemental.class;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

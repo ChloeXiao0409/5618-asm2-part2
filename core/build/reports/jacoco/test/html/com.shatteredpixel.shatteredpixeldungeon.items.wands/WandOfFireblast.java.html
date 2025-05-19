@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WandOfFireblast.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.wands</a> &gt; <span class="el_source">WandOfFireblast.java</span></div><h1>WandOfFireblast.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.wands;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Fire;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Cripple;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.mage.WildMagic;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Blazing;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.ConeAOE;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Callback;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.PathFinder;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L52">public class WandOfFireblast extends DamageWand {</span>
+
+	{
+<span class="nc" id="L55">		image = ItemSpriteSheet.WAND_FIREBOLT;</span>
+
+		//only used for targeting, actual projectile logic is Ballistica.STOP_SOLID | Ballistica.IGNORE_SOFT_SOLID
+<span class="nc" id="L58">		collisionProperties = Ballistica.WONT_STOP;</span>
+<span class="nc" id="L59">	}</span>
+
+	//1/2/3 base damage with 1/2/3 scaling based on charges used
+	public int min(int lvl){
+<span class="nc" id="L63">		return (1+lvl) * chargesPerCast();</span>
+	}
+
+	//2/8/18 base damage with 2/4/6 scaling based on charges used
+	public int max(int lvl){
+<span class="nc bnc" id="L68" title="All 3 branches missed.">		switch (chargesPerCast()){</span>
+			case 1: default:
+<span class="nc" id="L70">				return 2 + 2*lvl;</span>
+			case 2:
+<span class="nc" id="L72">				return 2*(4 + 2*lvl);</span>
+			case 3:
+<span class="nc" id="L74">				return 3*(6+2*lvl);</span>
+		}
+	}
+
+	ConeAOE cone;
+
+	@Override
+	public void onZap(Ballistica bolt) {
+
+<span class="nc" id="L83">		ArrayList&lt;Char&gt; affectedChars = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L84">		ArrayList&lt;Integer&gt; adjacentCells = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		for( int cell : cone.cells ){</span>
+
+			//ignore caster cell
+<span class="nc bnc" id="L88" title="All 2 branches missed.">			if (cell == bolt.sourcePos){</span>
+<span class="nc" id="L89">				continue;</span>
+			}
+
+			//knock doors open
+<span class="nc bnc" id="L93" title="All 2 branches missed.">			if (Dungeon.level.map[cell] == Terrain.DOOR){</span>
+<span class="nc" id="L94">				Level.set(cell, Terrain.OPEN_DOOR);</span>
+<span class="nc" id="L95">				GameScene.updateMap(cell);</span>
+			}
+
+			//only ignite cells directly near caster if they are flammable or solid
+<span class="nc bnc" id="L99" title="All 6 branches missed.">			if (Dungeon.level.adjacent(bolt.sourcePos, cell)</span>
+					&amp;&amp; !(Dungeon.level.flamable[cell] || Dungeon.level.solid[cell])){
+<span class="nc" id="L101">				adjacentCells.add(cell);</span>
+				//do burn any heaps located here though
+<span class="nc bnc" id="L103" title="All 2 branches missed.">				if (Dungeon.level.heaps.get(cell) != null){</span>
+<span class="nc" id="L104">					Dungeon.level.heaps.get(cell).burn();</span>
+				}
+			} else {
+<span class="nc" id="L107">				GameScene.add( Blob.seed( cell, 1+chargesPerCast(), Fire.class ) );</span>
+			}
+
+<span class="nc" id="L110">			Char ch = Actor.findChar( cell );</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">			if (ch != null) {</span>
+<span class="nc" id="L112">				affectedChars.add(ch);</span>
+			}
+<span class="nc" id="L114">		}</span>
+
+		//if wand was shot right at a wall
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		if (cone.cells.isEmpty()){</span>
+<span class="nc" id="L118">			adjacentCells.add(bolt.sourcePos);</span>
+		}
+
+		//ignite cells that share a side with an adjacent cell, are flammable, and are closer to the collision pos
+		//This prevents short-range casts not igniting barricades or bookshelves
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		for (int cell : adjacentCells){</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L125" title="All 4 branches missed.">				if (Dungeon.level.trueDistance(cell+i, bolt.collisionPos) &lt; Dungeon.level.trueDistance(cell, bolt.collisionPos)</span>
+						&amp;&amp; Dungeon.level.flamable[cell+i]
+<span class="nc bnc" id="L127" title="All 2 branches missed.">						&amp;&amp; Fire.volumeAt(cell+i, Fire.class) == 0){</span>
+<span class="nc" id="L128">					GameScene.add( Blob.seed( cell+i, 1+chargesPerCast(), Fire.class ) );</span>
+				}
+			}
+<span class="nc" id="L131">		}</span>
+
+<span class="nc bnc" id="L133" title="All 2 branches missed.">		for ( Char ch : affectedChars ){</span>
+<span class="nc" id="L134">			wandProc(ch, chargesPerCast());</span>
+<span class="nc" id="L135">			ch.damage(damageRoll(), this);</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">			if (ch.isAlive()) {</span>
+<span class="nc" id="L137">				Buff.affect(ch, Burning.class).reignite(ch);</span>
+<span class="nc bnc" id="L138" title="All 4 branches missed.">				switch (chargesPerCast()) {</span>
+					case 1:
+<span class="nc" id="L140">						break; //no effects</span>
+					case 2:
+<span class="nc" id="L142">						Buff.affect(ch, Cripple.class, 4f);</span>
+<span class="nc" id="L143">						break;</span>
+					case 3:
+<span class="nc" id="L145">						Buff.affect(ch, Paralysis.class, 4f);</span>
+						break;
+				}
+			}
+<span class="nc" id="L149">		}</span>
+<span class="nc" id="L150">	}</span>
+
+	@Override
+	public void onHit(MagesStaff staff, Char attacker, Char defender, int damage) {
+		//acts like blazing enchantment
+<span class="nc" id="L155">		new FireBlastOnHit().proc( staff, attacker, defender, damage);</span>
+<span class="nc" id="L156">	}</span>
+
+<span class="nc" id="L158">	public static class FireBlastOnHit extends Blazing {</span>
+		@Override
+		protected float procChanceMultiplier(Char attacker) {
+<span class="nc" id="L161">			return Wand.procChanceMultiplier(attacker);</span>
+		}
+	}
+
+	@Override
+	public void fx(Ballistica bolt, Callback callback) {
+		//need to perform flame spread logic here so we can determine what cells to put flames in.
+
+		// 5/7/9 distance
+<span class="nc" id="L170">		int maxDist = 3 + 2*chargesPerCast();</span>
+
+<span class="nc" id="L172">		cone = new ConeAOE( bolt,</span>
+				maxDist,
+<span class="nc" id="L174">				30 + 20*chargesPerCast(),</span>
+				Ballistica.STOP_TARGET | Ballistica.STOP_SOLID | Ballistica.IGNORE_SOFT_SOLID);
+
+		//cast to cells at the tip, rather than all cells, better performance.
+<span class="nc" id="L178">		Ballistica longestRay = null;</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">		for (Ballistica ray : cone.outerRays){</span>
+<span class="nc bnc" id="L180" title="All 4 branches missed.">			if (longestRay == null || ray.dist &gt; longestRay.dist){</span>
+<span class="nc" id="L181">				longestRay = ray;</span>
+			}
+<span class="nc" id="L183">			((MagicMissile)curUser.sprite.parent.recycle( MagicMissile.class )).reset(</span>
+					MagicMissile.FIRE_CONE,
+					curUser.sprite,
+<span class="nc" id="L186">					ray.path.get(ray.dist),</span>
+					null
+			);
+<span class="nc" id="L189">		}</span>
+
+		//final zap at half distance of the longest ray, for timing of the actual wand effect
+<span class="nc" id="L192">		MagicMissile.boltFromChar( curUser.sprite.parent,</span>
+				MagicMissile.FIRE_CONE,
+				curUser.sprite,
+<span class="nc" id="L195">				longestRay.path.get(longestRay.dist/2),</span>
+				callback );
+<span class="nc" id="L197">		Sample.INSTANCE.play( Assets.Sounds.ZAP );</span>
+<span class="nc" id="L198">		Sample.INSTANCE.play( Assets.Sounds.BURNING );</span>
+<span class="nc" id="L199">	}</span>
+
+	@Override
+	protected int chargesPerCast() {
+<span class="nc bnc" id="L203" title="All 6 branches missed.">		if (cursed ||</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">				(charger != null &amp;&amp; charger.target != null &amp;&amp; charger.target.buff(WildMagic.WildMagicTracker.class) != null)){</span>
+<span class="nc" id="L205">			return 1;</span>
+		}
+		//consumes 30% of current charges, rounded up, with a min of 1 and a max of 3.
+<span class="nc" id="L208">		return (int) GameMath.gate(1, (int)Math.ceil(curCharges*0.3f), 3);</span>
+	}
+
+	@Override
+	public String statsDesc() {
+<span class="nc bnc" id="L213" title="All 2 branches missed.">		if (levelKnown)</span>
+<span class="nc" id="L214">			return Messages.get(this, &quot;stats_desc&quot;, chargesPerCast(), min(), max());</span>
+		else
+<span class="nc" id="L216">			return Messages.get(this, &quot;stats_desc&quot;, chargesPerCast(), min(0), max(0));</span>
+	}
+
+	@Override
+	public String upgradeStat1(int level) {
+<span class="nc" id="L221">		return (1+level) + &quot;-&quot; + (2+2*level);</span>
+	}
+
+	@Override
+	public String upgradeStat2(int level) {
+<span class="nc" id="L226">		return (2+2*level) + &quot;-&quot; + 2*(4+2*level);</span>
+	}
+
+	@Override
+	public String upgradeStat3(int level) {
+<span class="nc" id="L231">		return (3+3*level) + &quot;-&quot; + 3*(6+2*level);</span>
+	}
+
+	@Override
+	public void staffFx(MagesStaff.StaffParticle particle) {
+<span class="nc" id="L236">		particle.color( 0xEE7722 );</span>
+<span class="nc" id="L237">		particle.am = 0.5f;</span>
+<span class="nc" id="L238">		particle.setLifespan(0.6f);</span>
+<span class="nc" id="L239">		particle.acc.set(0, -40);</span>
+<span class="nc" id="L240">		particle.setSize( 0f, 3f);</span>
+<span class="nc" id="L241">		particle.shuffleXY( 1.5f );</span>
+<span class="nc" id="L242">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

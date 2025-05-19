@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LiquidMetal.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items</a> &gt; <span class="el_source">LiquidMetal.java</span></div><h1>LiquidMetal.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.MagicalHolster;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.Dart;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.watabou.noosa.audio.Sample;
+
+import java.util.ArrayList;
+
+//these aren't considered potions internally as most potion effects shouldn't apply to them
+//mainly due to their high quantity
+<span class="nc" id="L47">public class LiquidMetal extends Item {</span>
+
+	{
+<span class="nc" id="L50">		image = ItemSpriteSheet.LIQUID_METAL;</span>
+
+<span class="nc" id="L52">		stackable = true;</span>
+
+<span class="nc" id="L54">		defaultAction = AC_APPLY;</span>
+
+<span class="nc" id="L56">		bones = true;</span>
+	}
+
+	private static final String AC_APPLY = &quot;APPLY&quot;;
+
+	@Override
+	public ArrayList&lt;String&gt; actions( Hero hero ) {
+<span class="nc" id="L63">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc" id="L64">		actions.add( AC_APPLY );</span>
+<span class="nc" id="L65">		return actions;</span>
+	}
+
+	@Override
+	public void execute( Hero hero, String action ) {
+
+<span class="nc" id="L71">		super.execute( hero, action );</span>
+
+<span class="nc bnc" id="L73" title="All 2 branches missed.">		if (action.equals(AC_APPLY)) {</span>
+
+<span class="nc" id="L75">			curUser = hero;</span>
+<span class="nc" id="L76">			GameScene.selectItem( itemSelector );</span>
+
+		}
+<span class="nc" id="L79">	}</span>
+
+	@Override
+	protected void onThrow( int cell ) {
+<span class="nc bnc" id="L83" title="All 4 branches missed.">		if (Dungeon.level.map[cell] == Terrain.WELL || Dungeon.level.pit[cell]) {</span>
+
+<span class="nc" id="L85">			super.onThrow( cell );</span>
+
+		} else  {
+
+<span class="nc" id="L89">			Dungeon.level.pressCell( cell );</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">			if (Dungeon.level.heroFOV[cell]) {</span>
+<span class="nc" id="L91">				GLog.i( Messages.get(Potion.class, &quot;shatter&quot;) );</span>
+<span class="nc" id="L92">				Sample.INSTANCE.play( Assets.Sounds.SHATTER );</span>
+<span class="nc" id="L93">				Splash.at( cell, 0xBFBFBF, 5 );</span>
+			}
+
+		}
+<span class="nc" id="L97">	}</span>
+
+	@Override
+	public boolean isUpgradable() {
+<span class="nc" id="L101">		return false;</span>
+	}
+
+	@Override
+	public boolean isIdentified() {
+<span class="nc" id="L106">		return true;</span>
+	}
+
+	@Override
+	public int value() {
+<span class="nc" id="L111">		return quantity;</span>
+	}
+
+<span class="nc" id="L114">	private final WndBag.ItemSelector itemSelector = new WndBag.ItemSelector() {</span>
+
+		@Override
+		public String textPrompt() {
+<span class="nc" id="L118">			return Messages.get(LiquidMetal.class, &quot;prompt&quot;);</span>
+		}
+
+		@Override
+		public Class&lt;?extends Bag&gt; preferredBag(){
+<span class="nc" id="L123">			return MagicalHolster.class;</span>
+		}
+
+		@Override
+		public boolean itemSelectable(Item item) {
+<span class="nc bnc" id="L128" title="All 4 branches missed.">			return item instanceof MissileWeapon &amp;&amp; !(item instanceof Dart);</span>
+		}
+
+		@Override
+		public void onSelect( Item item ) {
+<span class="nc bnc" id="L133" title="All 4 branches missed.">			if (item != null &amp;&amp; item instanceof MissileWeapon) {</span>
+<span class="nc" id="L134">				MissileWeapon m = (MissileWeapon)item;</span>
+
+<span class="nc" id="L136">				int maxToUse = 5*(m.tier+1);</span>
+<span class="nc" id="L137">				maxToUse *= Math.pow(2, m.level());</span>
+
+<span class="nc" id="L139">				float durabilityPerMetal = 100 / (float)maxToUse;</span>
+
+				//we remove a tiny amount here to account for rounding errors
+<span class="nc" id="L142">				float percentDurabilityLost = 0.999f - (m.durabilityLeft()/100f);</span>
+<span class="nc" id="L143">				maxToUse = (int)Math.ceil(maxToUse*percentDurabilityLost);</span>
+<span class="nc" id="L144">				float durPerUse = m.durabilityPerUse()/100f;</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">				if (maxToUse == 0 ||</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">						Math.ceil(m.durabilityLeft()/ m.durabilityPerUse()) &gt;= Math.ceil(m.MAX_DURABILITY/ m.durabilityPerUse()) ){</span>
+<span class="nc" id="L147">					GLog.w(Messages.get(LiquidMetal.class, &quot;already_fixed&quot;));</span>
+<span class="nc" id="L148">					return;</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">				} else if (maxToUse &lt; quantity()) {</span>
+<span class="nc" id="L150">					Catalog.countUses(LiquidMetal.class, maxToUse);</span>
+<span class="nc" id="L151">					m.repair(maxToUse*durabilityPerMetal);</span>
+<span class="nc" id="L152">					quantity(quantity()-maxToUse);</span>
+<span class="nc" id="L153">					GLog.i(Messages.get(LiquidMetal.class, &quot;apply&quot;, maxToUse));</span>
+
+				} else {
+<span class="nc" id="L156">					Catalog.countUses(LiquidMetal.class, quantity());</span>
+<span class="nc" id="L157">					m.repair(quantity()*durabilityPerMetal);</span>
+<span class="nc" id="L158">					GLog.i(Messages.get(LiquidMetal.class, &quot;apply&quot;, quantity()));</span>
+<span class="nc" id="L159">					detachAll(Dungeon.hero.belongings.backpack);</span>
+				}
+
+<span class="nc" id="L162">				curUser.sprite.operate(curUser.pos);</span>
+<span class="nc" id="L163">				Sample.INSTANCE.play(Assets.Sounds.DRINK);</span>
+<span class="nc" id="L164">				updateQuickslot();</span>
+<span class="nc" id="L165">				curUser.sprite.emitter().start(Speck.factory(Speck.LIGHT), 0.1f, 10);</span>
+			}
+<span class="nc" id="L167">		}</span>
+	};
+
+<span class="nc" id="L170">	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe {</span>
+
+		@Override
+		public boolean testIngredients(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc bnc" id="L174" title="All 2 branches missed.">			for (Item i : ingredients){</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">				if (!(i instanceof MissileWeapon)){</span>
+<span class="nc" id="L176">					return false;</span>
+				}
+<span class="nc" id="L178">			}</span>
+
+<span class="nc bnc" id="L180" title="All 2 branches missed.">			return !ingredients.isEmpty();</span>
+		}
+
+		@Override
+		public int cost(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc" id="L185">			int cost = 1;</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">			for (Item i : ingredients){</span>
+<span class="nc" id="L187">				cost += i.quantity();</span>
+<span class="nc" id="L188">			}</span>
+<span class="nc" id="L189">			return cost;</span>
+		}
+
+		@Override
+		public Item brew(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc" id="L194">			Item result = sampleOutput(ingredients);</span>
+
+<span class="nc bnc" id="L196" title="All 2 branches missed.">			for (Item i : ingredients){</span>
+<span class="nc" id="L197">				i.quantity(0);</span>
+<span class="nc" id="L198">			}</span>
+
+<span class="nc" id="L200">			return result;</span>
+		}
+
+		@Override
+		public Item sampleOutput(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc" id="L205">			int metalQuantity = 0;</span>
+
+<span class="nc bnc" id="L207" title="All 2 branches missed.">			for (Item i : ingredients){</span>
+<span class="nc" id="L208">				MissileWeapon m = (MissileWeapon) i;</span>
+<span class="nc" id="L209">				float quantity = m.quantity()-1;</span>
+<span class="nc" id="L210">				quantity += 0.25f + 0.0075f*m.durabilityLeft();</span>
+<span class="nc" id="L211">				quantity *= Math.pow(2, Math.min(3, m.level()));</span>
+<span class="nc" id="L212">				metalQuantity += Math.round((5*(m.tier+1))*quantity);</span>
+<span class="nc" id="L213">			}</span>
+
+<span class="nc" id="L215">			return new LiquidMetal().quantity(metalQuantity);</span>
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

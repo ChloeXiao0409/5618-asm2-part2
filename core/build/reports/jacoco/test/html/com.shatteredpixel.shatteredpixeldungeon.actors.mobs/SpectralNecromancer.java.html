@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SpectralNecromancer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">SpectralNecromancer.java</span></div><h1>SpectralNecromancer.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRemoveCurse;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.SpectralNecromancerSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L40">public class SpectralNecromancer extends Necromancer {</span>
+
+	{
+<span class="nc" id="L43">		spriteClass = SpectralNecromancerSprite.class;</span>
+	}
+
+<span class="nc" id="L46">	private ArrayList&lt;Integer&gt; wraithIDs = new ArrayList&lt;&gt;();</span>
+
+	@Override
+	protected boolean act() {
+<span class="nc bnc" id="L50" title="All 4 branches missed.">		if (summoning &amp;&amp; state != HUNTING){</span>
+<span class="nc" id="L51">			summoning = false;</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">			if (sprite instanceof SpectralNecromancerSprite) {</span>
+<span class="nc" id="L53">				((SpectralNecromancerSprite) sprite).cancelSummoning();</span>
+			}
+		}
+<span class="nc" id="L56">		return super.act();</span>
+	}
+
+	@Override
+	public void rollToDropLoot() {
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if (Dungeon.hero.lvl &gt; maxLvl + 2) return;</span>
+
+<span class="nc" id="L63">		super.rollToDropLoot();</span>
+
+		int ofs;
+		do {
+<span class="nc" id="L67">			ofs = PathFinder.NEIGHBOURS8[Random.Int(8)];</span>
+<span class="nc bnc" id="L68" title="All 4 branches missed.">		} while (Dungeon.level.solid[pos + ofs] &amp;&amp; !Dungeon.level.passable[pos + ofs]);</span>
+<span class="nc" id="L69">		Dungeon.level.drop( new ScrollOfRemoveCurse(), pos + ofs ).sprite.drop( pos );</span>
+<span class="nc" id="L70">	}</span>
+
+	@Override
+	public void die(Object cause) {
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		for (int ID : wraithIDs){</span>
+<span class="nc" id="L75">			Actor a = Actor.findById(ID);</span>
+<span class="nc bnc" id="L76" title="All 4 branches missed.">			if (a instanceof Wraith &amp;&amp; ((Wraith) a).alignment == alignment){</span>
+<span class="nc" id="L77">				((Wraith) a).die(null);</span>
+			}
+<span class="nc" id="L79">		}</span>
+
+<span class="nc" id="L81">		super.die(cause);</span>
+<span class="nc" id="L82">	}</span>
+
+	private static final String WRAITH_IDS = &quot;wraith_ids&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L88">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L89">		int[] wraithIDArr = new int[wraithIDs.size()];</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		int i = 0; for (Integer val : wraithIDs){ wraithIDArr[i] = val; i++; }</span>
+<span class="nc" id="L91">		bundle.put(WRAITH_IDS, wraithIDArr);</span>
+<span class="nc" id="L92">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L96">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L97">		wraithIDs.clear();</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">		for (int i : bundle.getIntArray(WRAITH_IDS)){</span>
+<span class="nc" id="L99">			wraithIDs.add(i);</span>
+		}
+<span class="nc" id="L101">	}</span>
+
+	@Override
+	public void summonMinion() {
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		if (Actor.findChar(summoningPos) != null) {</span>
+
+<span class="nc" id="L107">			int pushPos = pos;</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">			for (int c : PathFinder.NEIGHBOURS8) {</span>
+<span class="nc bnc" id="L109" title="All 6 branches missed.">				if (Actor.findChar(summoningPos + c) == null</span>
+						&amp;&amp; Dungeon.level.passable[summoningPos + c]
+<span class="nc bnc" id="L111" title="All 2 branches missed.">						&amp;&amp; (Dungeon.level.openSpace[summoningPos + c] || !hasProp(Actor.findChar(summoningPos), Property.LARGE))</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">						&amp;&amp; Dungeon.level.trueDistance(pos, summoningPos + c) &gt; Dungeon.level.trueDistance(pos, pushPos)) {</span>
+<span class="nc" id="L113">					pushPos = summoningPos + c;</span>
+				}
+			}
+
+			//no push if char is immovable
+<span class="nc bnc" id="L118" title="All 2 branches missed.">			if (Char.hasProp(Actor.findChar(summoningPos), Property.IMMOVABLE)){</span>
+<span class="nc" id="L119">				pushPos = pos;</span>
+			}
+
+			//push enemy, or wait a turn if there is no valid pushing position
+<span class="nc bnc" id="L123" title="All 2 branches missed.">			if (pushPos != pos) {</span>
+<span class="nc" id="L124">				Char ch = Actor.findChar(summoningPos);</span>
+<span class="nc" id="L125">				Actor.add( new Pushing( ch, ch.pos, pushPos ) );</span>
+
+<span class="nc" id="L127">				ch.pos = pushPos;</span>
+<span class="nc" id="L128">				Dungeon.level.occupyCell(ch );</span>
+
+<span class="nc" id="L130">			} else {</span>
+
+<span class="nc" id="L132">				Char blocker = Actor.findChar(summoningPos);</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">				if (blocker.alignment != alignment){</span>
+<span class="nc" id="L134">					blocker.damage( Random.NormalIntRange(2, 10), new SummoningBlockDamage() );</span>
+<span class="nc bnc" id="L135" title="All 4 branches missed.">					if (blocker == Dungeon.hero &amp;&amp; !blocker.isAlive()){</span>
+<span class="nc" id="L136">						Badges.validateDeathFromEnemyMagic();</span>
+<span class="nc" id="L137">						Dungeon.fail(this);</span>
+<span class="nc" id="L138">						GLog.n( Messages.capitalize(Messages.get(Char.class, &quot;kill&quot;, name())) );</span>
+					}
+				}
+
+<span class="nc" id="L142">				spend(TICK);</span>
+<span class="nc" id="L143">				return;</span>
+			}
+		}
+
+<span class="nc" id="L147">		summoning = firstSummon = false;</span>
+
+<span class="nc" id="L149">		Wraith wraith = Wraith.spawnAt(summoningPos, Wraith.class);</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">		if (wraith == null){</span>
+<span class="nc" id="L151">			spend(TICK);</span>
+<span class="nc" id="L152">			return;</span>
+		}
+<span class="nc" id="L154">		wraith.adjustStats(4);</span>
+<span class="nc" id="L155">		Dungeon.level.occupyCell( wraith );</span>
+<span class="nc" id="L156">		((SpectralNecromancerSprite)sprite).finishSummoning();</span>
+
+<span class="nc bnc" id="L158" title="All 2 branches missed.">		for (Buff b : buffs()){</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">			if (b.revivePersists) {</span>
+<span class="nc" id="L160">				Buff.affect(wraith, b.getClass());</span>
+			}
+<span class="nc" id="L162">		}</span>
+<span class="nc" id="L163">		wraithIDs.add(wraith.id());</span>
+<span class="nc" id="L164">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

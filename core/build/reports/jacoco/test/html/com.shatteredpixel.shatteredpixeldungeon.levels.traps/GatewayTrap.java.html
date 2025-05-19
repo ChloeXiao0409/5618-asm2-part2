@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GatewayTrap.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.traps</a> &gt; <span class="el_source">GatewayTrap.java</span></div><h1>GatewayTrap.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.traps;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Honeypot;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L42">public class GatewayTrap extends Trap {</span>
+
+	{
+<span class="nc" id="L45">		color = TEAL;</span>
+<span class="nc" id="L46">		shape = CROSSHAIR;</span>
+
+<span class="nc" id="L48">		disarmedByActivation = false;</span>
+<span class="nc" id="L49">		avoidsHallways = true;</span>
+	}
+
+<span class="nc" id="L52">	private int telePos = -1;</span>
+
+	@Override
+	public void activate() {
+
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		if (telePos == -1){</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS9){</span>
+<span class="nc" id="L59">				Char ch = Actor.findChar(pos + i);</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">				if (ch != null){</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">					if (ScrollOfTeleportation.teleportChar(ch)) {</span>
+<span class="nc bnc" id="L62" title="All 4 branches missed.">						if (ch instanceof Mob &amp;&amp; ((Mob) ch).state == ((Mob) ch).HUNTING) {</span>
+<span class="nc" id="L63">							((Mob) ch).state = ((Mob) ch).WANDERING;</span>
+						}
+<span class="nc" id="L65">						telePos = ch.pos;</span>
+<span class="nc" id="L66">						break;</span>
+					}
+				}
+<span class="nc" id="L69">				Heap heap = Dungeon.level.heaps.get(pos + i);</span>
+<span class="nc bnc" id="L70" title="All 4 branches missed.">				if (heap != null &amp;&amp; heap.type == Heap.Type.HEAP){</span>
+<span class="nc" id="L71">					int cell = Dungeon.level.randomRespawnCell( null );</span>
+
+<span class="nc" id="L73">					Item item = heap.pickUp();</span>
+
+<span class="nc bnc" id="L75" title="All 2 branches missed.">					if (cell != -1) {</span>
+<span class="nc" id="L76">						Dungeon.level.drop( item, cell );</span>
+<span class="nc" id="L77">						telePos = cell;</span>
+<span class="nc" id="L78">						break;</span>
+					}
+				}
+			}
+		}
+
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		if (telePos != -1){</span>
+
+<span class="nc" id="L86">			ArrayList&lt;Integer&gt; telePositions = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">				if (Dungeon.level.passable[telePos+i]</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">						&amp;&amp; Actor.findChar( telePos+i ) == null){</span>
+<span class="nc" id="L90">					telePositions.add(telePos+i);</span>
+				}
+			}
+<span class="nc" id="L93">			Random.shuffle(telePositions);</span>
+
+<span class="nc bnc" id="L95" title="All 2 branches missed.">			if (Dungeon.level.passable[telePos]</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">					&amp;&amp; Actor.findChar( telePos ) == null){</span>
+<span class="nc" id="L97">				telePositions.add(0, telePos);</span>
+			}
+
+<span class="nc" id="L100">			ArrayList&lt;Integer&gt; largeCharPositions = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">			for (int pos : telePositions){</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">				if (Dungeon.level.openSpace[pos]){</span>
+<span class="nc" id="L103">					largeCharPositions.add(pos);</span>
+				}
+<span class="nc" id="L105">			}</span>
+
+<span class="nc bnc" id="L107" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS9){</span>
+
+<span class="nc" id="L109">				Char ch = Actor.findChar(pos + i);</span>
+<span class="nc bnc" id="L110" title="All 4 branches missed.">				if (ch != null &amp;&amp; !Char.hasProp(ch, Char.Property.IMMOVABLE)){</span>
+<span class="nc" id="L111">					int newPos = -1;</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">					if (Char.hasProp(ch, Char.Property.LARGE)){</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">						if (!largeCharPositions.isEmpty()){</span>
+<span class="nc" id="L114">							newPos = largeCharPositions.get(0);</span>
+						}
+					} else {
+<span class="nc bnc" id="L117" title="All 2 branches missed.">						if (!telePositions.isEmpty()) {</span>
+<span class="nc" id="L118">							newPos = telePositions.get(0);</span>
+						}
+					}
+
+<span class="nc bnc" id="L122" title="All 2 branches missed.">					if (newPos != -1){</span>
+<span class="nc" id="L123">						telePositions.remove((Integer)newPos);</span>
+<span class="nc" id="L124">						largeCharPositions.remove((Integer)newPos);</span>
+
+<span class="nc bnc" id="L126" title="All 2 branches missed.">						if (ScrollOfTeleportation.teleportToLocation(ch, newPos)){</span>
+<span class="nc bnc" id="L127" title="All 4 branches missed.">							if (ch instanceof Mob &amp;&amp; ((Mob) ch).state == ((Mob) ch).HUNTING) {</span>
+<span class="nc" id="L128">								((Mob) ch).state = ((Mob) ch).WANDERING;</span>
+							}
+						}
+					}
+				}
+
+<span class="nc" id="L134">				Heap heap = Dungeon.level.heaps.get(pos + i);</span>
+<span class="nc bnc" id="L135" title="All 4 branches missed.">				if (heap != null &amp;&amp; heap.type == Heap.Type.HEAP){</span>
+<span class="nc" id="L136">					Item item = heap.pickUp();</span>
+<span class="nc" id="L137">					Dungeon.level.drop( item, telePos );</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">					if (item instanceof Honeypot.ShatteredPot){</span>
+<span class="nc" id="L139">						((Honeypot.ShatteredPot)item).movePot(pos, telePos);</span>
+					}
+<span class="nc" id="L141">					Sample.INSTANCE.play(Assets.Sounds.TELEPORT);</span>
+<span class="nc" id="L142">					CellEmitter.get(pos).burst(Speck.factory(Speck.LIGHT), 4);</span>
+				}
+			}
+		}
+
+<span class="nc" id="L147">	}</span>
+
+	private static final String TELE_POS = &quot;tele_pos&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L153">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L154">		bundle.put(TELE_POS, telePos);</span>
+<span class="nc" id="L155">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L159">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L160">		telePos = bundle.getInt(TELE_POS);</span>
+<span class="nc" id="L161">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ClassArmor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.armor</a> &gt; <span class="el_source">ClassArmor.java</span></div><h1>ClassArmor.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.armor;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.Trinity;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndChooseAbility;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+
+import java.util.ArrayList;
+
+abstract public class ClassArmor extends Armor {
+
+	private static final String AC_ABILITY = &quot;ABILITY&quot;;
+	private static final String AC_TRANSFER = &quot;TRANSFER&quot;;
+	
+	{
+<span class="nc" id="L57">		levelKnown = true;</span>
+<span class="nc" id="L58">		cursedKnown = true;</span>
+<span class="nc" id="L59">		defaultAction = AC_ABILITY;</span>
+
+<span class="nc" id="L61">		bones = false;</span>
+	}
+
+	private Charger charger;
+<span class="nc" id="L65">	public float charge = 0;</span>
+	
+	public ClassArmor() {
+<span class="nc" id="L68">		super( 5 );</span>
+<span class="nc" id="L69">	}</span>
+
+	@Override
+	public void activate(Char ch) {
+<span class="nc" id="L73">		super.activate(ch);</span>
+<span class="nc" id="L74">		charger = new Charger();</span>
+<span class="nc" id="L75">		charger.attachTo(ch);</span>
+<span class="nc" id="L76">	}</span>
+
+	@Override
+	public boolean doUnequip( Hero hero, boolean collect, boolean single ) {
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		if (super.doUnequip( hero, collect, single )) {</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">			if (charger != null){</span>
+<span class="nc" id="L82">				charger.detach();</span>
+<span class="nc" id="L83">				charger = null;</span>
+			}
+<span class="nc" id="L85">			return true;</span>
+
+		} else {
+<span class="nc" id="L88">			return false;</span>
+
+		}
+	}
+
+	@Override
+	public int targetingPos(Hero user, int dst) {
+<span class="nc" id="L95">		return user.armorAbility.targetedPos(user, dst);</span>
+	}
+
+	public static ClassArmor upgrade (Hero owner, Armor armor ) {
+		
+<span class="nc" id="L100">		ClassArmor classArmor = null;</span>
+		
+<span class="nc bnc" id="L102" title="All 7 branches missed.">		switch (owner.heroClass) {</span>
+			case WARRIOR:
+<span class="nc" id="L104">				classArmor = new WarriorArmor();</span>
+<span class="nc" id="L105">				break;</span>
+			case ROGUE:
+<span class="nc" id="L107">				classArmor = new RogueArmor();</span>
+<span class="nc" id="L108">				break;</span>
+			case MAGE:
+<span class="nc" id="L110">				classArmor = new MageArmor();</span>
+<span class="nc" id="L111">				break;</span>
+			case HUNTRESS:
+<span class="nc" id="L113">				classArmor = new HuntressArmor();</span>
+<span class="nc" id="L114">				break;</span>
+			case DUELIST:
+<span class="nc" id="L116">				classArmor = new DuelistArmor();</span>
+<span class="nc" id="L117">				break;</span>
+			case CLERIC:
+<span class="nc" id="L119">				classArmor = new ClericArmor();</span>
+				break;
+		}
+		
+<span class="nc" id="L123">		classArmor.level(armor.trueLevel());</span>
+<span class="nc" id="L124">		classArmor.tier = armor.tier;</span>
+<span class="nc" id="L125">		classArmor.augment = armor.augment;</span>
+<span class="nc" id="L126">		classArmor.inscribe(armor.glyph);</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		if (armor.seal != null) {</span>
+<span class="nc" id="L128">			classArmor.seal = armor.seal;</span>
+		}
+<span class="nc" id="L130">		classArmor.glyphHardened = armor.glyphHardened;</span>
+<span class="nc" id="L131">		classArmor.cursed = armor.cursed;</span>
+<span class="nc" id="L132">		classArmor.curseInfusionBonus = armor.curseInfusionBonus;</span>
+<span class="nc" id="L133">		classArmor.masteryPotionBonus = armor.masteryPotionBonus;</span>
+<span class="nc bnc" id="L134" title="All 4 branches missed.">		if (armor.levelKnown &amp;&amp; armor.cursedKnown) {</span>
+<span class="nc" id="L135">			classArmor.identify();</span>
+		} else {
+<span class="nc" id="L137">			classArmor.levelKnown = armor.levelKnown;</span>
+<span class="nc" id="L138">			classArmor.cursedKnown = true;</span>
+		}
+
+<span class="nc" id="L141">		classArmor.charge = 50;</span>
+		
+<span class="nc" id="L143">		return classArmor;</span>
+	}
+
+	private static final String ARMOR_TIER	= &quot;armortier&quot;;
+	private static final String CHARGE	    = &quot;charge&quot;;
+
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L151">		super.storeInBundle( bundle );</span>
+<span class="nc" id="L152">		bundle.put( ARMOR_TIER, tier );</span>
+<span class="nc" id="L153">		bundle.put( CHARGE, charge );</span>
+<span class="nc" id="L154">	}</span>
+
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L158">		super.restoreFromBundle( bundle );</span>
+<span class="nc" id="L159">		tier = bundle.getInt( ARMOR_TIER );</span>
+<span class="nc" id="L160">		charge = bundle.getFloat(CHARGE);</span>
+<span class="nc" id="L161">	}</span>
+	
+	@Override
+	public ArrayList&lt;String&gt; actions( Hero hero ) {
+<span class="nc" id="L165">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">		if (isEquipped( hero )) {</span>
+<span class="nc" id="L167">			actions.add( AC_ABILITY );</span>
+		}
+<span class="nc" id="L169">		actions.add( AC_TRANSFER );</span>
+<span class="nc" id="L170">		return actions;</span>
+	}
+
+	@Override
+	public String actionName(String action, Hero hero) {
+<span class="nc bnc" id="L175" title="All 4 branches missed.">		if (hero.armorAbility != null &amp;&amp; action.equals(AC_ABILITY)){</span>
+<span class="nc" id="L176">			return Messages.upperCase(hero.armorAbility.name());</span>
+		} else {
+<span class="nc" id="L178">			return super.actionName(action, hero);</span>
+		}
+	}
+
+	@Override
+	public String status() {
+<span class="nc" id="L184">		return Messages.format( &quot;%.0f%%&quot;, Math.floor(charge) );</span>
+	}
+
+	@Override
+	public void execute( Hero hero, String action ) {
+
+<span class="nc" id="L190">		super.execute( hero, action );</span>
+
+<span class="nc bnc" id="L192" title="All 2 branches missed.">		if (action.equals(AC_ABILITY)){</span>
+
+<span class="nc bnc" id="L194" title="All 2 branches missed.">			if (hero.armorAbility == null){</span>
+<span class="nc" id="L195">				GameScene.show(new WndChooseAbility(null, this, hero));</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">			} else if (!isEquipped( hero )) {</span>
+<span class="nc" id="L197">				usesTargeting = false;</span>
+<span class="nc" id="L198">				GLog.w( Messages.get(this, &quot;not_equipped&quot;) );</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">			} else if (charge &lt; hero.armorAbility.chargeUse(hero)) {</span>
+<span class="nc" id="L200">				usesTargeting = false;</span>
+<span class="nc" id="L201">				GLog.w( Messages.get(this, &quot;low_charge&quot;) );</span>
+			} else  {
+<span class="nc" id="L203">				usesTargeting = hero.armorAbility.useTargeting();</span>
+<span class="nc" id="L204">				hero.armorAbility.use(this, hero);</span>
+			}
+			
+<span class="nc bnc" id="L207" title="All 2 branches missed.">		} else if (action.equals(AC_TRANSFER)){</span>
+
+<span class="nc" id="L209">			GameScene.show(new WndOptions(new ItemSprite(ItemSpriteSheet.CROWN),</span>
+<span class="nc" id="L210">					Messages.get(ClassArmor.class, &quot;transfer_title&quot;),</span>
+<span class="nc" id="L211">					Messages.get(ClassArmor.class, &quot;transfer_desc&quot;),</span>
+<span class="nc" id="L212">					Messages.get(ClassArmor.class, &quot;transfer_prompt&quot;),</span>
+<span class="nc" id="L213">					Messages.get(ClassArmor.class, &quot;transfer_cancel&quot;)){</span>
+				@Override
+				protected void onSelect(int index) {
+<span class="nc bnc" id="L216" title="All 2 branches missed.">					if (index == 0){</span>
+<span class="nc" id="L217">						GameScene.selectItem(new WndBag.ItemSelector() {</span>
+							@Override
+							public String textPrompt() {
+<span class="nc" id="L220">								return Messages.get(ClassArmor.class, &quot;transfer_prompt&quot;);</span>
+							}
+
+							@Override
+							public boolean itemSelectable(Item item) {
+<span class="nc" id="L225">								return item instanceof Armor;</span>
+							}
+
+							@Override
+							public void onSelect(Item item) {
+<span class="nc bnc" id="L230" title="All 4 branches missed.">								if (item == null || item == ClassArmor.this) return;</span>
+
+<span class="nc" id="L232">								Armor armor = (Armor)item;</span>
+<span class="nc" id="L233">								armor.detach(hero.belongings.backpack);</span>
+<span class="nc bnc" id="L234" title="All 2 branches missed.">								if (hero.belongings.armor == armor){</span>
+<span class="nc" id="L235">									hero.belongings.armor = null;</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">									if (hero.sprite instanceof HeroSprite) {</span>
+<span class="nc" id="L237">										((HeroSprite) hero.sprite).updateArmor();</span>
+									}
+								}
+<span class="nc" id="L240">								level(armor.trueLevel());</span>
+<span class="nc" id="L241">								tier = armor.tier;</span>
+<span class="nc" id="L242">								augment = armor.augment;</span>
+<span class="nc" id="L243">								cursed = armor.cursed;</span>
+<span class="nc" id="L244">								curseInfusionBonus = armor.curseInfusionBonus;</span>
+<span class="nc" id="L245">								masteryPotionBonus = armor.masteryPotionBonus;</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">								if (armor.checkSeal() != null) {</span>
+<span class="nc" id="L247">									inscribe(armor.glyph);</span>
+<span class="nc" id="L248">									seal = armor.checkSeal();</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">								} else if (checkSeal() != null){</span>
+									//automates the process of detaching the seal manually
+									// and re-affixing it to the new armor
+<span class="nc bnc" id="L252" title="All 2 branches missed.">									if (seal.level() &gt; 0){</span>
+<span class="nc" id="L253">										int newLevel = trueLevel() + 1;</span>
+<span class="nc" id="L254">										level(newLevel);</span>
+<span class="nc" id="L255">										Badges.validateItemLevelAquired(ClassArmor.this);</span>
+									}
+
+									//if both source and destination armor have glyphs
+									// we assume the player wants the glyph on the destination armor
+									// they can always manually detach first if they don't.
+									// otherwise we automate glyph transfer just like upgrades
+<span class="nc bnc" id="L262" title="All 4 branches missed.">									if (armor.glyph == null &amp;&amp; seal.canTransferGlyph()){</span>
+										//do nothing, keep our glyph
+									} else {
+<span class="nc" id="L265">										inscribe(armor.glyph);</span>
+<span class="nc" id="L266">										seal.setGlyph(null);</span>
+									}
+								} else {
+<span class="nc" id="L269">									inscribe(armor.glyph);</span>
+								}
+
+<span class="nc bnc" id="L272" title="All 4 branches missed.">								if (armor.levelKnown &amp;&amp; armor.cursedKnown) {</span>
+<span class="nc" id="L273">									identify();</span>
+								} else {
+<span class="nc" id="L275">									levelKnown = armor.levelKnown;</span>
+<span class="nc" id="L276">									cursedKnown = true;</span>
+								}
+
+<span class="nc" id="L279">								GLog.p( Messages.get(ClassArmor.class, &quot;transfer_complete&quot;) );</span>
+<span class="nc" id="L280">								hero.sprite.operate(hero.pos);</span>
+<span class="nc" id="L281">								hero.sprite.emitter().burst( Speck.factory( Speck.CROWN), 12 );</span>
+<span class="nc" id="L282">								Sample.INSTANCE.play( Assets.Sounds.EVOKE );</span>
+<span class="nc" id="L283">								hero.spend(Actor.TICK);</span>
+<span class="nc" id="L284">								hero.busy();</span>
+
+<span class="nc" id="L286">							}</span>
+						});
+					}
+<span class="nc" id="L289">				}</span>
+			});
+
+		}
+<span class="nc" id="L293">	}</span>
+
+	@Override
+	public String desc() {
+<span class="nc" id="L297">		String desc = super.desc();</span>
+
+<span class="nc bnc" id="L299" title="All 4 branches missed.">		if (Dungeon.hero != null &amp;&amp; Dungeon.hero.belongings.contains(this)) {</span>
+<span class="nc" id="L300">			ArmorAbility ability = Dungeon.hero.armorAbility;</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">			if (ability != null) {</span>
+<span class="nc" id="L302">				desc += &quot;\n\n&quot; + ability.shortDesc();</span>
+<span class="nc" id="L303">				float chargeUse = ability.chargeUse(Dungeon.hero);</span>
+				//trinity has variable charge cost
+<span class="nc bnc" id="L305" title="All 2 branches missed.">				if (!(ability instanceof Trinity)) {</span>
+<span class="nc" id="L306">					desc += &quot; &quot; + Messages.get(this, &quot;charge_use&quot;, Messages.decimalFormat(&quot;#.##&quot;, chargeUse));</span>
+				}
+<span class="nc" id="L308">			} else {</span>
+<span class="nc" id="L309">				desc += &quot;\n\n&quot; + &quot;_&quot; + Messages.get(this, &quot;no_ability&quot;) + &quot;_&quot;;</span>
+			}
+		}
+
+<span class="nc" id="L313">		return desc;</span>
+	}
+	
+	@Override
+	public int value() {
+<span class="nc" id="L318">		return 0;</span>
+	}
+
+<span class="nc" id="L321">	public class Charger extends Buff {</span>
+
+		@Override
+		public boolean attachTo( Char target ) {
+<span class="nc bnc" id="L325" title="All 2 branches missed.">			if (super.attachTo( target )) {</span>
+				//if we're loading in and the hero has partially spent a turn, delay for 1 turn
+<span class="nc bnc" id="L327" title="All 8 branches missed.">				if (target instanceof Hero &amp;&amp; Dungeon.hero == null &amp;&amp; cooldown() == 0 &amp;&amp; target.cooldown() &gt; 0) {</span>
+<span class="nc" id="L328">					spend(TICK);</span>
+				}
+<span class="nc" id="L330">				return true;</span>
+			}
+<span class="nc" id="L332">			return false;</span>
+		}
+
+		@Override
+		public boolean act() {
+<span class="nc bnc" id="L337" title="All 2 branches missed.">			if (Regeneration.regenOn()) {</span>
+<span class="nc" id="L338">				float chargeGain = 100 / 500f; //500 turns to full charge</span>
+<span class="nc" id="L339">				chargeGain *= RingOfEnergy.armorChargeMultiplier(target);</span>
+<span class="nc" id="L340">				charge += chargeGain;</span>
+<span class="nc" id="L341">				updateQuickslot();</span>
+<span class="nc bnc" id="L342" title="All 2 branches missed.">				if (charge &gt; 100) {</span>
+<span class="nc" id="L343">					charge = 100;</span>
+				}
+			}
+<span class="nc" id="L346">			spend(TICK);</span>
+<span class="nc" id="L347">			return true;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

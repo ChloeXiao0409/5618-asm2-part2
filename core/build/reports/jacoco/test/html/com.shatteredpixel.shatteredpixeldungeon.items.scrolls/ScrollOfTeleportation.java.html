@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScrollOfTeleportation.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.scrolls</a> &gt; <span class="el_source">ScrollOfTeleportation.java</span></div><h1>ScrollOfTeleportation.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.scrolls;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Roots;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.levels.RegularLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret.SecretRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.SpecialRoom;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.watabou.utils.BArray;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.tweeners.AlphaTweener;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L51">public class ScrollOfTeleportation extends Scroll {</span>
+
+	{
+<span class="nc" id="L54">		icon = ItemSpriteSheet.Icons.SCROLL_TELEPORT;</span>
+<span class="nc" id="L55">	}</span>
+
+	@Override
+	public void doRead() {
+
+<span class="nc" id="L60">		detach(curUser.belongings.backpack);</span>
+<span class="nc" id="L61">		Sample.INSTANCE.play( Assets.Sounds.READ );</span>
+		
+<span class="nc bnc" id="L63" title="All 2 branches missed.">		if (teleportPreferringUnseen( curUser )){</span>
+<span class="nc" id="L64">			readAnimation();</span>
+		}
+<span class="nc" id="L66">		identify();</span>
+
+<span class="nc" id="L68">	}</span>
+	
+	public static boolean teleportToLocation(Char ch, int pos){
+<span class="nc" id="L71">		PathFinder.buildDistanceMap(pos, BArray.or(Dungeon.level.passable, Dungeon.level.avoid, null));</span>
+<span class="nc bnc" id="L72" title="All 6 branches missed.">		if (PathFinder.distance[ch.pos] == Integer.MAX_VALUE</span>
+				|| (!Dungeon.level.passable[pos] &amp;&amp; !Dungeon.level.avoid[pos])
+<span class="nc bnc" id="L74" title="All 4 branches missed.">				|| (Actor.findChar(pos) != null &amp;&amp; Actor.findChar(pos) != ch)){</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">			if (ch == Dungeon.hero){</span>
+<span class="nc" id="L76">				GLog.w( Messages.get(ScrollOfTeleportation.class, &quot;cant_reach&quot;) );</span>
+			}
+<span class="nc" id="L78">			return false;</span>
+		}
+		
+<span class="nc" id="L81">		appear( ch, pos );</span>
+<span class="nc" id="L82">		Dungeon.level.occupyCell( ch );</span>
+<span class="nc" id="L83">		Buff.detach(ch, Roots.class);</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		if (ch == Dungeon.hero) {</span>
+<span class="nc" id="L85">			Dungeon.observe();</span>
+<span class="nc" id="L86">			GameScene.updateFog();</span>
+		}
+<span class="nc" id="L88">		return true;</span>
+		
+	}
+
+	public static boolean teleportChar( Char ch ) {
+<span class="nc" id="L93">		return teleportChar( ch, ScrollOfTeleportation.class );</span>
+	}
+
+	public static boolean teleportChar( Char ch, Class source ) {
+
+<span class="nc bnc" id="L98" title="All 2 branches missed.">		if (!(Dungeon.level instanceof RegularLevel)){</span>
+<span class="nc" id="L99">			return teleportInNonRegularLevel( ch, false );</span>
+		}
+
+<span class="nc bnc" id="L102" title="All 4 branches missed.">		if (Char.hasProp(ch, Char.Property.IMMOVABLE) || ch.isImmune(source)){</span>
+<span class="nc" id="L103">			GLog.w( Messages.get(ScrollOfTeleportation.class, &quot;no_tele&quot;) );</span>
+<span class="nc" id="L104">			return false;</span>
+		}
+		
+<span class="nc" id="L107">		int count = 20;</span>
+		int pos;
+		do {
+<span class="nc" id="L110">			pos = Dungeon.level.randomRespawnCell( ch );</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">			if (count-- &lt;= 0) {</span>
+<span class="nc" id="L112">				break;</span>
+			}
+<span class="nc bnc" id="L114" title="All 4 branches missed.">		} while (pos == -1 || Dungeon.level.secret[pos]);</span>
+		
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		if (pos == -1) {</span>
+			
+<span class="nc" id="L118">			GLog.w( Messages.get(ScrollOfTeleportation.class, &quot;no_tele&quot;) );</span>
+<span class="nc" id="L119">			return false;</span>
+			
+		} else {
+			
+<span class="nc" id="L123">			appear( ch, pos );</span>
+<span class="nc" id="L124">			Dungeon.level.occupyCell( ch );</span>
+<span class="nc" id="L125">			Buff.detach(ch, Roots.class);</span>
+			
+<span class="nc bnc" id="L127" title="All 2 branches missed.">			if (ch == Dungeon.hero) {</span>
+<span class="nc" id="L128">				GLog.i( Messages.get(ScrollOfTeleportation.class, &quot;tele&quot;) );</span>
+				
+<span class="nc" id="L130">				Dungeon.observe();</span>
+<span class="nc" id="L131">				GameScene.updateFog();</span>
+<span class="nc" id="L132">				Dungeon.hero.interrupt();</span>
+			}
+<span class="nc" id="L134">			return true;</span>
+			
+		}
+	}
+	
+	public static boolean teleportPreferringUnseen( Hero hero ){
+		
+<span class="nc bnc" id="L141" title="All 2 branches missed.">		if (!(Dungeon.level instanceof RegularLevel)){</span>
+<span class="nc" id="L142">			return teleportInNonRegularLevel( hero, true );</span>
+		}
+		
+<span class="nc" id="L145">		RegularLevel level = (RegularLevel) Dungeon.level;</span>
+<span class="nc" id="L146">		ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+		
+<span class="nc bnc" id="L148" title="All 2 branches missed.">		for (Room r : level.rooms()){</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">			if (r instanceof SpecialRoom){</span>
+				int terr;
+<span class="nc" id="L151">				boolean locked = false;</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">				for (Point p : r.getPoints()){</span>
+<span class="nc" id="L153">					terr = level.map[level.pointToCell(p)];</span>
+<span class="nc bnc" id="L154" title="All 6 branches missed.">					if (terr == Terrain.LOCKED_DOOR || terr == Terrain.CRYSTAL_DOOR || terr == Terrain.BARRICADE){</span>
+<span class="nc" id="L155">						locked = true;</span>
+<span class="nc" id="L156">						break;</span>
+					}
+<span class="nc" id="L158">				}</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">				if (locked){</span>
+<span class="nc" id="L160">					continue;</span>
+				}
+			}
+			
+			int cell;
+<span class="nc bnc" id="L165" title="All 2 branches missed.">			for (Point p : r.charPlaceablePoints(level)){</span>
+<span class="nc" id="L166">				cell = level.pointToCell(p);</span>
+<span class="nc bnc" id="L167" title="All 8 branches missed.">				if (level.passable[cell] &amp;&amp; !level.visited[cell] &amp;&amp; !level.secret[cell] &amp;&amp; Actor.findChar(cell) == null){</span>
+<span class="nc" id="L168">					candidates.add(cell);</span>
+				}
+<span class="nc" id="L170">			}</span>
+<span class="nc" id="L171">		}</span>
+		
+<span class="nc bnc" id="L173" title="All 2 branches missed.">		if (candidates.isEmpty()){</span>
+<span class="nc" id="L174">			return teleportChar( hero );</span>
+		} else {
+<span class="nc" id="L176">			int pos = Random.element(candidates);</span>
+<span class="nc" id="L177">			boolean secretDoor = false;</span>
+<span class="nc" id="L178">			int doorPos = -1;</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">			if (level.room(pos) instanceof SpecialRoom){</span>
+<span class="nc" id="L180">				SpecialRoom room = (SpecialRoom) level.room(pos);</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">				if (room.entrance() != null){</span>
+<span class="nc" id="L182">					doorPos = level.pointToCell(room.entrance());</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">					for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L184" title="All 4 branches missed.">						if (!room.inside(level.cellToPoint(doorPos + i))</span>
+								&amp;&amp; level.passable[doorPos + i]
+<span class="nc bnc" id="L186" title="All 2 branches missed.">								&amp;&amp; Actor.findChar(doorPos + i) == null){</span>
+<span class="nc" id="L187">							secretDoor = room instanceof SecretRoom;</span>
+<span class="nc" id="L188">							pos = doorPos + i;</span>
+<span class="nc" id="L189">							break;</span>
+						}
+					}
+				}
+			}
+<span class="nc" id="L194">			GLog.i( Messages.get(ScrollOfTeleportation.class, &quot;tele&quot;) );</span>
+<span class="nc" id="L195">			appear( hero, pos );</span>
+<span class="nc" id="L196">			Dungeon.level.occupyCell( hero );</span>
+<span class="nc" id="L197">			Buff.detach(hero, Roots.class);</span>
+<span class="nc bnc" id="L198" title="All 4 branches missed.">			if (secretDoor &amp;&amp; level.map[doorPos] == Terrain.SECRET_DOOR){</span>
+<span class="nc" id="L199">				Sample.INSTANCE.play( Assets.Sounds.SECRET );</span>
+<span class="nc" id="L200">				int oldValue = Dungeon.level.map[doorPos];</span>
+<span class="nc" id="L201">				GameScene.discoverTile( doorPos, oldValue );</span>
+<span class="nc" id="L202">				Dungeon.level.discover( doorPos );</span>
+<span class="nc" id="L203">				ScrollOfMagicMapping.discover( doorPos );</span>
+			}
+<span class="nc" id="L205">			Dungeon.observe();</span>
+<span class="nc" id="L206">			GameScene.updateFog();</span>
+<span class="nc" id="L207">			return true;</span>
+		}
+		
+	}
+
+	//teleports to a random pathable location on the floor
+	//prefers not seen(optional) &gt; not visible &gt; visible
+	private static boolean teleportInNonRegularLevel(Char ch, boolean preferNotSeen ){
+
+<span class="nc bnc" id="L216" title="All 2 branches missed.">		if (Char.hasProp(ch, Char.Property.IMMOVABLE)){</span>
+<span class="nc" id="L217">			GLog.w( Messages.get(ScrollOfTeleportation.class, &quot;no_tele&quot;) );</span>
+<span class="nc" id="L218">			return false;</span>
+		}
+
+<span class="nc" id="L221">		ArrayList&lt;Integer&gt; visibleValid = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L222">		ArrayList&lt;Integer&gt; notVisibleValid = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L223">		ArrayList&lt;Integer&gt; notSeenValid = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L225">		boolean[] passable = Dungeon.level.passable;</span>
+
+<span class="nc bnc" id="L227" title="All 2 branches missed.">		if (Char.hasProp(ch, Char.Property.LARGE)){</span>
+<span class="nc" id="L228">			passable = BArray.and(passable, Dungeon.level.openSpace, null);</span>
+		}
+
+<span class="nc" id="L231">		PathFinder.buildDistanceMap(ch.pos, passable);</span>
+
+<span class="nc bnc" id="L233" title="All 2 branches missed.">		for (int i = 0; i &lt; Dungeon.level.length(); i++){</span>
+<span class="nc bnc" id="L234" title="All 4 branches missed.">			if (PathFinder.distance[i] &lt; Integer.MAX_VALUE</span>
+					&amp;&amp; !Dungeon.level.secret[i]
+<span class="nc bnc" id="L236" title="All 2 branches missed.">					&amp;&amp; Actor.findChar(i) == null){</span>
+<span class="nc bnc" id="L237" title="All 4 branches missed.">				if (preferNotSeen &amp;&amp; !Dungeon.level.visited[i]){</span>
+<span class="nc" id="L238">					notSeenValid.add(i);</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">				} else if (Dungeon.level.heroFOV[i]){</span>
+<span class="nc" id="L240">					visibleValid.add(i);</span>
+				} else {
+<span class="nc" id="L242">					notVisibleValid.add(i);</span>
+				}
+			}
+		}
+
+		int pos;
+
+<span class="nc bnc" id="L249" title="All 2 branches missed.">		if (!notSeenValid.isEmpty()){</span>
+<span class="nc" id="L250">			pos = Random.element(notSeenValid);</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">		} else if (!notVisibleValid.isEmpty()){</span>
+<span class="nc" id="L252">			pos = Random.element(notVisibleValid);</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">		} else if (!visibleValid.isEmpty()){</span>
+<span class="nc" id="L254">			pos = Random.element(visibleValid);</span>
+		} else {
+<span class="nc" id="L256">			GLog.w( Messages.get(ScrollOfTeleportation.class, &quot;no_tele&quot;) );</span>
+<span class="nc" id="L257">			return false;</span>
+		}
+
+<span class="nc" id="L260">		appear( ch, pos );</span>
+<span class="nc" id="L261">		Dungeon.level.occupyCell( ch );</span>
+
+<span class="nc" id="L263">		Buff.detach(ch, Roots.class);</span>
+
+<span class="nc bnc" id="L265" title="All 2 branches missed.">		if (ch == Dungeon.hero) {</span>
+<span class="nc" id="L266">			GLog.i( Messages.get(ScrollOfTeleportation.class, &quot;tele&quot;) );</span>
+
+<span class="nc" id="L268">			Dungeon.observe();</span>
+<span class="nc" id="L269">			GameScene.updateFog();</span>
+<span class="nc" id="L270">			Dungeon.hero.interrupt();</span>
+		}
+
+<span class="nc" id="L273">		return true;</span>
+
+	}
+
+	public static void appear( Char ch, int pos ) {
+
+<span class="nc" id="L279">		ch.sprite.interruptMotion();</span>
+
+<span class="nc bnc" id="L281" title="All 4 branches missed.">		if (Dungeon.level.heroFOV[pos] || Dungeon.level.heroFOV[ch.pos]){</span>
+<span class="nc" id="L282">			Sample.INSTANCE.play(Assets.Sounds.TELEPORT);</span>
+		}
+
+<span class="nc bnc" id="L285" title="All 4 branches missed.">		if (Dungeon.level.heroFOV[ch.pos] &amp;&amp; ch != Dungeon.hero ) {</span>
+<span class="nc" id="L286">			CellEmitter.get(ch.pos).start(Speck.factory(Speck.LIGHT), 0.2f, 3);</span>
+		}
+
+<span class="nc" id="L289">		ch.move( pos, false );</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">		if (ch.pos == pos) {</span>
+<span class="nc" id="L291">			ch.sprite.interruptMotion();</span>
+<span class="nc" id="L292">			ch.sprite.place(pos);</span>
+		}
+
+<span class="nc bnc" id="L295" title="All 2 branches missed.">		if (ch.invisible == 0) {</span>
+<span class="nc" id="L296">			ch.sprite.alpha( 0 );</span>
+<span class="nc" id="L297">			ch.sprite.parent.add( new AlphaTweener( ch.sprite, 1, 0.4f ) );</span>
+		}
+
+<span class="nc bnc" id="L300" title="All 4 branches missed.">		if (Dungeon.level.heroFOV[pos] || ch == Dungeon.hero ) {</span>
+<span class="nc" id="L301">			ch.sprite.emitter().start(Speck.factory(Speck.LIGHT), 0.2f, 3);</span>
+		}
+<span class="nc" id="L303">	}</span>
+
+	//just plays the VFX for teleporting, without any position changes, does re-press cells though
+	public static void appearVFX( Char ch ){
+<span class="nc bnc" id="L307" title="All 2 branches missed.">		if (Dungeon.level.heroFOV[ch.pos]){</span>
+<span class="nc" id="L308">			Sample.INSTANCE.play(Assets.Sounds.TELEPORT);</span>
+		}
+
+<span class="nc" id="L311">		Dungeon.level.occupyCell(ch);</span>
+
+<span class="nc bnc" id="L313" title="All 2 branches missed.">		if (ch.invisible == 0) {</span>
+<span class="nc" id="L314">			ch.sprite.alpha( 0 );</span>
+<span class="nc" id="L315">			ch.sprite.parent.add( new AlphaTweener( ch.sprite, 1, 0.4f ) );</span>
+		}
+
+<span class="nc bnc" id="L318" title="All 2 branches missed.">		if (Dungeon.level.heroFOV[ch.pos]) {</span>
+<span class="nc" id="L319">			ch.sprite.emitter().start(Speck.factory(Speck.LIGHT), 0.2f, 3);</span>
+		}
+<span class="nc" id="L321">	}</span>
+	
+	@Override
+	public int value() {
+<span class="nc bnc" id="L325" title="All 2 branches missed.">		return isKnown() ? 30 * quantity : super.value();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

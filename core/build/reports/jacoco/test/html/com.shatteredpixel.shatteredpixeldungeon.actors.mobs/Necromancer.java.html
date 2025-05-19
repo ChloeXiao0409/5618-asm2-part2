@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Necromancer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">Necromancer.java</span></div><h1>Necromancer.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Adrenaline;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Beam;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.NecromancerSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.SkeletonSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.BArray;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L47">public class Necromancer extends Mob {</span>
+	
+	{
+<span class="nc" id="L50">		spriteClass = NecromancerSprite.class;</span>
+		
+<span class="nc" id="L52">		HP = HT = 40;</span>
+<span class="nc" id="L53">		defenseSkill = 14;</span>
+		
+<span class="nc" id="L55">		EXP = 7;</span>
+<span class="nc" id="L56">		maxLvl = 14;</span>
+		
+<span class="nc" id="L58">		loot = PotionOfHealing.class;</span>
+<span class="nc" id="L59">		lootChance = 0.2f; //see lootChance()</span>
+		
+<span class="nc" id="L61">		properties.add(Property.UNDEAD);</span>
+		
+<span class="nc" id="L63">		HUNTING = new Hunting();</span>
+	}
+	
+<span class="nc" id="L66">	public boolean summoning = false;</span>
+<span class="nc" id="L67">	public int summoningPos = -1;</span>
+	
+<span class="nc" id="L69">	protected boolean firstSummon = true;</span>
+	
+	private NecroSkeleton mySkeleton;
+<span class="nc" id="L72">	private int storedSkeletonID = -1;</span>
+
+	@Override
+	protected boolean act() {
+<span class="nc bnc" id="L76" title="All 4 branches missed.">		if (summoning &amp;&amp; state != HUNTING){</span>
+<span class="nc" id="L77">			summoning = false;</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">			if (sprite instanceof NecromancerSprite) ((NecromancerSprite) sprite).cancelSummoning();</span>
+		}
+<span class="nc" id="L80">		return super.act();</span>
+	}
+
+	@Override
+	public void aggro(Char ch) {
+<span class="nc" id="L85">		super.aggro(ch);</span>
+<span class="nc bnc" id="L86" title="All 4 branches missed.">		if (mySkeleton != null &amp;&amp; mySkeleton.isAlive()</span>
+<span class="nc bnc" id="L87" title="All 4 branches missed.">				&amp;&amp; Dungeon.level.mobs.contains(mySkeleton)</span>
+				&amp;&amp; mySkeleton.alignment == alignment){
+<span class="nc" id="L89">			mySkeleton.aggro(ch);</span>
+		}
+<span class="nc" id="L91">	}</span>
+
+	@Override
+	public int drRoll() {
+<span class="nc" id="L95">		return super.drRoll() + Random.NormalIntRange(0, 5);</span>
+	}
+	
+	@Override
+	public float lootChance() {
+<span class="nc" id="L100">		return super.lootChance() * ((6f - Dungeon.LimitedDrops.NECRO_HP.count) / 6f);</span>
+	}
+	
+	@Override
+	public Item createLoot(){
+<span class="nc" id="L105">		Dungeon.LimitedDrops.NECRO_HP.count++;</span>
+<span class="nc" id="L106">		return super.createLoot();</span>
+	}
+	
+	@Override
+	public void die(Object cause) {
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		if (storedSkeletonID != -1){</span>
+<span class="nc" id="L112">			Actor ch = Actor.findById(storedSkeletonID);</span>
+<span class="nc" id="L113">			storedSkeletonID = -1;</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">			if (ch instanceof NecroSkeleton){</span>
+<span class="nc" id="L115">				mySkeleton = (NecroSkeleton) ch;</span>
+			}
+		}
+		
+<span class="nc bnc" id="L119" title="All 6 branches missed.">		if (mySkeleton != null &amp;&amp; mySkeleton.isAlive() &amp;&amp; mySkeleton.alignment == alignment){</span>
+<span class="nc" id="L120">			mySkeleton.die(null);</span>
+		}
+		
+<span class="nc" id="L123">		super.die(cause);</span>
+<span class="nc" id="L124">	}</span>
+
+	@Override
+	protected boolean canAttack(Char enemy) {
+<span class="nc" id="L128">		return false;</span>
+	}
+
+	private static final String SUMMONING = &quot;summoning&quot;;
+	private static final String FIRST_SUMMON = &quot;first_summon&quot;;
+	private static final String SUMMONING_POS = &quot;summoning_pos&quot;;
+	private static final String MY_SKELETON = &quot;my_skeleton&quot;;
+	
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L138">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L139">		bundle.put( SUMMONING, summoning );</span>
+<span class="nc" id="L140">		bundle.put( FIRST_SUMMON, firstSummon );</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">		if (summoning){</span>
+<span class="nc" id="L142">			bundle.put( SUMMONING_POS, summoningPos);</span>
+		}
+<span class="nc bnc" id="L144" title="All 2 branches missed.">		if (mySkeleton != null){</span>
+<span class="nc" id="L145">			bundle.put( MY_SKELETON, mySkeleton.id() );</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">		} else if (storedSkeletonID != -1){</span>
+<span class="nc" id="L147">			bundle.put( MY_SKELETON, storedSkeletonID );</span>
+		}
+<span class="nc" id="L149">	}</span>
+	
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L153">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L154">		summoning = bundle.getBoolean( SUMMONING );</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		if (bundle.contains(FIRST_SUMMON)) firstSummon = bundle.getBoolean(FIRST_SUMMON);</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		if (summoning){</span>
+<span class="nc" id="L157">			summoningPos = bundle.getInt( SUMMONING_POS );</span>
+		}
+<span class="nc bnc" id="L159" title="All 2 branches missed.">		if (bundle.contains( MY_SKELETON )){</span>
+<span class="nc" id="L160">			storedSkeletonID = bundle.getInt( MY_SKELETON );</span>
+		}
+<span class="nc" id="L162">	}</span>
+	
+	public void onZapComplete(){
+<span class="nc bnc" id="L165" title="All 6 branches missed.">		if (mySkeleton == null || mySkeleton.sprite == null || !mySkeleton.isAlive()){</span>
+<span class="nc" id="L166">			return;</span>
+		}
+		
+		//heal skeleton first
+<span class="nc bnc" id="L170" title="All 2 branches missed.">		if (mySkeleton.HP &lt; mySkeleton.HT){</span>
+
+<span class="nc bnc" id="L172" title="All 4 branches missed.">			if (sprite.visible || mySkeleton.sprite.visible) {</span>
+<span class="nc" id="L173">				sprite.parent.add(new Beam.HealthRay(sprite.center(), mySkeleton.sprite.center()));</span>
+			}
+			
+<span class="nc" id="L176">			mySkeleton.HP = Math.min(mySkeleton.HP + mySkeleton.HT/5, mySkeleton.HT);</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">			if (mySkeleton.sprite.visible) {</span>
+<span class="nc" id="L178">				mySkeleton.sprite.showStatusWithIcon( CharSprite.POSITIVE, Integer.toString( mySkeleton.HT/5 ), FloatingText.HEALING );</span>
+			}
+			
+		//otherwise give it adrenaline
+<span class="nc bnc" id="L182" title="All 2 branches missed.">		} else if (mySkeleton.buff(Adrenaline.class) == null) {</span>
+
+<span class="nc bnc" id="L184" title="All 4 branches missed.">			if (sprite.visible || mySkeleton.sprite.visible) {</span>
+<span class="nc" id="L185">				sprite.parent.add(new Beam.HealthRay(sprite.center(), mySkeleton.sprite.center()));</span>
+			}
+			
+<span class="nc" id="L188">			Buff.affect(mySkeleton, Adrenaline.class, 3f);</span>
+		}
+		
+<span class="nc" id="L191">		next();</span>
+<span class="nc" id="L192">	}</span>
+
+	public void summonMinion(){
+<span class="nc bnc" id="L195" title="All 2 branches missed.">		if (Actor.findChar(summoningPos) != null) {</span>
+
+<span class="nc" id="L197">			int pushPos = pos;</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">			for (int c : PathFinder.NEIGHBOURS8) {</span>
+<span class="nc bnc" id="L199" title="All 6 branches missed.">				if (Actor.findChar(summoningPos + c) == null</span>
+						&amp;&amp; Dungeon.level.passable[summoningPos + c]
+<span class="nc bnc" id="L201" title="All 2 branches missed.">						&amp;&amp; (Dungeon.level.openSpace[summoningPos + c] || !hasProp(Actor.findChar(summoningPos), Property.LARGE))</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">						&amp;&amp; Dungeon.level.trueDistance(pos, summoningPos + c) &gt; Dungeon.level.trueDistance(pos, pushPos)) {</span>
+<span class="nc" id="L203">					pushPos = summoningPos + c;</span>
+				}
+			}
+
+			//no push if char is immovable
+<span class="nc bnc" id="L208" title="All 2 branches missed.">			if (Char.hasProp(Actor.findChar(summoningPos), Property.IMMOVABLE)){</span>
+<span class="nc" id="L209">				pushPos = pos;</span>
+			}
+
+			//push enemy, or wait a turn if there is no valid pushing position
+<span class="nc bnc" id="L213" title="All 2 branches missed.">			if (pushPos != pos) {</span>
+<span class="nc" id="L214">				Char ch = Actor.findChar(summoningPos);</span>
+<span class="nc" id="L215">				Actor.add( new Pushing( ch, ch.pos, pushPos ) );</span>
+
+<span class="nc" id="L217">				ch.pos = pushPos;</span>
+<span class="nc" id="L218">				Dungeon.level.occupyCell(ch );</span>
+
+<span class="nc" id="L220">			} else {</span>
+
+<span class="nc" id="L222">				Char blocker = Actor.findChar(summoningPos);</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">				if (blocker.alignment != alignment){</span>
+<span class="nc" id="L224">					blocker.damage( Random.NormalIntRange(2, 10), new SummoningBlockDamage() );</span>
+<span class="nc bnc" id="L225" title="All 4 branches missed.">					if (blocker == Dungeon.hero &amp;&amp; !blocker.isAlive()){</span>
+<span class="nc" id="L226">						Badges.validateDeathFromEnemyMagic();</span>
+<span class="nc" id="L227">						Dungeon.fail(this);</span>
+<span class="nc" id="L228">						GLog.n( Messages.capitalize(Messages.get(Char.class, &quot;kill&quot;, name())) );</span>
+					}
+				}
+
+<span class="nc" id="L232">				spend(TICK);</span>
+<span class="nc" id="L233">				return;</span>
+			}
+		}
+
+<span class="nc" id="L237">		summoning = firstSummon = false;</span>
+
+<span class="nc" id="L239">		mySkeleton = new NecroSkeleton();</span>
+<span class="nc" id="L240">		mySkeleton.pos = summoningPos;</span>
+<span class="nc" id="L241">		GameScene.add( mySkeleton );</span>
+<span class="nc" id="L242">		Dungeon.level.occupyCell( mySkeleton );</span>
+<span class="nc" id="L243">		((NecromancerSprite)sprite).finishSummoning();</span>
+
+<span class="nc bnc" id="L245" title="All 2 branches missed.">		for (Buff b : buffs()){</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">			if (b.revivePersists) {</span>
+<span class="nc" id="L247">				Buff.affect(mySkeleton, b.getClass());</span>
+			}
+<span class="nc" id="L249">		}</span>
+<span class="nc" id="L250">	}</span>
+
+<span class="nc" id="L252">	public static class SummoningBlockDamage{}</span>
+	
+<span class="nc" id="L254">	private class Hunting extends Mob.Hunting{</span>
+		
+		@Override
+		public boolean act(boolean enemyInFOV, boolean justAlerted) {
+<span class="nc" id="L258">			enemySeen = enemyInFOV;</span>
+
+<span class="nc bnc" id="L260" title="All 2 branches missed.">			if (enemySeen){</span>
+<span class="nc" id="L261">				target = enemy.pos;</span>
+			}
+			
+<span class="nc bnc" id="L264" title="All 2 branches missed.">			if (storedSkeletonID != -1){</span>
+<span class="nc" id="L265">				Actor ch = Actor.findById(storedSkeletonID);</span>
+<span class="nc" id="L266">				storedSkeletonID = -1;</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">				if (ch instanceof NecroSkeleton){</span>
+<span class="nc" id="L268">					mySkeleton = (NecroSkeleton) ch;</span>
+				}
+			}
+			
+<span class="nc bnc" id="L272" title="All 2 branches missed.">			if (summoning){</span>
+<span class="nc" id="L273">				summonMinion();</span>
+<span class="nc" id="L274">				return true;</span>
+			}
+			
+<span class="nc bnc" id="L277" title="All 2 branches missed.">			if (mySkeleton != null &amp;&amp;</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">					(!mySkeleton.isAlive()</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">					|| !Dungeon.level.mobs.contains(mySkeleton)</span>
+<span class="nc bnc" id="L280" title="All 2 branches missed.">					|| mySkeleton.alignment != alignment)){</span>
+<span class="nc" id="L281">				mySkeleton = null;</span>
+			}
+			
+			//if enemy is seen, and enemy is within range, and we have no skeleton, summon a skeleton!
+<span class="nc bnc" id="L285" title="All 6 branches missed.">			if (enemySeen &amp;&amp; Dungeon.level.distance(pos, enemy.pos) &lt;= 4 &amp;&amp; mySkeleton == null){</span>
+				
+<span class="nc" id="L287">				summoningPos = -1;</span>
+
+				//we can summon around blocking terrain, but not through it, except unlocked doors
+<span class="nc" id="L290">				boolean[] passable = BArray.not(Dungeon.level.solid, null);</span>
+<span class="nc" id="L291">				BArray.or(Dungeon.level.passable, passable, passable);</span>
+<span class="nc" id="L292">				PathFinder.buildDistanceMap(pos, passable, Dungeon.level.distance(pos, enemy.pos)+3);</span>
+
+<span class="nc bnc" id="L294" title="All 2 branches missed.">				for (int c : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L295" title="All 6 branches missed.">					if (Actor.findChar(enemy.pos+c) == null</span>
+							&amp;&amp; PathFinder.distance[enemy.pos+c] != Integer.MAX_VALUE
+							&amp;&amp; Dungeon.level.passable[enemy.pos+c]
+<span class="nc bnc" id="L298" title="All 6 branches missed.">							&amp;&amp; (!hasProp(Necromancer.this, Property.LARGE) || Dungeon.level.openSpace[enemy.pos+c])</span>
+							&amp;&amp; fieldOfView[enemy.pos+c]
+<span class="nc bnc" id="L300" title="All 2 branches missed.">							&amp;&amp; Dungeon.level.trueDistance(pos, enemy.pos+c) &lt; Dungeon.level.trueDistance(pos, summoningPos)){</span>
+<span class="nc" id="L301">						summoningPos = enemy.pos+c;</span>
+					}
+				}
+				
+<span class="nc bnc" id="L305" title="All 2 branches missed.">				if (summoningPos != -1){</span>
+					
+<span class="nc" id="L307">					summoning = true;</span>
+<span class="nc" id="L308">					sprite.zap( summoningPos );</span>
+
+<span class="nc bnc" id="L310" title="All 4 branches missed.">					if (Dungeon.level.heroFOV[pos] || Dungeon.level.heroFOV[summoningPos]){</span>
+<span class="nc" id="L311">						Dungeon.hero.interrupt();</span>
+					}
+					
+<span class="nc bnc" id="L314" title="All 2 branches missed.">					spend( firstSummon ? TICK : 2*TICK );</span>
+				} else {
+					//wait for a turn
+<span class="nc" id="L317">					spend(TICK);</span>
+				}
+				
+<span class="nc" id="L320">				return true;</span>
+			//otherwise, if enemy is seen, and we have a skeleton...
+<span class="nc bnc" id="L322" title="All 4 branches missed.">			} else if (enemySeen &amp;&amp; mySkeleton != null){</span>
+				
+<span class="nc" id="L324">				spend(TICK);</span>
+				
+<span class="nc bnc" id="L326" title="All 2 branches missed.">				if (!fieldOfView[mySkeleton.pos]){</span>
+					
+					//if the skeleton is not next to the enemy
+					//teleport them to the closest spot next to the enemy that can be seen
+<span class="nc bnc" id="L330" title="All 2 branches missed.">					if (!Dungeon.level.adjacent(mySkeleton.pos, enemy.pos)){</span>
+<span class="nc" id="L331">						int telePos = -1;</span>
+<span class="nc bnc" id="L332" title="All 2 branches missed.">						for (int c : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L333" title="All 8 branches missed.">							if (Actor.findChar(enemy.pos+c) == null</span>
+									&amp;&amp; Dungeon.level.passable[enemy.pos+c]
+									&amp;&amp; fieldOfView[enemy.pos+c]
+<span class="nc bnc" id="L336" title="All 2 branches missed.">									&amp;&amp; (Dungeon.level.openSpace[enemy.pos+c] || !Char.hasProp(mySkeleton, Property.LARGE))</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">									&amp;&amp; Dungeon.level.trueDistance(pos, enemy.pos+c) &lt; Dungeon.level.trueDistance(pos, telePos)){</span>
+<span class="nc" id="L338">								telePos = enemy.pos+c;</span>
+							}
+						}
+						
+<span class="nc bnc" id="L342" title="All 2 branches missed.">						if (telePos != -1){</span>
+							
+<span class="nc" id="L344">							ScrollOfTeleportation.appear(mySkeleton, telePos);</span>
+<span class="nc" id="L345">							mySkeleton.teleportSpend();</span>
+							
+<span class="nc bnc" id="L347" title="All 4 branches missed.">							if (sprite != null &amp;&amp; sprite.visible){</span>
+<span class="nc" id="L348">								sprite.zap(telePos);</span>
+<span class="nc" id="L349">								return false;</span>
+							} else {
+<span class="nc" id="L351">								onZapComplete();</span>
+							}
+						}
+					}
+					
+<span class="nc" id="L356">					return true;</span>
+					
+				} else {
+					
+					//zap skeleton
+<span class="nc bnc" id="L361" title="All 4 branches missed.">					if (mySkeleton.HP &lt; mySkeleton.HT || mySkeleton.buff(Adrenaline.class) == null) {</span>
+<span class="nc bnc" id="L362" title="All 4 branches missed.">						if (sprite != null &amp;&amp; sprite.visible){</span>
+<span class="nc" id="L363">							sprite.zap(mySkeleton.pos);</span>
+<span class="nc" id="L364">							return false;</span>
+						} else {
+<span class="nc" id="L366">							onZapComplete();</span>
+						}
+					}
+					
+				}
+				
+<span class="nc" id="L372">				return true;</span>
+				
+			//otherwise, default to regular hunting behaviour
+			} else {
+<span class="nc" id="L376">				return super.act(enemyInFOV, justAlerted);</span>
+			}
+		}
+	}
+	
+<span class="nc" id="L381">	public static class NecroSkeleton extends Skeleton {</span>
+		
+		{
+<span class="nc" id="L384">			state = WANDERING;</span>
+			
+<span class="nc" id="L386">			spriteClass = NecroSkeletonSprite.class;</span>
+			
+			//no loot or exp
+<span class="nc" id="L389">			maxLvl = -5;</span>
+			
+			//20/25 health to start
+<span class="nc" id="L392">			HP = 20;</span>
+<span class="nc" id="L393">		}</span>
+
+		@Override
+		public float spawningWeight() {
+<span class="nc" id="L397">			return 0;</span>
+		}
+
+		private void teleportSpend(){
+<span class="nc" id="L401">			spend(TICK);</span>
+<span class="nc" id="L402">		}</span>
+		
+		public static class NecroSkeletonSprite extends SkeletonSprite{
+			
+			public NecroSkeletonSprite(){
+<span class="nc" id="L407">				super();</span>
+<span class="nc" id="L408">				brightness(0.75f);</span>
+<span class="nc" id="L409">			}</span>
+			
+			@Override
+			public void resetColor() {
+<span class="nc" id="L413">				super.resetColor();</span>
+<span class="nc" id="L414">				brightness(0.75f);</span>
+<span class="nc" id="L415">			}</span>
+		}
+		
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

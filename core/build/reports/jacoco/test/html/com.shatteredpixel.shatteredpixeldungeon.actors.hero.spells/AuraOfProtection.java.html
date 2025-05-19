@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuraOfProtection.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells</a> &gt; <span class="el_source">AuraOfProtection.java</span></div><h1>AuraOfProtection.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2025 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+
+<span class="nc" id="L38">public class AuraOfProtection extends ClericSpell {</span>
+
+<span class="nc" id="L40">	public static AuraOfProtection INSTANCE = new AuraOfProtection();</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L44">		return HeroIcon.AURA_OF_PROTECTION;</span>
+	}
+
+	@Override
+	public String desc() {
+<span class="nc" id="L49">		int dmgReduction = Math.round(7.5f + 7.5F*Dungeon.hero.pointsInTalent(Talent.AURA_OF_PROTECTION));</span>
+<span class="nc" id="L50">		int glyphPow = 25 + 25*Dungeon.hero.pointsInTalent(Talent.AURA_OF_PROTECTION);</span>
+<span class="nc" id="L51">		return Messages.get(this, &quot;desc&quot;, dmgReduction, glyphPow) + &quot;\n\n&quot; + Messages.get(this, &quot;charge_cost&quot;, (int)chargeUse(Dungeon.hero));</span>
+	}
+
+	@Override
+	public float chargeUse(Hero hero) {
+<span class="nc" id="L56">		return 2f;</span>
+	}
+
+	@Override
+	public boolean canCast(Hero hero) {
+<span class="nc bnc" id="L61" title="All 4 branches missed.">		return super.canCast(hero) &amp;&amp; hero.hasTalent(Talent.AURA_OF_PROTECTION);</span>
+	}
+
+	@Override
+	public void onCast(HolyTome tome, Hero hero) {
+
+<span class="nc" id="L67">		Buff.affect(hero,AuraBuff.class, AuraBuff.DURATION);</span>
+
+<span class="nc" id="L69">		Sample.INSTANCE.play(Assets.Sounds.READ);</span>
+
+<span class="nc" id="L71">		hero.spend( 1f );</span>
+<span class="nc" id="L72">		hero.busy();</span>
+<span class="nc" id="L73">		hero.sprite.operate(hero.pos);</span>
+
+<span class="nc" id="L75">		onSpellCast(tome, hero);</span>
+
+<span class="nc" id="L77">	}</span>
+
+<span class="nc" id="L79">	public static class AuraBuff extends FlavourBuff {</span>
+
+<span class="nc" id="L81">		public static float DURATION = 20f;</span>
+
+		private Emitter particles;
+
+		{
+<span class="nc" id="L86">			type = buffType.POSITIVE;</span>
+<span class="nc" id="L87">		}</span>
+
+		@Override
+		public int icon() {
+<span class="nc" id="L91">			return BuffIndicator.PROT_AURA;</span>
+		}
+
+		@Override
+		public void fx(boolean on) {
+<span class="nc bnc" id="L96" title="All 6 branches missed.">			if (on &amp;&amp; (particles == null || particles.parent == null)){</span>
+<span class="nc" id="L97">				particles = target.sprite.emitter(); //emitter is much bigger than char so it needs to manage itself</span>
+<span class="nc" id="L98">				particles.pos(target.sprite, -32, -32, 80, 80);</span>
+<span class="nc" id="L99">				particles.fillTarget = false;</span>
+<span class="nc" id="L100">				particles.pour(Speck.factory(Speck.LIGHT), 0.02f);</span>
+<span class="nc bnc" id="L101" title="All 4 branches missed.">			} else if (!on &amp;&amp; particles != null){</span>
+<span class="nc" id="L102">				particles.on = false;</span>
+			}
+<span class="nc" id="L104">		}</span>
+
+		@Override
+		public float iconFadePercent() {
+<span class="nc" id="L108">			return Math.max(0, (DURATION - visualcooldown()) / DURATION);</span>
+		}
+
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

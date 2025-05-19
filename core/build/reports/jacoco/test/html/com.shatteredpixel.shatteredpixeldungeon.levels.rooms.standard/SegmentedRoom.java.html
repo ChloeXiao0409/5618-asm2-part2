@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SegmentedRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard</a> &gt; <span class="el_source">SegmentedRoom.java</span></div><h1>SegmentedRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard;
+
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+import com.watabou.utils.Rect;
+
+<span class="nc" id="L31">public class SegmentedRoom extends StandardRoom {</span>
+
+	@Override
+	public int minWidth() {
+<span class="nc" id="L35">		return Math.max(super.minWidth(), 7);</span>
+	}
+	
+	@Override
+	public int minHeight() {
+<span class="nc" id="L40">		return Math.max(super.minHeight(), 7);</span>
+	}
+	
+	@Override
+	public float[] sizeCatProbs() {
+<span class="nc" id="L45">		return new float[]{9, 3, 1};</span>
+	}
+
+	@Override
+	public void paint( Level level ) {
+<span class="nc" id="L50">		Painter.fill( level, this, Terrain.WALL );</span>
+<span class="nc" id="L51">		Painter.fill( level, this, 1 , Terrain.EMPTY );</span>
+		
+<span class="nc bnc" id="L53" title="All 2 branches missed.">		for (Door door : connected.values()) {</span>
+<span class="nc" id="L54">			door.set( Door.Type.REGULAR );</span>
+			//set door areas to be empty to help with create walls logic
+<span class="nc" id="L56">			Painter.set(level, door, Terrain.EMPTY);</span>
+<span class="nc" id="L57">		}</span>
+		
+<span class="nc" id="L59">		createWalls( level, new Rect(left+1, top+1, right-1, bottom-1));</span>
+<span class="nc" id="L60">	}</span>
+	
+	private void createWalls( Level level, Rect area ){
+<span class="nc bnc" id="L63" title="All 2 branches missed.">		if (Math.max(area.width()+1, area.height()+1) &lt; 5</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">				|| Math.min(area.width()+1, area.height()+1) &lt; 3){</span>
+<span class="nc" id="L65">			return;</span>
+		}
+		
+<span class="nc" id="L68">		int tries = 10;</span>
+		
+		//splitting top/bottom
+<span class="nc bnc" id="L71" title="All 6 branches missed.">		if (area.width() &gt; area.height() || (area.width() == area.height() &amp;&amp; Random.Int(2) == 0)){</span>
+			
+			do{
+<span class="nc" id="L74">				int splitX = Random.IntRange(area.left+2, area.right-2);</span>
+				
+<span class="nc bnc" id="L76" title="All 2 branches missed.">				if (level.map[splitX + level.width()*(area.top-1)] == Terrain.WALL</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">						&amp;&amp; level.map[splitX + level.width()*(area.bottom+1)] == Terrain.WALL){</span>
+<span class="nc" id="L78">					tries = 0;</span>
+					
+<span class="nc" id="L80">					Painter.drawLine(level, new Point(splitX, area.top), new Point(splitX, area.bottom), Terrain.WALL);</span>
+					
+<span class="nc" id="L82">					int spaceTop = Random.IntRange(area.top, area.bottom-1);</span>
+<span class="nc" id="L83">					Painter.set(level, splitX, spaceTop, Terrain.EMPTY);</span>
+<span class="nc" id="L84">					Painter.set(level, splitX, spaceTop+1, Terrain.EMPTY);</span>
+					
+<span class="nc" id="L86">					createWalls(level, new Rect(area.left, area.top, splitX-1, area.bottom));</span>
+<span class="nc" id="L87">					createWalls(level, new Rect(splitX+1, area.top, area.right, area.bottom));</span>
+				}
+				
+<span class="nc bnc" id="L90" title="All 2 branches missed.">			} while (--tries &gt; 0);</span>
+			
+		//splitting left/right
+		} else {
+			
+			do{
+<span class="nc" id="L96">				int splitY = Random.IntRange(area.top+2, area.bottom-2);</span>
+				
+<span class="nc bnc" id="L98" title="All 2 branches missed.">				if (level.map[area.left-1 + level.width()*splitY] == Terrain.WALL</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">						&amp;&amp; level.map[area.right+1 + level.width()*splitY] == Terrain.WALL){</span>
+<span class="nc" id="L100">					tries = 0;</span>
+					
+<span class="nc" id="L102">					Painter.drawLine(level, new Point(area.left, splitY), new Point(area.right, splitY), Terrain.WALL);</span>
+					
+<span class="nc" id="L104">					int spaceLeft = Random.IntRange(area.left, area.right-1);</span>
+<span class="nc" id="L105">					Painter.set(level, spaceLeft, splitY, Terrain.EMPTY);</span>
+<span class="nc" id="L106">					Painter.set(level, spaceLeft+1, splitY, Terrain.EMPTY);</span>
+					
+<span class="nc" id="L108">					createWalls(level, new Rect(area.left, area.top, area.right, splitY-1));</span>
+<span class="nc" id="L109">					createWalls(level, new Rect(area.left, splitY+1, area.right, area.bottom));</span>
+				}
+				
+<span class="nc bnc" id="L112" title="All 2 branches missed.">			} while (--tries &gt; 0);</span>
+		
+		}
+<span class="nc" id="L115">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

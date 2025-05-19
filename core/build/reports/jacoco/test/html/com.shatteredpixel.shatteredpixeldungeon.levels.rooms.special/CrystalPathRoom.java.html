@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CrystalPathRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special</a> &gt; <span class="el_source">CrystalPathRoom.java</span></div><h1>CrystalPathRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.keys.CrystalKey;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfExperience;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.ExoticPotion;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfDivineInspiration;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTransmutation;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ExoticScroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfMetamorphosis;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.ExoticCrystals;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.EmptyRoom;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+
+<span class="nc" id="L46">public class CrystalPathRoom extends SpecialRoom {</span>
+
+	@Override
+<span class="nc" id="L49">	public int minWidth() { return 7; }</span>
+<span class="nc" id="L50">	public int minHeight() { return 7; }</span>
+
+	@Override
+	public void paint(Level level) {
+
+<span class="nc" id="L55">		Painter.fill( level, this, Terrain.WALL );</span>
+
+		//rooms are ordered from closest to furthest from the entrance
+<span class="nc" id="L58">		EmptyRoom[] rooms = new EmptyRoom[6];</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		for( int i=0; i&lt;rooms.length; i++){</span>
+<span class="nc" id="L60">			rooms[i] = new EmptyRoom();</span>
+		}
+
+<span class="nc" id="L63">		Point entry = new Point(entrance());</span>
+
+<span class="nc" id="L65">		int prize1 = 0, prize2 = 0;</span>
+<span class="nc bnc" id="L66" title="All 4 branches missed.">		if (entry.x == left || entry.x == right){</span>
+
+<span class="nc bnc" id="L68" title="All 2 branches missed.">			Painter.drawInside(level, this, entry, width() &gt; 8 ? 5 : 3, Terrain.EMPTY);</span>
+
+<span class="nc bnc" id="L70" title="All 2 branches missed.">			int roomW1 = width() &gt;= 9 ? 2 : 1;</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">			int roomW2 = width() % 2 == 0 ? 2 : 1;</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">			int roomH = height() &gt;= 9 ? 2 : 1;</span>
+
+<span class="nc bnc" id="L74" title="All 2 branches missed.">			if (entry.x == left){</span>
+<span class="nc" id="L75">				rooms[0].setPos(left+1, entry.y-roomH-1).resize(roomW1-1, roomH-1);</span>
+<span class="nc" id="L76">				Painter.set(level, rooms[0].left, rooms[0].bottom+1, Terrain.CRYSTAL_DOOR);</span>
+<span class="nc" id="L77">				rooms[1].setPos(left+1, entry.y+2).resize(roomW1-1, roomH-1);</span>
+<span class="nc" id="L78">				Painter.set(level, rooms[1].left, rooms[1].top-1, Terrain.CRYSTAL_DOOR);</span>
+
+<span class="nc" id="L80">				rooms[2].setPos(rooms[1].right+2, entry.y-roomH-1).resize(roomW1-1, roomH-1);</span>
+<span class="nc" id="L81">				Painter.set(level, rooms[2].left, rooms[2].bottom+1, Terrain.CRYSTAL_DOOR);</span>
+<span class="nc" id="L82">				rooms[3].setPos(rooms[1].right+2, entry.y+2).resize(roomW1-1, roomH-1);</span>
+<span class="nc" id="L83">				Painter.set(level, rooms[3].left, rooms[3].top-1, Terrain.CRYSTAL_DOOR);</span>
+
+<span class="nc" id="L85">				rooms[4].setPos(rooms[3].right+2, entry.y-roomH-1).resize(roomW2-1, roomH);</span>
+<span class="nc" id="L86">				Painter.set(level, rooms[4].left-1, rooms[4].bottom-1, Terrain.CRYSTAL_DOOR);</span>
+<span class="nc" id="L87">				rooms[5].setPos(rooms[3].right+2, entry.y+1).resize(roomW2-1, roomH);</span>
+<span class="nc" id="L88">				Painter.set(level, rooms[5].left-1, rooms[5].top+1, Terrain.CRYSTAL_DOOR);</span>
+
+<span class="nc" id="L90">				prize1 = level.pointToCell(new Point(rooms[4].left, rooms[4].bottom));</span>
+<span class="nc" id="L91">				prize2 = level.pointToCell(new Point(rooms[5].left, rooms[5].top));</span>
+			} else {
+<span class="nc" id="L93">				rooms[0].setPos(right-roomW1, entry.y-roomH-1).resize(roomW1-1, roomH-1);</span>
+<span class="nc" id="L94">				Painter.set(level, rooms[0].right, rooms[0].bottom+1, Terrain.CRYSTAL_DOOR);</span>
+<span class="nc" id="L95">				rooms[1].setPos(right-roomW1, entry.y+2).resize(roomW1-1, roomH-1);</span>
+<span class="nc" id="L96">				Painter.set(level, rooms[1].right, rooms[1].top-1, Terrain.CRYSTAL_DOOR);</span>
+
+<span class="nc" id="L98">				rooms[2].setPos(rooms[1].left-roomW1-1, entry.y-roomH-1).resize(roomW1-1, roomH-1);</span>
+<span class="nc" id="L99">				Painter.set(level, rooms[2].right, rooms[2].bottom+1, Terrain.CRYSTAL_DOOR);</span>
+<span class="nc" id="L100">				rooms[3].setPos(rooms[1].left-roomW1-1, entry.y+2).resize(roomW1-1, roomH-1);</span>
+<span class="nc" id="L101">				Painter.set(level, rooms[3].right, rooms[3].top-1, Terrain.CRYSTAL_DOOR);</span>
+
+<span class="nc" id="L103">				rooms[4].setPos(rooms[3].left-roomW2-1, entry.y-roomH-1).resize(roomW2-1, roomH);</span>
+<span class="nc" id="L104">				Painter.set(level, rooms[4].right+1, rooms[4].bottom-1, Terrain.CRYSTAL_DOOR);</span>
+<span class="nc" id="L105">				rooms[5].setPos(rooms[3].left-roomW2-1, entry.y+1).resize(roomW2-1, roomH);</span>
+<span class="nc" id="L106">				Painter.set(level, rooms[5].right+1, rooms[5].top+1, Terrain.CRYSTAL_DOOR);</span>
+
+<span class="nc" id="L108">				prize1 = level.pointToCell(new Point(rooms[4].right, rooms[4].bottom));</span>
+<span class="nc" id="L109">				prize2 = level.pointToCell(new Point(rooms[5].right, rooms[5].top));</span>
+			}
+
+<span class="nc" id="L112">		} else {</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">			Painter.drawInside(level, this, entry, height() &gt; 8 ? 5 : 3, Terrain.EMPTY);</span>
+
+<span class="nc bnc" id="L115" title="All 2 branches missed.">			int roomW = width() &gt;= 9 ? 2 : 1;</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">			int roomH1 = height() &gt;= 9 ? 2 : 1;</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">			int roomH2 = height() % 2 == 0 ? 2 : 1;</span>
+
+<span class="nc bnc" id="L119" title="All 2 branches missed.">			if (entry.y == top){</span>
+<span class="nc" id="L120">				rooms[0].setPos(entry.x-roomW-1, top+1).resize(roomW-1, roomH1-1);</span>
+<span class="nc" id="L121">				Painter.set(level, rooms[0].right+1, rooms[0].top, Terrain.CRYSTAL_DOOR);</span>
+<span class="nc" id="L122">				rooms[1].setPos(entry.x+2, top+1).resize(roomW-1, roomH1-1);</span>
+<span class="nc" id="L123">				Painter.set(level, rooms[1].left-1, rooms[1].top, Terrain.CRYSTAL_DOOR);</span>
+
+<span class="nc" id="L125">				rooms[2].setPos(entry.x-roomW-1, rooms[1].bottom+2).resize(roomW-1, roomH1-1);</span>
+<span class="nc" id="L126">				Painter.set(level, rooms[2].right+1, rooms[2].top, Terrain.CRYSTAL_DOOR);</span>
+<span class="nc" id="L127">				rooms[3].setPos(entry.x+2,  rooms[1].bottom+2).resize(roomW-1, roomH1-1);</span>
+<span class="nc" id="L128">				Painter.set(level, rooms[3].left-1, rooms[3].top, Terrain.CRYSTAL_DOOR);</span>
+
+<span class="nc" id="L130">				rooms[4].setPos(entry.x-roomW-1, rooms[3].bottom+2).resize(roomW, roomH2-1);</span>
+<span class="nc" id="L131">				Painter.set(level, rooms[4].right-1, rooms[4].top-1, Terrain.CRYSTAL_DOOR);</span>
+<span class="nc" id="L132">				rooms[5].setPos(entry.x+1, rooms[3].bottom+2).resize(roomW, roomH2-1);</span>
+<span class="nc" id="L133">				Painter.set(level, rooms[5].left+1, rooms[5].top-1, Terrain.CRYSTAL_DOOR);</span>
+
+<span class="nc" id="L135">				prize1 = level.pointToCell(new Point(rooms[4].right, rooms[4].top));</span>
+<span class="nc" id="L136">				prize2 = level.pointToCell(new Point(rooms[5].left, rooms[5].top));</span>
+			} else {
+<span class="nc" id="L138">				rooms[0].setPos(entry.x-roomW-1, bottom-roomH1).resize(roomW-1, roomH1-1);</span>
+<span class="nc" id="L139">				Painter.set(level, rooms[0].right+1, rooms[0].bottom, Terrain.CRYSTAL_DOOR);</span>
+<span class="nc" id="L140">				rooms[1].setPos(entry.x+2, bottom-roomH1).resize(roomW-1, roomH1-1);</span>
+<span class="nc" id="L141">				Painter.set(level, rooms[1].left-1, rooms[1].bottom, Terrain.CRYSTAL_DOOR);</span>
+
+<span class="nc" id="L143">				rooms[2].setPos(entry.x-roomW-1, rooms[1].top-roomH1-1).resize(roomW-1, roomH1-1);</span>
+<span class="nc" id="L144">				Painter.set(level, rooms[2].right+1, rooms[2].bottom, Terrain.CRYSTAL_DOOR);</span>
+<span class="nc" id="L145">				rooms[3].setPos(entry.x+2, rooms[1].top-roomH1-1).resize(roomW-1, roomH1-1);</span>
+<span class="nc" id="L146">				Painter.set(level, rooms[3].left-1, rooms[3].bottom, Terrain.CRYSTAL_DOOR);</span>
+
+<span class="nc" id="L148">				rooms[4].setPos(entry.x-roomW-1, rooms[3].top-roomH2-1).resize(roomW, roomH2-1);</span>
+<span class="nc" id="L149">				Painter.set(level, rooms[4].right-1, rooms[4].bottom+1, Terrain.CRYSTAL_DOOR);</span>
+<span class="nc" id="L150">				rooms[5].setPos(entry.x+1,  rooms[3].top-roomH2-1).resize(roomW, roomH2-1);</span>
+<span class="nc" id="L151">				Painter.set(level, rooms[5].left+1, rooms[5].bottom+1, Terrain.CRYSTAL_DOOR);</span>
+
+<span class="nc" id="L153">				prize1 = level.pointToCell(new Point(rooms[4].right, rooms[4].bottom));</span>
+<span class="nc" id="L154">				prize2 = level.pointToCell(new Point(rooms[5].left, rooms[5].bottom));</span>
+			}
+
+		}
+
+<span class="nc bnc" id="L159" title="All 2 branches missed.">		for (EmptyRoom room : rooms) {</span>
+<span class="nc" id="L160">			Painter.fill(level, room, Terrain.EMPTY_SP);</span>
+		}
+<span class="nc" id="L162">		Painter.set(level, prize1, Terrain.PEDESTAL);</span>
+<span class="nc" id="L163">		Painter.set(level, prize2, Terrain.PEDESTAL);</span>
+
+		//random potion/scroll in rooms 1-4, with lower value ones going into earlier rooms
+<span class="nc" id="L166">		ArrayList&lt;Item&gt; potions = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L167">		ArrayList&lt;Item&gt; scrolls = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L169">		ArrayList&lt;Item&gt; duplicates = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L171" title="All 2 branches missed.">		if (Random.Int(2) == 0){</span>
+<span class="nc" id="L172">			addRewardItem(Generator.Category.POTION, potions, duplicates);</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">			scrolls.add(Random.Float() &lt; ExoticCrystals.consumableExoticChance()</span>
+<span class="nc" id="L174">					? new ScrollOfMetamorphosis() : new ScrollOfTransmutation());</span>
+		} else {
+<span class="nc bnc" id="L176" title="All 2 branches missed.">			potions.add(Random.Float() &lt; ExoticCrystals.consumableExoticChance()</span>
+<span class="nc" id="L177">					? new PotionOfDivineInspiration() : new PotionOfExperience());</span>
+<span class="nc" id="L178">			addRewardItem(Generator.Category.SCROLL, scrolls, duplicates);</span>
+		}
+<span class="nc" id="L180">		addRewardItem(Generator.Category.POTION, potions, duplicates);</span>
+<span class="nc" id="L181">		addRewardItem(Generator.Category.SCROLL, scrolls, duplicates);</span>
+<span class="nc" id="L182">		addRewardItem(Generator.Category.POTION, potions, duplicates);</span>
+<span class="nc" id="L183">		addRewardItem(Generator.Category.SCROLL, scrolls, duplicates);</span>
+
+		//need to undo the changes to spawn chances that the duplicates created
+<span class="nc bnc" id="L186" title="All 2 branches missed.">		for (Item i : duplicates){</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">			if (i instanceof ExoticPotion){</span>
+<span class="nc" id="L188">				Generator.undoDrop(ExoticPotion.exoToReg.get(i.getClass()));</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">			} else if (i instanceof ExoticScroll){</span>
+<span class="nc" id="L190">				Generator.undoDrop(ExoticScroll.exoToReg.get(i.getClass()));</span>
+			} else {
+<span class="nc" id="L192">				Generator.undoDrop(i);</span>
+			}
+<span class="nc" id="L194">		}</span>
+
+		//rarer potions/scrolls go later in the order
+<span class="nc" id="L197">		Collections.sort(potions, new Comparator&lt;Item&gt;() {</span>
+			@Override
+			public int compare(Item a, Item b) {
+<span class="nc" id="L200">				int aVal = 0, bVal = 0;</span>
+<span class="nc" id="L201">				Class aCls = a.getClass(), bCls = b.getClass();</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">				if (a instanceof ExoticPotion){</span>
+<span class="nc" id="L203">					aCls = ExoticPotion.exoToReg.get(aCls);</span>
+				}
+<span class="nc bnc" id="L205" title="All 2 branches missed.">				if (b instanceof ExoticPotion){</span>
+<span class="nc" id="L206">					bCls = ExoticPotion.exoToReg.get(aCls);</span>
+				}
+<span class="nc bnc" id="L208" title="All 2 branches missed.">				for (int i = 0; i &lt; Generator.Category.POTION.classes.length; i++){</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">					if (aCls == Generator.Category.POTION.classes[i]) aVal = (int)Generator.Category.POTION.defaultProbsTotal[i];</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">					if (bCls == Generator.Category.POTION.classes[i]) bVal = (int)Generator.Category.POTION.defaultProbsTotal[i];</span>
+				}
+<span class="nc" id="L212">				return bVal - aVal;</span>
+			}
+		});
+<span class="nc" id="L215">		Collections.sort(scrolls, new Comparator&lt;Item&gt;() {</span>
+			@Override
+			public int compare(Item a, Item b) {
+<span class="nc" id="L218">				int aVal = 0, bVal = 0;</span>
+<span class="nc" id="L219">				Class aCls = a.getClass(), bCls = b.getClass();</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">				if (a instanceof ExoticScroll){</span>
+<span class="nc" id="L221">					aCls = ExoticScroll.exoToReg.get(aCls);</span>
+				}
+<span class="nc bnc" id="L223" title="All 2 branches missed.">				if (b instanceof ExoticScroll){</span>
+<span class="nc" id="L224">					bCls = ExoticScroll.exoToReg.get(aCls);</span>
+				}
+<span class="nc bnc" id="L226" title="All 2 branches missed.">				for (int i = 0; i &lt; Generator.Category.SCROLL.classes.length; i++){</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">					if (aCls == Generator.Category.SCROLL.classes[i]) aVal = (int)Generator.Category.SCROLL.defaultProbsTotal[i];</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">					if (bCls == Generator.Category.SCROLL.classes[i]) bVal = (int)Generator.Category.SCROLL.defaultProbsTotal[i];</span>
+				}
+<span class="nc" id="L230">				return bVal - aVal;</span>
+			}
+		});
+
+		//least valuable items go into rooms 2&amp;3, then rooms 0&amp;1, and finally 4&amp;5
+<span class="nc" id="L235">		int shuffle = Random.Int(2);</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">		level.drop(potions.remove(0), level.pointToCell(rooms[shuffle == 1 ? 2 : 3].center()));</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">		level.drop(scrolls.remove(0), level.pointToCell(rooms[shuffle == 1 ? 3 : 2].center()));</span>
+
+<span class="nc bnc" id="L239" title="All 2 branches missed.">		level.drop(potions.remove(0), level.pointToCell(rooms[shuffle == 1 ? 0 : 1].center()));</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">		level.drop(scrolls.remove(0), level.pointToCell(rooms[shuffle == 1 ? 1 : 0].center()));</span>
+
+		//player can only see these if they unlock the previous doors, so don't count them for exploration
+<span class="nc bnc" id="L243" title="All 2 branches missed.">		level.drop(potions.remove(0), shuffle == 1 ? prize1 : prize2).autoExplored = true;</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">		level.drop(scrolls.remove(0), shuffle == 1 ? prize2 : prize1).autoExplored = true;</span>
+
+<span class="nc" id="L246">		level.addItemToSpawn( new CrystalKey( Dungeon.depth ) );</span>
+<span class="nc" id="L247">		level.addItemToSpawn( new CrystalKey( Dungeon.depth ) );</span>
+<span class="nc" id="L248">		level.addItemToSpawn( new CrystalKey( Dungeon.depth ) );</span>
+
+<span class="nc" id="L250">		entrance().set( Door.Type.UNLOCKED );</span>
+
+<span class="nc" id="L252">	}</span>
+
+	//this prevents duplicates
+	public void addRewardItem(Generator.Category cat, ArrayList&lt;Item&gt; items, ArrayList&lt;Item&gt; dupes){
+		while (true) {
+<span class="nc" id="L257">			Item reward = Generator.random(cat);</span>
+
+			//we have to de-exotify for comparison here to weed out duplicates
+<span class="nc" id="L260">			Class rewardClass = reward.getClass();</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">			if (reward instanceof ExoticPotion){</span>
+<span class="nc" id="L262">				rewardClass = ExoticPotion.exoToReg.get(rewardClass);</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">			} else if (reward instanceof ExoticScroll){</span>
+<span class="nc" id="L264">				rewardClass = ExoticScroll.exoToReg.get(rewardClass);</span>
+			}
+
+<span class="nc" id="L267">			boolean dupe = false;</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">			for (Item i : items){</span>
+<span class="nc" id="L269">				Class iClass = i.getClass();</span>
+<span class="nc bnc" id="L270" title="All 2 branches missed.">				if (i instanceof ExoticPotion){</span>
+<span class="nc" id="L271">					iClass = ExoticPotion.exoToReg.get(iClass);</span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">				} else if (i instanceof ExoticScroll){</span>
+<span class="nc" id="L273">					iClass = ExoticScroll.exoToReg.get(iClass);</span>
+				}
+<span class="nc bnc" id="L275" title="All 2 branches missed.">				if (iClass == rewardClass){</span>
+<span class="nc" id="L276">					dupes.add(reward);</span>
+<span class="nc" id="L277">					dupe = true;</span>
+<span class="nc" id="L278">					break;</span>
+				}
+<span class="nc" id="L280">			}</span>
+
+<span class="nc bnc" id="L282" title="All 2 branches missed.">			if (!dupe){</span>
+<span class="nc" id="L283">				items.add(reward);</span>
+<span class="nc" id="L284">				return;</span>
+			}
+<span class="nc" id="L286">		}</span>
+	}
+
+	@Override
+	public boolean canConnect(Point p) {
+<span class="nc bnc" id="L291" title="All 2 branches missed.">		if (!super.canConnect(p)){</span>
+<span class="nc" id="L292">			return false;</span>
+		}
+		//only place doors in the center
+<span class="nc bnc" id="L295" title="All 2 branches missed.">		if (Math.abs(p.x - (right - (width()-1)/2f)) &lt; 1f){</span>
+<span class="nc" id="L296">			return true;</span>
+		}
+<span class="nc bnc" id="L298" title="All 2 branches missed.">		if (Math.abs(p.y - (bottom - (height()-1)/2f)) &lt; 1f){</span>
+<span class="nc" id="L299">			return true;</span>
+		}
+<span class="nc" id="L301">		return false;</span>
+	}
+
+	@Override
+	public boolean canPlaceGrass(Point p) {
+<span class="nc" id="L306">		return false;</span>
+	}
+
+	@Override
+	public boolean canPlaceWater(Point p) {
+<span class="nc" id="L311">		return false;</span>
+	}
+
+	@Override
+	public boolean canPlaceTrap(Point p) {
+<span class="nc" id="L316">		return false;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SpiritHawk.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.huntress</a> &gt; <span class="el_source">SpiritHawk.java</span></div><h1>SpiritHawk.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.huntress;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AllyBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Blindness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.BlobImmunity;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Cripple;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.DirectableAlly;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShaftParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.MobSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.TextureFilm;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L55">public class SpiritHawk extends ArmorAbility {</span>
+
+	@Override
+	public String targetingPrompt() {
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		if (getHawk() == null) {</span>
+<span class="nc" id="L60">			return super.targetingPrompt();</span>
+		} else {
+<span class="nc" id="L62">			return Messages.get(this, &quot;prompt&quot;);</span>
+		}
+	}
+
+	@Override
+	public boolean useTargeting(){
+<span class="nc" id="L68">		return false;</span>
+	}
+
+	{
+<span class="nc" id="L72">		baseChargeUse = 35f;</span>
+<span class="nc" id="L73">	}</span>
+
+	@Override
+	public float chargeUse(Hero hero) {
+<span class="nc bnc" id="L77" title="All 2 branches missed.">		if (getHawk() == null) {</span>
+<span class="nc" id="L78">			return super.chargeUse(hero);</span>
+		} else {
+<span class="nc" id="L80">			return 0;</span>
+		}
+	}
+
+	@Override
+	protected void activate(ClassArmor armor, Hero hero, Integer target) {
+<span class="nc" id="L86">		HawkAlly ally = getHawk();</span>
+
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		if (ally != null){</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">			if (target == null){</span>
+<span class="nc" id="L90">				return;</span>
+			} else {
+<span class="nc" id="L92">				ally.directTocell(target);</span>
+			}
+		} else {
+<span class="nc" id="L95">			ArrayList&lt;Integer&gt; spawnPoints = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">			for (int i = 0; i &lt; PathFinder.NEIGHBOURS8.length; i++) {</span>
+<span class="nc" id="L97">				int p = hero.pos + PathFinder.NEIGHBOURS8[i];</span>
+<span class="nc bnc" id="L98" title="All 6 branches missed.">				if (Actor.findChar(p) == null &amp;&amp; (Dungeon.level.passable[p] || Dungeon.level.avoid[p])) {</span>
+<span class="nc" id="L99">					spawnPoints.add(p);</span>
+				}
+			}
+
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			if (!spawnPoints.isEmpty()){</span>
+<span class="nc" id="L104">				armor.charge -= chargeUse(hero);</span>
+<span class="nc" id="L105">				armor.updateQuickslot();</span>
+
+<span class="nc" id="L107">				ally = new HawkAlly();</span>
+<span class="nc" id="L108">				ally.pos = Random.element(spawnPoints);</span>
+<span class="nc" id="L109">				GameScene.add(ally);</span>
+
+<span class="nc" id="L111">				ScrollOfTeleportation.appear(ally, ally.pos);</span>
+<span class="nc" id="L112">				Dungeon.observe();</span>
+
+<span class="nc" id="L114">				Invisibility.dispel();</span>
+<span class="nc" id="L115">				hero.spendAndNext(Actor.TICK);</span>
+
+			} else {
+<span class="nc" id="L118">				GLog.w(Messages.get(this, &quot;no_space&quot;));</span>
+			}
+		}
+
+<span class="nc" id="L122">	}</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L126">		return HeroIcon.SPIRIT_HAWK;</span>
+	}
+
+	@Override
+	public Talent[] talents() {
+<span class="nc" id="L131">		return new Talent[]{Talent.EAGLE_EYE, Talent.GO_FOR_THE_EYES, Talent.SWIFT_SPIRIT, Talent.HEROIC_ENERGY};</span>
+	}
+
+	private static HawkAlly getHawk(){
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		for (Char ch : Actor.chars()){</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">			if (ch instanceof HawkAlly){</span>
+<span class="nc" id="L137">				return (HawkAlly) ch;</span>
+			}
+<span class="nc" id="L139">		}</span>
+<span class="nc" id="L140">		return null;</span>
+	}
+
+<span class="nc" id="L143">	public static class HawkAlly extends DirectableAlly {</span>
+
+		{
+<span class="nc" id="L146">			spriteClass = HawkSprite.class;</span>
+
+<span class="nc" id="L148">			HP = HT = 10;</span>
+<span class="nc" id="L149">			defenseSkill = 60;</span>
+
+<span class="nc" id="L151">			flying = true;</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">			if (Dungeon.hero != null) {</span>
+<span class="nc" id="L153">				viewDistance = (int) GameMath.gate(6, 6 + Dungeon.hero.pointsInTalent(Talent.EAGLE_EYE), 8);</span>
+<span class="nc" id="L154">				baseSpeed = 2f + Dungeon.hero.pointsInTalent(Talent.SWIFT_SPIRIT) / 2f;</span>
+			} else {
+<span class="nc" id="L156">				viewDistance = 6;</span>
+<span class="nc" id="L157">				baseSpeed = 2f;</span>
+			}
+<span class="nc" id="L159">			attacksAutomatically = false;</span>
+
+<span class="nc" id="L161">			immunities.addAll(new BlobImmunity().immunities());</span>
+<span class="nc" id="L162">			immunities.add(AllyBuff.class);</span>
+		}
+
+		@Override
+		public int attackSkill(Char target) {
+<span class="nc" id="L167">			return 60;</span>
+		}
+
+<span class="nc" id="L170">		private int dodgesUsed = 0;</span>
+<span class="nc" id="L171">		private float timeRemaining = 100f;</span>
+
+		@Override
+		public int defenseSkill(Char enemy) {
+<span class="nc bnc" id="L175" title="All 2 branches missed.">			if (Dungeon.hero.hasTalent(Talent.SWIFT_SPIRIT) &amp;&amp;</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">					dodgesUsed &lt; 2*Dungeon.hero.pointsInTalent(Talent.SWIFT_SPIRIT)) {</span>
+<span class="nc" id="L177">				dodgesUsed++;</span>
+<span class="nc" id="L178">				return Char.INFINITE_EVASION;</span>
+			}
+<span class="nc" id="L180">			return super.defenseSkill(enemy);</span>
+		}
+
+		@Override
+		public int damageRoll() {
+<span class="nc" id="L185">			return Random.NormalIntRange(5, 10);</span>
+		}
+
+		@Override
+		public int attackProc(Char enemy, int damage) {
+<span class="nc" id="L190">			damage = super.attackProc( enemy, damage );</span>
+<span class="nc bnc" id="L191" title="All 5 branches missed.">			switch (Dungeon.hero.pointsInTalent(Talent.GO_FOR_THE_EYES)){</span>
+				case 1:
+<span class="nc" id="L193">					Buff.prolong( enemy, Blindness.class, 2);</span>
+<span class="nc" id="L194">					break;</span>
+				case 2:
+<span class="nc" id="L196">					Buff.prolong( enemy, Blindness.class, 5);</span>
+<span class="nc" id="L197">					break;</span>
+				case 3:
+<span class="nc" id="L199">					Buff.prolong( enemy, Blindness.class, 5);</span>
+<span class="nc" id="L200">					Buff.prolong( enemy, Cripple.class, 2);</span>
+<span class="nc" id="L201">					break;</span>
+				case 4:
+<span class="nc" id="L203">					Buff.prolong( enemy, Blindness.class, 5);</span>
+<span class="nc" id="L204">					Buff.prolong( enemy, Cripple.class, 5);</span>
+<span class="nc" id="L205">					break;</span>
+				default:
+					//do nothing
+			}
+
+<span class="nc" id="L210">			return damage;</span>
+		}
+
+		@Override
+		protected boolean act() {
+<span class="nc bnc" id="L215" title="All 2 branches missed.">			if (timeRemaining &lt;= 0){</span>
+<span class="nc" id="L216">				die(null);</span>
+<span class="nc" id="L217">				Dungeon.hero.interrupt();</span>
+<span class="nc" id="L218">				return true;</span>
+			}
+<span class="nc" id="L220">			viewDistance = 6+Dungeon.hero.pointsInTalent(Talent.EAGLE_EYE);</span>
+<span class="nc" id="L221">			baseSpeed = 2f + Dungeon.hero.pointsInTalent(Talent.SWIFT_SPIRIT)/2f;</span>
+<span class="nc" id="L222">			boolean result = super.act();</span>
+<span class="nc" id="L223">			Dungeon.level.updateFieldOfView( this, fieldOfView );</span>
+<span class="nc" id="L224">			GameScene.updateFog(pos, viewDistance+(int)Math.ceil(speed()));</span>
+<span class="nc" id="L225">			return result;</span>
+		}
+
+		@Override
+		public void die(Object cause) {
+<span class="nc" id="L230">			flying = false;</span>
+<span class="nc" id="L231">			super.die(cause);</span>
+<span class="nc" id="L232">		}</span>
+
+		@Override
+		protected void spend(float time) {
+<span class="nc" id="L236">			super.spend(time);</span>
+<span class="nc" id="L237">			timeRemaining -= time;</span>
+<span class="nc" id="L238">		}</span>
+
+		@Override
+		public void destroy() {
+<span class="nc" id="L242">			super.destroy();</span>
+<span class="nc" id="L243">			Dungeon.observe();</span>
+<span class="nc" id="L244">			GameScene.updateFog();</span>
+<span class="nc" id="L245">		}</span>
+
+		@Override
+		public void defendPos(int cell) {
+<span class="nc" id="L249">			GLog.i(Messages.get(this, &quot;direct_defend&quot;));</span>
+<span class="nc" id="L250">			super.defendPos(cell);</span>
+<span class="nc" id="L251">		}</span>
+
+		@Override
+		public void followHero() {
+<span class="nc" id="L255">			GLog.i(Messages.get(this, &quot;direct_follow&quot;));</span>
+<span class="nc" id="L256">			super.followHero();</span>
+<span class="nc" id="L257">		}</span>
+
+		@Override
+		public void targetChar(Char ch) {
+<span class="nc" id="L261">			GLog.i(Messages.get(this, &quot;direct_attack&quot;));</span>
+<span class="nc" id="L262">			super.targetChar(ch);</span>
+<span class="nc" id="L263">		}</span>
+
+		@Override
+		public String description() {
+<span class="nc" id="L267">			String message = Messages.get(this, &quot;desc&quot;, (int)timeRemaining);</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">			if (Actor.chars().contains(this)){</span>
+<span class="nc" id="L269">				message += &quot;\n\n&quot; + Messages.get(this, &quot;desc_remaining&quot;, (int)timeRemaining);</span>
+<span class="nc bnc" id="L270" title="All 2 branches missed.">				if (dodgesUsed &lt; 2*Dungeon.hero.pointsInTalent(Talent.SWIFT_SPIRIT)){</span>
+<span class="nc" id="L271">					message += &quot;\n&quot; + Messages.get(this, &quot;desc_dodges&quot;, (2*Dungeon.hero.pointsInTalent(Talent.SWIFT_SPIRIT) - dodgesUsed));</span>
+				}
+			}
+<span class="nc" id="L274">			return message;</span>
+		}
+
+		private static final String DODGES_USED     = &quot;dodges_used&quot;;
+		private static final String TIME_REMAINING  = &quot;time_remaining&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L282">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L283">			bundle.put(DODGES_USED, dodgesUsed);</span>
+<span class="nc" id="L284">			bundle.put(TIME_REMAINING, timeRemaining);</span>
+<span class="nc" id="L285">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L289">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L290">			dodgesUsed = bundle.getInt(DODGES_USED);</span>
+<span class="nc" id="L291">			timeRemaining = bundle.getFloat(TIME_REMAINING);</span>
+<span class="nc" id="L292">		}</span>
+	}
+
+	public static class HawkSprite extends MobSprite {
+
+		public HawkSprite() {
+<span class="nc" id="L298">			super();</span>
+
+<span class="nc" id="L300">			texture( Assets.Sprites.SPIRIT_HAWK );</span>
+
+<span class="nc" id="L302">			TextureFilm frames = new TextureFilm( texture, 15, 15 );</span>
+
+<span class="nc" id="L304">			int c = 0;</span>
+
+<span class="nc" id="L306">			idle = new Animation( 6, true );</span>
+<span class="nc" id="L307">			idle.frames( frames, 0, 1 );</span>
+
+<span class="nc" id="L309">			run = new Animation( 8, true );</span>
+<span class="nc" id="L310">			run.frames( frames, 0, 1 );</span>
+
+<span class="nc" id="L312">			attack = new Animation( 12, false );</span>
+<span class="nc" id="L313">			attack.frames( frames, 2, 3, 0, 1 );</span>
+
+<span class="nc" id="L315">			die = new Animation( 12, false );</span>
+<span class="nc" id="L316">			die.frames( frames, 4, 5, 6 );</span>
+
+<span class="nc" id="L318">			play( idle );</span>
+<span class="nc" id="L319">		}</span>
+
+		@Override
+		public int blood() {
+<span class="nc" id="L323">			return 0xFF00FFFF;</span>
+		}
+
+		@Override
+		public void die() {
+<span class="nc" id="L328">			super.die();</span>
+<span class="nc" id="L329">			emitter().start( ShaftParticle.FACTORY, 0.3f, 4 );</span>
+<span class="nc" id="L330">			emitter().start( Speck.factory( Speck.LIGHT ), 0.2f, 3 );</span>
+<span class="nc" id="L331">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

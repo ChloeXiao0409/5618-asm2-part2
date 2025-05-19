@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LineBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.builders</a> &gt; <span class="el_source">LineBuilder.java</span></div><h1>LineBuilder.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.builders;
+
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.connection.ConnectionRoom;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+//A simple builder which utilizes a line as its core feature.
+<span class="nc" id="L31">public class LineBuilder extends RegularBuilder {</span>
+
+	@Override
+	public ArrayList&lt;Room&gt; build(ArrayList&lt;Room&gt; rooms) {
+	
+<span class="nc" id="L36">		setupRooms(rooms);</span>
+		
+<span class="nc bnc" id="L38" title="All 2 branches missed.">		if (entrance == null){</span>
+<span class="nc" id="L39">			return null;</span>
+		}
+
+<span class="nc" id="L42">		float direction = Random.Float(0, 360);</span>
+<span class="nc" id="L43">		ArrayList&lt;Room&gt; branchable = new ArrayList&lt;&gt;();</span>
+		
+<span class="nc" id="L45">		entrance.setSize();</span>
+<span class="nc" id="L46">		entrance.setPos(0, 0);</span>
+
+<span class="nc" id="L48">		mainPathRooms.add(0, entrance);</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">		if (exit != null) mainPathRooms.add(exit);</span>
+
+<span class="nc bnc" id="L51" title="All 2 branches missed.">		if (shop != null){</span>
+<span class="nc" id="L52">			placeRoom(rooms, entrance, shop, direction + 180f);</span>
+		}
+		
+<span class="nc" id="L55">		Room prev = entrance;</span>
+
+<span class="nc" id="L57">		float[] pathTunnels = pathTunnelChances.clone();</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">		for (int i = 1; i &lt; mainPathRooms.size(); i++){</span>
+<span class="nc" id="L59">			Room r = mainPathRooms.get(i);</span>
+
+<span class="nc" id="L61">			int tunnels = Random.chances(pathTunnels);</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">			if (tunnels == -1){</span>
+<span class="nc" id="L63">				pathTunnels = pathTunnelChances.clone();</span>
+<span class="nc" id="L64">				tunnels = Random.chances(pathTunnels);</span>
+			}
+<span class="nc" id="L66">			pathTunnels[tunnels]--;</span>
+
+<span class="nc bnc" id="L68" title="All 2 branches missed.">			for (int j = 0; j &lt; tunnels; j++){</span>
+<span class="nc" id="L69">				ConnectionRoom t = ConnectionRoom.createRoom();</span>
+<span class="nc" id="L70">				placeRoom(rooms, prev, t, direction + Random.Float(-pathVariance, pathVariance));</span>
+<span class="nc" id="L71">				branchable.add(t);</span>
+<span class="nc" id="L72">				rooms.add(t);</span>
+<span class="nc" id="L73">				prev = t;</span>
+			}
+
+<span class="nc" id="L76">			placeRoom(rooms, prev, r, direction + Random.Float(-pathVariance, pathVariance));</span>
+<span class="nc" id="L77">			branchable.add(r);</span>
+<span class="nc" id="L78">			prev = r;</span>
+		}
+		
+<span class="nc" id="L81">		ArrayList&lt;Room&gt; roomsToBranch = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L82">		roomsToBranch.addAll(multiConnections);</span>
+<span class="nc" id="L83">		roomsToBranch.addAll(singleConnections);</span>
+<span class="nc" id="L84">		weightRooms(branchable);</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if (!createBranches(rooms, branchable, roomsToBranch, branchTunnelChances)){</span>
+<span class="nc" id="L86">			return null;</span>
+		}
+		
+<span class="nc" id="L89">		findNeighbours(rooms);</span>
+		
+<span class="nc bnc" id="L91" title="All 2 branches missed.">		for (Room r : rooms){</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">			for (Room n : r.neigbours){</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">				if (!n.connected.containsKey(r)</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">						&amp;&amp; Random.Float() &lt; extraConnectionChance){</span>
+<span class="nc" id="L95">					r.connect(n);</span>
+				}
+<span class="nc" id="L97">			}</span>
+<span class="nc" id="L98">		}</span>
+		
+<span class="nc" id="L100">		return rooms;</span>
+	
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PrismaticImage.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs</a> &gt; <span class="el_source">PrismaticImage.java</span></div><h1>PrismaticImage.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.CorrosiveGas;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ToxicGas;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AllyBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.PrismaticGuard;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfAccuracy;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEvasion;
+import com.shatteredpixel.shatteredpixeldungeon.levels.features.Chasm;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.PrismaticSprite;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L47">public class PrismaticImage extends NPC {</span>
+	
+	{
+<span class="nc" id="L50">		spriteClass = PrismaticSprite.class;</span>
+		
+<span class="nc" id="L52">		HP = HT = 10;</span>
+<span class="nc" id="L53">		defenseSkill = 1;</span>
+		
+<span class="nc" id="L55">		alignment = Alignment.ALLY;</span>
+<span class="nc" id="L56">		intelligentAlly = true;</span>
+<span class="nc" id="L57">		state = HUNTING;</span>
+		
+<span class="nc" id="L59">		WANDERING = new Wandering();</span>
+		
+		//before other mobs
+<span class="nc" id="L62">		actPriority = MOB_PRIO + 1;</span>
+	}
+	
+	private Hero hero;
+	private int heroID;
+	public int armTier;
+	
+<span class="nc" id="L69">	private int deathTimer = -1;</span>
+	
+	@Override
+	protected boolean act() {
+		
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		if (!isAlive()){</span>
+<span class="nc" id="L75">			deathTimer--;</span>
+			
+<span class="nc bnc" id="L77" title="All 2 branches missed.">			if (deathTimer &gt; 0) {</span>
+<span class="nc" id="L78">				sprite.alpha((deathTimer + 3) / 8f);</span>
+<span class="nc" id="L79">				spend(TICK);</span>
+			} else {
+<span class="nc" id="L81">				destroy();</span>
+<span class="nc" id="L82">				sprite.die();</span>
+			}
+<span class="nc" id="L84">			return true;</span>
+		}
+		
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		if (deathTimer != -1){</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">			if (paralysed == 0) sprite.remove(CharSprite.State.PARALYSED);</span>
+<span class="nc" id="L89">			deathTimer = -1;</span>
+<span class="nc" id="L90">			sprite.resetColor();</span>
+		}
+		
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		if ( hero == null ){</span>
+<span class="nc" id="L94">			hero = (Hero) Actor.findById(heroID);</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">			if ( hero == null ){</span>
+<span class="nc" id="L96">				destroy();</span>
+<span class="nc" id="L97">				sprite.die();</span>
+<span class="nc" id="L98">				return true;</span>
+			}
+		}
+		
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if (hero.tier() != armTier){</span>
+<span class="nc" id="L103">			armTier = hero.tier();</span>
+<span class="nc" id="L104">			((PrismaticSprite)sprite).updateArmor( armTier );</span>
+		}
+		
+<span class="nc" id="L107">		return super.act();</span>
+	}
+	
+	@Override
+	public void die(Object cause) {
+<span class="nc bnc" id="L112" title="All 2 branches missed.">		if (deathTimer == -1) {</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">			if (cause == Chasm.class){</span>
+<span class="nc" id="L114">				super.die( cause );</span>
+			} else {
+<span class="nc" id="L116">				deathTimer = 5;</span>
+<span class="nc" id="L117">				sprite.add(CharSprite.State.PARALYSED);</span>
+			}
+		}
+<span class="nc" id="L120">	}</span>
+
+	@Override
+	public boolean isActive() {
+<span class="nc bnc" id="L124" title="All 4 branches missed.">		return isAlive() || deathTimer &gt; 0;</span>
+	}
+
+	private static final String HEROID	= &quot;hero_id&quot;;
+	private static final String TIMER	= &quot;timer&quot;;
+	
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L132">		super.storeInBundle( bundle );</span>
+<span class="nc" id="L133">		bundle.put( HEROID, heroID );</span>
+<span class="nc" id="L134">		bundle.put( TIMER, deathTimer );</span>
+<span class="nc" id="L135">	}</span>
+	
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L139">		super.restoreFromBundle( bundle );</span>
+<span class="nc" id="L140">		heroID = bundle.getInt( HEROID );</span>
+<span class="nc" id="L141">		deathTimer = bundle.getInt( TIMER );</span>
+<span class="nc" id="L142">	}</span>
+	
+	public void duplicate( Hero hero, int HP ) {
+<span class="nc" id="L145">		this.hero = hero;</span>
+<span class="nc" id="L146">		heroID = this.hero.id();</span>
+<span class="nc" id="L147">		this.HP = HP;</span>
+<span class="nc" id="L148">		HT = PrismaticGuard.maxHP( hero );</span>
+<span class="nc" id="L149">	}</span>
+	
+	@Override
+	public int damageRoll() {
+<span class="nc bnc" id="L153" title="All 2 branches missed.">		if (hero != null) {</span>
+<span class="nc" id="L154">			return Random.NormalIntRange( 2 + hero.lvl/4, 4 + hero.lvl/2 );</span>
+		} else {
+<span class="nc" id="L156">			return Random.NormalIntRange( 2, 4 );</span>
+		}
+	}
+	
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc bnc" id="L162" title="All 2 branches missed.">		if (hero != null) {</span>
+			//same base attack skill as hero, benefits from accuracy ring
+<span class="nc" id="L164">			return (int)((9 + hero.lvl) * RingOfAccuracy.accuracyMultiplier(hero));</span>
+		} else {
+<span class="nc" id="L166">			return 0;</span>
+		}
+	}
+	
+	@Override
+	public int defenseSkill(Char enemy) {
+<span class="nc bnc" id="L172" title="All 2 branches missed.">		if (hero != null) {</span>
+<span class="nc" id="L173">			int baseEvasion = 4 + hero.lvl;</span>
+<span class="nc" id="L174">			int heroEvasion = (int)((4 + hero.lvl) * RingOfEvasion.evasionMultiplier( hero ));</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">			if (hero.belongings.armor() != null){</span>
+<span class="nc" id="L176">				heroEvasion = (int)hero.belongings.armor().evasionFactor(this, heroEvasion);</span>
+			}
+
+			//if the hero has more/less evasion, 50% of it is applied
+			//includes ring of evasion and armor boosts
+<span class="nc" id="L181">			return super.defenseSkill(enemy) * (baseEvasion + heroEvasion) / 2;</span>
+		} else {
+<span class="nc" id="L183">			return 0;</span>
+		}
+	}
+	
+	@Override
+	public int drRoll() {
+<span class="nc" id="L189">		int dr = super.drRoll();</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">		if (hero != null){</span>
+<span class="nc" id="L191">			return dr + hero.drRoll();</span>
+		} else {
+<span class="nc" id="L193">			return dr;</span>
+		}
+	}
+	
+	@Override
+	public int defenseProc(Char enemy, int damage) {
+<span class="nc bnc" id="L199" title="All 4 branches missed.">		if (hero != null &amp;&amp; hero.belongings.armor() != null){</span>
+<span class="nc" id="L200">			damage = hero.belongings.armor().proc( enemy, this, damage );</span>
+		}
+<span class="nc" id="L202">		return super.defenseProc(enemy, damage);</span>
+	}
+
+	@Override
+	public int glyphLevel(Class&lt;? extends Armor.Glyph&gt; cls) {
+<span class="nc bnc" id="L207" title="All 2 branches missed.">		if (hero != null){</span>
+<span class="nc" id="L208">			return Math.max(super.glyphLevel(cls), hero.glyphLevel(cls));</span>
+		} else {
+<span class="nc" id="L210">			return super.glyphLevel(cls);</span>
+		}
+	}
+
+	@Override
+	public int attackProc( Char enemy, int damage ) {
+		
+<span class="nc bnc" id="L217" title="All 2 branches missed.">		if (enemy instanceof Mob) {</span>
+<span class="nc" id="L218">			((Mob)enemy).aggro( this );</span>
+		}
+		
+<span class="nc" id="L221">		return super.attackProc( enemy, damage );</span>
+	}
+	
+	@Override
+	public CharSprite sprite() {
+<span class="nc" id="L226">		CharSprite s = super.sprite();</span>
+		
+<span class="nc" id="L228">		hero = (Hero)Actor.findById(heroID);</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">		if (hero != null) {</span>
+<span class="nc" id="L230">			armTier = hero.tier();</span>
+		} else {
+<span class="nc" id="L232">			armTier = 1;</span>
+		}
+<span class="nc" id="L234">		((PrismaticSprite)s).updateArmor( armTier );</span>
+<span class="nc" id="L235">		return s;</span>
+	}
+	
+	{
+<span class="nc" id="L239">		immunities.add( ToxicGas.class );</span>
+<span class="nc" id="L240">		immunities.add( CorrosiveGas.class );</span>
+<span class="nc" id="L241">		immunities.add( Burning.class );</span>
+<span class="nc" id="L242">		immunities.add( AllyBuff.class );</span>
+<span class="nc" id="L243">	}</span>
+	
+<span class="nc" id="L245">	private class Wandering extends Mob.Wandering{</span>
+		
+		@Override
+		public boolean act(boolean enemyInFOV, boolean justAlerted) {
+<span class="nc bnc" id="L249" title="All 2 branches missed.">			if (!enemyInFOV){</span>
+<span class="nc" id="L250">				Buff.affect(hero, PrismaticGuard.class).set( PrismaticImage.this );</span>
+<span class="nc" id="L251">				destroy();</span>
+<span class="nc" id="L252">				CellEmitter.get(pos).start( Speck.factory(Speck.LIGHT), 0.2f, 3 );</span>
+<span class="nc" id="L253">				sprite.die();</span>
+<span class="nc" id="L254">				Sample.INSTANCE.play( Assets.Sounds.TELEPORT );</span>
+<span class="nc" id="L255">				return true;</span>
+			} else {
+<span class="nc" id="L257">				return super.act(enemyInFOV, justAlerted);</span>
+			}
+		}
+		
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

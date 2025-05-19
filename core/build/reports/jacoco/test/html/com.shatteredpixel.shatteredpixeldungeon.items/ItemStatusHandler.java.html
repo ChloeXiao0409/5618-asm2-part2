@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ItemStatusHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items</a> &gt; <span class="el_source">ItemStatusHandler.java</span></div><h1>ItemStatusHandler.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items;
+
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+
+public class ItemStatusHandler&lt;T extends Item&gt; {
+
+	private Class&lt;? extends T&gt;[] items;
+	private LinkedHashMap&lt;Class&lt;? extends T&gt;, String&gt; itemLabels;
+	private LinkedHashMap&lt;String, Integer&gt; labelImages;
+	private LinkedHashSet&lt;Class&lt;? extends T&gt;&gt; known;
+
+<span class="nc" id="L42">	public ItemStatusHandler( Class&lt;? extends T&gt;[] items, HashMap&lt;String, Integer&gt; labelImages ) {</span>
+
+<span class="nc" id="L44">		this.items = items;</span>
+
+<span class="nc" id="L46">		this.itemLabels = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc" id="L47">		this.labelImages = new LinkedHashMap&lt;&gt;(labelImages);</span>
+<span class="nc" id="L48">		known = new LinkedHashSet&lt;&gt;();</span>
+
+<span class="nc" id="L50">		ArrayList&lt;String&gt; labelsLeft = new ArrayList&lt;&gt;(labelImages.keySet());</span>
+
+<span class="nc bnc" id="L52" title="All 2 branches missed.">		for (int i=0; i &lt; items.length; i++) {</span>
+
+<span class="nc" id="L54">			Class&lt;? extends T&gt; item = items[i];</span>
+
+<span class="nc" id="L56">			int index = Random.Int( labelsLeft.size() );</span>
+
+<span class="nc" id="L58">			itemLabels.put( item, labelsLeft.get( index ) );</span>
+<span class="nc" id="L59">			labelsLeft.remove( index );</span>
+
+		}
+<span class="nc" id="L62">	}</span>
+
+<span class="nc" id="L64">	public ItemStatusHandler( Class&lt;? extends T&gt;[] items, HashMap&lt;String, Integer&gt; labelImages, Bundle bundle ) {</span>
+
+<span class="nc" id="L66">		this.items = items;</span>
+
+<span class="nc" id="L68">		this.itemLabels = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc" id="L69">		this.labelImages = new LinkedHashMap&lt;&gt;(labelImages);</span>
+<span class="nc" id="L70">		known = new LinkedHashSet&lt;&gt;();</span>
+
+<span class="nc" id="L72">		ArrayList&lt;String&gt; allLabels = new ArrayList&lt;&gt;(labelImages.keySet());</span>
+
+<span class="nc" id="L74">		restore(bundle, allLabels);</span>
+<span class="nc" id="L75">	}</span>
+
+	private static final String PFX_LABEL	= &quot;_label&quot;;
+	private static final String PFX_KNOWN	= &quot;_known&quot;;
+	
+	public void save( Bundle bundle ) {
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		for (int i=0; i &lt; items.length; i++) {</span>
+<span class="nc" id="L82">			String itemName = items[i].getSimpleName();</span>
+<span class="nc" id="L83">			bundle.put( itemName + PFX_LABEL, itemLabels.get( items[i] ) );</span>
+<span class="nc" id="L84">			bundle.put( itemName + PFX_KNOWN, known.contains( items[i] ) );</span>
+		}
+<span class="nc" id="L86">	}</span>
+
+	public void saveSelectively( Bundle bundle, ArrayList&lt;Item&gt; itemsToSave ){
+<span class="nc" id="L89">		List&lt;Class&lt;? extends T&gt;&gt; items = Arrays.asList(this.items);</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		for (Item item : itemsToSave){</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">			if (items.contains(item.getClass())){</span>
+<span class="nc" id="L92">				Class&lt;? extends T&gt; cls = items.get(items.indexOf(item.getClass()));</span>
+<span class="nc" id="L93">				String itemName = cls.getSimpleName();</span>
+<span class="nc" id="L94">				bundle.put( itemName + PFX_LABEL, itemLabels.get( cls ) );</span>
+<span class="nc" id="L95">				bundle.put( itemName + PFX_KNOWN, known.contains( cls ) );</span>
+			}
+<span class="nc" id="L97">		}</span>
+<span class="nc" id="L98">	}</span>
+	
+	public void saveClassesSelectively( Bundle bundle, ArrayList&lt;Class&lt;?extends Item&gt;&gt; clsToSave ){
+<span class="nc" id="L101">		List&lt;Class&lt;? extends T&gt;&gt; items = Arrays.asList(this.items);</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		for (Class&lt;?extends Item&gt; cls : clsToSave){</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			if (items.contains(cls)){</span>
+<span class="nc" id="L104">				Class&lt;? extends T&gt; toSave = items.get(items.indexOf(cls));</span>
+<span class="nc" id="L105">				String itemName = toSave.getSimpleName();</span>
+<span class="nc" id="L106">				bundle.put( itemName + PFX_LABEL, itemLabels.get( toSave ) );</span>
+<span class="nc" id="L107">				bundle.put( itemName + PFX_KNOWN, known.contains( toSave ) );</span>
+			}
+<span class="nc" id="L109">		}</span>
+<span class="nc" id="L110">	}</span>
+
+	private void restore( Bundle bundle, ArrayList&lt;String&gt; labelsLeft  ) {
+
+<span class="nc" id="L114">		ArrayList&lt;Class&lt;? extends T&gt;&gt; unlabelled = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		for (int i=0; i &lt; items.length; i++) {</span>
+
+<span class="nc" id="L118">			Class&lt;? extends T&gt; item = items[i];</span>
+<span class="nc" id="L119">			String itemName = item.getSimpleName();</span>
+
+<span class="nc bnc" id="L121" title="All 2 branches missed.">			if (bundle.contains( itemName + PFX_LABEL )) {</span>
+
+<span class="nc" id="L123">				String label = bundle.getString( itemName + PFX_LABEL );</span>
+<span class="nc" id="L124">				itemLabels.put( item, label );</span>
+<span class="nc" id="L125">				labelsLeft.remove( label );</span>
+
+<span class="nc bnc" id="L127" title="All 2 branches missed.">				if (bundle.getBoolean( itemName + PFX_KNOWN )) {</span>
+<span class="nc" id="L128">					known.add( item );</span>
+				}
+
+<span class="nc" id="L131">			} else {</span>
+
+<span class="nc" id="L133">				unlabelled.add(items[i]);</span>
+
+			}
+		}
+
+<span class="nc bnc" id="L138" title="All 2 branches missed.">		for (Class&lt;? extends T&gt; item : unlabelled){</span>
+
+<span class="nc" id="L140">			String itemName = item.getSimpleName();</span>
+
+<span class="nc" id="L142">			int index = Random.Int( labelsLeft.size() );</span>
+
+<span class="nc" id="L144">			itemLabels.put( item, labelsLeft.get( index ) );</span>
+<span class="nc" id="L145">			labelsLeft.remove( index );</span>
+
+<span class="nc bnc" id="L147" title="All 4 branches missed.">			if (bundle.contains( itemName + PFX_KNOWN ) &amp;&amp; bundle.getBoolean( itemName + PFX_KNOWN )) {</span>
+<span class="nc" id="L148">				known.add( item );</span>
+			}
+<span class="nc" id="L150">		}</span>
+<span class="nc" id="L151">	}</span>
+	
+	public boolean contains( T item ){
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		for (Class&lt;?extends Item&gt; i : items){</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">			if (item.getClass().equals(i)){</span>
+<span class="nc" id="L156">				return true;</span>
+			}
+		}
+<span class="nc" id="L159">		return false;</span>
+	}
+	
+	public boolean contains( Class&lt;?extends T&gt; itemCls ){
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		for (Class&lt;?extends Item&gt; i : items){</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">			if (itemCls.equals(i)){</span>
+<span class="nc" id="L165">				return true;</span>
+			}
+		}
+<span class="nc" id="L168">		return false;</span>
+	}
+	
+	public int image( T item ) {
+<span class="nc" id="L172">		return labelImages.get(label(item));</span>
+	}
+	
+	public int image( Class&lt;?extends T&gt; itemCls ) {
+<span class="nc" id="L176">		return labelImages.get(label(itemCls));</span>
+	}
+	
+	public String label( T item ) {
+<span class="nc" id="L180">		return itemLabels.get(item.getClass());</span>
+	}
+	
+	public String label( Class&lt;?extends T&gt; itemCls ){
+<span class="nc" id="L184">		return itemLabels.get( itemCls );</span>
+	}
+	
+	public boolean isKnown( T item ) {
+<span class="nc" id="L188">		return known.contains( item.getClass() );</span>
+	}
+	
+	public boolean isKnown( Class&lt;?extends T&gt; itemCls ){
+<span class="nc" id="L192">		return known.contains( itemCls );</span>
+	}
+	
+	public void know( T item ) {
+<span class="nc" id="L196">		known.add( (Class&lt;? extends T&gt;)item.getClass() );</span>
+<span class="nc" id="L197">	}</span>
+	
+	public void know( Class&lt;?extends T&gt; itemCls ){
+<span class="nc" id="L200">		known.add( itemCls );</span>
+<span class="nc" id="L201">	}</span>
+	
+	public HashSet&lt;Class&lt;? extends T&gt;&gt; known() {
+<span class="nc" id="L204">		return known;</span>
+	}
+	
+	public HashSet&lt;Class&lt;? extends T&gt;&gt; unknown() {
+<span class="nc" id="L208">		LinkedHashSet&lt;Class&lt;? extends T&gt;&gt; result = new LinkedHashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">		for (Class&lt;? extends T&gt; i : items) {</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">			if (!known.contains( i )) {</span>
+<span class="nc" id="L211">				result.add( i );</span>
+			}
+		}
+<span class="nc" id="L214">		return result;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

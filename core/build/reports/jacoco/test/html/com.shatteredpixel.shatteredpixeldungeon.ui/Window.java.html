@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Window.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">Window.java</span></div><h1>Window.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
+import com.shatteredpixel.shatteredpixeldungeon.effects.ShadowBox;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.watabou.input.KeyBindings;
+import com.watabou.input.KeyEvent;
+import com.watabou.input.PointerEvent;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Group;
+import com.watabou.noosa.NinePatch;
+import com.watabou.noosa.PointerArea;
+import com.watabou.utils.Point;
+import com.watabou.utils.Signal;
+
+public class Window extends Group implements Signal.Listener&lt;KeyEvent&gt; {
+
+	protected int width;
+	protected int height;
+
+	protected int xOffset;
+	protected int yOffset;
+	
+	protected PointerArea blocker;
+	protected ShadowBox shadow;
+	protected NinePatch chrome;
+
+	public static final int WHITE = 0xFFFFFF;
+	public static final int TITLE_COLOR = 0xFFFF44;
+	public static final int SHPX_COLOR = 0x33BB33;
+	
+	public Window() {
+<span class="nc" id="L56">		this( 0, 0, Chrome.get( Chrome.Type.WINDOW ) );</span>
+<span class="nc" id="L57">	}</span>
+	
+	public Window( int width, int height ) {
+<span class="nc" id="L60">		this( width, height, Chrome.get( Chrome.Type.WINDOW ) );</span>
+<span class="nc" id="L61">	}</span>
+
+	public Window( int width, int height, NinePatch chrome ) {
+<span class="nc" id="L64">		super();</span>
+		
+<span class="nc" id="L66">		blocker = new PointerArea( 0, 0, PixelScene.uiCamera.width, PixelScene.uiCamera.height ) {</span>
+			@Override
+			protected void onClick( PointerEvent event ) {
+<span class="nc bnc" id="L69" title="All 4 branches missed.">				if (Window.this.parent != null &amp;&amp; !Window.this.chrome.overlapsScreenPoint(</span>
+					(int) event.current.x,
+					(int) event.current.y )) {
+					
+<span class="nc" id="L73">					onBackPressed();</span>
+				}
+<span class="nc" id="L75">			}</span>
+		};
+<span class="nc" id="L77">		blocker.camera = PixelScene.uiCamera;</span>
+<span class="nc" id="L78">		add( blocker );</span>
+		
+<span class="nc" id="L80">		this.chrome = chrome;</span>
+
+<span class="nc" id="L82">		this.width = width;</span>
+<span class="nc" id="L83">		this.height = height;</span>
+
+<span class="nc" id="L85">		shadow = new ShadowBox();</span>
+<span class="nc" id="L86">		shadow.am = 0.5f;</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		shadow.camera = PixelScene.uiCamera.visible ?</span>
+<span class="nc" id="L88">				PixelScene.uiCamera : Camera.main;</span>
+<span class="nc" id="L89">		add( shadow );</span>
+
+<span class="nc" id="L91">		chrome.x = -chrome.marginLeft();</span>
+<span class="nc" id="L92">		chrome.y = -chrome.marginTop();</span>
+<span class="nc" id="L93">		chrome.size(</span>
+<span class="nc" id="L94">			width - chrome.x + chrome.marginRight(),</span>
+<span class="nc" id="L95">			height - chrome.y + chrome.marginBottom() );</span>
+<span class="nc" id="L96">		add( chrome );</span>
+		
+<span class="nc" id="L98">		camera = new Camera( 0, 0,</span>
+			(int)chrome.width,
+			(int)chrome.height,
+			PixelScene.defaultZoom );
+<span class="nc" id="L102">		camera.x = (int)(Game.width - camera.width * camera.zoom) / 2;</span>
+<span class="nc" id="L103">		camera.y = (int)(Game.height - camera.height * camera.zoom) / 2;</span>
+<span class="nc" id="L104">		camera.y -= yOffset * camera.zoom;</span>
+<span class="nc" id="L105">		camera.scroll.set( chrome.x, chrome.y );</span>
+<span class="nc" id="L106">		Camera.add( camera );</span>
+
+<span class="nc" id="L108">		shadow.boxRect(</span>
+				camera.x / camera.zoom,
+				camera.y / camera.zoom,
+<span class="nc" id="L111">				chrome.width(), chrome.height );</span>
+
+<span class="nc" id="L113">		KeyEvent.addKeyListener( this );</span>
+<span class="nc" id="L114">	}</span>
+	
+	public void resize( int w, int h ) {
+<span class="nc" id="L117">		this.width = w;</span>
+<span class="nc" id="L118">		this.height = h;</span>
+		
+<span class="nc" id="L120">		chrome.size(</span>
+<span class="nc" id="L121">			width + chrome.marginHor(),</span>
+<span class="nc" id="L122">			height + chrome.marginVer() );</span>
+		
+<span class="nc" id="L124">		camera.resize( (int)chrome.width, (int)chrome.height );</span>
+
+<span class="nc" id="L126">		camera.x = (int)(Game.width - camera.screenWidth()) / 2;</span>
+<span class="nc" id="L127">		camera.x += xOffset * camera.zoom;</span>
+
+<span class="nc" id="L129">		camera.y = (int)(Game.height - camera.screenHeight()) / 2;</span>
+<span class="nc" id="L130">		camera.y += yOffset * camera.zoom;</span>
+
+<span class="nc" id="L132">		shadow.boxRect( camera.x / camera.zoom, camera.y / camera.zoom, chrome.width(), chrome.height );</span>
+<span class="nc" id="L133">	}</span>
+
+	public Point getOffset(){
+<span class="nc" id="L136">		return new Point(xOffset, yOffset);</span>
+	}
+
+	public final void offset( Point offset ){
+<span class="nc" id="L140">		offset(offset.x, offset.y);</span>
+<span class="nc" id="L141">	}</span>
+
+	//windows with scroll panes will likely need to override this and refresh them when offset changes
+	public void offset( int xOffset, int yOffset ){
+<span class="nc" id="L145">		camera.x -= this.xOffset * camera.zoom;</span>
+<span class="nc" id="L146">		this.xOffset = xOffset;</span>
+<span class="nc" id="L147">		camera.x += xOffset * camera.zoom;</span>
+
+<span class="nc" id="L149">		camera.y -= this.yOffset * camera.zoom;</span>
+<span class="nc" id="L150">		this.yOffset = yOffset;</span>
+<span class="nc" id="L151">		camera.y += yOffset * camera.zoom;</span>
+
+<span class="nc" id="L153">		shadow.boxRect( camera.x / camera.zoom, camera.y / camera.zoom, chrome.width(), chrome.height );</span>
+<span class="nc" id="L154">	}</span>
+
+	//ensures the window, with offset, does not go beyond a given margin
+	public void boundOffsetWithMargin( int margin ){
+<span class="nc" id="L158">		float x = camera.x / camera.zoom;</span>
+<span class="nc" id="L159">		float y = camera.y / camera.zoom;</span>
+
+<span class="nc bnc" id="L161" title="All 2 branches missed.">		Camera sceneCam = PixelScene.uiCamera.visible ? PixelScene.uiCamera : Camera.main;</span>
+
+<span class="nc" id="L163">		int newXOfs = xOffset;</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">		if (x &lt; margin){</span>
+<span class="nc" id="L165">			newXOfs += margin - x;</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">		} else if (x + camera.width &gt; sceneCam.width - margin){</span>
+<span class="nc" id="L167">			newXOfs += (sceneCam.width - margin) - (x + camera.width);</span>
+		}
+
+<span class="nc" id="L170">		int newYOfs = yOffset;</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">		if (y &lt; margin){</span>
+<span class="nc" id="L172">			newYOfs += margin - y;</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">		} else if (y + camera.height &gt; sceneCam.height - margin){</span>
+<span class="nc" id="L174">			newYOfs += (sceneCam.height - margin) - (y + camera.height);</span>
+		}
+
+<span class="nc" id="L177">		offset(newXOfs, newYOfs);</span>
+<span class="nc" id="L178">	}</span>
+	
+	public void hide() {
+<span class="nc bnc" id="L181" title="All 2 branches missed.">		if (parent != null) {</span>
+<span class="nc" id="L182">			parent.erase(this);</span>
+		}
+<span class="nc" id="L184">		destroy();</span>
+<span class="nc" id="L185">	}</span>
+	
+	@Override
+	public void destroy() {
+<span class="nc" id="L189">		super.destroy();</span>
+		
+<span class="nc" id="L191">		Camera.remove( camera );</span>
+<span class="nc" id="L192">		KeyEvent.removeKeyListener( this );</span>
+<span class="nc" id="L193">	}</span>
+
+	@Override
+	public boolean onSignal( KeyEvent event ) {
+<span class="nc bnc" id="L197" title="All 2 branches missed.">		if (event.pressed) {</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">			if (KeyBindings.getActionForKey( event ) == SPDAction.BACK</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">				|| KeyBindings.getActionForKey( event ) == SPDAction.WAIT){</span>
+<span class="nc" id="L200">				onBackPressed();</span>
+			}
+		}
+		
+<span class="nc" id="L204">		return true;</span>
+	}
+	
+	public void onBackPressed() {
+<span class="nc" id="L208">		hide();</span>
+<span class="nc" id="L209">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

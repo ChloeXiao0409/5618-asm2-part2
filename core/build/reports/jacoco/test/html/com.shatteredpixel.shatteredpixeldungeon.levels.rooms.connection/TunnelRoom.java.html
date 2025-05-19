@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TunnelRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.connection</a> &gt; <span class="el_source">TunnelRoom.java</span></div><h1>TunnelRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.connection;
+
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.Point;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+import com.watabou.utils.Rect;
+
+//tunnels along the rooms center, with straight lines
+<span class="nc" id="L33">public class TunnelRoom extends ConnectionRoom {</span>
+
+	public void paint(Level level) {
+
+<span class="nc" id="L37">		int floor = level.tunnelTile();</span>
+
+<span class="nc" id="L39">		Rect c = getConnectionSpace();</span>
+
+<span class="nc bnc" id="L41" title="All 2 branches missed.">		for (Door door : connected.values()) {</span>
+
+			Point start;
+			Point mid;
+			Point end;
+
+<span class="nc" id="L47">			start = new Point(door);</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">			if (start.x == left)        start.x++;</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">			else if (start.y == top)    start.y++;</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">			else if (start.x == right)  start.x--;</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">			else if (start.y == bottom) start.y--;</span>
+
+			int rightShift;
+			int downShift;
+
+<span class="nc bnc" id="L56" title="All 2 branches missed.">			if (start.x &lt; c.left)           rightShift = c.left - start.x;</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed."> 			else if (start.x &gt; c.right)     rightShift = c.right - start.x;</span>
+<span class="nc" id="L58">			else                            rightShift = 0;</span>
+
+<span class="nc bnc" id="L60" title="All 2 branches missed.">			if (start.y &lt; c.top)            downShift = c.top - start.y;</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">			else if (start.y &gt; c.bottom)    downShift = c.bottom - start.y;</span>
+<span class="nc" id="L62">			else                            downShift = 0;</span>
+
+			//always goes inward first
+<span class="nc bnc" id="L65" title="All 4 branches missed.">			if (door.x == left || door.x == right){</span>
+<span class="nc" id="L66">				mid = new Point(start.x + rightShift, start.y);</span>
+<span class="nc" id="L67">				end = new Point(mid.x, mid.y + downShift);</span>
+
+			} else {
+<span class="nc" id="L70">				mid = new Point(start.x, start.y + downShift);</span>
+<span class="nc" id="L71">				end = new Point(mid.x + rightShift, mid.y);</span>
+
+			}
+
+<span class="nc" id="L75">			Painter.drawLine( level, start, mid, floor );</span>
+<span class="nc" id="L76">			Painter.drawLine( level, mid, end, floor );</span>
+<span class="nc" id="L77">		}</span>
+
+		//fill in an extra diagonal tile at center randomly if we're a larger room with many connections
+		//this makes the shape a bit more varied in these cases
+<span class="nc bnc" id="L81" title="All 8 branches missed.">		if (width() &gt;= 7 &amp;&amp; height() &gt;= 7 &amp;&amp; connected.size() &gt; 4 &amp;&amp; c.square() == 0){</span>
+<span class="nc" id="L82">			Point p = new Point(c.left, c.top);</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">			p.x += Random.Int(2) == 0 ? 1 : -1;</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">			p.y += Random.Int(2) == 0 ? 1 : -1;</span>
+			//also prevent filling a tile outside the room in rare cases
+<span class="nc" id="L86">			p.x = (int)GameMath.gate(left+1, p.x, right-1);</span>
+<span class="nc" id="L87">			p.y = (int)GameMath.gate(top+1, p.y, bottom-1);</span>
+<span class="nc" id="L88">			Painter.set(level, p, floor);</span>
+		}
+
+<span class="nc bnc" id="L91" title="All 2 branches missed.">		for (Door door : connected.values()) {</span>
+<span class="nc" id="L92">			door.set( Door.Type.TUNNEL );</span>
+<span class="nc" id="L93">		}</span>
+<span class="nc" id="L94">	}</span>
+
+	//returns the space which all doors must connect to (usually 1 cell, but can be more)
+	//Note that, like rooms, this space is inclusive to its right and bottom sides
+	protected Rect getConnectionSpace(){
+<span class="nc" id="L99">		Point c = getDoorCenter();</span>
+
+<span class="nc" id="L101">		return new Rect(c.x, c.y, c.x, c.y);</span>
+	}
+
+	//returns a point equidistant from all doors this room has
+	protected final Point getDoorCenter(){
+<span class="nc" id="L106">		PointF doorCenter = new PointF(0, 0);</span>
+
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		for (Door door : connected.values()) {</span>
+<span class="nc" id="L109">			doorCenter.x += door.x;</span>
+<span class="nc" id="L110">			doorCenter.y += door.y;</span>
+<span class="nc" id="L111">		}</span>
+
+<span class="nc" id="L113">		Point c = new Point((int)doorCenter.x / connected.size(), (int)doorCenter.y / connected.size());</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">		if (Random.Float() &lt; doorCenter.x % 1) c.x++;</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">		if (Random.Float() &lt; doorCenter.y % 1) c.y++;</span>
+<span class="nc" id="L116">		c.x = (int)GameMath.gate(left+1, c.x, right-1);</span>
+<span class="nc" id="L117">		c.y = (int)GameMath.gate(top+1, c.y, bottom-1);</span>
+
+<span class="nc" id="L119">		return c;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

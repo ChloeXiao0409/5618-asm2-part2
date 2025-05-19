@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SmokeBomb.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.rogue</a> &gt; <span class="el_source">SmokeBomb.java</span></div><h1>SmokeBomb.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.rogue;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AllyBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Amok;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Blindness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Charm;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Dread;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Haste;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Sleep;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Terror;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.NPC;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.MobSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.TextureFilm;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.BArray;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L60">public class SmokeBomb extends ArmorAbility {</span>
+
+	{
+<span class="nc" id="L63">		baseChargeUse = 50;</span>
+<span class="nc" id="L64">	}</span>
+
+	@Override
+	public String targetingPrompt() {
+<span class="nc" id="L68">		return Messages.get(this, &quot;prompt&quot;);</span>
+	}
+
+	@Override
+	public boolean useTargeting() {
+<span class="nc" id="L73">		return false;</span>
+	}
+
+	@Override
+	public float chargeUse(Hero hero) {
+<span class="nc bnc" id="L78" title="All 4 branches missed.">		if (!hero.hasTalent(Talent.SHADOW_STEP) || hero.invisible &lt;= 0){</span>
+<span class="nc" id="L79">			return super.chargeUse(hero);</span>
+		} else {
+			//reduced charge use by 16%/30%/41%/50%
+<span class="nc" id="L82">			return (float)(super.chargeUse(hero) * Math.pow(0.84, hero.pointsInTalent(Talent.SHADOW_STEP)));</span>
+		}
+	}
+
+	@Override
+	protected void activate(ClassArmor armor, Hero hero, Integer target) {
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		if (target != null) {</span>
+
+<span class="nc bnc" id="L90" title="All 4 branches missed.">			if (target != hero.pos &amp;&amp; hero.rooted){</span>
+<span class="nc" id="L91">				PixelScene.shake( 1, 1f );</span>
+<span class="nc" id="L92">				return;</span>
+			}
+
+<span class="nc" id="L95">			PathFinder.buildDistanceMap(hero.pos, BArray.or(Dungeon.level.passable, Dungeon.level.avoid, null), 6);</span>
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">			if ( PathFinder.distance[target] == Integer.MAX_VALUE ||</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">					!Dungeon.level.heroFOV[target] ||</span>
+<span class="nc bnc" id="L99" title="All 4 branches missed.">					(target != hero.pos &amp;&amp; Actor.findChar( target ) != null)) {</span>
+
+<span class="nc" id="L101">				GLog.w( Messages.get(this, &quot;fov&quot;) );</span>
+<span class="nc" id="L102">				return;</span>
+			}
+
+<span class="nc" id="L105">			armor.charge -= chargeUse(hero);</span>
+<span class="nc" id="L106">			Item.updateQuickslot();</span>
+
+<span class="nc bnc" id="L108" title="All 4 branches missed.">			boolean shadowStepping = hero.invisible &gt; 0 &amp;&amp; hero.hasTalent(Talent.SHADOW_STEP);</span>
+
+<span class="nc bnc" id="L110" title="All 2 branches missed.">			if (!shadowStepping) {</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">				for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {</span>
+<span class="nc bnc" id="L112" title="All 4 branches missed.">					if (Dungeon.level.adjacent(mob.pos, hero.pos) &amp;&amp; mob.alignment != Char.Alignment.ALLY) {</span>
+<span class="nc" id="L113">						Buff.prolong(mob, Blindness.class, Blindness.DURATION / 2f);</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">						if (mob.state == mob.HUNTING) mob.state = mob.WANDERING;</span>
+<span class="nc" id="L115">						mob.sprite.emitter().burst(Speck.factory(Speck.LIGHT), 4);</span>
+					}
+				}
+
+<span class="nc bnc" id="L119" title="All 2 branches missed.">				if (hero.hasTalent(Talent.BODY_REPLACEMENT)) {</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">					for (Char ch : Actor.chars()){</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">						if (ch instanceof NinjaLog){</span>
+<span class="nc" id="L122">							ch.die(null);</span>
+						}
+<span class="nc" id="L124">					}</span>
+
+<span class="nc" id="L126">					NinjaLog n = new NinjaLog();</span>
+<span class="nc" id="L127">					n.pos = hero.pos;</span>
+<span class="nc" id="L128">					GameScene.add(n);</span>
+<span class="nc" id="L129">					Dungeon.level.occupyCell(n);</span>
+				}
+
+<span class="nc bnc" id="L132" title="All 2 branches missed.">				if (hero.hasTalent(Talent.HASTY_RETREAT)){</span>
+					//effectively 1/2/3/4 turns
+<span class="nc" id="L134">					float duration = 0.67f + hero.pointsInTalent(Talent.HASTY_RETREAT);</span>
+<span class="nc" id="L135">					Buff.affect(hero, Haste.class, duration);</span>
+<span class="nc" id="L136">					Buff.affect(hero, Invisibility.class, duration);</span>
+				}
+			}
+
+<span class="nc" id="L140">			CellEmitter.get( hero.pos ).burst( Speck.factory( Speck.WOOL ), 10 );</span>
+<span class="nc" id="L141">			ScrollOfTeleportation.appear( hero, target );</span>
+<span class="nc" id="L142">			Sample.INSTANCE.play( Assets.Sounds.PUFF );</span>
+<span class="nc" id="L143">			Dungeon.level.occupyCell( hero );</span>
+<span class="nc" id="L144">			Dungeon.observe();</span>
+<span class="nc" id="L145">			GameScene.updateFog();</span>
+
+<span class="nc bnc" id="L147" title="All 2 branches missed.">			if (!shadowStepping) {</span>
+<span class="nc" id="L148">				hero.spendAndNext(Actor.TICK);</span>
+			} else {
+<span class="nc" id="L150">				hero.next();</span>
+			}
+		}
+<span class="nc" id="L153">	}</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L157">		return HeroIcon.SMOKE_BOMB;</span>
+	}
+
+	@Override
+	public Talent[] talents() {
+<span class="nc" id="L162">		return new Talent[]{Talent.HASTY_RETREAT, Talent.BODY_REPLACEMENT, Talent.SHADOW_STEP, Talent.HEROIC_ENERGY};</span>
+	}
+
+<span class="nc" id="L165">	public static class NinjaLog extends NPC {</span>
+
+		{
+<span class="nc" id="L168">			spriteClass = NinjaLogSprite.class;</span>
+<span class="nc" id="L169">			defenseSkill = 0;</span>
+
+<span class="nc" id="L171">			properties.add(Property.INORGANIC); //wood is organic, but this is accurate for game logic</span>
+
+<span class="nc" id="L173">			alignment = Alignment.ALLY;</span>
+
+<span class="nc" id="L175">			HT = 20;</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">			if (Dungeon.hero != null) HT *= Dungeon.hero.pointsInTalent(Talent.BODY_REPLACEMENT);</span>
+<span class="nc" id="L177">			HP = HT;</span>
+		}
+
+		@Override
+		public int drRoll() {
+<span class="nc" id="L182">			int dr = super.drRoll();</span>
+
+<span class="nc" id="L184">			dr += Random.NormalIntRange(Dungeon.hero.pointsInTalent(Talent.BODY_REPLACEMENT),</span>
+<span class="nc" id="L185">					3*Dungeon.hero.pointsInTalent(Talent.BODY_REPLACEMENT));</span>
+
+<span class="nc" id="L187">			return dr;</span>
+		}
+
+		{
+<span class="nc" id="L191">			immunities.add( Dread.class );</span>
+<span class="nc" id="L192">			immunities.add( Terror.class );</span>
+<span class="nc" id="L193">			immunities.add( Amok.class );</span>
+<span class="nc" id="L194">			immunities.add( Charm.class );</span>
+<span class="nc" id="L195">			immunities.add( Sleep.class );</span>
+<span class="nc" id="L196">			immunities.add( AllyBuff.class );</span>
+<span class="nc" id="L197">		}</span>
+
+	}
+
+	public static class NinjaLogSprite extends MobSprite {
+
+		public NinjaLogSprite(){
+<span class="nc" id="L204">			super();</span>
+
+<span class="nc" id="L206">			texture( Assets.Sprites.NINJA_LOG );</span>
+
+<span class="nc" id="L208">			TextureFilm frames = new TextureFilm( texture, 11, 12 );</span>
+
+<span class="nc" id="L210">			idle = new Animation( 0, true );</span>
+<span class="nc" id="L211">			idle.frames( frames, 0 );</span>
+
+<span class="nc" id="L213">			run = idle.clone();</span>
+<span class="nc" id="L214">			attack = idle.clone();</span>
+<span class="nc" id="L215">			zap = attack.clone();</span>
+
+<span class="nc" id="L217">			die = new Animation( 12, false );</span>
+<span class="nc" id="L218">			die.frames( frames, 1, 2, 3, 4 );</span>
+
+<span class="nc" id="L220">			play( idle );</span>
+
+<span class="nc" id="L222">		}</span>
+
+		@Override
+		public void showAlert() {
+			//do nothing
+<span class="nc" id="L227">		}</span>
+
+		@Override
+		public int blood() {
+<span class="nc" id="L231">			return 0xFF966400;</span>
+		}
+
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

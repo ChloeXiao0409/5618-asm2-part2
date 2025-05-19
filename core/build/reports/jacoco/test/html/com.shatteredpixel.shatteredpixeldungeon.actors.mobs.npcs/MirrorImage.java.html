@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MirrorImage.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs</a> &gt; <span class="el_source">MirrorImage.java</span></div><h1>MirrorImage.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.CorrosiveGas;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ToxicGas;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AllyBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfAccuracy;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEvasion;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.MirrorSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L45">public class MirrorImage extends NPC {</span>
+	
+	{
+<span class="nc" id="L48">		spriteClass = MirrorSprite.class;</span>
+		
+<span class="nc" id="L50">		HP = HT = 1;</span>
+<span class="nc" id="L51">		defenseSkill = 1;</span>
+		
+<span class="nc" id="L53">		alignment = Alignment.ALLY;</span>
+<span class="nc" id="L54">		state = HUNTING;</span>
+		
+		//before other mobs
+<span class="nc" id="L57">		actPriority = MOB_PRIO + 1;</span>
+	}
+	
+	private Hero hero;
+	private int heroID;
+	public int armTier;
+	
+	@Override
+	protected boolean act() {
+		
+<span class="nc bnc" id="L67" title="All 2 branches missed.">		if ( hero == null ){</span>
+<span class="nc" id="L68">			hero = (Hero)Actor.findById(heroID);</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">			if ( hero == null ){</span>
+<span class="nc" id="L70">				die(null);</span>
+<span class="nc" id="L71">				sprite.killAndErase();</span>
+<span class="nc" id="L72">				return true;</span>
+			}
+		}
+		
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		if (hero.tier() != armTier){</span>
+<span class="nc" id="L77">			armTier = hero.tier();</span>
+<span class="nc" id="L78">			((MirrorSprite)sprite).updateArmor( armTier );</span>
+		}
+		
+<span class="nc" id="L81">		return super.act();</span>
+	}
+	
+	private static final String HEROID	= &quot;hero_id&quot;;
+	
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L88">		super.storeInBundle( bundle );</span>
+<span class="nc" id="L89">		bundle.put( HEROID, heroID );</span>
+<span class="nc" id="L90">	}</span>
+	
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L94">		super.restoreFromBundle( bundle );</span>
+<span class="nc" id="L95">		heroID = bundle.getInt( HEROID );</span>
+<span class="nc" id="L96">	}</span>
+	
+	public void duplicate( Hero hero ) {
+<span class="nc" id="L99">		this.hero = hero;</span>
+<span class="nc" id="L100">		heroID = this.hero.id();</span>
+<span class="nc" id="L101">		Buff.affect(this, MirrorInvis.class, Short.MAX_VALUE);</span>
+<span class="nc" id="L102">	}</span>
+	
+	@Override
+	public int damageRoll() {
+		int damage;
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		if (hero.belongings.weapon() != null){</span>
+<span class="nc" id="L108">			damage = hero.belongings.weapon().damageRoll(this);</span>
+		} else {
+<span class="nc" id="L110">			damage = hero.damageRoll(); //handles ring of force</span>
+		}
+<span class="nc" id="L112">		return (damage+1)/2; //half hero damage, rounded up</span>
+	}
+	
+	@Override
+	public int attackSkill( Char target ) {
+		//same base attack skill as hero, benefits from accuracy ring and weapon
+<span class="nc" id="L118">		int attackSkill = 9 + hero.lvl;</span>
+<span class="nc" id="L119">		attackSkill *= RingOfAccuracy.accuracyMultiplier(hero);</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">		if (hero.belongings.attackingWeapon() != null){</span>
+<span class="nc" id="L121">			attackSkill *= hero.belongings.attackingWeapon().accuracyFactor(this, target);</span>
+		}
+<span class="nc" id="L123">		return attackSkill;</span>
+	}
+	
+	@Override
+	public int defenseSkill(Char enemy) {
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		if (hero != null) {</span>
+<span class="nc" id="L129">			int baseEvasion = 4 + hero.lvl;</span>
+<span class="nc" id="L130">			int heroEvasion = (int)((4 + hero.lvl) * RingOfEvasion.evasionMultiplier( hero ));</span>
+			
+			//if the hero has more/less evasion, 50% of it is applied
+			//includes ring of evasion boost
+<span class="nc" id="L134">			return super.defenseSkill(enemy) * (baseEvasion + heroEvasion) / 2;</span>
+		} else {
+<span class="nc" id="L136">			return 0;</span>
+		}
+	}
+	
+	@Override
+	public float attackDelay() {
+<span class="nc" id="L142">		return hero.attackDelay(); //handles ring of furor</span>
+	}
+	
+	@Override
+	protected boolean canAttack(Char enemy) {
+<span class="nc bnc" id="L147" title="All 6 branches missed.">		return super.canAttack(enemy) || (hero.belongings.weapon() != null &amp;&amp; hero.belongings.weapon().canReach(this, enemy.pos));</span>
+	}
+	
+	@Override
+	public int drRoll() {
+<span class="nc" id="L152">		int dr = super.drRoll();</span>
+<span class="nc bnc" id="L153" title="All 4 branches missed.">		if (hero != null &amp;&amp; hero.belongings.weapon() != null){</span>
+<span class="nc" id="L154">			return dr + Random.NormalIntRange(0, hero.belongings.weapon().defenseFactor(this)/2);</span>
+		} else {
+<span class="nc" id="L156">			return dr;</span>
+		}
+	}
+	
+	@Override
+	public int attackProc( Char enemy, int damage ) {
+<span class="nc" id="L162">		damage = super.attackProc( enemy, damage );</span>
+		
+<span class="nc" id="L164">		MirrorInvis buff = buff(MirrorInvis.class);</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">		if (buff != null){</span>
+<span class="nc" id="L166">			buff.detach();</span>
+		}
+		
+<span class="nc bnc" id="L169" title="All 2 branches missed.">		if (enemy instanceof Mob) {</span>
+<span class="nc" id="L170">			((Mob)enemy).aggro( this );</span>
+		}
+<span class="nc bnc" id="L172" title="All 2 branches missed.">		if (hero.belongings.weapon() != null){</span>
+<span class="nc" id="L173">			damage = hero.belongings.weapon().proc( this, enemy, damage );</span>
+<span class="nc bnc" id="L174" title="All 4 branches missed.">			if (!enemy.isAlive() &amp;&amp; enemy == Dungeon.hero){</span>
+<span class="nc" id="L175">				Dungeon.fail(this);</span>
+<span class="nc" id="L176">				GLog.n( Messages.capitalize(Messages.get(Char.class, &quot;kill&quot;, name())) );</span>
+			}
+<span class="nc" id="L178">			return damage;</span>
+		} else {
+<span class="nc" id="L180">			return damage;</span>
+		}
+	}
+	
+	@Override
+	public CharSprite sprite() {
+<span class="nc" id="L186">		CharSprite s = super.sprite();</span>
+		
+<span class="nc" id="L188">		hero = (Hero)Actor.findById(heroID);</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">		if (hero != null) {</span>
+<span class="nc" id="L190">			armTier = hero.tier();</span>
+		} else {
+<span class="nc" id="L192">			armTier = 1;</span>
+		}
+<span class="nc" id="L194">		((MirrorSprite)s).updateArmor( armTier );</span>
+<span class="nc" id="L195">		return s;</span>
+	}
+	
+	{
+<span class="nc" id="L199">		immunities.add( ToxicGas.class );</span>
+<span class="nc" id="L200">		immunities.add( CorrosiveGas.class );</span>
+<span class="nc" id="L201">		immunities.add( Burning.class );</span>
+<span class="nc" id="L202">		immunities.add( AllyBuff.class );</span>
+<span class="nc" id="L203">	}</span>
+	
+<span class="nc" id="L205">	public static class MirrorInvis extends Invisibility {</span>
+		
+		{
+<span class="nc" id="L208">			announced = false;</span>
+<span class="nc" id="L209">		}</span>
+		
+		@Override
+		public int icon() {
+<span class="nc" id="L213">			return BuffIndicator.NONE;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

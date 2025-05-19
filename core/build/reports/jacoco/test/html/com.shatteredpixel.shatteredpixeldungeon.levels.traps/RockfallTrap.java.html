@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RockfallTrap.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.traps</a> &gt; <span class="el_source">RockfallTrap.java</span></div><h1>RockfallTrap.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.traps;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.levels.RegularLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.BArray;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L46">public class RockfallTrap extends Trap {</span>
+
+	{
+<span class="nc" id="L49">		color = GREY;</span>
+<span class="nc" id="L50">		shape = DIAMOND;</span>
+		
+<span class="nc" id="L52">		canBeHidden = false;</span>
+<span class="nc" id="L53">		avoidsHallways = true;</span>
+<span class="nc" id="L54">	}</span>
+	
+	@Override
+	public void activate() {
+		
+<span class="nc" id="L59">		ArrayList&lt;Integer&gt; rockCells = new ArrayList&lt;&gt;();</span>
+		
+		//determines if the trap is actually in the world, or if it is being spawned for its effect
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		boolean onGround = Dungeon.level.traps.get(pos) == this;</span>
+<span class="nc" id="L63">		Room r = null;</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">		if (Dungeon.level instanceof RegularLevel){</span>
+<span class="nc" id="L65">			r = ((RegularLevel) Dungeon.level).room(pos);</span>
+		}
+		
+<span class="nc bnc" id="L68" title="All 4 branches missed.">		if (onGround &amp;&amp; r != null){</span>
+			int cell;
+<span class="nc bnc" id="L70" title="All 2 branches missed.">			for (Point p : r.getPoints()){</span>
+<span class="nc" id="L71">				cell = Dungeon.level.pointToCell(p);</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">				if (!Dungeon.level.solid[cell]){</span>
+<span class="nc" id="L73">					rockCells.add(cell);</span>
+				}
+<span class="nc" id="L75">			}</span>
+			
+		//if we don't have a room, then just do 5x5
+		} else {
+<span class="nc" id="L79">			PathFinder.buildDistanceMap( pos, BArray.not( Dungeon.level.solid, null ), 2 );</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">			for (int i = 0; i &lt; PathFinder.distance.length; i++) {</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">				if (PathFinder.distance[i] &lt; Integer.MAX_VALUE) {</span>
+<span class="nc" id="L82">					rockCells.add(i);</span>
+				}
+			}
+		}
+		
+<span class="nc" id="L87">		boolean seen = false;</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		for (int cell : rockCells){</span>
+
+<span class="nc bnc" id="L90" title="All 2 branches missed.">			if (Dungeon.level.heroFOV[ cell ]){</span>
+<span class="nc" id="L91">				CellEmitter.get( cell - Dungeon.level.width() ).start(Speck.factory(Speck.ROCK), 0.07f, 10);</span>
+<span class="nc" id="L92">				seen = true;</span>
+			}
+
+<span class="nc" id="L95">			Char ch = Actor.findChar( cell );</span>
+
+<span class="nc bnc" id="L97" title="All 4 branches missed.">			if (ch != null &amp;&amp; ch.isAlive()){</span>
+<span class="nc" id="L98">				int damage = Random.NormalIntRange(5+scalingDepth(), 10+scalingDepth()*2);</span>
+<span class="nc" id="L99">				damage -= ch.drRoll();</span>
+<span class="nc" id="L100">				ch.damage( Math.max(damage, 0) , this);</span>
+
+<span class="nc bnc" id="L102" title="All 2 branches missed.">				if (ch.isActive()) {</span>
+<span class="nc" id="L103">					Buff.prolong(ch, Paralysis.class, Paralysis.DURATION);</span>
+<span class="nc bnc" id="L104" title="All 4 branches missed.">				} else if (!ch.isAlive() &amp;&amp; ch == Dungeon.hero){</span>
+<span class="nc" id="L105">					Dungeon.fail( this );</span>
+<span class="nc" id="L106">					GLog.n( Messages.get(this, &quot;ondeath&quot;) );</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">					if (reclaimed) Badges.validateDeathFromFriendlyMagic();</span>
+				}
+			}
+<span class="nc" id="L110">		}</span>
+		
+<span class="nc bnc" id="L112" title="All 2 branches missed.">		if (seen){</span>
+<span class="nc" id="L113">			PixelScene.shake(3, 0.7f);</span>
+<span class="nc" id="L114">			Sample.INSTANCE.play(Assets.Sounds.ROCKS);</span>
+		}
+
+<span class="nc" id="L117">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

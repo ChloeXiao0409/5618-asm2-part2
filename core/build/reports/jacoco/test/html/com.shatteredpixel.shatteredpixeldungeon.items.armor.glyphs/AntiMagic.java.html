@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AntiMagic.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs</a> &gt; <span class="el_source">AntiMagic.java</span></div><h1>AntiMagic.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs;
+
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Charm;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Degrade;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Hex;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicalSleep;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Vulnerable;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Weakness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.Judgement;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.duelist.ElementalStrike;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.mage.ElementalBlast;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.mage.WarpBeacon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.GuidingLight;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.HolyLance;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.HolyWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.Smite;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.Sunray;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.CrystalWisp;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DM100;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Eye;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Shaman;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Warlock;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.YogFist;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.bombs.ArcaneBomb;
+import com.shatteredpixel.shatteredpixeldungeon.items.bombs.HolyBomb;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRetribution;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfPsionicBlast;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.CursedWand;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfBlastWave;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfDisintegration;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfFireblast;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfFrost;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfLightning;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfLivingEarth;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfPrismaticLight;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfTransfusion;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfWarding;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Blazing;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Grim;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Shocking;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.HolyDart;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.DisintegrationTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.GrimTrap;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.watabou.utils.Random;
+
+import java.util.HashSet;
+
+<span class="nc" id="L74">public class AntiMagic extends Armor.Glyph {</span>
+
+<span class="nc" id="L76">	private static ItemSprite.Glowing TEAL = new ItemSprite.Glowing( 0x88EEFF );</span>
+	
+<span class="nc" id="L78">	public static final HashSet&lt;Class&gt; RESISTS = new HashSet&lt;&gt;();</span>
+	static {
+<span class="nc" id="L80">		RESISTS.add( MagicalSleep.class );</span>
+<span class="nc" id="L81">		RESISTS.add( Charm.class );</span>
+<span class="nc" id="L82">		RESISTS.add( Weakness.class );</span>
+<span class="nc" id="L83">		RESISTS.add( Vulnerable.class );</span>
+<span class="nc" id="L84">		RESISTS.add( Hex.class );</span>
+<span class="nc" id="L85">		RESISTS.add( Degrade.class );</span>
+		
+<span class="nc" id="L87">		RESISTS.add( DisintegrationTrap.class );</span>
+<span class="nc" id="L88">		RESISTS.add( GrimTrap.class );</span>
+
+<span class="nc" id="L90">		RESISTS.add( ArcaneBomb.class );</span>
+<span class="nc" id="L91">		RESISTS.add( HolyBomb.HolyDamage.class );</span>
+<span class="nc" id="L92">		RESISTS.add( ScrollOfRetribution.class );</span>
+<span class="nc" id="L93">		RESISTS.add( ScrollOfPsionicBlast.class );</span>
+<span class="nc" id="L94">		RESISTS.add( ScrollOfTeleportation.class );</span>
+<span class="nc" id="L95">		RESISTS.add( HolyDart.class );</span>
+
+<span class="nc" id="L97">		RESISTS.add( GuidingLight.class );</span>
+<span class="nc" id="L98">		RESISTS.add( HolyWeapon.class );</span>
+<span class="nc" id="L99">		RESISTS.add( Sunray.class );</span>
+<span class="nc" id="L100">		RESISTS.add( HolyLance.class );</span>
+<span class="nc" id="L101">		RESISTS.add( Smite.class );</span>
+<span class="nc" id="L102">		RESISTS.add( Judgement.class );</span>
+
+<span class="nc" id="L104">		RESISTS.add( ElementalBlast.class );</span>
+<span class="nc" id="L105">		RESISTS.add( CursedWand.class );</span>
+<span class="nc" id="L106">		RESISTS.add( WandOfBlastWave.class );</span>
+<span class="nc" id="L107">		RESISTS.add( WandOfDisintegration.class );</span>
+<span class="nc" id="L108">		RESISTS.add( WandOfFireblast.class );</span>
+<span class="nc" id="L109">		RESISTS.add( WandOfFrost.class );</span>
+<span class="nc" id="L110">		RESISTS.add( WandOfLightning.class );</span>
+<span class="nc" id="L111">		RESISTS.add( WandOfLivingEarth.class );</span>
+<span class="nc" id="L112">		RESISTS.add( WandOfMagicMissile.class );</span>
+<span class="nc" id="L113">		RESISTS.add( WandOfPrismaticLight.class );</span>
+<span class="nc" id="L114">		RESISTS.add( WandOfTransfusion.class );</span>
+<span class="nc" id="L115">		RESISTS.add( WandOfWarding.Ward.class );</span>
+
+<span class="nc" id="L117">		RESISTS.add( ElementalStrike.class );</span>
+<span class="nc" id="L118">		RESISTS.add( Blazing.class );</span>
+<span class="nc" id="L119">		RESISTS.add( WandOfFireblast.FireBlastOnHit.class );</span>
+<span class="nc" id="L120">		RESISTS.add( Shocking.class );</span>
+<span class="nc" id="L121">		RESISTS.add( WandOfLightning.LightningOnHit.class );</span>
+<span class="nc" id="L122">		RESISTS.add( Grim.class );</span>
+
+<span class="nc" id="L124">		RESISTS.add( WarpBeacon.class );</span>
+		
+<span class="nc" id="L126">		RESISTS.add( DM100.LightningBolt.class );</span>
+<span class="nc" id="L127">		RESISTS.add( Shaman.EarthenBolt.class );</span>
+<span class="nc" id="L128">		RESISTS.add( CrystalWisp.LightBeam.class );</span>
+<span class="nc" id="L129">		RESISTS.add( Warlock.DarkBolt.class );</span>
+<span class="nc" id="L130">		RESISTS.add( Eye.DeathGaze.class );</span>
+<span class="nc" id="L131">		RESISTS.add( YogFist.BrightFist.LightBeam.class );</span>
+<span class="nc" id="L132">		RESISTS.add( YogFist.DarkFist.DarkBolt.class );</span>
+<span class="nc" id="L133">	}</span>
+	
+	@Override
+	public int proc(Armor armor, Char attacker, Char defender, int damage) {
+		//no proc effect, triggers in Char.damage
+<span class="nc" id="L138">		return damage;</span>
+	}
+	
+	public static int drRoll( Char owner, int level ){
+<span class="nc bnc" id="L142" title="All 2 branches missed.">		if (level == -1){</span>
+<span class="nc" id="L143">			return 0;</span>
+		} else {
+<span class="nc" id="L145">			return Random.NormalIntRange(</span>
+<span class="nc" id="L146">					Math.round(level * genericProcChanceMultiplier(owner)),</span>
+<span class="nc" id="L147">					Math.round((3 + (level * 1.5f)) * genericProcChanceMultiplier(owner)));</span>
+		}
+	}
+
+	@Override
+	public ItemSprite.Glowing glowing() {
+<span class="nc" id="L153">		return TEAL;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

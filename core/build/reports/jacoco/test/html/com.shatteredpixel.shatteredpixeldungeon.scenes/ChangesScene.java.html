@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChangesScene.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.scenes</a> &gt; <span class="el_source">ChangesScene.java</span></div><h1>ChangesScene.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.scenes;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Archs;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ExitButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ScrollPane;
+import com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.changelist.ChangeInfo;
+import com.shatteredpixel.shatteredpixeldungeon.ui.changelist.WndChanges;
+import com.shatteredpixel.shatteredpixeldungeon.ui.changelist.WndChangesTabbed;
+import com.shatteredpixel.shatteredpixeldungeon.ui.changelist.v0_1_X_Changes;
+import com.shatteredpixel.shatteredpixeldungeon.ui.changelist.v0_2_X_Changes;
+import com.shatteredpixel.shatteredpixeldungeon.ui.changelist.v0_3_X_Changes;
+import com.shatteredpixel.shatteredpixeldungeon.ui.changelist.v0_4_X_Changes;
+import com.shatteredpixel.shatteredpixeldungeon.ui.changelist.v0_5_X_Changes;
+import com.shatteredpixel.shatteredpixeldungeon.ui.changelist.v0_6_X_Changes;
+import com.shatteredpixel.shatteredpixeldungeon.ui.changelist.v0_7_X_Changes;
+import com.shatteredpixel.shatteredpixeldungeon.ui.changelist.v0_8_X_Changes;
+import com.shatteredpixel.shatteredpixeldungeon.ui.changelist.v0_9_X_Changes;
+import com.shatteredpixel.shatteredpixeldungeon.ui.changelist.v1_X_Changes;
+import com.shatteredpixel.shatteredpixeldungeon.ui.changelist.v2_X_Changes;
+import com.shatteredpixel.shatteredpixeldungeon.ui.changelist.v3_X_Changes;
+import com.shatteredpixel.shatteredpixeldungeon.windows.IconTitle;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.NinePatch;
+import com.watabou.noosa.Scene;
+import com.watabou.noosa.audio.Music;
+import com.watabou.noosa.ui.Component;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L61">public class ChangesScene extends PixelScene {</span>
+	
+<span class="nc" id="L63">	public static int changesSelected = 0;</span>
+
+	private NinePatch rightPanel;
+	private ScrollPane rightScroll;
+	private IconTitle changeTitle;
+	private RenderedTextBlock changeBody;
+	
+	@Override
+	public void create() {
+<span class="nc" id="L72">		super.create();</span>
+
+<span class="nc" id="L74">		Music.INSTANCE.playTracks(</span>
+				new String[]{Assets.Music.THEME_1, Assets.Music.THEME_2},
+				new float[]{1, 1},
+				false);
+
+<span class="nc" id="L79">		int w = Camera.main.width;</span>
+<span class="nc" id="L80">		int h = Camera.main.height;</span>
+
+<span class="nc" id="L82">		IconTitle title = new IconTitle(Icons.CHANGES.get(), Messages.get(this, &quot;title&quot;));</span>
+<span class="nc" id="L83">		title.setSize(200, 0);</span>
+<span class="nc" id="L84">		title.setPos(</span>
+<span class="nc" id="L85">				(w - title.reqWidth()) / 2f,</span>
+<span class="nc" id="L86">				(20 - title.height()) / 2f</span>
+		);
+<span class="nc" id="L88">		align(title);</span>
+<span class="nc" id="L89">		add(title);</span>
+
+<span class="nc" id="L91">		ExitButton btnExit = new ExitButton();</span>
+<span class="nc" id="L92">		btnExit.setPos( Camera.main.width - btnExit.width(), 0 );</span>
+<span class="nc" id="L93">		add( btnExit );</span>
+
+<span class="nc" id="L95">		NinePatch panel = Chrome.get(Chrome.Type.TOAST);</span>
+
+<span class="nc" id="L97">		int pw = 135 + panel.marginLeft() + panel.marginRight() - 2;</span>
+<span class="nc" id="L98">		int ph = h - 36;</span>
+
+<span class="nc bnc" id="L100" title="All 4 branches missed.">		if (h &gt;= PixelScene.MIN_HEIGHT_FULL &amp;&amp; w &gt;= 300) {</span>
+<span class="nc" id="L101">			panel.size( pw, ph );</span>
+<span class="nc" id="L102">			panel.x = (w - pw) / 2f - pw/2 - 1;</span>
+<span class="nc" id="L103">			panel.y = 20;</span>
+
+<span class="nc" id="L105">			rightPanel = Chrome.get(Chrome.Type.TOAST);</span>
+<span class="nc" id="L106">			rightPanel.size( pw, ph );</span>
+<span class="nc" id="L107">			rightPanel.x = (w - pw) / 2f + pw/2 + 1;</span>
+<span class="nc" id="L108">			rightPanel.y = 20;</span>
+<span class="nc" id="L109">			add(rightPanel);</span>
+
+<span class="nc" id="L111">			rightScroll = new ScrollPane(new Component());</span>
+<span class="nc" id="L112">			add(rightScroll);</span>
+<span class="nc" id="L113">			rightScroll.setRect(</span>
+<span class="nc" id="L114">					rightPanel.x + rightPanel.marginLeft(),</span>
+<span class="nc" id="L115">					rightPanel.y + rightPanel.marginTop()-1,</span>
+<span class="nc" id="L116">					rightPanel.innerWidth() + 2,</span>
+<span class="nc" id="L117">					rightPanel.innerHeight() + 2);</span>
+<span class="nc" id="L118">			rightScroll.scrollTo(0, 0);</span>
+
+<span class="nc" id="L120">			changeTitle = new IconTitle(Icons.get(Icons.CHANGES), Messages.get(this, &quot;right_title&quot;));</span>
+<span class="nc" id="L121">			changeTitle.setPos(0, 1);</span>
+<span class="nc" id="L122">			changeTitle.setSize(pw, 20);</span>
+<span class="nc" id="L123">			rightScroll.content().add(changeTitle);</span>
+
+<span class="nc" id="L125">			String body = Messages.get(this, &quot;right_body&quot;);</span>
+
+<span class="nc" id="L127">			changeBody = PixelScene.renderTextBlock(body, 6);</span>
+<span class="nc" id="L128">			changeBody.maxWidth(pw - panel.marginHor());</span>
+<span class="nc" id="L129">			changeBody.setPos(0, changeTitle.bottom()+2);</span>
+<span class="nc" id="L130">			rightScroll.content().add(changeBody);</span>
+
+<span class="nc" id="L132">		} else {</span>
+<span class="nc" id="L133">			panel.size( pw, ph );</span>
+<span class="nc" id="L134">			panel.x = (w - pw) / 2f;</span>
+<span class="nc" id="L135">			panel.y = 20;</span>
+		}
+<span class="nc" id="L137">		align( panel );</span>
+<span class="nc" id="L138">		add( panel );</span>
+		
+<span class="nc" id="L140">		final ArrayList&lt;ChangeInfo&gt; changeInfos = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L142" title="All 2 branches missed.">		if (Messages.lang() != Languages.ENGLISH){</span>
+<span class="nc" id="L143">			ChangeInfo langWarn = new ChangeInfo(&quot;&quot;, true, Messages.get(this, &quot;lang_warn&quot;));</span>
+<span class="nc" id="L144">			langWarn.hardlight(CharSprite.WARNING);</span>
+<span class="nc" id="L145">			changeInfos.add(langWarn);</span>
+		}
+		
+<span class="nc bnc" id="L148" title="All 8 branches missed.">		switch (changesSelected){</span>
+			case 0: default:
+<span class="nc" id="L150">				v3_X_Changes.addAllChanges(changeInfos);</span>
+<span class="nc" id="L151">				break;</span>
+			case 1:
+<span class="nc" id="L153">				v2_X_Changes.addAllChanges(changeInfos);</span>
+<span class="nc" id="L154">				break;</span>
+			case 2:
+<span class="nc" id="L156">				v1_X_Changes.addAllChanges(changeInfos);</span>
+<span class="nc" id="L157">				break;</span>
+			case 3:
+<span class="nc" id="L159">				v0_9_X_Changes.addAllChanges(changeInfos);</span>
+<span class="nc" id="L160">				break;</span>
+			case 4:
+<span class="nc" id="L162">				v0_8_X_Changes.addAllChanges(changeInfos);</span>
+<span class="nc" id="L163">				break;</span>
+			case 5:
+<span class="nc" id="L165">				v0_7_X_Changes.addAllChanges(changeInfos);</span>
+<span class="nc" id="L166">				break;</span>
+			case 6:
+<span class="nc" id="L168">				v0_6_X_Changes.addAllChanges(changeInfos);</span>
+<span class="nc" id="L169">				break;</span>
+			case 7:
+<span class="nc" id="L171">				v0_5_X_Changes.addAllChanges(changeInfos);</span>
+<span class="nc" id="L172">				v0_4_X_Changes.addAllChanges(changeInfos);</span>
+<span class="nc" id="L173">				v0_3_X_Changes.addAllChanges(changeInfos);</span>
+<span class="nc" id="L174">				v0_2_X_Changes.addAllChanges(changeInfos);</span>
+<span class="nc" id="L175">				v0_1_X_Changes.addAllChanges(changeInfos);</span>
+				break;
+		}
+
+<span class="nc" id="L179">		ScrollPane list = new ScrollPane( new Component() ){</span>
+
+			@Override
+			public void onClick(float x, float y) {
+<span class="nc bnc" id="L183" title="All 2 branches missed.">				for (ChangeInfo info : changeInfos){</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">					if (info.onClick( x, y )){</span>
+<span class="nc" id="L185">						return;</span>
+					}
+<span class="nc" id="L187">				}</span>
+<span class="nc" id="L188">			}</span>
+
+		};
+<span class="nc" id="L191">		add( list );</span>
+
+<span class="nc" id="L193">		Component content = list.content();</span>
+<span class="nc" id="L194">		content.clear();</span>
+
+<span class="nc" id="L196">		float posY = 0;</span>
+<span class="nc" id="L197">		float nextPosY = 0;</span>
+<span class="nc" id="L198">		boolean second = false;</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">		for (ChangeInfo info : changeInfos){</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">			if (info.major) {</span>
+<span class="nc" id="L201">				posY = nextPosY;</span>
+<span class="nc" id="L202">				second = false;</span>
+<span class="nc" id="L203">				info.setRect(0, posY, panel.innerWidth(), 0);</span>
+<span class="nc" id="L204">				content.add(info);</span>
+<span class="nc" id="L205">				posY = nextPosY = info.bottom();</span>
+			} else {
+<span class="nc bnc" id="L207" title="All 2 branches missed.">				if (!second){</span>
+<span class="nc" id="L208">					second = true;</span>
+<span class="nc" id="L209">					info.setRect(0, posY, panel.innerWidth()/2f, 0);</span>
+<span class="nc" id="L210">					content.add(info);</span>
+<span class="nc" id="L211">					nextPosY = info.bottom();</span>
+				} else {
+<span class="nc" id="L213">					second = false;</span>
+<span class="nc" id="L214">					info.setRect(panel.innerWidth()/2f, posY, panel.innerWidth()/2f, 0);</span>
+<span class="nc" id="L215">					content.add(info);</span>
+<span class="nc" id="L216">					nextPosY = Math.max(info.bottom(), nextPosY);</span>
+<span class="nc" id="L217">					posY = nextPosY;</span>
+				}
+			}
+<span class="nc" id="L220">		}</span>
+
+<span class="nc" id="L222">		content.setSize( panel.innerWidth(), (int)Math.ceil(posY) );</span>
+
+<span class="nc" id="L224">		list.setRect(</span>
+<span class="nc" id="L225">				panel.x + panel.marginLeft(),</span>
+<span class="nc" id="L226">				panel.y + panel.marginTop() - 1,</span>
+<span class="nc" id="L227">				panel.innerWidth() + 2,</span>
+<span class="nc" id="L228">				panel.innerHeight() + 2);</span>
+<span class="nc" id="L229">		list.scrollTo(0, 0);</span>
+
+<span class="nc" id="L231">		StyledButton btn3_X = new StyledButton(Chrome.Type.GREY_BUTTON_TR, &quot;3.X&quot;, 8){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L234">				super.onClick();</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">				if (changesSelected != 0) {</span>
+<span class="nc" id="L236">					changesSelected = 0;</span>
+<span class="nc" id="L237">					ShatteredPixelDungeon.seamlessResetScene();</span>
+				}
+<span class="nc" id="L239">			}</span>
+		};
+<span class="nc bnc" id="L241" title="All 2 branches missed.">		if (changesSelected != 0) btn3_X.textColor( 0xBBBBBB );</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">		btn3_X.setRect(list.left()-4f, list.bottom(), 19, changesSelected == 0 ? 19 : 15);</span>
+<span class="nc" id="L243">		addToBack(btn3_X);</span>
+
+<span class="nc" id="L245">		StyledButton btn2_X = new StyledButton(Chrome.Type.GREY_BUTTON_TR, &quot;2.X&quot;, 8){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L248">				super.onClick();</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">				if (changesSelected != 1) {</span>
+<span class="nc" id="L250">					changesSelected = 1;</span>
+<span class="nc" id="L251">					ShatteredPixelDungeon.seamlessResetScene();</span>
+				}
+<span class="nc" id="L253">			}</span>
+		};
+<span class="nc bnc" id="L255" title="All 2 branches missed.">		if (changesSelected != 1) btn2_X.textColor( 0xBBBBBB );</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">		btn2_X.setRect(btn3_X.right()-2, list.bottom(), 19, changesSelected == 1 ? 19 : 15);</span>
+<span class="nc" id="L257">		addToBack(btn2_X);</span>
+
+<span class="nc" id="L259">		StyledButton btn1_X = new StyledButton(Chrome.Type.GREY_BUTTON_TR, &quot;1.X&quot;, 8){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L262">				super.onClick();</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">				if (changesSelected != 2) {</span>
+<span class="nc" id="L264">					changesSelected = 2;</span>
+<span class="nc" id="L265">					ShatteredPixelDungeon.seamlessResetScene();</span>
+				}
+<span class="nc" id="L267">			}</span>
+		};
+<span class="nc bnc" id="L269" title="All 2 branches missed.">		if (changesSelected != 2) btn1_X.textColor( 0xBBBBBB );</span>
+<span class="nc bnc" id="L270" title="All 2 branches missed.">		btn1_X.setRect(btn2_X.right()-2, list.bottom(), 19, changesSelected == 2 ? 19 : 15);</span>
+<span class="nc" id="L271">		addToBack(btn1_X);</span>
+
+<span class="nc" id="L273">		StyledButton btn0_9 = new StyledButton(Chrome.Type.GREY_BUTTON_TR, &quot;0.9&quot;, 8){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L276">				super.onClick();</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">				if (changesSelected != 3) {</span>
+<span class="nc" id="L278">					changesSelected = 3;</span>
+<span class="nc" id="L279">					ShatteredPixelDungeon.seamlessResetScene();</span>
+				}
+<span class="nc" id="L281">			}</span>
+		};
+<span class="nc bnc" id="L283" title="All 2 branches missed.">		if (changesSelected != 3) btn0_9.textColor( 0xBBBBBB );</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">		btn0_9.setRect(btn1_X.right()-2, list.bottom(), 19, changesSelected == 3 ? 19 : 15);</span>
+<span class="nc" id="L285">		addToBack(btn0_9);</span>
+
+<span class="nc" id="L287">		StyledButton btn0_8 = new StyledButton(Chrome.Type.GREY_BUTTON_TR, &quot;0.8&quot;, 8){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L290">				super.onClick();</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">				if (changesSelected != 4) {</span>
+<span class="nc" id="L292">					changesSelected = 4;</span>
+<span class="nc" id="L293">					ShatteredPixelDungeon.seamlessResetScene();</span>
+				}
+<span class="nc" id="L295">			}</span>
+		};
+<span class="nc bnc" id="L297" title="All 2 branches missed.">		if (changesSelected != 4) btn0_8.textColor( 0xBBBBBB );</span>
+<span class="nc bnc" id="L298" title="All 2 branches missed.">		btn0_8.setRect(btn0_9.right()-2, list.bottom(), 19, changesSelected == 4 ? 19 : 15);</span>
+<span class="nc" id="L299">		addToBack(btn0_8);</span>
+		
+<span class="nc" id="L301">		StyledButton btn0_7 = new StyledButton(Chrome.Type.GREY_BUTTON_TR, &quot;0.7&quot;, 8){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L304">				super.onClick();</span>
+<span class="nc bnc" id="L305" title="All 2 branches missed.">				if (changesSelected != 5) {</span>
+<span class="nc" id="L306">					changesSelected = 5;</span>
+<span class="nc" id="L307">					ShatteredPixelDungeon.seamlessResetScene();</span>
+				}
+<span class="nc" id="L309">			}</span>
+		};
+<span class="nc bnc" id="L311" title="All 2 branches missed.">		if (changesSelected != 5) btn0_7.textColor( 0xBBBBBB );</span>
+<span class="nc bnc" id="L312" title="All 2 branches missed.">		btn0_7.setRect(btn0_8.right()-2, btn0_8.top(), 19, changesSelected == 5 ? 19 : 15);</span>
+<span class="nc" id="L313">		addToBack(btn0_7);</span>
+		
+<span class="nc" id="L315">		StyledButton btn0_6 = new StyledButton(Chrome.Type.GREY_BUTTON_TR, &quot;0.6&quot;, 8){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L318">				super.onClick();</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">				if (changesSelected != 6) {</span>
+<span class="nc" id="L320">					changesSelected = 6;</span>
+<span class="nc" id="L321">					ShatteredPixelDungeon.seamlessResetScene();</span>
+				}
+<span class="nc" id="L323">			}</span>
+		};
+<span class="nc bnc" id="L325" title="All 2 branches missed.">		if (changesSelected != 6) btn0_6.textColor( 0xBBBBBB );</span>
+<span class="nc bnc" id="L326" title="All 2 branches missed.">		btn0_6.setRect(btn0_7.right()-2, btn0_8.top(), 19, changesSelected == 6 ? 19 : 15);</span>
+<span class="nc" id="L327">		addToBack(btn0_6);</span>
+		
+<span class="nc" id="L329">		StyledButton btnOld = new StyledButton(Chrome.Type.GREY_BUTTON_TR, &quot;0.5-&quot;, 8){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L332">				super.onClick();</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">				if (changesSelected != 7) {</span>
+<span class="nc" id="L334">					changesSelected = 7;</span>
+<span class="nc" id="L335">					ShatteredPixelDungeon.seamlessResetScene();</span>
+				}
+<span class="nc" id="L337">			}</span>
+		};
+<span class="nc bnc" id="L339" title="All 2 branches missed.">		if (changesSelected != 7) btnOld.textColor( 0xBBBBBB );</span>
+<span class="nc bnc" id="L340" title="All 2 branches missed.">		btnOld.setRect(btn0_6.right()-2, btn0_8.top(), 22, changesSelected == 7 ? 19 : 15);</span>
+<span class="nc" id="L341">		addToBack(btnOld);</span>
+
+<span class="nc" id="L343">		Archs archs = new Archs();</span>
+<span class="nc" id="L344">		archs.setSize( Camera.main.width, Camera.main.height );</span>
+<span class="nc" id="L345">		addToBack( archs );</span>
+
+<span class="nc" id="L347">		fadeIn();</span>
+<span class="nc" id="L348">	}</span>
+
+	private void updateChangesText(Image icon, String title, String... messages){
+<span class="nc bnc" id="L351" title="All 2 branches missed.">		if (changeTitle != null){</span>
+<span class="nc" id="L352">			changeTitle.icon(icon);</span>
+<span class="nc" id="L353">			changeTitle.label(title);</span>
+<span class="nc" id="L354">			changeTitle.setPos(changeTitle.left(), changeTitle.top());</span>
+
+<span class="nc" id="L356">			String message = &quot;&quot;;</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">			for (int i = 0; i &lt; messages.length; i++){</span>
+<span class="nc" id="L358">				message += messages[i];</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">				if (i != messages.length-1){</span>
+<span class="nc" id="L360">					message += &quot;\n\n&quot;;</span>
+				}
+			}
+<span class="nc" id="L363">			changeBody.text(message);</span>
+<span class="nc" id="L364">			rightScroll.content().setSize(rightScroll.width(), changeBody.bottom()+2);</span>
+<span class="nc" id="L365">			rightScroll.setSize(rightScroll.width(), rightScroll.height());</span>
+<span class="nc" id="L366">			rightScroll.scrollTo(0, 0);</span>
+
+<span class="nc" id="L368">		} else {</span>
+<span class="nc bnc" id="L369" title="All 2 branches missed.">			if (messages.length == 1) {</span>
+<span class="nc" id="L370">				addToFront(new WndChanges(icon, title, messages[0]));</span>
+			} else {
+<span class="nc" id="L372">				addToFront(new WndChangesTabbed(icon, title, messages));</span>
+			}
+		}
+<span class="nc" id="L375">	}</span>
+
+	public static void showChangeInfo(Image icon, String title, String... messages){
+<span class="nc" id="L378">		Scene s = ShatteredPixelDungeon.scene();</span>
+<span class="nc bnc" id="L379" title="All 2 branches missed.">		if (s instanceof ChangesScene){</span>
+<span class="nc" id="L380">			((ChangesScene) s).updateChangesText(icon, title, messages);</span>
+<span class="nc" id="L381">			return;</span>
+		}
+<span class="nc bnc" id="L383" title="All 2 branches missed.">		if (messages.length == 1) {</span>
+<span class="nc" id="L384">			s.addToFront(new WndChanges(icon, title, messages[0]));</span>
+		} else {
+<span class="nc" id="L386">			s.addToFront(new WndChangesTabbed(icon, title, messages));</span>
+		}
+<span class="nc" id="L388">	}</span>
+	
+	@Override
+	protected void onBackPressed() {
+<span class="nc" id="L392">		ShatteredPixelDungeon.switchNoFade(TitleScene.class);</span>
+<span class="nc" id="L393">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

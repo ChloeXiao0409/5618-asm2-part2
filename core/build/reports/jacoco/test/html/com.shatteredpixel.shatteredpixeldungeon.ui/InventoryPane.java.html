@@ -1,0 +1,704 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InventoryPane.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">InventoryPane.java</span></div><h1>InventoryPane.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.MagicalHolster;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.PotionBandolier;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.ScrollHolder;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.VelvetPouch;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoItem;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndUseItem;
+import com.watabou.gltextures.TextureCache;
+import com.watabou.input.GameAction;
+import com.watabou.input.KeyBindings;
+import com.watabou.input.KeyEvent;
+import com.watabou.input.PointerEvent;
+import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.ColorBlock;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.NinePatch;
+import com.watabou.noosa.PointerArea;
+import com.watabou.noosa.ui.Component;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Signal;
+
+import java.util.ArrayList;
+
+public class InventoryPane extends Component {
+
+	private NinePatch bg;
+	private NinePatch bg2; //2 backgrounds to reduce transparency
+
+	//used to prevent clicks through the BG normally, or to cancel selectors if they're enabled
+	private PointerArea blocker;
+
+	private Signal.Listener&lt;KeyEvent&gt; keyBlocker;
+
+	private static InventoryPane instance;
+
+	private ArrayList&lt;InventorySlot&gt; equipped;
+	private ArrayList&lt;InventorySlot&gt; bagItems;
+
+	private Image gold;
+	private BitmapText goldTxt;
+	private Image energy;
+	private BitmapText energyTxt;
+	private RenderedTextBlock promptTxt;
+
+	private ArrayList&lt;BagButton&gt; bags;
+
+	public static final int WIDTH = 187;
+	public static final int HEIGHT = 82;
+
+	private static final int SLOT_WIDTH = 17;
+	private static final int SLOT_HEIGHT = 24;
+
+	private WndBag.ItemSelector selector;
+
+	public static Bag lastBag;
+
+<span class="nc" id="L93">	private boolean lastEnabled = true;</span>
+
+	private static Image crossB;
+	private static Image crossM;
+
+<span class="nc" id="L98">	private static boolean targeting = false;</span>
+<span class="nc" id="L99">	private static InventorySlot targetingSlot = null;</span>
+<span class="nc" id="L100">	public static Char lastTarget = null;</span>
+
+	public InventoryPane(){
+<span class="nc" id="L103">		super();</span>
+<span class="nc" id="L104">		instance = this;</span>
+<span class="nc" id="L105">	}</span>
+
+	@Override
+	public synchronized void destroy() {
+<span class="nc" id="L109">		KeyEvent.removeKeyListener(keyBlocker);</span>
+<span class="nc" id="L110">		super.destroy();</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		if (instance == this) instance = null;</span>
+<span class="nc" id="L112">	}</span>
+
+	@Override
+	protected void createChildren() {
+
+<span class="nc" id="L117">		bg = Chrome.get(Chrome.Type.TOAST_TR_HEAVY);</span>
+<span class="nc" id="L118">		add(bg);</span>
+
+<span class="nc" id="L120">		blocker = new PointerArea(0, 0, PixelScene.uiCamera.width, PixelScene.uiCamera.height){</span>
+			@Override
+			protected void onClick(PointerEvent event) {
+<span class="nc bnc" id="L123" title="All 4 branches missed.">				if (selector != null &amp;&amp; !bg.overlapsScreenPoint((int)event.current.x, (int)event.current.y)){</span>
+					//any windows opened as a consequence of this should be centered on the inventory
+<span class="nc" id="L125">					GameScene.centerNextWndOnInvPane();</span>
+<span class="nc" id="L126">					selector.onSelect(null);</span>
+<span class="nc" id="L127">					selector = null;</span>
+<span class="nc" id="L128">					updateInventory();</span>
+				}
+<span class="nc" id="L130">			}</span>
+		};
+<span class="nc" id="L132">		blocker.target = bg; //targets bg when there is no selector, otherwise targets itself</span>
+<span class="nc" id="L133">		add (blocker);</span>
+
+<span class="nc" id="L135">		keyBlocker = new Signal.Listener&lt;KeyEvent&gt;(){</span>
+			@Override
+			public boolean onSignal(KeyEvent keyEvent) {
+<span class="nc bnc" id="L138" title="All 6 branches missed.">				if (keyEvent.pressed &amp;&amp; isSelecting() &amp;&amp; InventoryPane.this.visible</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">						&amp;&amp; KeyBindings.getActionForKey(keyEvent) != SPDAction.BAG_1</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">						&amp;&amp; KeyBindings.getActionForKey(keyEvent) != SPDAction.BAG_2</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">						&amp;&amp; KeyBindings.getActionForKey(keyEvent) != SPDAction.BAG_3</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">						&amp;&amp; KeyBindings.getActionForKey(keyEvent) != SPDAction.BAG_4</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">						&amp;&amp; KeyBindings.getActionForKey(keyEvent) != SPDAction.BAG_5){</span>
+					//any windows opened as a consequence of this should be centered on the inventory
+<span class="nc" id="L145">					GameScene.centerNextWndOnInvPane();</span>
+<span class="nc" id="L146">					selector.onSelect(null);</span>
+<span class="nc" id="L147">					selector = null;</span>
+<span class="nc" id="L148">					updateInventory();</span>
+<span class="nc" id="L149">					return true;</span>
+				}
+<span class="nc" id="L151">				return false;</span>
+			}
+		};
+
+<span class="nc" id="L155">		equipped = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		for (int i = 0; i &lt; 5; i++){</span>
+<span class="nc" id="L157">			InventorySlot btn = new InventoryPaneSlot(null);</span>
+<span class="nc" id="L158">			equipped.add(btn);</span>
+<span class="nc" id="L159">			add(btn);</span>
+		}
+
+<span class="nc" id="L162">		gold = Icons.get(Icons.COIN_SML);</span>
+<span class="nc" id="L163">		add(gold);</span>
+<span class="nc" id="L164">		goldTxt = new BitmapText(PixelScene.pixelFont);</span>
+<span class="nc" id="L165">		goldTxt.hardlight(Window.TITLE_COLOR);</span>
+<span class="nc" id="L166">		add(goldTxt);</span>
+
+<span class="nc" id="L168">		energy = Icons.get(Icons.ENERGY_SML);</span>
+<span class="nc" id="L169">		add(energy);</span>
+<span class="nc" id="L170">		energyTxt = new BitmapText(PixelScene.pixelFont);</span>
+<span class="nc" id="L171">		energyTxt.hardlight(0x44CCFF);</span>
+<span class="nc" id="L172">		add(energyTxt);</span>
+
+<span class="nc" id="L174">		promptTxt = PixelScene.renderTextBlock(6);</span>
+<span class="nc" id="L175">		promptTxt.hardlight(Window.TITLE_COLOR);</span>
+<span class="nc" id="L176">		add(promptTxt);</span>
+
+<span class="nc" id="L178">		bagItems = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">		for (int i = 0; i &lt; 20; i++){</span>
+<span class="nc" id="L180">			InventorySlot btn = new InventoryPaneSlot(null);</span>
+<span class="nc" id="L181">			bagItems.add(btn);</span>
+<span class="nc" id="L182">			add(btn);</span>
+		}
+
+<span class="nc" id="L185">		bags = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">		for (int i = 0; i &lt; 5; i++){</span>
+<span class="nc" id="L187">			BagButton btn = new BagButton(null, i+1);</span>
+<span class="nc" id="L188">			bags.add(btn);</span>
+<span class="nc" id="L189">			add(btn);</span>
+		}
+
+<span class="nc" id="L192">		crossB = Icons.TARGET.get();</span>
+<span class="nc" id="L193">		crossB.visible = false;</span>
+<span class="nc" id="L194">		add( crossB );</span>
+
+<span class="nc" id="L196">		crossM = new Image();</span>
+<span class="nc" id="L197">		crossM.copy( crossB );</span>
+
+<span class="nc" id="L199">		lastEnabled = true;</span>
+<span class="nc" id="L200">		updateInventory();</span>
+
+<span class="nc" id="L202">		width = WIDTH;</span>
+<span class="nc" id="L203">		height = HEIGHT;</span>
+<span class="nc" id="L204">	}</span>
+
+	@Override
+	protected void layout() {
+<span class="nc" id="L208">		width = WIDTH;</span>
+<span class="nc" id="L209">		height = HEIGHT;</span>
+
+<span class="nc" id="L211">		bg.x = x;</span>
+<span class="nc" id="L212">		bg.y = y;</span>
+<span class="nc" id="L213">		bg.size(width, height);</span>
+
+<span class="nc" id="L215">		float left = x+4;</span>
+<span class="nc bnc" id="L216" title="All 2 branches missed.">		for (InventorySlot i : equipped){</span>
+<span class="nc" id="L217">			i.setRect(left, y+4, SLOT_WIDTH, SLOT_HEIGHT);</span>
+<span class="nc" id="L218">			left = i.right()+1;</span>
+<span class="nc" id="L219">		}</span>
+
+<span class="nc" id="L221">		promptTxt.maxWidth((int) (width - (left - x) - bg.marginRight()));</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">		if (promptTxt.height() &gt; 10){</span>
+<span class="nc" id="L223">			promptTxt.setPos(left, y + 2 + (12 - promptTxt.height()) / 2);</span>
+		} else {
+<span class="nc" id="L225">			promptTxt.setPos(left, y + 4 + (10 - promptTxt.height()) / 2);</span>
+		}
+
+<span class="nc" id="L228">		goldTxt.x = left;</span>
+<span class="nc" id="L229">		goldTxt.y = y+5.5f;</span>
+<span class="nc" id="L230">		PixelScene.align(goldTxt);</span>
+
+<span class="nc" id="L232">		gold.x = goldTxt.x + goldTxt.width() + 1;</span>
+<span class="nc" id="L233">		gold.y = goldTxt.y;</span>
+
+<span class="nc" id="L235">		energyTxt.x = gold.x + gold.width() + 2;</span>
+<span class="nc" id="L236">		energyTxt.y = y+5.5f;</span>
+<span class="nc" id="L237">		PixelScene.align(energyTxt);</span>
+
+<span class="nc" id="L239">		energy.x = energyTxt.x + energyTxt.width() + 1;</span>
+<span class="nc" id="L240">		energy.y = energyTxt.y;</span>
+
+<span class="nc bnc" id="L242" title="All 2 branches missed.">		for (BagButton b : bags){</span>
+<span class="nc" id="L243">			b.setRect(left, y + 14, SLOT_WIDTH, 14);</span>
+<span class="nc" id="L244">			left = b.right()+1;</span>
+<span class="nc" id="L245">		}</span>
+
+<span class="nc" id="L247">		left = x+4;</span>
+<span class="nc" id="L248">		float top = y+4+SLOT_HEIGHT+1;</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">		for (InventorySlot b : bagItems){</span>
+<span class="nc" id="L250">			b.setRect(left, top, SLOT_WIDTH, SLOT_HEIGHT);</span>
+<span class="nc" id="L251">			left = b.right()+1;</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">			if (left - x &gt; width - 17){</span>
+<span class="nc" id="L253">				left = x+4;</span>
+<span class="nc" id="L254">				top += SLOT_HEIGHT+1;</span>
+			}
+<span class="nc" id="L256">		}</span>
+
+<span class="nc" id="L258">		super.layout();</span>
+<span class="nc" id="L259">	}</span>
+	
+	public void alpha( float value ){
+<span class="nc" id="L262">		bg.alpha( value );</span>
+		
+<span class="nc bnc" id="L264" title="All 2 branches missed.">		for (InventorySlot slot : equipped){</span>
+<span class="nc" id="L265">			slot.alpha( value );</span>
+<span class="nc" id="L266">		}</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">		for (InventorySlot slot : bagItems){</span>
+<span class="nc" id="L268">			slot.alpha( value );</span>
+<span class="nc" id="L269">		}</span>
+		
+<span class="nc" id="L271">		gold.alpha(value);</span>
+<span class="nc" id="L272">		goldTxt.alpha(value);</span>
+<span class="nc" id="L273">		energy.alpha(value);</span>
+<span class="nc" id="L274">		energyTxt.alpha(value);</span>
+
+<span class="nc bnc" id="L276" title="All 2 branches missed.">		for (BagButton bag : bags){</span>
+<span class="nc" id="L277">			bag.alpha( value );</span>
+<span class="nc" id="L278">		}</span>
+<span class="nc" id="L279">	}</span>
+
+	public static void refresh(){
+<span class="nc bnc" id="L282" title="All 2 branches missed.">		if (instance != null) instance.updateInventory();</span>
+<span class="nc" id="L283">	}</span>
+
+	public void updateInventory(){
+<span class="nc bnc" id="L286" title="All 2 branches missed.">		if (selector == null){</span>
+<span class="nc" id="L287">			blocker.target = bg;</span>
+<span class="nc" id="L288">			KeyEvent.removeKeyListener(keyBlocker);</span>
+		} else {
+<span class="nc" id="L290">			blocker.target = blocker;</span>
+<span class="nc" id="L291">			KeyEvent.addKeyListener(keyBlocker);</span>
+		}
+
+<span class="nc" id="L294">		Belongings stuff = Dungeon.hero.belongings;</span>
+
+<span class="nc bnc" id="L296" title="All 4 branches missed.">		if (lastBag == null || !stuff.getBags().contains(lastBag)){</span>
+<span class="nc" id="L297">			lastBag = stuff.backpack;</span>
+		}
+
+<span class="nc bnc" id="L300" title="All 2 branches missed.">		equipped.get(0).item(stuff.weapon == null ? new WndBag.Placeholder( ItemSpriteSheet.WEAPON_HOLDER ) : stuff.weapon);</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">		equipped.get(1).item(stuff.armor == null ? new WndBag.Placeholder( ItemSpriteSheet.ARMOR_HOLDER ) : stuff.armor);</span>
+<span class="nc bnc" id="L302" title="All 2 branches missed.">		equipped.get(2).item(stuff.artifact == null ? new WndBag.Placeholder( ItemSpriteSheet.ARTIFACT_HOLDER ) : stuff.artifact);</span>
+<span class="nc bnc" id="L303" title="All 2 branches missed.">		equipped.get(3).item(stuff.misc == null ? new WndBag.Placeholder( ItemSpriteSheet.SOMETHING ) : stuff.misc);</span>
+<span class="nc bnc" id="L304" title="All 2 branches missed.">		equipped.get(4).item(stuff.ring == null ? new WndBag.Placeholder( ItemSpriteSheet.RING_HOLDER ) : stuff.ring);</span>
+
+<span class="nc" id="L306">		ArrayList&lt;Item&gt; items = (ArrayList&lt;Item&gt;) lastBag.items.clone();</span>
+
+<span class="nc bnc" id="L308" title="All 4 branches missed.">		if (lastBag == stuff.backpack &amp;&amp; stuff.secondWep != null){</span>
+<span class="nc" id="L309">			items.add(0, stuff.secondWep);</span>
+		}
+
+<span class="nc" id="L312">		int j = 0;</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">		for (int i = 0; i &lt; 20; i++){</span>
+<span class="nc bnc" id="L314" title="All 4 branches missed.">			if (i == 0 &amp;&amp; lastBag != stuff.backpack){</span>
+<span class="nc" id="L315">				bagItems.get(i).item(lastBag);</span>
+<span class="nc" id="L316">				continue;</span>
+			}
+<span class="nc bnc" id="L318" title="All 2 branches missed.">			if (items.size() &gt; j){</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">				if (items.get(j) instanceof Bag){</span>
+<span class="nc" id="L320">					j++;</span>
+<span class="nc" id="L321">					i--;</span>
+<span class="nc" id="L322">					continue;</span>
+				}
+<span class="nc" id="L324">				bagItems.get(i).item(items.get(j));</span>
+<span class="nc" id="L325">				j++;</span>
+			} else {
+<span class="nc" id="L327">				bagItems.get(i).item(null);</span>
+			}
+		}
+
+<span class="nc bnc" id="L331" title="All 2 branches missed.">		if (selector == null) {</span>
+<span class="nc" id="L332">			promptTxt.visible = false;</span>
+
+<span class="nc" id="L334">			goldTxt.text(Integer.toString(Dungeon.gold));</span>
+<span class="nc" id="L335">			goldTxt.measure();</span>
+<span class="nc" id="L336">			goldTxt.visible = gold.visible = true;</span>
+
+<span class="nc" id="L338">			energyTxt.text(Integer.toString(Dungeon.energy));</span>
+<span class="nc" id="L339">			energyTxt.measure();</span>
+<span class="nc bnc" id="L340" title="All 2 branches missed.">			energyTxt.visible = energy.visible = Dungeon.energy &gt; 0;</span>
+		} else {
+<span class="nc" id="L342">			promptTxt.text(selector.textPrompt());</span>
+<span class="nc" id="L343">			promptTxt.visible = true;</span>
+
+<span class="nc" id="L345">			goldTxt.visible = gold.visible = false;</span>
+<span class="nc" id="L346">			energyTxt.visible = energy.visible = false;</span>
+		}
+
+<span class="nc" id="L349">		ArrayList&lt;Bag&gt; inventBags = stuff.getBags();</span>
+<span class="nc bnc" id="L350" title="All 2 branches missed.">		for (int i = 0; i &lt; bags.size(); i++){</span>
+<span class="nc bnc" id="L351" title="All 2 branches missed.">			if (inventBags.size() &gt; i){</span>
+<span class="nc" id="L352">				bags.get(i).bag(inventBags.get(i));</span>
+			} else {
+<span class="nc" id="L354">				bags.get(i).bag(null);</span>
+			}
+		}
+
+<span class="nc" id="L358">		boolean lostInvent = Dungeon.hero.belongings.lostInventory();</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">		for (InventorySlot b : equipped){</span>
+<span class="nc bnc" id="L360" title="All 2 branches missed.">			b.enable(lastEnabled</span>
+<span class="nc bnc" id="L361" title="All 4 branches missed.">					&amp;&amp; !(b.item() instanceof WndBag.Placeholder)</span>
+<span class="nc bnc" id="L362" title="All 4 branches missed.">					&amp;&amp; (selector == null || selector.itemSelectable(b.item()))</span>
+<span class="nc bnc" id="L363" title="All 2 branches missed.">					&amp;&amp; (!lostInvent || b.item().keptThroughLostInventory()));</span>
+<span class="nc" id="L364">		}</span>
+<span class="nc bnc" id="L365" title="All 2 branches missed.">		for (InventorySlot b : bagItems){</span>
+<span class="nc bnc" id="L366" title="All 2 branches missed.">			b.enable(lastEnabled</span>
+<span class="nc bnc" id="L367" title="All 4 branches missed.">					&amp;&amp; b.item() != null</span>
+<span class="nc bnc" id="L368" title="All 4 branches missed.">					&amp;&amp; (selector == null || selector.itemSelectable(b.item()))</span>
+<span class="nc bnc" id="L369" title="All 2 branches missed.">					&amp;&amp; (!lostInvent || b.item().keptThroughLostInventory()));</span>
+<span class="nc" id="L370">		}</span>
+<span class="nc bnc" id="L371" title="All 2 branches missed.">		for (BagButton b : bags){</span>
+<span class="nc" id="L372">			b.enable(lastEnabled);</span>
+<span class="nc" id="L373">		}</span>
+
+<span class="nc bnc" id="L375" title="All 2 branches missed.">		goldTxt.alpha( lastEnabled ? 1f : 0.3f );</span>
+<span class="nc bnc" id="L376" title="All 2 branches missed.">		gold.alpha( lastEnabled ? 1f : 0.3f );</span>
+<span class="nc bnc" id="L377" title="All 2 branches missed.">		energyTxt.alpha( lastEnabled ? 1f : 0.3f );</span>
+<span class="nc bnc" id="L378" title="All 2 branches missed.">		energy.alpha( lastEnabled ? 1f : 0.3f );</span>
+
+<span class="nc" id="L380">		layout();</span>
+<span class="nc" id="L381">	}</span>
+
+	public void setSelector(WndBag.ItemSelector selector){
+<span class="nc" id="L384">		this.selector = selector;</span>
+<span class="nc bnc" id="L385" title="All 2 branches missed.">		if (selector.preferredBag() == Belongings.Backpack.class){</span>
+<span class="nc" id="L386">			lastBag = Dungeon.hero.belongings.backpack;</span>
+<span class="nc bnc" id="L387" title="All 2 branches missed.">		} else if (selector.preferredBag() != null) {</span>
+<span class="nc" id="L388">			Bag preferred = Dungeon.hero.belongings.getItem(selector.preferredBag());</span>
+<span class="nc bnc" id="L389" title="All 2 branches missed.">			if (preferred != null)  lastBag = preferred;</span>
+			//if a specific preferred bag isn't present, then the relevant items will be in backpack
+<span class="nc" id="L391">			else                    lastBag = Dungeon.hero.belongings.backpack;</span>
+		}
+<span class="nc" id="L393">		updateInventory();</span>
+<span class="nc" id="L394">	}</span>
+
+	public boolean isSelecting(){
+<span class="nc bnc" id="L397" title="All 2 branches missed.">		return selector != null;</span>
+	}
+
+	public static void clearTargetingSlot(){
+<span class="nc" id="L401">		targetingSlot = null;</span>
+<span class="nc" id="L402">	}</span>
+
+	public static void useTargeting(){
+<span class="nc bnc" id="L405" title="All 8 branches missed.">		if (instance != null &amp;&amp;</span>
+				instance.visible &amp;&amp;
+				lastTarget != null &amp;&amp;
+				targetingSlot != null &amp;&amp;
+<span class="nc bnc" id="L409" title="All 2 branches missed.">				Actor.chars().contains( lastTarget ) &amp;&amp;</span>
+<span class="nc bnc" id="L410" title="All 6 branches missed.">				lastTarget.isAlive() &amp;&amp;</span>
+				lastTarget.alignment != Char.Alignment.ALLY &amp;&amp;
+				Dungeon.level.heroFOV[lastTarget.pos]) {
+
+<span class="nc" id="L414">			targeting = true;</span>
+<span class="nc" id="L415">			CharSprite sprite = lastTarget.sprite;</span>
+
+<span class="nc bnc" id="L417" title="All 2 branches missed.">			if (sprite.parent != null) {</span>
+<span class="nc" id="L418">				sprite.parent.addToFront(crossM);</span>
+<span class="nc" id="L419">				crossM.point(sprite.center(crossM));</span>
+			}
+
+<span class="nc" id="L422">			crossB.point(targetingSlot.sprite.center(crossB));</span>
+<span class="nc" id="L423">			crossB.visible = true;</span>
+
+<span class="nc" id="L425">		} else {</span>
+
+<span class="nc" id="L427">			lastTarget = null;</span>
+<span class="nc" id="L428">			targeting = false;</span>
+
+		}
+<span class="nc" id="L431">	}</span>
+
+	public static void cancelTargeting(){
+<span class="nc bnc" id="L434" title="All 2 branches missed.">		if (targeting){</span>
+<span class="nc" id="L435">			crossB.visible = false;</span>
+<span class="nc" id="L436">			crossM.remove();</span>
+<span class="nc" id="L437">			targeting = false;</span>
+		}
+<span class="nc" id="L439">	}</span>
+
+	@Override
+	public synchronized void update() {
+<span class="nc" id="L443">		super.update();</span>
+
+<span class="nc bnc" id="L445" title="All 6 branches missed.">		if (lastEnabled != (Dungeon.hero.ready || !Dungeon.hero.isAlive())) {</span>
+<span class="nc bnc" id="L446" title="All 4 branches missed.">			lastEnabled = (Dungeon.hero.ready || !Dungeon.hero.isAlive());</span>
+
+<span class="nc" id="L448">			boolean lostInvent = Dungeon.hero.belongings.lostInventory();</span>
+<span class="nc bnc" id="L449" title="All 2 branches missed.">			for (InventorySlot b : equipped){</span>
+<span class="nc bnc" id="L450" title="All 2 branches missed.">				b.enable(lastEnabled</span>
+<span class="nc bnc" id="L451" title="All 4 branches missed.">						&amp;&amp; !(b.item() instanceof WndBag.Placeholder)</span>
+<span class="nc bnc" id="L452" title="All 4 branches missed.">						&amp;&amp; (selector == null || selector.itemSelectable(b.item()))</span>
+<span class="nc bnc" id="L453" title="All 2 branches missed.">						&amp;&amp; (!lostInvent || b.item().keptThroughLostInventory()));</span>
+<span class="nc" id="L454">			}</span>
+<span class="nc bnc" id="L455" title="All 2 branches missed.">			for (InventorySlot b : bagItems){</span>
+<span class="nc bnc" id="L456" title="All 2 branches missed.">				b.enable(lastEnabled</span>
+<span class="nc bnc" id="L457" title="All 4 branches missed.">						&amp;&amp; b.item() != null</span>
+<span class="nc bnc" id="L458" title="All 4 branches missed.">						&amp;&amp; (selector == null || selector.itemSelectable(b.item()))</span>
+<span class="nc bnc" id="L459" title="All 2 branches missed.">						&amp;&amp; (!lostInvent || b.item().keptThroughLostInventory()));</span>
+<span class="nc" id="L460">			}</span>
+<span class="nc bnc" id="L461" title="All 2 branches missed.">			for (BagButton b : bags){</span>
+<span class="nc" id="L462">				b.enable(lastEnabled);</span>
+<span class="nc" id="L463">			}</span>
+
+<span class="nc bnc" id="L465" title="All 2 branches missed.">			goldTxt.alpha( lastEnabled ? 1f : 0.3f );</span>
+<span class="nc bnc" id="L466" title="All 2 branches missed.">			gold.alpha( lastEnabled ? 1f : 0.3f );</span>
+<span class="nc bnc" id="L467" title="All 2 branches missed.">			energyTxt.alpha( lastEnabled ? 1f : 0.3f );</span>
+<span class="nc bnc" id="L468" title="All 2 branches missed.">			energy.alpha( lastEnabled ? 1f : 0.3f );</span>
+		}
+
+<span class="nc" id="L471">	}</span>
+
+	private Image bagIcon(Bag bag ) {
+<span class="nc bnc" id="L474" title="All 2 branches missed.">		if (bag instanceof VelvetPouch) {</span>
+<span class="nc" id="L475">			return Icons.get( Icons.SEED_POUCH );</span>
+<span class="nc bnc" id="L476" title="All 2 branches missed.">		} else if (bag instanceof ScrollHolder) {</span>
+<span class="nc" id="L477">			return Icons.get( Icons.SCROLL_HOLDER );</span>
+<span class="nc bnc" id="L478" title="All 2 branches missed.">		} else if (bag instanceof MagicalHolster) {</span>
+<span class="nc" id="L479">			return Icons.get( Icons.WAND_HOLSTER );</span>
+<span class="nc bnc" id="L480" title="All 2 branches missed.">		} else if (bag instanceof PotionBandolier) {</span>
+<span class="nc" id="L481">			return Icons.get( Icons.POTION_BANDOLIER );</span>
+		} else {
+<span class="nc" id="L483">			return Icons.get( Icons.BACKPACK );</span>
+		}
+	}
+
+	private class InventoryPaneSlot extends InventorySlot {
+
+<span class="nc" id="L489">		private InventoryPaneSlot( Item item ){</span>
+<span class="nc" id="L490">			super(item);</span>
+<span class="nc" id="L491">		}</span>
+
+		@Override
+		protected void onClick() {
+<span class="nc bnc" id="L495" title="All 6 branches missed.">			if (lastBag != item &amp;&amp; !lastBag.contains(item) &amp;&amp; !item.isEquipped(Dungeon.hero)){</span>
+<span class="nc" id="L496">				updateInventory();</span>
+<span class="nc" id="L497">				return;</span>
+			}
+
+<span class="nc bnc" id="L500" title="All 2 branches missed.">			if (targeting){</span>
+<span class="nc bnc" id="L501" title="All 2 branches missed.">				if (targetingSlot == this){</span>
+<span class="nc" id="L502">					int cell = QuickSlotButton.autoAim(lastTarget, item());</span>
+
+<span class="nc bnc" id="L504" title="All 2 branches missed.">					if (cell != -1){</span>
+<span class="nc" id="L505">						GameScene.handleCell(cell);</span>
+					} else {
+						//couldn't auto-aim, just target the position and hope for the best.
+<span class="nc" id="L508">						GameScene.handleCell( lastTarget.pos );</span>
+					}
+<span class="nc" id="L510">					return;</span>
+				} else {
+<span class="nc" id="L512">					cancelTargeting();</span>
+				}
+			}
+
+			//any windows opened as a consequence of this button should be centered on the inventory
+<span class="nc" id="L517">			GameScene.centerNextWndOnInvPane();</span>
+<span class="nc bnc" id="L518" title="All 2 branches missed.">			if (selector != null) {</span>
+<span class="nc" id="L519">				WndBag.ItemSelector activating = selector;</span>
+<span class="nc" id="L520">				selector = null;</span>
+<span class="nc" id="L521">				activating.onSelect( item );</span>
+<span class="nc" id="L522">				updateInventory();</span>
+<span class="nc" id="L523">			} else {</span>
+<span class="nc" id="L524">				targetingSlot = this;</span>
+<span class="nc" id="L525">				GameScene.show(new WndUseItem( null, item ));</span>
+			}
+<span class="nc" id="L527">		}</span>
+
+		@Override
+		protected boolean onLongClick() {
+<span class="nc bnc" id="L531" title="All 4 branches missed.">			if (selector == null &amp;&amp; item.defaultAction() != null) {</span>
+<span class="nc" id="L532">				QuickSlotButton.set( item );</span>
+<span class="nc" id="L533">				return true;</span>
+<span class="nc bnc" id="L534" title="All 2 branches missed.">			} else if (selector != null) {</span>
+<span class="nc" id="L535">				GameScene.centerNextWndOnInvPane();</span>
+<span class="nc" id="L536">				GameScene.show(new WndInfoItem(item));</span>
+<span class="nc" id="L537">				return true;</span>
+			} else {
+<span class="nc" id="L539">				return false;</span>
+			}
+		}
+
+		@Override
+		protected void onMiddleClick() {
+<span class="nc bnc" id="L545" title="All 6 branches missed.">			if (lastBag != item &amp;&amp; !lastBag.contains(item) &amp;&amp; !item.isEquipped(Dungeon.hero)){</span>
+<span class="nc" id="L546">				updateInventory();</span>
+<span class="nc" id="L547">				return;</span>
+			}
+
+<span class="nc bnc" id="L550" title="All 4 branches missed.">			if (!Dungeon.hero.isAlive() || !Dungeon.hero.ready){</span>
+<span class="nc" id="L551">				return;</span>
+			}
+
+<span class="nc bnc" id="L554" title="All 2 branches missed.">			if (targeting){</span>
+<span class="nc bnc" id="L555" title="All 2 branches missed.">				if (targetingSlot == this){</span>
+<span class="nc" id="L556">					onClick();</span>
+				}
+<span class="nc" id="L558">				return;</span>
+			}
+
+<span class="nc bnc" id="L561" title="All 4 branches missed.">			if (selector == null &amp;&amp; item.defaultAction() != null){</span>
+<span class="nc" id="L562">				item.execute(Dungeon.hero);</span>
+<span class="nc bnc" id="L563" title="All 4 branches missed.">				if (item != null &amp;&amp; item.usesTargeting) {</span>
+<span class="nc" id="L564">					targetingSlot = this;</span>
+<span class="nc" id="L565">					InventoryPane.useTargeting();</span>
+				}
+			} else {
+<span class="nc" id="L568">				onClick();</span>
+			}
+<span class="nc" id="L570">		}</span>
+
+		@Override
+		protected void onRightClick() {
+<span class="nc bnc" id="L574" title="All 6 branches missed.">			if (lastBag != item &amp;&amp; !lastBag.contains(item) &amp;&amp; !item.isEquipped(Dungeon.hero)){</span>
+<span class="nc" id="L575">				updateInventory();</span>
+<span class="nc" id="L576">				return;</span>
+			}
+
+<span class="nc bnc" id="L579" title="All 4 branches missed.">			if (!Dungeon.hero.isAlive() || !Dungeon.hero.ready){</span>
+<span class="nc" id="L580">				return;</span>
+			}
+
+<span class="nc bnc" id="L583" title="All 2 branches missed.">			if (targeting){</span>
+				//do nothing
+<span class="nc" id="L585">				return;</span>
+			}
+
+<span class="nc bnc" id="L588" title="All 2 branches missed.">			if (selector == null){</span>
+<span class="nc" id="L589">				targetingSlot = this;</span>
+<span class="nc" id="L590">				RightClickMenu r = new RightClickMenu(item);</span>
+<span class="nc" id="L591">				parent.addToFront(r);</span>
+<span class="nc" id="L592">				r.camera = camera();</span>
+<span class="nc" id="L593">				PointF mousePos = PointerEvent.currentHoverPos();</span>
+<span class="nc" id="L594">				mousePos = camera.screenToCamera((int)mousePos.x, (int)mousePos.y);</span>
+<span class="nc" id="L595">				r.setPos(mousePos.x-3, mousePos.y-3);</span>
+			} else {
+				//do nothing
+			}
+<span class="nc" id="L599">		}</span>
+	}
+
+	private class BagButton extends IconButton {
+
+		private static final int ACTIVE		= 0x9953564D;
+		private static final int INACTIVE	= 0x9942443D;
+
+		private ColorBlock bgTop;
+		private ColorBlock bgBottom;
+
+		private Bag bag;
+		private int index;
+
+<span class="nc" id="L613">		public BagButton( Bag bag, int index ){</span>
+<span class="nc" id="L614">			super( bagIcon(bag) );</span>
+<span class="nc" id="L615">			this.bag = bag;</span>
+<span class="nc" id="L616">			this.index = index;</span>
+<span class="nc bnc" id="L617" title="All 2 branches missed.">			visible = active = bag != null;</span>
+<span class="nc" id="L618">		}</span>
+
+		public void bag( Bag bag ){
+<span class="nc" id="L621">			this.bag = bag;</span>
+<span class="nc" id="L622">			icon(bagIcon(bag));</span>
+<span class="nc bnc" id="L623" title="All 2 branches missed.">			visible = active = bag != null;</span>
+
+<span class="nc bnc" id="L625" title="All 2 branches missed.">			if (lastBag == bag){</span>
+<span class="nc" id="L626">				bgTop.texture(TextureCache.createSolid(ACTIVE));</span>
+<span class="nc" id="L627">				bgBottom.texture(TextureCache.createSolid(ACTIVE));</span>
+			} else {
+<span class="nc" id="L629">				bgTop.texture(TextureCache.createSolid(INACTIVE));</span>
+<span class="nc" id="L630">				bgBottom.texture(TextureCache.createSolid(INACTIVE));</span>
+			}
+<span class="nc" id="L632">		}</span>
+
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L636">			super.createChildren();</span>
+
+<span class="nc" id="L638">			bgTop = new ColorBlock(1, 1, ACTIVE);</span>
+<span class="nc" id="L639">			add(bgTop);</span>
+
+<span class="nc" id="L641">			bgBottom = new ColorBlock(1, 1, ACTIVE);</span>
+<span class="nc" id="L642">			add(bgBottom);</span>
+<span class="nc" id="L643">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L647">			super.layout();</span>
+
+<span class="nc" id="L649">			bgTop.size(width-2, 1);</span>
+<span class="nc" id="L650">			bgTop.y = y;</span>
+<span class="nc" id="L651">			bgTop.x = x+1;</span>
+
+<span class="nc" id="L653">			bgBottom.size(width, height-1);</span>
+<span class="nc" id="L654">			bgBottom.y = y+1;</span>
+<span class="nc" id="L655">			bgBottom.x = x;</span>
+<span class="nc" id="L656">		}</span>
+		
+		public void alpha( float value ){
+<span class="nc" id="L659">			bgTop.alpha(value);</span>
+<span class="nc" id="L660">			bgBottom.alpha(value);</span>
+<span class="nc" id="L661">			icon.alpha(value);</span>
+<span class="nc" id="L662">		}</span>
+
+		@Override
+		protected void onClick() {
+<span class="nc" id="L666">			super.onClick();</span>
+<span class="nc" id="L667">			GameScene.cancel();</span>
+<span class="nc" id="L668">			lastBag = bag;</span>
+<span class="nc" id="L669">			refresh();</span>
+<span class="nc" id="L670">		}</span>
+
+		@Override
+		public GameAction keyAction() {
+<span class="nc bnc" id="L674" title="All 5 branches missed.">			switch (index){</span>
+				case 1: default:
+<span class="nc" id="L676">					return SPDAction.BAG_1;</span>
+				case 2:
+<span class="nc" id="L678">					return SPDAction.BAG_2;</span>
+				case 3:
+<span class="nc" id="L680">					return SPDAction.BAG_3;</span>
+				case 4:
+<span class="nc" id="L682">					return SPDAction.BAG_4;</span>
+				case 5:
+<span class="nc" id="L684">					return SPDAction.BAG_5;</span>
+			}
+		}
+
+		@Override
+		public GameAction secondaryTooltipAction() {
+<span class="nc" id="L690">			return SPDAction.INVENTORY_SELECTOR;</span>
+		}
+
+		@Override
+		protected String hoverText() {
+<span class="nc bnc" id="L695" title="All 2 branches missed.">			if (bag != null) {</span>
+<span class="nc" id="L696">				return Messages.titleCase(bag.name());</span>
+			} else {
+<span class="nc" id="L698">				return null;</span>
+			}
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ShardOfOblivion.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.trinkets</a> &gt; <span class="el_source">ShardOfOblivion.java</span></div><h1>ShardOfOblivion.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.trinkets;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Identification;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Sample;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L47">public class ShardOfOblivion extends Trinket {</span>
+
+	{
+<span class="nc" id="L50">		image = ItemSpriteSheet.OBLIVION_SHARD;</span>
+<span class="nc" id="L51">	}</span>
+
+	public static final String AC_IDENTIFY = &quot;IDENTIFY&quot;;
+
+	@Override
+	protected int upgradeEnergyCost() {
+		//6 -&gt; 8(14) -&gt; 10(24) -&gt; 12(36)
+<span class="nc" id="L58">		return 6+2*level();</span>
+	}
+
+	@Override
+	public String statsDesc() {
+<span class="nc bnc" id="L63" title="All 2 branches missed.">		if (isIdentified()){</span>
+<span class="nc" id="L64">			return Messages.get(this, &quot;stats_desc&quot;, buffedLvl()+1);</span>
+		} else {
+<span class="nc" id="L66">			return Messages.get(this, &quot;stats_desc&quot;, 1);</span>
+		}
+	}
+
+	@Override
+	public ArrayList&lt;String&gt; actions(Hero hero) {
+<span class="nc" id="L72">		ArrayList&lt;String&gt; actions = super.actions(hero);</span>
+<span class="nc" id="L73">		actions.add(AC_IDENTIFY);</span>
+<span class="nc" id="L74">		return actions;</span>
+	}
+
+	@Override
+	public void execute(Hero hero, String action) {
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if (action.equals(AC_IDENTIFY)){</span>
+<span class="nc" id="L80">			curUser = hero;</span>
+<span class="nc" id="L81">			curItem = this;</span>
+<span class="nc" id="L82">			GameScene.selectItem(identifySelector);</span>
+		} else {
+<span class="nc" id="L84">			super.execute(hero, action);</span>
+		}
+<span class="nc" id="L86">	}</span>
+
+<span class="nc" id="L88">	public static WndBag.ItemSelector identifySelector = new WndBag.ItemSelector() {</span>
+		@Override
+		public String textPrompt() {
+<span class="nc" id="L91">			return Messages.get(ShardOfOblivion.class, &quot;identify_prompt&quot;);</span>
+		}
+
+		@Override
+		public boolean itemSelectable(Item item) {
+<span class="nc bnc" id="L96" title="All 4 branches missed.">			return !item.isIdentified() &amp;&amp; item.isUpgradable();</span>
+		}
+
+		@Override
+		public void onSelect(Item item) {
+<span class="nc" id="L101">			boolean ready = false;</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">			if (item instanceof Weapon){</span>
+<span class="nc" id="L103">				ready = ((Weapon) item).readyToIdentify();</span>
+<span class="nc bnc" id="L104" title="All 4 branches missed.">				if (item.isEquipped(curUser) &amp;&amp; curUser.pointsInTalent(Talent.ADVENTURERS_INTUITION) == 2){</span>
+<span class="nc" id="L105">					ready = true;</span>
+				}
+<span class="nc bnc" id="L107" title="All 2 branches missed.">			} else if (item instanceof Armor){</span>
+<span class="nc" id="L108">				ready = ((Armor) item).readyToIdentify();</span>
+<span class="nc bnc" id="L109" title="All 4 branches missed.">				if (item.isEquipped(curUser) &amp;&amp; curUser.pointsInTalent(Talent.VETERANS_INTUITION) == 2){</span>
+<span class="nc" id="L110">					ready = true;</span>
+				}
+<span class="nc bnc" id="L112" title="All 2 branches missed.">			} else if (item instanceof Ring){</span>
+<span class="nc" id="L113">				ready = ((Ring) item).readyToIdentify();</span>
+<span class="nc bnc" id="L114" title="All 4 branches missed.">				if (item.isEquipped(curUser) &amp;&amp; curUser.pointsInTalent(Talent.THIEFS_INTUITION) == 2){</span>
+<span class="nc" id="L115">					ready = true;</span>
+				}
+<span class="nc bnc" id="L117" title="All 2 branches missed.">			} else if (item instanceof Wand){</span>
+<span class="nc" id="L118">				ready = ((Wand) item).readyToIdentify();</span>
+			}
+
+<span class="nc bnc" id="L121" title="All 2 branches missed.">			if (ready){</span>
+<span class="nc" id="L122">				item.identify();</span>
+<span class="nc" id="L123">				Badges.validateItemLevelAquired(item);</span>
+<span class="nc" id="L124">				curUser.sprite.operate(curUser.pos);</span>
+<span class="nc" id="L125">				Sample.INSTANCE.play(Assets.Sounds.TELEPORT);</span>
+<span class="nc" id="L126">				curUser.sprite.parent.add( new Identification( curUser.sprite.center().offset( 0, -16 ) ) );</span>
+<span class="nc" id="L127">				GLog.p(Messages.get(ShardOfOblivion.class, &quot;identify&quot;));</span>
+			} else {
+<span class="nc" id="L129">				GLog.w(Messages.get(ShardOfOblivion.class, &quot;identify_not_yet&quot;));</span>
+			}
+<span class="nc" id="L131">		}</span>
+	};
+
+	public static boolean passiveIDDisabled(){
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		return trinketLevel(ShardOfOblivion.class) &gt;= 0;</span>
+	}
+
+<span class="nc" id="L138">	public static class WandUseTracker extends FlavourBuff{</span>
+
+		{
+<span class="nc" id="L141">			type = buffType.POSITIVE;</span>
+<span class="nc" id="L142">		}</span>
+
+<span class="nc" id="L144">		public static float DURATION = 50f;</span>
+
+		@Override
+		public int icon() {
+<span class="nc" id="L148">			return BuffIndicator.WAND;</span>
+		}
+
+		@Override
+		public void tintIcon(Image icon) {
+<span class="nc" id="L153">			icon.hardlight(0, 0.6f, 1);</span>
+<span class="nc" id="L154">		}</span>
+
+		@Override
+		public float iconFadePercent() {
+<span class="nc" id="L158">			return Math.max(0, (DURATION - visualcooldown()) / DURATION);</span>
+		}
+
+	}
+
+	public static float lootChanceMultiplier(){
+<span class="nc" id="L164">		return lootChanceMultiplier(trinketLevel(ShardOfOblivion.class));</span>
+	}
+
+	public static float lootChanceMultiplier(int level){
+<span class="nc bnc" id="L168" title="All 2 branches missed.">		if (level &lt; 0) return 1f;</span>
+
+<span class="nc" id="L170">		int wornUnIDed = 0;</span>
+<span class="nc bnc" id="L171" title="All 4 branches missed.">		if (Dungeon.hero.belongings.weapon() != null &amp;&amp; !Dungeon.hero.belongings.weapon().isIdentified()){</span>
+<span class="nc" id="L172">			wornUnIDed++;</span>
+		}
+<span class="nc bnc" id="L174" title="All 4 branches missed.">		if (Dungeon.hero.belongings.armor() != null &amp;&amp; !Dungeon.hero.belongings.armor().isIdentified()){</span>
+<span class="nc" id="L175">			wornUnIDed++;</span>
+		}
+<span class="nc bnc" id="L177" title="All 4 branches missed.">		if (Dungeon.hero.belongings.ring() != null &amp;&amp; !Dungeon.hero.belongings.ring().isIdentified()){</span>
+<span class="nc" id="L178">			wornUnIDed++;</span>
+		}
+<span class="nc bnc" id="L180" title="All 4 branches missed.">		if (Dungeon.hero.belongings.misc() != null &amp;&amp; !Dungeon.hero.belongings.misc().isIdentified()){</span>
+<span class="nc" id="L181">			wornUnIDed++;</span>
+		}
+<span class="nc bnc" id="L183" title="All 2 branches missed.">		if (Dungeon.hero.buff(WandUseTracker.class) != null){</span>
+<span class="nc" id="L184">			wornUnIDed++;</span>
+		}
+
+<span class="nc" id="L187">		wornUnIDed = Math.min(wornUnIDed, level+1);</span>
+<span class="nc" id="L188">		return 1f + .2f*wornUnIDed;</span>
+
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

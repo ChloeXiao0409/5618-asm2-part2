@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WndTabbed.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.windows</a> &gt; <span class="el_source">WndTabbed.java</span></div><h1>WndTabbed.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.windows;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Button;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.watabou.input.KeyBindings;
+import com.watabou.input.KeyEvent;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.NinePatch;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.RectF;
+import com.watabou.utils.Signal;
+
+import java.util.ArrayList;
+
+public class WndTabbed extends Window {
+
+<span class="nc" id="L44">	protected ArrayList&lt;Tab&gt; tabs = new ArrayList&lt;&gt;();</span>
+	protected Tab selected;
+
+	private Signal.Listener&lt;KeyEvent&gt; tabListener;
+	
+	public WndTabbed() {
+<span class="nc" id="L50">		super( 0, 0, Chrome.get( Chrome.Type.TAB_SET ) );</span>
+
+<span class="nc" id="L52">		KeyEvent.addKeyListener(tabListener = new Signal.Listener&lt;KeyEvent&gt;() {</span>
+			@Override
+			public boolean onSignal(KeyEvent keyEvent) {
+
+<span class="nc bnc" id="L56" title="All 4 branches missed.">				if (!keyEvent.pressed &amp;&amp; KeyBindings.getActionForKey(keyEvent) == SPDAction.CYCLE){</span>
+<span class="nc" id="L57">					int idx = tabs.indexOf(selected);</span>
+<span class="nc" id="L58">					idx++;</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">					if (idx &gt;= tabs.size()) idx = 0;</span>
+<span class="nc" id="L60">					select(idx);</span>
+
+<span class="nc" id="L62">					return true;</span>
+				}
+
+<span class="nc" id="L65">				return false;</span>
+			}
+		});
+<span class="nc" id="L68">	}</span>
+
+	@Override
+	public void destroy() {
+<span class="nc" id="L72">		super.destroy();</span>
+<span class="nc" id="L73">		KeyEvent.removeKeyListener(tabListener);</span>
+<span class="nc" id="L74">	}</span>
+
+	protected Tab add(Tab tab ) {
+
+<span class="nc bnc" id="L78" title="All 2 branches missed.">		tab.setPos( tabs.size() == 0 ?</span>
+<span class="nc" id="L79">			-chrome.marginLeft() + 1 :</span>
+<span class="nc" id="L80">			tabs.get( tabs.size() - 1 ).right(), height );</span>
+<span class="nc" id="L81">		tab.select( tab.selected );</span>
+<span class="nc" id="L82">		super.add( tab );</span>
+		
+<span class="nc" id="L84">		tabs.add( tab );</span>
+
+<span class="nc" id="L86">		return tab;</span>
+	}
+	
+	public void select( int index ) {
+<span class="nc" id="L90">		select( tabs.get( index ) );</span>
+<span class="nc" id="L91">	}</span>
+	
+	public void select( Tab tab ) {
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		if (tab != selected) {</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">			for (Tab t : tabs) {</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">				if (t == selected) {</span>
+<span class="nc" id="L97">					t.select( false );</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">				} else if (t == tab) {</span>
+<span class="nc" id="L99">					t.select( true );</span>
+				}
+<span class="nc" id="L101">			}</span>
+			
+<span class="nc" id="L103">			selected = tab;</span>
+		}
+<span class="nc" id="L105">	}</span>
+	
+	@Override
+	public void resize( int w, int h ) {
+		// -&gt; super.resize(...)
+<span class="nc" id="L110">		this.width = w;</span>
+<span class="nc" id="L111">		this.height = h;</span>
+		
+<span class="nc" id="L113">		chrome.size(</span>
+<span class="nc" id="L114">			width + chrome.marginHor(),</span>
+<span class="nc" id="L115">			height + chrome.marginVer() );</span>
+		
+<span class="nc" id="L117">		camera.resize( (int)chrome.width, chrome.marginTop() + height + tabHeight() );</span>
+<span class="nc" id="L118">		camera.x = (int)(Game.width - camera.screenWidth()) / 2;</span>
+<span class="nc" id="L119">		camera.y = (int)(Game.height - camera.screenHeight()) / 2;</span>
+<span class="nc" id="L120">		camera.y += yOffset * camera.zoom;</span>
+
+<span class="nc" id="L122">		shadow.boxRect(</span>
+				camera.x / camera.zoom,
+				camera.y / camera.zoom,
+<span class="nc" id="L125">				chrome.width(), chrome.height );</span>
+		// &lt;- super.resize(...)
+		
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		for (Tab tab : tabs) {</span>
+<span class="nc" id="L129">			remove( tab );</span>
+<span class="nc" id="L130">		}</span>
+		
+<span class="nc" id="L132">		ArrayList&lt;Tab&gt; tabs = new ArrayList&lt;&gt;(this.tabs);</span>
+<span class="nc" id="L133">		this.tabs.clear();</span>
+		
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		for (Tab tab : tabs) {</span>
+<span class="nc" id="L136">			add( tab );</span>
+<span class="nc" id="L137">		}</span>
+<span class="nc" id="L138">	}</span>
+
+	public void layoutTabs(){
+		//subtract two as that horizontal space is transparent at the bottom
+<span class="nc" id="L142">		int fullWidth = width+chrome.marginHor()-2;</span>
+<span class="nc" id="L143">		float numTabs = tabs.size();</span>
+<span class="nc" id="L144">		float tabWidth = (fullWidth - (numTabs-1))/numTabs;</span>
+
+<span class="nc" id="L146">		float pos = -chrome.marginLeft() + 1;</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">		for (Tab tab : tabs){</span>
+<span class="nc" id="L148">			tab.setSize(tabWidth, tabHeight());</span>
+<span class="nc" id="L149">			tab.setPos(pos, height);</span>
+<span class="nc" id="L150">			pos = tab.right() + 1;</span>
+<span class="nc" id="L151">			PixelScene.align(tab);</span>
+<span class="nc" id="L152">		}</span>
+<span class="nc" id="L153">	}</span>
+	
+	protected int tabHeight() {
+<span class="nc" id="L156">		return 25;</span>
+	}
+	
+	protected void onClick( Tab tab ) {
+<span class="nc" id="L160">		select( tab );</span>
+<span class="nc" id="L161">	}</span>
+	
+<span class="nc" id="L163">	protected class Tab extends Button {</span>
+		
+<span class="nc" id="L165">		protected final int CUT = 5;</span>
+		
+		protected boolean selected;
+		
+		protected NinePatch bg;
+		
+		@Override
+		protected void layout() {
+<span class="nc" id="L173">			super.layout();</span>
+			
+<span class="nc bnc" id="L175" title="All 2 branches missed.">			if (bg != null) {</span>
+<span class="nc" id="L176">				bg.x = x;</span>
+<span class="nc" id="L177">				bg.y = y;</span>
+<span class="nc" id="L178">				bg.size( width, height );</span>
+			}
+<span class="nc" id="L180">		}</span>
+		
+		protected void select( boolean value ) {
+			
+<span class="nc" id="L184">			selected = value;</span>
+			
+<span class="nc bnc" id="L186" title="All 2 branches missed.">			if (bg != null) {</span>
+<span class="nc" id="L187">				remove( bg );</span>
+			}
+			
+<span class="nc bnc" id="L190" title="All 2 branches missed.">			bg = Chrome.get( selected ?</span>
+<span class="nc" id="L191">				Chrome.Type.TAB_SELECTED :</span>
+<span class="nc" id="L192">				Chrome.Type.TAB_UNSELECTED );</span>
+<span class="nc" id="L193">			addToBack( bg );</span>
+			
+<span class="nc" id="L195">			layout();</span>
+<span class="nc" id="L196">		}</span>
+		
+		@Override
+		protected void onClick() {
+<span class="nc bnc" id="L200" title="All 2 branches missed.">			if (!selected) {</span>
+<span class="nc" id="L201">				Sample.INSTANCE.play(Assets.Sounds.CLICK, 0.7f, 0.7f, 1.2f);</span>
+<span class="nc" id="L202">				WndTabbed.this.onClick(this);</span>
+			}
+<span class="nc" id="L204">		}</span>
+	}
+	
+	protected class LabeledTab extends Tab {
+		
+		private RenderedTextBlock btLabel;
+		
+<span class="nc" id="L211">		public LabeledTab( String label ) {</span>
+			
+<span class="nc" id="L213">			super();</span>
+			
+<span class="nc" id="L215">			btLabel.text( label );</span>
+<span class="nc" id="L216">		}</span>
+		
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L220">			super.createChildren();</span>
+			
+<span class="nc" id="L222">			btLabel = PixelScene.renderTextBlock( 9 );</span>
+<span class="nc" id="L223">			add( btLabel );</span>
+<span class="nc" id="L224">		}</span>
+		
+		@Override
+		protected void layout() {
+<span class="nc" id="L228">			super.layout();</span>
+			
+<span class="nc" id="L230">			btLabel.setPos(</span>
+<span class="nc" id="L231">					x + (width - btLabel.width()) / 2,</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">					y + (height - btLabel.height()) / 2 - (selected ? 1 : 3)</span>
+			);
+<span class="nc" id="L234">			PixelScene.align(btLabel);</span>
+<span class="nc" id="L235">		}</span>
+		
+		@Override
+		protected void select( boolean value ) {
+<span class="nc" id="L239">			super.select( value );</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">			btLabel.alpha( selected ? 1.0f : 0.6f );</span>
+<span class="nc" id="L241">		}</span>
+	}
+	
+	protected class IconTab extends Tab {
+		
+		protected Image icon;
+		private RectF defaultFrame;
+		
+<span class="nc" id="L249">		public IconTab( Image icon ){</span>
+<span class="nc" id="L250">			super();</span>
+			
+<span class="nc" id="L252">			this.icon.copy(icon);</span>
+<span class="nc" id="L253">			this.defaultFrame = icon.frame();</span>
+<span class="nc" id="L254">		}</span>
+		
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L258">			super.createChildren();</span>
+			
+<span class="nc" id="L260">			icon = new Image();</span>
+<span class="nc" id="L261">			add( icon );</span>
+<span class="nc" id="L262">		}</span>
+		
+		@Override
+		protected void layout() {
+<span class="nc" id="L266">			super.layout();</span>
+			
+<span class="nc" id="L268">			icon.frame(defaultFrame);</span>
+<span class="nc" id="L269">			icon.x = x + (width - icon.width) / 2;</span>
+<span class="nc" id="L270">			icon.y = y + (height - icon.height) / 2 - 1;</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">			if (!selected) {</span>
+<span class="nc" id="L272">				icon.y -= 2;</span>
+				//if some of the icon is going into the window, cut it off
+<span class="nc bnc" id="L274" title="All 2 branches missed.">				if (icon.y &lt; y + CUT) {</span>
+<span class="nc" id="L275">					RectF frame = icon.frame();</span>
+<span class="nc" id="L276">					frame.top += (y + CUT - icon.y) / icon.texture.height;</span>
+<span class="nc" id="L277">					icon.frame( frame );</span>
+<span class="nc" id="L278">					icon.y = y + CUT;</span>
+				}
+			}
+<span class="nc" id="L281">			PixelScene.align(icon);</span>
+<span class="nc" id="L282">		}</span>
+		
+		@Override
+		protected void select( boolean value ) {
+<span class="nc" id="L286">			super.select( value );</span>
+<span class="nc bnc" id="L287" title="All 2 branches missed.">			icon.am = selected ? 1.0f : 0.6f;</span>
+<span class="nc" id="L288">		}</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

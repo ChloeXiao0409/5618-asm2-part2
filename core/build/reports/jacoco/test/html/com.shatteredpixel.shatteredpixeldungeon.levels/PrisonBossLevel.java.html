@@ -1,0 +1,955 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PrisonBossLevel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels</a> &gt; <span class="el_source">PrisonBossLevel.java</span></div><h1>PrisonBossLevel.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Bones;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Regrowth;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.StormCloud;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Doom;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Tengu;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
+import com.shatteredpixel.shatteredpixeldungeon.items.keys.IronKey;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.HeavyBoomerang;
+import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.TenguDartTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.ui.TargetHealthIndicator;
+import com.watabou.utils.BArray;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Group;
+import com.watabou.noosa.Tilemap;
+import com.watabou.noosa.audio.Music;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.tweeners.AlphaTweener;
+import com.watabou.utils.Bundlable;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+import com.watabou.utils.Rect;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L71">public class PrisonBossLevel extends Level {</span>
+	
+	{
+<span class="nc" id="L74">		color1 = 0x6a723d;</span>
+<span class="nc" id="L75">		color2 = 0x88924c;</span>
+		
+		//the player should be able to see all of Tengu's arena
+<span class="nc" id="L78">		viewDistance = 12;</span>
+	}
+	
+<span class="nc" id="L81">	public enum State {</span>
+<span class="nc" id="L82">		START,</span>
+<span class="nc" id="L83">		FIGHT_START,</span>
+<span class="nc" id="L84">		FIGHT_PAUSE,</span>
+<span class="nc" id="L85">		FIGHT_ARENA,</span>
+<span class="nc" id="L86">		WON</span>
+	}
+	
+	private State state;
+	private Tengu tengu;
+
+	@Override
+	public void playLevelMusic() {
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		if (state == State.START){</span>
+<span class="nc" id="L95">			Music.INSTANCE.end();</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">		} else if (state == State.WON) {</span>
+<span class="nc" id="L97">			Music.INSTANCE.playTracks(PrisonLevel.PRISON_TRACK_LIST, PrisonLevel.PRISON_TRACK_CHANCES, false);</span>
+		} else {
+<span class="nc" id="L99">			Music.INSTANCE.play(Assets.Music.PRISON_BOSS, true);</span>
+		}
+<span class="nc" id="L101">	}</span>
+
+	public State state(){
+<span class="nc" id="L104">		return state;</span>
+	}
+	
+	@Override
+	public String tilesTex() {
+<span class="nc" id="L109">		return Assets.Environment.TILES_PRISON;</span>
+	}
+	
+	@Override
+	public String waterTex() {
+<span class="nc" id="L114">		return Assets.Environment.WATER_PRISON;</span>
+	}
+	
+	private static final String STATE	        = &quot;state&quot;;
+	private static final String TENGU	        = &quot;tengu&quot;;
+	private static final String STORED_ITEMS    = &quot;storeditems&quot;;
+	private static final String TRIGGERED       = &quot;triggered&quot;;
+	
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L124">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L125">		bundle.put( STATE, state );</span>
+<span class="nc" id="L126">		bundle.put( TENGU, tengu );</span>
+<span class="nc" id="L127">		bundle.put( STORED_ITEMS, storedItems);</span>
+<span class="nc" id="L128">		bundle.put(TRIGGERED, triggered );</span>
+<span class="nc" id="L129">	}</span>
+	
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L133">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L134">		state = bundle.getEnum( STATE, State.class );</span>
+		
+		//in some states tengu won't be in the world, in others he will be.
+<span class="nc bnc" id="L137" title="All 4 branches missed.">		if (state == State.START || state == State.FIGHT_PAUSE) {</span>
+<span class="nc" id="L138">			tengu = (Tengu)bundle.get( TENGU );</span>
+		} else {
+<span class="nc bnc" id="L140" title="All 2 branches missed.">			for (Mob mob : mobs){</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">				if (mob instanceof Tengu) {</span>
+<span class="nc" id="L142">					tengu = (Tengu) mob;</span>
+<span class="nc" id="L143">					break;</span>
+				}
+<span class="nc" id="L145">			}</span>
+		}
+		
+<span class="nc bnc" id="L148" title="All 2 branches missed.">		for (Bundlable item : bundle.getCollection(STORED_ITEMS)){</span>
+<span class="nc" id="L149">			storedItems.add( (Item)item );</span>
+<span class="nc" id="L150">		}</span>
+		
+<span class="nc" id="L152">		triggered = bundle.getBooleanArray(TRIGGERED);</span>
+		
+<span class="nc" id="L154">	}</span>
+	
+	@Override
+	protected boolean build() {
+<span class="nc" id="L158">		setSize(32, 32);</span>
+		
+<span class="nc" id="L160">		state = State.START;</span>
+<span class="nc" id="L161">		setMapStart();</span>
+		
+<span class="nc" id="L163">		return true;</span>
+	}
+	
+	private static final int ENTRANCE_POS = 10 + 4*32;
+<span class="nc" id="L167">	private static final Rect entranceRoom = new Rect(8, 2, 13, 8);</span>
+<span class="nc" id="L168">	private static final Rect startHallway = new Rect(9, 7, 12, 24);</span>
+<span class="nc" id="L169">	private static final Rect[] startCells = new Rect[]{ new Rect(5, 9, 10, 16), new Rect(11, 9, 16, 16),</span>
+	                                         new Rect(5, 15, 10, 22), new Rect(11, 15, 16, 22)};
+<span class="nc" id="L171">	private static final Rect tenguCell = new Rect(6, 23, 15, 32);</span>
+<span class="nc" id="L172">	private static final Point tenguCellCenter = new Point(10, 27);</span>
+<span class="nc" id="L173">	private static final Point tenguCellDoor = new Point(10, 23);</span>
+<span class="nc" id="L174">	private static final Point[] startTorches = new Point[]{ new Point(10, 2),</span>
+	                                       new Point(7, 9), new Point(13, 9),
+	                                       new Point(7, 15), new Point(13, 15),
+	                                       new Point(8, 23), new Point(12, 23)};
+	
+	private void setMapStart(){
+<span class="nc" id="L180">		transitions.add(new LevelTransition(this, ENTRANCE_POS, LevelTransition.Type.REGULAR_ENTRANCE));</span>
+		
+<span class="nc" id="L182">		Painter.fill(this, 0, 0, 32, 32, Terrain.WALL);</span>
+		
+		//Start
+<span class="nc" id="L185">		Painter.fill(this, entranceRoom, Terrain.WALL);</span>
+<span class="nc" id="L186">		Painter.fill(this, entranceRoom, 1, Terrain.EMPTY);</span>
+<span class="nc" id="L187">		Painter.set(this, ENTRANCE_POS, Terrain.ENTRANCE);</span>
+		
+<span class="nc" id="L189">		Painter.fill(this, startHallway, Terrain.WALL);</span>
+<span class="nc" id="L190">		Painter.fill(this, startHallway, 1, Terrain.EMPTY);</span>
+		
+<span class="nc" id="L192">		Painter.set(this, startHallway.left+1, startHallway.top, Terrain.DOOR);</span>
+		
+<span class="nc bnc" id="L194" title="All 2 branches missed.">		for (Rect r : startCells){</span>
+<span class="nc" id="L195">			Painter.fill(this, r, Terrain.WALL);</span>
+<span class="nc" id="L196">			Painter.fill(this, r, 1, Terrain.EMPTY);</span>
+		}
+		
+<span class="nc" id="L199">		Painter.set(this, startHallway.left, startHallway.top+5, Terrain.DOOR);</span>
+<span class="nc" id="L200">		Painter.set(this, startHallway.right-1, startHallway.top+5, Terrain.DOOR);</span>
+<span class="nc" id="L201">		Painter.set(this, startHallway.left, startHallway.top+11, Terrain.DOOR);</span>
+<span class="nc" id="L202">		Painter.set(this, startHallway.right-1, startHallway.top+11, Terrain.DOOR);</span>
+		
+<span class="nc" id="L204">		Painter.fill(this, tenguCell, Terrain.WALL);</span>
+<span class="nc" id="L205">		Painter.fill(this, tenguCell, 1, Terrain.EMPTY);</span>
+		
+<span class="nc" id="L207">		Painter.set(this, tenguCell.left+4, tenguCell.top, Terrain.LOCKED_DOOR);</span>
+		
+<span class="nc bnc" id="L209" title="All 2 branches missed.">		for (Point p : startTorches){</span>
+<span class="nc" id="L210">			Painter.set(this, p, Terrain.WALL_DECO);</span>
+		}
+
+		//we set up the exit for consistently with other levels, even though it's in the walls
+<span class="nc" id="L214">		LevelTransition exit = new LevelTransition(this, pointToCell(levelExit), LevelTransition.Type.REGULAR_EXIT);</span>
+<span class="nc" id="L215">		exit.right+=2;</span>
+<span class="nc" id="L216">		exit.bottom+=3;</span>
+<span class="nc" id="L217">		transitions.add(exit);</span>
+<span class="nc" id="L218">	}</span>
+
+	//area where items/chars are preserved when moving to the arena
+<span class="nc" id="L221">	private static final Rect pauseSafeArea = new Rect(9, 2, 12, 12);</span>
+
+	private void setMapPause(){
+<span class="nc" id="L224">		setMapStart();</span>
+<span class="nc" id="L225">		transitions.clear();</span>
+
+<span class="nc" id="L227">		Painter.set(this, tenguCell.left+4, tenguCell.top, Terrain.DOOR);</span>
+
+<span class="nc" id="L229">		Painter.fill(this, startCells[1].left, startCells[1].top+3, 1, 7, Terrain.EMPTY);</span>
+<span class="nc" id="L230">		Painter.fill(this, startCells[1].left+2, startCells[1].top+2, 3, 10, Terrain.EMPTY);</span>
+
+<span class="nc" id="L232">		Painter.fill(this, entranceRoom, Terrain.WALL);</span>
+<span class="nc" id="L233">		Painter.set(this, startHallway.left+1, startHallway.top, Terrain.EMPTY);</span>
+<span class="nc" id="L234">		Painter.set(this, startHallway.left+1, startHallway.top+1, Terrain.DOOR);</span>
+
+<span class="nc" id="L236">	}</span>
+	
+<span class="nc" id="L238">	private static final Rect arena = new Rect(3, 1, 18, 16);</span>
+	
+	private void setMapArena(){
+<span class="nc" id="L241">		transitions.clear();</span>
+
+<span class="nc" id="L243">		Painter.fill(this, 0, 0, 32, 32, Terrain.WALL);</span>
+		
+<span class="nc" id="L245">		Painter.fill(this, arena, Terrain.WALL);</span>
+<span class="nc" id="L246">		Painter.fillEllipse(this, arena, 1, Terrain.EMPTY);</span>
+	
+<span class="nc" id="L248">	}</span>
+	
+<span class="nc" id="L250">	private static int W = Terrain.WALL;</span>
+<span class="nc" id="L251">	private static int D = Terrain.WALL_DECO;</span>
+<span class="nc" id="L252">	private static int e = Terrain.EMPTY;</span>
+<span class="nc" id="L253">	private static int E = Terrain.EXIT;</span>
+<span class="nc" id="L254">	private static int C = Terrain.CHASM;</span>
+	
+<span class="nc" id="L256">	private static final Point endStart = new Point( startHallway.left+2, startHallway.top+2);</span>
+<span class="nc" id="L257">	private static final Point levelExit = new Point( endStart.x+11, endStart.y+6);</span>
+<span class="nc" id="L258">	private static final int[] endMap = new int[]{</span>
+			W, W, D, W, W, W, W, W, W, W, W, W, W, W,
+			W, e, e, e, W, W, W, W, W, W, W, W, W, W,
+			W, e, e, e, e, e, e, e, e, W, W, W, W, W,
+			e, e, e, e, e, e, e, e, e, e, e, e, W, W,
+			e, e, e, e, e, e, e, e, e, e, e, e, e, W,
+			e, e, e, C, C, C, C, C, C, C, C, e, e, W,
+			e, W, C, C, C, C, C, C, C, C, C, E, E, W,
+			e, e, e, C, C, C, C, C, C, C, C, E, E, W,
+			e, e, e, e, e, C, C, C, C, C, C, E, E, W,
+			e, e, e, e, e, e, e, W, W, W, C, C, C, W,
+			W, e, e, e, e, e, W, W, W, W, C, C, C, W,
+			W, e, e, e, e, W, W, W, W, W, W, C, C, W,
+			W, W, W, W, W, W, W, W, W, W, W, C, C, W,
+			W, W, W, W, W, W, W, W, W, W, W, C, C, W,
+			W, D, W, W, W, W, W, W, W, W, W, C, C, W,
+			e, e, e, W, W, W, W, W, W, W, W, C, C, W,
+			e, e, e, W, W, W, W, W, W, W, W, C, C, W,
+			e, e, e, W, W, W, W, W, W, W, W, C, C, W,
+			e, e, e, W, W, W, W, W, W, W, W, C, C, W,
+			e, e, e, W, W, W, W, W, W, W, W, C, C, W,
+			e, e, e, W, W, W, W, W, W, W, W, C, C, W,
+			e, e, e, W, W, W, W, W, W, W, W, C, C, W,
+			W, W, W, W, W, W, W, W, W, W, W, C, C, W
+	};
+	
+	private void setMapEnd(){
+		
+<span class="nc" id="L286">		Painter.fill(this, 0, 0, 32, 32, Terrain.WALL);</span>
+		
+<span class="nc" id="L288">		setMapStart();</span>
+		
+<span class="nc bnc" id="L290" title="All 2 branches missed.">		for (Heap h : heaps.valueList()){</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">			if (h.peek() instanceof IronKey){</span>
+<span class="nc" id="L292">				h.destroy();</span>
+			}
+<span class="nc" id="L294">		}</span>
+		
+<span class="nc" id="L296">		CustomTilemap vis = new ExitVisual();</span>
+<span class="nc" id="L297">		vis.pos(11, 10);</span>
+<span class="nc" id="L298">		customTiles.add(vis);</span>
+<span class="nc" id="L299">		GameScene.add(vis, false);</span>
+		
+<span class="nc" id="L301">		vis = new ExitVisualWalls();</span>
+<span class="nc" id="L302">		vis.pos(11, 10);</span>
+<span class="nc" id="L303">		customWalls.add(vis);</span>
+<span class="nc" id="L304">		GameScene.add(vis, true);</span>
+		
+<span class="nc" id="L306">		Painter.set(this, tenguCell.left+4, tenguCell.top, Terrain.DOOR);</span>
+		
+<span class="nc" id="L308">		int cell = pointToCell(endStart);</span>
+<span class="nc" id="L309">		int i = 0;</span>
+<span class="nc bnc" id="L310" title="All 2 branches missed.">		while (cell &lt; length()){</span>
+<span class="nc" id="L311">			System.arraycopy(endMap, i, map, cell, 14);</span>
+<span class="nc" id="L312">			i += 14;</span>
+<span class="nc" id="L313">			cell += width();</span>
+		}
+
+		//pre-2.5.1 saves, if exit wasn't already added
+<span class="nc bnc" id="L317" title="All 2 branches missed.">		if (exit() == entrance()) {</span>
+<span class="nc" id="L318">			LevelTransition exit = new LevelTransition(this, pointToCell(levelExit), LevelTransition.Type.REGULAR_EXIT);</span>
+<span class="nc" id="L319">			exit.right += 2;</span>
+<span class="nc" id="L320">			exit.bottom += 3;</span>
+<span class="nc" id="L321">			transitions.add(exit);</span>
+		}
+<span class="nc" id="L323">	}</span>
+	
+	//keep track of removed items as the level is changed. Dump them back into the level at the end.
+<span class="nc" id="L326">	private ArrayList&lt;Item&gt; storedItems = new ArrayList&lt;&gt;();</span>
+	
+	private void clearEntities(Rect safeArea){
+<span class="nc bnc" id="L329" title="All 2 branches missed.">		for (Heap heap : heaps.valueList()){</span>
+<span class="nc bnc" id="L330" title="All 4 branches missed.">			if (safeArea == null || !safeArea.inside(cellToPoint(heap.pos))){</span>
+<span class="nc bnc" id="L331" title="All 2 branches missed.">				for (Item item : heap.items){</span>
+<span class="nc bnc" id="L332" title="All 4 branches missed.">					if (!(item instanceof Bomb) || ((Bomb)item).fuse == null){</span>
+<span class="nc" id="L333">						storedItems.add(item);</span>
+					}
+<span class="nc" id="L335">				}</span>
+<span class="nc" id="L336">				heap.destroy();</span>
+			}
+<span class="nc" id="L338">		}</span>
+		
+<span class="nc bnc" id="L340" title="All 2 branches missed.">		for (HeavyBoomerang.CircleBack b : Dungeon.hero.buffs(HeavyBoomerang.CircleBack.class)){</span>
+<span class="nc bnc" id="L341" title="All 4 branches missed.">			if (b.activeDepth() == Dungeon.depth</span>
+<span class="nc bnc" id="L342" title="All 2 branches missed.">					&amp;&amp; (safeArea == null || !safeArea.inside(cellToPoint(b.returnPos())))){</span>
+<span class="nc" id="L343">				storedItems.add(b.cancel());</span>
+			}
+<span class="nc" id="L345">		}</span>
+		
+<span class="nc bnc" id="L347" title="All 2 branches missed.">		for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])){</span>
+<span class="nc bnc" id="L348" title="All 6 branches missed.">			if (mob != tengu &amp;&amp; (safeArea == null || !safeArea.inside(cellToPoint(mob.pos)))){</span>
+<span class="nc" id="L349">				mob.destroy();</span>
+<span class="nc bnc" id="L350" title="All 2 branches missed.">				if (mob.sprite != null)</span>
+<span class="nc" id="L351">					mob.sprite.killAndErase();</span>
+			}
+		}
+<span class="nc bnc" id="L354" title="All 2 branches missed.">		for (Plant plant : plants.valueList()){</span>
+<span class="nc bnc" id="L355" title="All 4 branches missed.">			if (safeArea == null || !safeArea.inside(cellToPoint(plant.pos))){</span>
+<span class="nc" id="L356">				plants.remove(plant.pos);</span>
+			}
+<span class="nc" id="L358">		}</span>
+<span class="nc" id="L359">	}</span>
+	
+	private void cleanMapState(){
+<span class="nc" id="L362">		buildFlagMaps();</span>
+<span class="nc" id="L363">		cleanWalls();</span>
+		
+<span class="nc" id="L365">		BArray.setFalse(visited);</span>
+<span class="nc" id="L366">		BArray.setFalse(mapped);</span>
+		
+<span class="nc bnc" id="L368" title="All 2 branches missed.">		for (Blob blob: blobs.values()){</span>
+<span class="nc" id="L369">			blob.fullyClear();</span>
+<span class="nc" id="L370">		}</span>
+<span class="nc" id="L371">		addVisuals(); //this also resets existing visuals</span>
+<span class="nc" id="L372">		traps.clear();</span>
+
+<span class="nc bnc" id="L374" title="All 2 branches missed.">		for (CustomTilemap t : customTiles){</span>
+<span class="nc bnc" id="L375" title="All 2 branches missed.">			if (t instanceof FadingTraps){</span>
+<span class="nc" id="L376">				((FadingTraps) t).remove();</span>
+			}
+<span class="nc" id="L378">		}</span>
+		
+<span class="nc" id="L380">		GameScene.resetMap();</span>
+<span class="nc" id="L381">		Dungeon.observe();</span>
+<span class="nc" id="L382">	}</span>
+	
+	@Override
+	public Group addVisuals() {
+<span class="nc" id="L386">		super.addVisuals();</span>
+<span class="nc" id="L387">		PrisonLevel.addPrisonVisuals(this, visuals);</span>
+<span class="nc" id="L388">		return visuals;</span>
+	}
+	
+	public void progress(){
+<span class="nc bnc" id="L392" title="All 5 branches missed.">		switch (state){</span>
+			case START:
+				
+<span class="nc" id="L395">				int tenguPos = pointToCell(tenguCellCenter);</span>
+				
+				//if something is occupying Tengu's space, try to put him in an adjacent cell
+<span class="nc bnc" id="L398" title="All 2 branches missed.">				if (Actor.findChar(tenguPos) != null){</span>
+<span class="nc" id="L399">					ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L400" title="All 2 branches missed.">					for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L401" title="All 2 branches missed.">						if (Actor.findChar(tenguPos + i) == null){</span>
+<span class="nc" id="L402">							candidates.add(tenguPos + i);</span>
+						}
+					}
+					
+<span class="nc bnc" id="L406" title="All 2 branches missed.">					if (!candidates.isEmpty()){</span>
+<span class="nc" id="L407">						tenguPos = Random.element(candidates);</span>
+					//if there are no adjacent cells, wait and do nothing
+					} else {
+<span class="nc" id="L410">						return;</span>
+					}
+				}
+				
+<span class="nc" id="L414">				seal();</span>
+<span class="nc" id="L415">				Statistics.qualifiedForBossChallengeBadge = true;</span>
+<span class="nc" id="L416">				set(pointToCell(tenguCellDoor), Terrain.LOCKED_DOOR);</span>
+<span class="nc" id="L417">				GameScene.updateMap(pointToCell(tenguCellDoor));</span>
+
+				//moves intelligent allies with the hero, preferring closer pos to cell door
+<span class="nc" id="L420">				int doorPos = pointToCell(tenguCellDoor);</span>
+<span class="nc" id="L421">				Mob.holdAllies(this, doorPos);</span>
+<span class="nc" id="L422">				Mob.restoreAllies(this, Dungeon.hero.pos, doorPos);</span>
+				
+<span class="nc" id="L424">				tengu.state = tengu.HUNTING;</span>
+<span class="nc" id="L425">				tengu.pos = tenguPos;</span>
+<span class="nc" id="L426">				GameScene.add( tengu );</span>
+<span class="nc" id="L427">				tengu.notice();</span>
+
+<span class="nc" id="L429">				CellEmitter.get( tengu.pos ).burst( Speck.factory( Speck.WOOL ), 6 );</span>
+<span class="nc" id="L430">				Sample.INSTANCE.play( Assets.Sounds.PUFF );</span>
+				
+<span class="nc" id="L432">				state = State.FIGHT_START;</span>
+
+<span class="nc" id="L434">				Game.runOnRenderThread(new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L437">						Music.INSTANCE.play(Assets.Music.PRISON_BOSS, true);</span>
+<span class="nc" id="L438">					}</span>
+				});
+<span class="nc" id="L440">				break;</span>
+				
+			case FIGHT_START:
+				
+<span class="nc" id="L444">				clearEntities( tenguCell ); //clear anything not in tengu's cell</span>
+				
+<span class="nc" id="L446">				setMapPause();</span>
+<span class="nc" id="L447">				cleanMapState();</span>
+
+<span class="nc" id="L449">				Doom d = tengu.buff(Doom.class);</span>
+<span class="nc" id="L450">				Actor.remove(tengu);</span>
+<span class="nc" id="L451">				mobs.remove(tengu);</span>
+<span class="nc" id="L452">				TargetHealthIndicator.instance.target(null);</span>
+<span class="nc" id="L453">				tengu.sprite.kill();</span>
+<span class="nc bnc" id="L454" title="All 2 branches missed.">				if (d != null) tengu.add(d);</span>
+				
+<span class="nc" id="L456">				GameScene.flash(0x80FFFFFF);</span>
+<span class="nc" id="L457">				Sample.INSTANCE.play(Assets.Sounds.BLAST);</span>
+				
+<span class="nc" id="L459">				state = State.FIGHT_PAUSE;</span>
+<span class="nc" id="L460">				break;</span>
+
+			case FIGHT_PAUSE:
+				
+<span class="nc" id="L464">				Dungeon.hero.interrupt();</span>
+				
+<span class="nc" id="L466">				clearEntities( pauseSafeArea );</span>
+				
+<span class="nc" id="L468">				setMapArena();</span>
+<span class="nc" id="L469">				cleanMapState();</span>
+				
+<span class="nc" id="L471">				tengu.state = tengu.HUNTING;</span>
+<span class="nc" id="L472">				tengu.pos = (arena.left + arena.width()/2) + width()*(arena.top+2);</span>
+<span class="nc" id="L473">				GameScene.add(tengu);</span>
+<span class="nc" id="L474">				tengu.timeToNow();</span>
+<span class="nc" id="L475">				tengu.notice();</span>
+
+<span class="nc" id="L477">				CellEmitter.get( tengu.pos ).burst( Speck.factory( Speck.WOOL ), 6 );</span>
+				
+<span class="nc" id="L479">				GameScene.flash(0x80FFFFFF);</span>
+<span class="nc" id="L480">				Sample.INSTANCE.play(Assets.Sounds.BLAST);</span>
+				
+<span class="nc" id="L482">				state = State.FIGHT_ARENA;</span>
+<span class="nc" id="L483">				break;</span>
+				
+			case FIGHT_ARENA:
+				
+<span class="nc" id="L487">				unseal();</span>
+				
+<span class="nc" id="L489">				Dungeon.hero.interrupt();</span>
+<span class="nc" id="L490">				Dungeon.hero.pos = tenguCell.left+4 + (tenguCell.top+2)*width();</span>
+<span class="nc" id="L491">				Dungeon.hero.sprite.interruptMotion();</span>
+<span class="nc" id="L492">				Dungeon.hero.sprite.place(Dungeon.hero.pos);</span>
+<span class="nc" id="L493">				Camera.main.snapTo(Dungeon.hero.sprite.center());</span>
+				
+<span class="nc" id="L495">				tengu.pos = pointToCell(tenguCellCenter);</span>
+<span class="nc" id="L496">				tengu.sprite.place(tengu.pos);</span>
+				
+				//remove all mobs, but preserve allies
+<span class="nc" id="L499">				ArrayList&lt;Mob&gt; allies = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L500" title="All 2 branches missed.">				for(Mob m : mobs.toArray(new Mob[0])){</span>
+<span class="nc bnc" id="L501" title="All 4 branches missed.">					if (m.alignment == Char.Alignment.ALLY &amp;&amp; !m.properties().contains(Char.Property.IMMOVABLE)){</span>
+<span class="nc" id="L502">						allies.add(m);</span>
+<span class="nc" id="L503">						mobs.remove(m);</span>
+					}
+				}
+				
+<span class="nc" id="L507">				setMapEnd();</span>
+				
+<span class="nc bnc" id="L509" title="All 2 branches missed.">				for (Mob m : allies){</span>
+					do{
+<span class="nc" id="L511">						m.pos = randomTenguCellPos();</span>
+<span class="nc bnc" id="L512" title="All 4 branches missed.">					} while (findMob(m.pos) != null || m.pos == Dungeon.hero.pos);</span>
+<span class="nc bnc" id="L513" title="All 2 branches missed.">					if (m.sprite != null) m.sprite.place(m.pos);</span>
+<span class="nc" id="L514">					mobs.add(m);</span>
+<span class="nc" id="L515">				}</span>
+				
+<span class="nc" id="L517">				tengu.die(Dungeon.hero);</span>
+				
+<span class="nc" id="L519">				clearEntities(tenguCell);</span>
+<span class="nc" id="L520">				cleanMapState();</span>
+				
+<span class="nc bnc" id="L522" title="All 2 branches missed.">				for (Item item : storedItems) {</span>
+<span class="nc bnc" id="L523" title="All 4 branches missed.">					if (!(item instanceof Tengu.BombAbility.BombItem)</span>
+						&amp;&amp; !(item instanceof Tengu.ShockerAbility.ShockerItem)) {
+<span class="nc" id="L525">						drop(item, randomTenguCellPos());</span>
+					}
+<span class="nc" id="L527">				}</span>
+				
+<span class="nc" id="L529">				GameScene.flash(0x80FFFFFF);</span>
+<span class="nc" id="L530">				Sample.INSTANCE.play(Assets.Sounds.BLAST);</span>
+				
+<span class="nc" id="L532">				state = State.WON;</span>
+<span class="nc" id="L533">				Game.runOnRenderThread(new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L536">						Music.INSTANCE.fadeOut(5f, new Callback() {</span>
+							@Override
+							public void call() {
+<span class="nc" id="L539">								Music.INSTANCE.end();</span>
+<span class="nc" id="L540">							}</span>
+						});
+<span class="nc" id="L542">					}</span>
+				});
+				break;
+		}
+<span class="nc" id="L546">	}</span>
+	
+<span class="nc" id="L548">	private boolean[] triggered = new boolean[]{false, false, false, false};</span>
+	
+	@Override
+	public void occupyCell(Char ch) {
+<span class="nc bnc" id="L552" title="All 2 branches missed.">		if (ch == Dungeon.hero){</span>
+<span class="nc bnc" id="L553" title="All 3 branches missed.">			switch (state){</span>
+				case START:
+<span class="nc bnc" id="L555" title="All 2 branches missed.">					if (cellToPoint(ch.pos).y &gt; tenguCell.top){</span>
+<span class="nc" id="L556">						progress();</span>
+					}
+					break;
+				case FIGHT_PAUSE:
+					
+<span class="nc bnc" id="L561" title="All 2 branches missed.">					if (cellToPoint(ch.pos).y &lt;= startHallway.top+1){</span>
+<span class="nc" id="L562">						progress();</span>
+					}
+					break;
+			}
+		}
+
+<span class="nc" id="L568">		super.occupyCell(ch);</span>
+<span class="nc" id="L569">	}</span>
+	
+	@Override
+	protected void createMobs() {
+<span class="nc" id="L573">		tengu = new Tengu(); //We want to keep track of tengu independently of other mobs, he's not always in the level.</span>
+<span class="nc" id="L574">	}</span>
+	
+	public Actor addRespawner() {
+<span class="nc" id="L577">		return null;</span>
+	}
+	
+	@Override
+	protected void createItems() {
+<span class="nc" id="L582">		Random.pushGenerator(Random.Long());</span>
+<span class="nc" id="L583">			ArrayList&lt;Item&gt; bonesItems = Bones.get();</span>
+<span class="nc bnc" id="L584" title="All 2 branches missed.">			if (bonesItems != null) {</span>
+				int pos;
+				do {
+<span class="nc" id="L587">					pos = randomRespawnCell(null);</span>
+<span class="nc bnc" id="L588" title="All 2 branches missed.">				} while (pos == entrance());</span>
+<span class="nc bnc" id="L589" title="All 2 branches missed.">				for (Item i : bonesItems) {</span>
+<span class="nc" id="L590">					drop(i, pos).setHauntedIfCursed().type = Heap.Type.REMAINS;</span>
+<span class="nc" id="L591">				}</span>
+			}
+<span class="nc" id="L593">		Random.popGenerator();</span>
+
+<span class="nc" id="L595">		drop(new IronKey(10), randomPrisonCellPos());</span>
+<span class="nc" id="L596">	}</span>
+
+	@Override
+	public ArrayList&lt;Item&gt; getItemsToPreserveFromSealedResurrect() {
+<span class="nc" id="L600">		ArrayList&lt;Item&gt; items = super.getItemsToPreserveFromSealedResurrect();</span>
+
+<span class="nc" id="L602">		items.addAll(storedItems);</span>
+
+<span class="nc bnc" id="L604" title="All 2 branches missed.">		for (Item i : items.toArray(new Item[0])){</span>
+<span class="nc bnc" id="L605" title="All 4 branches missed.">			if (i instanceof Tengu.BombAbility.BombItem || i instanceof Tengu.ShockerAbility.ShockerItem){</span>
+<span class="nc" id="L606">				items.remove(i);</span>
+			}
+		}
+
+<span class="nc" id="L610">		return items;</span>
+	}
+
+	private int randomPrisonCellPos(){
+<span class="nc" id="L614">		Rect room = startCells[Random.Int(startCells.length)];</span>
+		
+<span class="nc" id="L616">		return Random.IntRange(room.left+1, room.right-2)</span>
+<span class="nc" id="L617">				+ width()*Random.IntRange(room.top+1, room.bottom-2);</span>
+	}
+	
+	public int randomTenguCellPos(){
+<span class="nc" id="L621">		return Random.IntRange(tenguCell.left+1, tenguCell.right-2)</span>
+<span class="nc" id="L622">				+ width()*Random.IntRange(tenguCell.top+1, tenguCell.bottom-2);</span>
+	}
+	
+	public void cleanTenguCell(){
+		
+<span class="nc" id="L627">		traps.clear();</span>
+<span class="nc" id="L628">		Painter.fill(this, tenguCell, 1, Terrain.EMPTY);</span>
+<span class="nc" id="L629">		buildFlagMaps();</span>
+
+<span class="nc bnc" id="L631" title="All 2 branches missed.">		for (CustomTilemap vis : customTiles){</span>
+<span class="nc bnc" id="L632" title="All 2 branches missed.">			if (vis instanceof FadingTraps){</span>
+<span class="nc" id="L633">				((FadingTraps) vis).remove();</span>
+			}
+<span class="nc" id="L635">		}</span>
+		
+<span class="nc" id="L637">	}</span>
+	
+	public void placeTrapsInTenguCell(float fill){
+		
+<span class="nc" id="L641">		Point tenguPoint = cellToPoint(tengu.pos);</span>
+<span class="nc" id="L642">		Point heroPoint = cellToPoint(Dungeon.hero.pos);</span>
+		
+<span class="nc" id="L644">		PathFinder.setMapSize(7, 7);</span>
+		
+<span class="nc" id="L646">		int tenguPos = tenguPoint.x-(tenguCell.left+1) + (tenguPoint.y-(tenguCell.top+1))*7;</span>
+<span class="nc" id="L647">		int heroPos = heroPoint.x-(tenguCell.left+1) + (heroPoint.y-(tenguCell.top+1))*7;</span>
+		
+		boolean[] trapsPatch;
+
+		//fill ramps up much faster during challenge, effectively 78%-90%
+<span class="nc bnc" id="L652" title="All 2 branches missed.">		if (Dungeon.isChallenged(Challenges.STRONGER_BOSSES)){</span>
+<span class="nc" id="L653">			fill = 0.675f + fill/4f;</span>
+		}
+
+<span class="nc" id="L656">		int tries = 0;</span>
+		do {
+<span class="nc" id="L658">			tries++;</span>
+
+<span class="nc bnc" id="L660" title="All 2 branches missed.">			if (tries &gt;= 100){</span>
+<span class="nc" id="L661">				tries = 0;</span>
+<span class="nc" id="L662">				fill -= 0.01f;</span>
+			}
+
+<span class="nc" id="L665">			trapsPatch = Patch.generate(7, 7, fill, 0, false);</span>
+
+<span class="nc" id="L667">			PathFinder.buildDistanceMap(tenguPos, BArray.not(trapsPatch, null));</span>
+			//note that the effective range of fill is 40%-90%
+			//so distance to tengu starts at 3-6 tiles and scales up to 7-8 as fill increases
+<span class="nc bnc" id="L670" title="All 2 branches missed.">		} while (((PathFinder.distance[heroPos] &lt; Math.ceil(7*fill))</span>
+<span class="nc bnc" id="L671" title="All 2 branches missed.">				|| (PathFinder.distance[heroPos] &gt; Math.ceil(4 + 4*fill))));</span>
+<span class="nc" id="L672">		System.out.println(tries);</span>
+
+<span class="nc" id="L674">		PathFinder.setMapSize(width(), height());</span>
+		
+<span class="nc bnc" id="L676" title="All 2 branches missed.">		for (int i = 0; i &lt; trapsPatch.length; i++){</span>
+<span class="nc bnc" id="L677" title="All 2 branches missed.">			if (trapsPatch[i]) {</span>
+<span class="nc" id="L678">				int x = i % 7;</span>
+<span class="nc" id="L679">				int y = i / 7;</span>
+<span class="nc" id="L680">				int cell = x+tenguCell.left+1 + (y+tenguCell.top+1)*width();</span>
+<span class="nc bnc" id="L681" title="All 2 branches missed.">				if (Blob.volumeAt(cell, StormCloud.class) == 0</span>
+<span class="nc bnc" id="L682" title="All 2 branches missed.">						&amp;&amp; Blob.volumeAt(cell, Regrowth.class) &lt;= 9</span>
+<span class="nc bnc" id="L683" title="All 2 branches missed.">						&amp;&amp; Dungeon.level.plants.get(cell) == null</span>
+<span class="nc bnc" id="L684" title="All 2 branches missed.">						&amp;&amp; Actor.findChar(cell) == null) {</span>
+<span class="nc" id="L685">					Level.set(cell, Terrain.SECRET_TRAP);</span>
+<span class="nc" id="L686">					setTrap(new TenguDartTrap().hide(), cell);</span>
+<span class="nc" id="L687">					CellEmitter.get(cell).burst(Speck.factory(Speck.LIGHT), 2);</span>
+				}
+			}
+		}
+		
+<span class="nc" id="L692">		GameScene.updateMap();</span>
+		
+<span class="nc" id="L694">		FadingTraps t = new FadingTraps();</span>
+<span class="nc" id="L695">		t.fadeDelay = 2f;</span>
+<span class="nc" id="L696">		t.setCoveringArea(tenguCell);</span>
+<span class="nc" id="L697">		GameScene.add(t, false);</span>
+<span class="nc" id="L698">		customTiles.add(t);</span>
+<span class="nc" id="L699">	}</span>
+	
+	@Override
+	public int randomRespawnCell( Char ch ) {
+<span class="nc" id="L703">		ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L704" title="All 2 branches missed.">		for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc" id="L705">			int cell = ENTRANCE_POS + i;</span>
+<span class="nc bnc" id="L706" title="All 2 branches missed.">			if (passable[cell]</span>
+<span class="nc bnc" id="L707" title="All 2 branches missed.">					&amp;&amp; Actor.findChar(cell) == null</span>
+<span class="nc bnc" id="L708" title="All 4 branches missed.">					&amp;&amp; (!Char.hasProp(ch, Char.Property.LARGE) || openSpace[cell])){</span>
+<span class="nc" id="L709">				candidates.add(cell);</span>
+			}
+		}
+
+<span class="nc bnc" id="L713" title="All 2 branches missed.">		if (candidates.isEmpty()){</span>
+<span class="nc" id="L714">			return -1;</span>
+		} else {
+<span class="nc" id="L716">			return Random.element(candidates);</span>
+		}
+	}
+	
+	@Override
+	public String tileName( int tile ) {
+<span class="nc bnc" id="L722" title="All 2 branches missed.">		switch (tile) {</span>
+			case Terrain.WATER:
+<span class="nc" id="L724">				return Messages.get(PrisonLevel.class, &quot;water_name&quot;);</span>
+			default:
+<span class="nc" id="L726">				return super.tileName( tile );</span>
+		}
+	}
+	
+	@Override
+	public String tileDesc(int tile) {
+<span class="nc bnc" id="L732" title="All 3 branches missed.">		switch (tile) {</span>
+			case Terrain.EMPTY_DECO:
+<span class="nc" id="L734">				return Messages.get(PrisonLevel.class, &quot;empty_deco_desc&quot;);</span>
+			case Terrain.BOOKSHELF:
+<span class="nc" id="L736">				return Messages.get(PrisonLevel.class, &quot;bookshelf_desc&quot;);</span>
+			default:
+<span class="nc" id="L738">				return super.tileDesc( tile );</span>
+		}
+	}
+	
+	//TODO consider making this external to the prison boss level
+<span class="nc" id="L743">	public static class FadingTraps extends CustomTilemap {</span>
+		
+		{
+<span class="nc" id="L746">			texture = Assets.Environment.TERRAIN_FEATURES;</span>
+		}
+		
+		Rect area;
+		
+<span class="nc" id="L751">		private float fadeDuration = 1f;</span>
+<span class="nc" id="L752">		private float initialAlpha = .4f;</span>
+<span class="nc" id="L753">		private float fadeDelay = 1f;</span>
+		
+		public void setCoveringArea(Rect area){
+<span class="nc" id="L756">			tileX = area.left;</span>
+<span class="nc" id="L757">			tileY = area.top;</span>
+<span class="nc" id="L758">			tileH = area.bottom - area.top;</span>
+<span class="nc" id="L759">			tileW = area.right - area.left;</span>
+			
+<span class="nc" id="L761">			this.area = area;</span>
+<span class="nc" id="L762">		}</span>
+		
+		@Override
+		public Tilemap create() {
+<span class="nc" id="L766">			Tilemap v = super.create();</span>
+<span class="nc" id="L767">			int[] data = new int[tileW*tileH];</span>
+			int cell;
+			Trap t;
+<span class="nc" id="L770">			int i = 0;</span>
+<span class="nc bnc" id="L771" title="All 2 branches missed.">			for (int y = tileY; y &lt; tileY + tileH; y++){</span>
+<span class="nc" id="L772">				cell = tileX + y*Dungeon.level.width();</span>
+<span class="nc bnc" id="L773" title="All 2 branches missed.">				for (int x = tileX; x &lt; tileX + tileW; x++){</span>
+<span class="nc" id="L774">					t = Dungeon.level.traps.get(cell);</span>
+<span class="nc bnc" id="L775" title="All 2 branches missed.">					if (t != null){</span>
+<span class="nc" id="L776">						data[i] = t.color + t.shape*16;</span>
+					} else {
+<span class="nc" id="L778">						data[i] = -1;</span>
+					}
+<span class="nc" id="L780">					cell++;</span>
+<span class="nc" id="L781">					i++;</span>
+				}
+			}
+			
+<span class="nc" id="L785">			v.map( data, tileW );</span>
+<span class="nc" id="L786">			setFade();</span>
+<span class="nc" id="L787">			return v;</span>
+		}
+		
+		@Override
+		public String name(int tileX, int tileY) {
+<span class="nc" id="L792">			int cell = (this.tileX+tileX) + Dungeon.level.width()*(this.tileY+tileY);</span>
+<span class="nc bnc" id="L793" title="All 2 branches missed.">			if (Dungeon.level.traps.get(cell) != null){</span>
+<span class="nc" id="L794">				return Messages.titleCase(Dungeon.level.traps.get(cell).name());</span>
+			}
+<span class="nc" id="L796">			return super.name(tileX, tileY);</span>
+		}
+		
+		@Override
+		public String desc(int tileX, int tileY) {
+<span class="nc" id="L801">			int cell = (this.tileX+tileX) + Dungeon.level.width()*(this.tileY+tileY);</span>
+<span class="nc bnc" id="L802" title="All 2 branches missed.">			if (Dungeon.level.traps.get(cell) != null){</span>
+<span class="nc" id="L803">				return Dungeon.level.traps.get(cell).desc();</span>
+			}
+<span class="nc" id="L805">			return super.desc(tileX, tileY);</span>
+		}
+		
+		private void setFade( ){
+<span class="nc bnc" id="L809" title="All 2 branches missed.">			if (vis == null){</span>
+<span class="nc" id="L810">				return;</span>
+			}
+			
+<span class="nc" id="L813">			vis.alpha( initialAlpha );</span>
+<span class="nc" id="L814">			Actor.addDelayed(new Actor() {</span>
+				
+				{
+<span class="nc" id="L817">					actPriority = HERO_PRIO+1;</span>
+<span class="nc" id="L818">				}</span>
+				
+				@Override
+				protected boolean act() {
+<span class="nc" id="L822">					Actor.remove(this);</span>
+					
+<span class="nc bnc" id="L824" title="All 4 branches missed.">					if (vis != null &amp;&amp; vis.parent != null) {</span>
+<span class="nc" id="L825">						Dungeon.level.customTiles.remove(FadingTraps.this);</span>
+<span class="nc" id="L826">						vis.parent.add(new AlphaTweener(vis, 0f, fadeDuration) {</span>
+							@Override
+							protected void onComplete() {
+<span class="nc" id="L829">								super.onComplete();</span>
+<span class="nc" id="L830">								vis.killAndErase();</span>
+<span class="nc" id="L831">								killAndErase();</span>
+<span class="nc" id="L832">							}</span>
+						});
+					}
+					
+<span class="nc" id="L836">					return true;</span>
+				}
+			}, fadeDelay);
+<span class="nc" id="L839">		}</span>
+
+		private void remove(){
+<span class="nc bnc" id="L842" title="All 2 branches missed.">			if (vis != null){</span>
+<span class="nc" id="L843">				vis.killAndErase();</span>
+			}
+<span class="nc" id="L845">			Dungeon.level.customTiles.remove(this);</span>
+<span class="nc" id="L846">		}</span>
+		
+	}
+	
+<span class="nc" id="L850">	public static class ExitVisual extends CustomTilemap {</span>
+		
+		{
+<span class="nc" id="L853">			texture = Assets.Environment.PRISON_EXIT;</span>
+			
+<span class="nc" id="L855">			tileW = 14;</span>
+<span class="nc" id="L856">			tileH = 11;</span>
+		}
+		
+<span class="nc" id="L859">		final int TEX_WIDTH = 256;</span>
+		
+<span class="nc" id="L861">		private static byte[] render = new byte[]{</span>
+				0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
+				1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+				1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+				1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+				1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+				1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0,
+				1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0,
+				1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0,
+				0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0,
+				0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+				0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		};
+		
+		@Override
+		public Tilemap create() {
+<span class="nc" id="L877">			Tilemap v = super.create();</span>
+<span class="nc" id="L878">			int[] data = mapSimpleImage(0, 0, TEX_WIDTH);</span>
+<span class="nc bnc" id="L879" title="All 2 branches missed.">			for (int i = 0; i &lt; data.length; i++){</span>
+<span class="nc bnc" id="L880" title="All 2 branches missed.">				if (render[i] == 0) data[i] = -1;</span>
+			}
+<span class="nc" id="L882">			v.map(data, tileW);</span>
+<span class="nc" id="L883">			return v;</span>
+		}
+		
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L888">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L889">			tileX = 11;</span>
+<span class="nc" id="L890">			tileY = 10;</span>
+<span class="nc" id="L891">			tileW = 14;</span>
+<span class="nc" id="L892">			tileH = 11;</span>
+<span class="nc" id="L893">		}</span>
+	}
+	
+<span class="nc" id="L896">	public static class ExitVisualWalls extends CustomTilemap {</span>
+		
+		{
+<span class="nc" id="L899">			texture = Assets.Environment.PRISON_EXIT;</span>
+			
+<span class="nc" id="L901">			tileW = 14;</span>
+<span class="nc" id="L902">			tileH = 22;</span>
+		}
+		
+<span class="nc" id="L905">		final int TEX_WIDTH = 256;</span>
+		
+<span class="nc" id="L907">		private static byte[] render = new byte[]{</span>
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+				0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
+				0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1,
+				1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1,
+				0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1,
+				0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1
+		};
+		
+		@Override
+		public Tilemap create() {
+<span class="nc" id="L934">			Tilemap v = super.create();</span>
+<span class="nc" id="L935">			int[] data = mapSimpleImage(0, 10, TEX_WIDTH);</span>
+<span class="nc bnc" id="L936" title="All 2 branches missed.">			for (int i = 0; i &lt; data.length; i++){</span>
+<span class="nc bnc" id="L937" title="All 2 branches missed.">				if (render[i] == 0) data[i] = -1;</span>
+			}
+<span class="nc" id="L939">			v.map(data, tileW);</span>
+<span class="nc" id="L940">			return v;</span>
+		}
+		
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L945">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L946">			tileX = 11;</span>
+<span class="nc" id="L947">			tileY = 10;</span>
+<span class="nc" id="L948">			tileW = 14;</span>
+<span class="nc" id="L949">			tileH = 22;</span>
+<span class="nc" id="L950">		}</span>
+		
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

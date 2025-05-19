@@ -1,0 +1,631 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>YogFist.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">YogFist.java</span></div><h1>YogFist.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Fire;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.StormCloud;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ToxicGas;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Bleeding;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Blindness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Cripple;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Light;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.LockedFloor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Ooze;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Roots;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Sleep;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.LeafParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Viscosity;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sickle;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.GeyserTrap;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.FistSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L65">public abstract class YogFist extends Mob {</span>
+
+	{
+<span class="nc" id="L68">		HP = HT = 300;</span>
+<span class="nc" id="L69">		defenseSkill = 20;</span>
+
+<span class="nc" id="L71">		viewDistance = Light.DISTANCE;</span>
+
+		//for doomed resistance
+<span class="nc" id="L74">		EXP = 25;</span>
+<span class="nc" id="L75">		maxLvl = -2;</span>
+
+<span class="nc" id="L77">		state = HUNTING;</span>
+
+<span class="nc" id="L79">		properties.add(Property.BOSS);</span>
+<span class="nc" id="L80">		properties.add(Property.DEMONIC);</span>
+	}
+
+	private float rangedCooldown;
+<span class="nc" id="L84">	protected boolean canRangedInMelee = true;</span>
+
+	protected void incrementRangedCooldown(){
+<span class="nc" id="L87">		rangedCooldown += Random.NormalFloat(8, 12);</span>
+<span class="nc" id="L88">	}</span>
+
+	@Override
+	protected boolean act() {
+<span class="nc bnc" id="L92" title="All 4 branches missed.">		if (paralysed &lt;= 0 &amp;&amp; rangedCooldown &gt; 0) rangedCooldown--;</span>
+
+<span class="nc bnc" id="L94" title="All 4 branches missed.">		if (Dungeon.hero.invisible &lt;= 0 &amp;&amp; state == WANDERING){</span>
+<span class="nc" id="L95">			beckon(Dungeon.hero.pos);</span>
+<span class="nc" id="L96">			state = HUNTING;</span>
+<span class="nc" id="L97">			enemy = Dungeon.hero;</span>
+		}
+
+<span class="nc" id="L100">		return super.act();</span>
+	}
+
+	@Override
+	protected boolean canAttack(Char enemy) {
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		if (rangedCooldown &lt;= 0){</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			return new Ballistica( pos, enemy.pos, Ballistica.MAGIC_BOLT).collisionPos == enemy.pos;</span>
+		} else {
+<span class="nc" id="L108">			return super.canAttack(enemy);</span>
+		}
+	}
+
+<span class="nc" id="L112">	private boolean invulnWarned = false;</span>
+
+	protected boolean isNearYog(){
+<span class="nc" id="L115">		int yogPos = Dungeon.level.exit() + 3*Dungeon.level.width();</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		return Dungeon.level.distance(pos, yogPos) &lt;= 4;</span>
+	}
+
+	@Override
+	public boolean isInvulnerable(Class effect) {
+<span class="nc bnc" id="L121" title="All 4 branches missed.">		if (isNearYog() &amp;&amp; !invulnWarned){</span>
+<span class="nc" id="L122">			invulnWarned = true;</span>
+<span class="nc" id="L123">			GLog.w(Messages.get(this, &quot;invuln_warn&quot;));</span>
+		}
+<span class="nc bnc" id="L125" title="All 4 branches missed.">		return isNearYog() || super.isInvulnerable(effect);</span>
+	}
+
+	@Override
+	protected boolean doAttack( Char enemy ) {
+
+<span class="nc bnc" id="L131" title="All 6 branches missed.">		if (Dungeon.level.adjacent( pos, enemy.pos ) &amp;&amp; (!canRangedInMelee || rangedCooldown &gt; 0)) {</span>
+
+<span class="nc" id="L133">			return super.doAttack( enemy );</span>
+
+		} else {
+
+<span class="nc" id="L137">			incrementRangedCooldown();</span>
+<span class="nc bnc" id="L138" title="All 6 branches missed.">			if (sprite != null &amp;&amp; (sprite.visible || enemy.sprite.visible)) {</span>
+<span class="nc" id="L139">				sprite.zap( enemy.pos );</span>
+<span class="nc" id="L140">				return false;</span>
+			} else {
+<span class="nc" id="L142">				zap();</span>
+<span class="nc" id="L143">				return true;</span>
+			}
+		}
+	}
+
+	@Override
+	public void damage(int dmg, Object src) {
+<span class="nc" id="L150">		int preHP = HP;</span>
+<span class="nc" id="L151">		super.damage(dmg, src);</span>
+<span class="nc" id="L152">		int dmgTaken = preHP - HP;</span>
+
+<span class="nc" id="L154">		LockedFloor lock = Dungeon.hero.buff(LockedFloor.class);</span>
+<span class="nc bnc" id="L155" title="All 8 branches missed.">		if (dmgTaken &gt; 0 &amp;&amp; lock != null &amp;&amp; !isImmune(src.getClass()) &amp;&amp; !isInvulnerable(src.getClass())){</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">			if (Dungeon.isChallenged(Challenges.STRONGER_BOSSES))   lock.addTime(dmgTaken/4f);</span>
+<span class="nc" id="L157">			else                                                    lock.addTime(dmgTaken/2f);</span>
+		}
+<span class="nc" id="L159">	}</span>
+
+	@Override
+	public void die(Object cause) {
+<span class="nc" id="L163">		super.die(cause);</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">		for ( Char c : Actor.chars() ){</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">			if (c instanceof YogDzewa){</span>
+<span class="nc" id="L166">				((YogDzewa) c).processFistDeath();</span>
+			}
+<span class="nc" id="L168">		}</span>
+<span class="nc" id="L169">	}</span>
+
+	protected abstract void zap();
+
+	public void onZapComplete(){
+<span class="nc" id="L174">		zap();</span>
+<span class="nc" id="L175">		next();</span>
+<span class="nc" id="L176">	}</span>
+
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L180">		return 36;</span>
+	}
+
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L185">		return Random.NormalIntRange( 18, 36 );</span>
+	}
+
+	@Override
+	public int drRoll() {
+<span class="nc" id="L190">		return super.drRoll() + Random.NormalIntRange(0, 15);</span>
+	}
+
+	{
+<span class="nc" id="L194">		immunities.add( Sleep.class );</span>
+<span class="nc" id="L195">	}</span>
+
+	@Override
+	public String description() {
+<span class="nc" id="L199">		return Messages.get(YogFist.class, &quot;desc&quot;) + &quot;\n\n&quot; + Messages.get(this, &quot;desc&quot;);</span>
+	}
+
+	public static final String RANGED_COOLDOWN = &quot;ranged_cooldown&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L206">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L207">		bundle.put(RANGED_COOLDOWN, rangedCooldown);</span>
+<span class="nc" id="L208">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L212">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L213">		rangedCooldown = bundle.getFloat(RANGED_COOLDOWN);</span>
+<span class="nc" id="L214">	}</span>
+
+<span class="nc" id="L216">	public static class BurningFist extends YogFist {</span>
+
+		{
+<span class="nc" id="L219">			spriteClass = FistSprite.Burning.class;</span>
+
+<span class="nc" id="L221">			properties.add(Property.FIERY);</span>
+		}
+
+		@Override
+		public boolean act() {
+
+<span class="nc" id="L227">			boolean result = super.act();</span>
+
+<span class="nc bnc" id="L229" title="All 2 branches missed.">			if (Dungeon.level.map[pos] == Terrain.WATER){</span>
+<span class="nc" id="L230">				Level.set( pos, Terrain.EMPTY);</span>
+<span class="nc" id="L231">				GameScene.updateMap( pos );</span>
+<span class="nc" id="L232">				CellEmitter.get( pos ).burst( Speck.factory( Speck.STEAM ), 10 );</span>
+			}
+
+			//1.67 evaporated tiles on average
+<span class="nc" id="L236">			int evaporatedTiles = Random.chances(new float[]{0, 1, 2});</span>
+
+<span class="nc bnc" id="L238" title="All 2 branches missed.">			for (int i = 0; i &lt; evaporatedTiles; i++) {</span>
+<span class="nc" id="L239">				int cell = pos + PathFinder.NEIGHBOURS8[Random.Int(8)];</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">				if (Dungeon.level.map[cell] == Terrain.WATER){</span>
+<span class="nc" id="L241">					Level.set( cell, Terrain.EMPTY);</span>
+<span class="nc" id="L242">					GameScene.updateMap( cell );</span>
+<span class="nc" id="L243">					CellEmitter.get( cell ).burst( Speck.factory( Speck.STEAM ), 10 );</span>
+				}
+			}
+
+<span class="nc bnc" id="L247" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS9) {</span>
+<span class="nc" id="L248">				int vol = Fire.volumeAt(pos+i, Fire.class);</span>
+<span class="nc bnc" id="L249" title="All 6 branches missed.">				if (vol &lt; 4 &amp;&amp; !Dungeon.level.water[pos + i] &amp;&amp; !Dungeon.level.solid[pos + i]){</span>
+<span class="nc" id="L250">					GameScene.add( Blob.seed( pos + i, 4 - vol, Fire.class ) );</span>
+				}
+			}
+
+<span class="nc" id="L254">			return result;</span>
+		}
+
+		@Override
+		protected void zap() {
+<span class="nc" id="L259">			spend( 1f );</span>
+
+<span class="nc bnc" id="L261" title="All 2 branches missed.">			if (Dungeon.level.map[enemy.pos] == Terrain.WATER){</span>
+<span class="nc" id="L262">				Level.set( enemy.pos, Terrain.EMPTY);</span>
+<span class="nc" id="L263">				GameScene.updateMap( enemy.pos );</span>
+<span class="nc" id="L264">				CellEmitter.get( enemy.pos ).burst( Speck.factory( Speck.STEAM ), 10 );</span>
+			} else {
+<span class="nc" id="L266">				Buff.affect( enemy, Burning.class ).reignite( enemy );</span>
+			}
+
+<span class="nc bnc" id="L269" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS9){</span>
+<span class="nc bnc" id="L270" title="All 4 branches missed.">				if (!Dungeon.level.water[enemy.pos+i] &amp;&amp; !Dungeon.level.solid[enemy.pos+i]){</span>
+<span class="nc" id="L271">					int vol = Fire.volumeAt(enemy.pos+i, Fire.class);</span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">					if (vol &lt; 4){</span>
+<span class="nc" id="L273">						GameScene.add( Blob.seed( enemy.pos + i, 4 - vol, Fire.class ) );</span>
+					}
+				}
+			}
+
+<span class="nc" id="L278">		}</span>
+
+		{
+<span class="nc" id="L281">			immunities.add(Frost.class);</span>
+
+<span class="nc" id="L283">			resistances.add(StormCloud.class);</span>
+<span class="nc" id="L284">			resistances.add(GeyserTrap.class);</span>
+<span class="nc" id="L285">		}</span>
+
+	}
+
+<span class="nc" id="L289">	public static class SoiledFist extends YogFist {</span>
+
+		{
+<span class="nc" id="L292">			spriteClass = FistSprite.Soiled.class;</span>
+<span class="nc" id="L293">		}</span>
+
+		@Override
+		public boolean act() {
+
+<span class="nc" id="L298">			boolean result = super.act();</span>
+
+			//1.33 grass tiles on average
+<span class="nc" id="L301">			int furrowedTiles = Random.chances(new float[]{0, 2, 1});</span>
+
+<span class="nc bnc" id="L303" title="All 2 branches missed.">			for (int i = 0; i &lt; furrowedTiles; i++) {</span>
+<span class="nc" id="L304">				int cell = pos + PathFinder.NEIGHBOURS9[Random.Int(9)];</span>
+<span class="nc bnc" id="L305" title="All 2 branches missed.">				if (Dungeon.level.map[cell] == Terrain.GRASS) {</span>
+<span class="nc" id="L306">					Level.set(cell, Terrain.FURROWED_GRASS);</span>
+<span class="nc" id="L307">					GameScene.updateMap(cell);</span>
+<span class="nc" id="L308">					CellEmitter.get(cell).burst(LeafParticle.GENERAL, 10);</span>
+				}
+			}
+
+<span class="nc" id="L312">			Dungeon.observe();</span>
+
+<span class="nc bnc" id="L314" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS9) {</span>
+<span class="nc" id="L315">				int cell = pos + i;</span>
+<span class="nc bnc" id="L316" title="All 2 branches missed.">				if (canSpreadGrass(cell)){</span>
+<span class="nc" id="L317">					Level.set(pos+i, Terrain.GRASS);</span>
+<span class="nc" id="L318">					GameScene.updateMap( pos + i );</span>
+				}
+			}
+
+<span class="nc" id="L322">			return result;</span>
+		}
+
+		@Override
+		public void damage(int dmg, Object src) {
+<span class="nc" id="L327">			int grassCells = 0;</span>
+<span class="nc bnc" id="L328" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS9) {</span>
+<span class="nc bnc" id="L329" title="All 4 branches missed.">				if (Dungeon.level.map[pos+i] == Terrain.FURROWED_GRASS</span>
+				|| Dungeon.level.map[pos+i] == Terrain.HIGH_GRASS){
+<span class="nc" id="L331">					grassCells++;</span>
+				}
+			}
+<span class="nc bnc" id="L334" title="All 2 branches missed.">			if (grassCells &gt; 0) dmg = Math.round(dmg * (6-grassCells)/6f);</span>
+
+			//can be ignited, but takes no damage from burning
+<span class="nc bnc" id="L337" title="All 2 branches missed.">			if (src.getClass() == Burning.class){</span>
+<span class="nc" id="L338">				return;</span>
+			}
+
+<span class="nc" id="L341">			super.damage(dmg, src);</span>
+<span class="nc" id="L342">		}</span>
+
+		@Override
+		protected void zap() {
+<span class="nc" id="L346">			spend( 1f );</span>
+
+<span class="nc" id="L348">			Invisibility.dispel(this);</span>
+<span class="nc" id="L349">			Char enemy = this.enemy;</span>
+<span class="nc bnc" id="L350" title="All 2 branches missed.">			if (hit( this, enemy, true )) {</span>
+
+<span class="nc" id="L352">				Buff.affect( enemy, Roots.class, 3f );</span>
+
+			} else {
+
+<span class="nc" id="L356">				enemy.sprite.showStatus( CharSprite.NEUTRAL,  enemy.defenseVerb() );</span>
+			}
+
+<span class="nc bnc" id="L359" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS9){</span>
+<span class="nc" id="L360">				int cell = enemy.pos + i;</span>
+<span class="nc bnc" id="L361" title="All 2 branches missed.">				if (canSpreadGrass(cell)){</span>
+<span class="nc bnc" id="L362" title="All 2 branches missed.">					if (Random.Int(5) == 0){</span>
+<span class="nc" id="L363">						Level.set(cell, Terrain.FURROWED_GRASS);</span>
+<span class="nc" id="L364">						GameScene.updateMap( cell );</span>
+					} else {
+<span class="nc" id="L366">						Level.set(cell, Terrain.GRASS);</span>
+<span class="nc" id="L367">						GameScene.updateMap( cell );</span>
+					}
+<span class="nc" id="L369">					CellEmitter.get( cell ).burst( LeafParticle.GENERAL, 10 );</span>
+				}
+			}
+<span class="nc" id="L372">			Dungeon.observe();</span>
+
+<span class="nc" id="L374">		}</span>
+
+		private boolean canSpreadGrass(int cell){
+<span class="nc" id="L377">			int yogPos = Dungeon.level.exit() + Dungeon.level.width()*3;</span>
+<span class="nc bnc" id="L378" title="All 8 branches missed.">			return Dungeon.level.distance(cell, yogPos) &gt; 4 &amp;&amp; !Dungeon.level.solid[cell]</span>
+					&amp;&amp; !(Dungeon.level.map[cell] == Terrain.FURROWED_GRASS || Dungeon.level.map[cell] == Terrain.HIGH_GRASS);
+		}
+
+	}
+
+<span class="nc" id="L384">	public static class RottingFist extends YogFist {</span>
+
+		{
+<span class="nc" id="L387">			spriteClass = FistSprite.Rotting.class;</span>
+
+<span class="nc" id="L389">			properties.add(Property.ACIDIC);</span>
+		}
+
+		@Override
+		protected boolean act() {
+			//ensures toxic gas acts at the appropriate time when added
+<span class="nc" id="L395">			GameScene.add(Blob.seed(pos, 0, ToxicGas.class));</span>
+
+<span class="nc bnc" id="L397" title="All 4 branches missed.">			if (Dungeon.level.water[pos] &amp;&amp; HP &lt; HT) {</span>
+<span class="nc" id="L398">				sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(HT/50), FloatingText.HEALING);</span>
+<span class="nc" id="L399">				HP = Math.min(HT, HP + HT/50);</span>
+			}
+
+<span class="nc" id="L402">			return super.act();</span>
+		}
+
+		@Override
+		public void damage(int dmg, Object src) {
+<span class="nc bnc" id="L407" title="All 4 branches missed.">			if (!isInvulnerable(src.getClass())</span>
+					&amp;&amp; !(src instanceof Bleeding)
+<span class="nc bnc" id="L409" title="All 2 branches missed.">					&amp;&amp; buff(Sickle.HarvestBleedTracker.class) == null){</span>
+<span class="nc" id="L410">				dmg = Math.round( dmg * resist( src.getClass() ));</span>
+<span class="nc bnc" id="L411" title="All 2 branches missed.">				if (dmg &lt; 0){</span>
+<span class="nc" id="L412">					return;</span>
+				}
+<span class="nc" id="L414">				Bleeding b = buff(Bleeding.class);</span>
+<span class="nc bnc" id="L415" title="All 2 branches missed.">				if (b == null){</span>
+<span class="nc" id="L416">					b = new Bleeding();</span>
+				}
+<span class="nc" id="L418">				b.announced = false;</span>
+<span class="nc" id="L419">				b.set(dmg*.6f);</span>
+<span class="nc" id="L420">				b.attachTo(this);</span>
+<span class="nc" id="L421">				sprite.showStatus(CharSprite.WARNING, Messages.titleCase(b.name()) + &quot; &quot; + (int)b.level());</span>
+<span class="nc" id="L422">			} else{</span>
+<span class="nc" id="L423">				super.damage(dmg, src);</span>
+			}
+<span class="nc" id="L425">		}</span>
+
+		@Override
+		protected void zap() {
+<span class="nc" id="L429">			spend( 1f );</span>
+<span class="nc" id="L430">			GameScene.add(Blob.seed(enemy.pos, 100, ToxicGas.class));</span>
+<span class="nc" id="L431">		}</span>
+
+		@Override
+		public int attackProc( Char enemy, int damage ) {
+<span class="nc" id="L435">			damage = super.attackProc( enemy, damage );</span>
+
+<span class="nc bnc" id="L437" title="All 2 branches missed.">			if (Random.Int( 2 ) == 0) {</span>
+<span class="nc" id="L438">				Buff.affect( enemy, Ooze.class ).set( Ooze.DURATION );</span>
+<span class="nc" id="L439">				enemy.sprite.burst( 0xFF000000, 5 );</span>
+			}
+
+<span class="nc" id="L442">			return damage;</span>
+		}
+
+		{
+<span class="nc" id="L446">			immunities.add(ToxicGas.class);</span>
+<span class="nc" id="L447">		}</span>
+
+	}
+
+<span class="nc" id="L451">	public static class RustedFist extends YogFist {</span>
+
+		{
+<span class="nc" id="L454">			spriteClass = FistSprite.Rusted.class;</span>
+
+<span class="nc" id="L456">			properties.add(Property.LARGE);</span>
+<span class="nc" id="L457">			properties.add(Property.INORGANIC);</span>
+<span class="nc" id="L458">		}</span>
+
+		@Override
+		public int damageRoll() {
+<span class="nc" id="L462">			return Random.NormalIntRange( 22, 44 );</span>
+		}
+
+		@Override
+		public void damage(int dmg, Object src) {
+<span class="nc bnc" id="L467" title="All 4 branches missed.">			if (!isInvulnerable(src.getClass()) &amp;&amp; !(src instanceof Viscosity.DeferedDamage)){</span>
+<span class="nc" id="L468">				dmg = Math.round( dmg * resist( src.getClass() ));</span>
+<span class="nc bnc" id="L469" title="All 2 branches missed.">				if (dmg &gt;= 0) {</span>
+<span class="nc" id="L470">					Buff.affect(this, Viscosity.DeferedDamage.class).extend(dmg);</span>
+<span class="nc" id="L471">					sprite.showStatus(CharSprite.WARNING, Messages.get(Viscosity.class, &quot;deferred&quot;, dmg));</span>
+				}
+			} else{
+<span class="nc" id="L474">				super.damage(dmg, src);</span>
+			}
+<span class="nc" id="L476">		}</span>
+
+		@Override
+		protected void zap() {
+<span class="nc" id="L480">			spend( 1f );</span>
+<span class="nc" id="L481">			Buff.affect(enemy, Cripple.class, 4f);</span>
+<span class="nc" id="L482">		}</span>
+
+	}
+
+<span class="nc" id="L486">	public static class BrightFist extends YogFist {</span>
+
+		{
+<span class="nc" id="L489">			spriteClass = FistSprite.Bright.class;</span>
+
+<span class="nc" id="L491">			properties.add(Property.ELECTRIC);</span>
+
+<span class="nc" id="L493">			canRangedInMelee = false;</span>
+<span class="nc" id="L494">		}</span>
+
+		@Override
+		protected void incrementRangedCooldown() {
+			//ranged attack has no cooldown
+<span class="nc" id="L499">		}</span>
+
+		//used so resistances can differentiate between melee and magical attacks
+<span class="nc" id="L502">		public static class LightBeam{}</span>
+
+		@Override
+		protected void zap() {
+<span class="nc" id="L506">			spend( 1f );</span>
+
+<span class="nc" id="L508">			Invisibility.dispel(this);</span>
+<span class="nc" id="L509">			Char enemy = this.enemy;</span>
+<span class="nc bnc" id="L510" title="All 2 branches missed.">			if (hit( this, enemy, true )) {</span>
+
+<span class="nc" id="L512">				enemy.damage( Random.NormalIntRange(10, 20), new LightBeam() );</span>
+<span class="nc" id="L513">				Buff.prolong( enemy, Blindness.class, Blindness.DURATION/2f );</span>
+
+<span class="nc bnc" id="L515" title="All 4 branches missed.">				if (!enemy.isAlive() &amp;&amp; enemy == Dungeon.hero) {</span>
+<span class="nc" id="L516">					Badges.validateDeathFromEnemyMagic();</span>
+<span class="nc" id="L517">					Dungeon.fail( this );</span>
+<span class="nc" id="L518">					GLog.n( Messages.get(Char.class, &quot;kill&quot;, name()) );</span>
+				}
+
+			} else {
+
+<span class="nc" id="L523">				enemy.sprite.showStatus( CharSprite.NEUTRAL,  enemy.defenseVerb() );</span>
+			}
+
+<span class="nc" id="L526">		}</span>
+
+		@Override
+		public void damage(int dmg, Object src) {
+<span class="nc" id="L530">			int beforeHP = HP;</span>
+<span class="nc" id="L531">			super.damage(dmg, src);</span>
+<span class="nc bnc" id="L532" title="All 6 branches missed.">			if (isAlive() &amp;&amp; beforeHP &gt; HT/2 &amp;&amp; HP &lt; HT/2){</span>
+<span class="nc" id="L533">				HP = HT/2;</span>
+<span class="nc" id="L534">				Buff.prolong( Dungeon.hero, Blindness.class, Blindness.DURATION*1.5f );</span>
+				int i;
+				do {
+<span class="nc" id="L537">					i = Random.Int(Dungeon.level.length());</span>
+<span class="nc bnc" id="L538" title="All 4 branches missed.">				} while (Dungeon.level.heroFOV[i]</span>
+						|| Dungeon.level.solid[i]
+<span class="nc bnc" id="L540" title="All 2 branches missed.">						|| Actor.findChar(i) != null</span>
+<span class="nc bnc" id="L541" title="All 2 branches missed.">						|| PathFinder.getStep(i, Dungeon.level.exit(), Dungeon.level.passable) == -1);</span>
+<span class="nc" id="L542">				ScrollOfTeleportation.appear(this, i);</span>
+<span class="nc" id="L543">				state = WANDERING;</span>
+<span class="nc" id="L544">				GameScene.flash(0x80FFFFFF);</span>
+<span class="nc" id="L545">				GLog.w( Messages.get( this, &quot;teleport&quot; ));</span>
+<span class="nc bnc" id="L546" title="All 2 branches missed.">			} else if (!isAlive()){</span>
+<span class="nc" id="L547">				Buff.prolong( Dungeon.hero, Blindness.class, Blindness.DURATION*3f );</span>
+<span class="nc" id="L548">				GameScene.flash(0x80FFFFFF);</span>
+			}
+<span class="nc" id="L550">		}</span>
+
+	}
+
+<span class="nc" id="L554">	public static class DarkFist extends YogFist {</span>
+
+		{
+<span class="nc" id="L557">			spriteClass = FistSprite.Dark.class;</span>
+
+<span class="nc" id="L559">			canRangedInMelee = false;</span>
+<span class="nc" id="L560">		}</span>
+
+		@Override
+		protected void incrementRangedCooldown() {
+			//ranged attack has no cooldown
+<span class="nc" id="L565">		}</span>
+
+		//used so resistances can differentiate between melee and magical attacks
+<span class="nc" id="L568">		public static class DarkBolt{}</span>
+
+		@Override
+		protected void zap() {
+<span class="nc" id="L572">			spend( 1f );</span>
+
+<span class="nc" id="L574">			Invisibility.dispel(this);</span>
+<span class="nc" id="L575">			Char enemy = this.enemy;</span>
+<span class="nc bnc" id="L576" title="All 2 branches missed.">			if (hit( this, enemy, true )) {</span>
+
+<span class="nc" id="L578">				enemy.damage( Random.NormalIntRange(10, 20), new DarkBolt() );</span>
+
+<span class="nc" id="L580">				Light l = enemy.buff(Light.class);</span>
+<span class="nc bnc" id="L581" title="All 2 branches missed.">				if (l != null){</span>
+<span class="nc" id="L582">					l.weaken(50);</span>
+				}
+
+<span class="nc bnc" id="L585" title="All 4 branches missed.">				if (!enemy.isAlive() &amp;&amp; enemy == Dungeon.hero) {</span>
+<span class="nc" id="L586">					Badges.validateDeathFromEnemyMagic();</span>
+<span class="nc" id="L587">					Dungeon.fail( this );</span>
+<span class="nc" id="L588">					GLog.n( Messages.get(Char.class, &quot;kill&quot;, name()) );</span>
+				}
+
+<span class="nc" id="L591">			} else {</span>
+
+<span class="nc" id="L593">				enemy.sprite.showStatus( CharSprite.NEUTRAL,  enemy.defenseVerb() );</span>
+			}
+
+<span class="nc" id="L596">		}</span>
+
+		@Override
+		public void damage(int dmg, Object src) {
+<span class="nc" id="L600">			int beforeHP = HP;</span>
+<span class="nc" id="L601">			super.damage(dmg, src);</span>
+<span class="nc bnc" id="L602" title="All 6 branches missed.">			if (isAlive() &amp;&amp; beforeHP &gt; HT/2 &amp;&amp; HP &lt; HT/2){</span>
+<span class="nc" id="L603">				HP = HT/2;</span>
+<span class="nc" id="L604">				Light l = Dungeon.hero.buff(Light.class);</span>
+<span class="nc bnc" id="L605" title="All 2 branches missed.">				if (l != null){</span>
+<span class="nc" id="L606">					l.detach();</span>
+				}
+				int i;
+				do {
+<span class="nc" id="L610">					i = Random.Int(Dungeon.level.length());</span>
+<span class="nc bnc" id="L611" title="All 4 branches missed.">				} while (Dungeon.level.heroFOV[i]</span>
+						|| Dungeon.level.solid[i]
+<span class="nc bnc" id="L613" title="All 2 branches missed.">						|| Actor.findChar(i) != null</span>
+<span class="nc bnc" id="L614" title="All 2 branches missed.">						|| PathFinder.getStep(i, Dungeon.level.exit(), Dungeon.level.passable) == -1);</span>
+<span class="nc" id="L615">				ScrollOfTeleportation.appear(this, i);</span>
+<span class="nc" id="L616">				state = WANDERING;</span>
+<span class="nc" id="L617">				GameScene.flash(0, false);</span>
+<span class="nc" id="L618">				GLog.w( Messages.get( this, &quot;teleport&quot; ));</span>
+<span class="nc bnc" id="L619" title="All 2 branches missed.">			} else if (!isAlive()){</span>
+<span class="nc" id="L620">				Light l = Dungeon.hero.buff(Light.class);</span>
+<span class="nc bnc" id="L621" title="All 2 branches missed.">				if (l != null){</span>
+<span class="nc" id="L622">					l.detach();</span>
+				}
+<span class="nc" id="L624">				GameScene.flash(0, false);</span>
+			}
+<span class="nc" id="L626">		}</span>
+
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

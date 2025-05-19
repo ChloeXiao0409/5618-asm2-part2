@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Feint.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.duelist</a> &gt; <span class="el_source">Feint.java</span></div><h1>Feint.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.duelist;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.BlobImmunity;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Haste;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Vulnerable;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Weakness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.features.Door;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.MirrorSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.ui.TargetHealthIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.tweeners.AlphaTweener;
+import com.watabou.noosa.tweeners.Delayer;
+import com.watabou.utils.Callback;
+
+<span class="nc" id="L56">public class Feint extends ArmorAbility {</span>
+
+	{
+<span class="nc" id="L59">		baseChargeUse = 50;</span>
+<span class="nc" id="L60">	}</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L64">		return HeroIcon.FEINT;</span>
+	}
+
+	public boolean useTargeting(){
+<span class="nc" id="L68">		return false;</span>
+	}
+
+	@Override
+	public String targetingPrompt() {
+<span class="nc" id="L73">		return Messages.get(this, &quot;prompt&quot;);</span>
+	}
+
+	@Override
+	public int targetedPos(Char user, int dst) {
+<span class="nc" id="L78">		return dst;</span>
+	}
+
+	@Override
+	protected void activate(ClassArmor armor, Hero hero, Integer target) {
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if (target == null){</span>
+<span class="nc" id="L84">			return;</span>
+		}
+
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		if (!Dungeon.level.adjacent(hero.pos, target)){</span>
+<span class="nc" id="L88">			GLog.w(Messages.get(this, &quot;too_far&quot;));</span>
+<span class="nc" id="L89">			return;</span>
+		}
+
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		if (Dungeon.hero.rooted){</span>
+<span class="nc" id="L93">			PixelScene.shake( 1, 1f );</span>
+<span class="nc" id="L94">			GLog.w(Messages.get(this, &quot;bad_location&quot;));</span>
+<span class="nc" id="L95">			return;</span>
+		}
+
+<span class="nc bnc" id="L98" title="All 4 branches missed.">		if (Dungeon.level.solid[target] || Actor.findChar(target) != null){</span>
+<span class="nc" id="L99">			GLog.w(Messages.get(this, &quot;bad_location&quot;));</span>
+<span class="nc" id="L100">			return;</span>
+		}
+
+<span class="nc" id="L103">		hero.busy();</span>
+<span class="nc" id="L104">		Sample.INSTANCE.play(Assets.Sounds.MISS);</span>
+<span class="nc" id="L105">		hero.sprite.jump(hero.pos, target, 0, 0.1f, new Callback() {</span>
+			@Override
+			public void call() {
+<span class="nc bnc" id="L108" title="All 2 branches missed.">				if (Dungeon.level.map[hero.pos] == Terrain.OPEN_DOOR) {</span>
+<span class="nc" id="L109">					Door.leave( hero.pos );</span>
+				}
+<span class="nc" id="L111">				hero.pos = target;</span>
+<span class="nc" id="L112">				Dungeon.level.occupyCell(hero);</span>
+<span class="nc" id="L113">				Invisibility.dispel();</span>
+<span class="nc" id="L114">				hero.spendAndNext(1f);</span>
+<span class="nc" id="L115">			}</span>
+		});
+
+<span class="nc" id="L118">		AfterImage image = new AfterImage();</span>
+<span class="nc" id="L119">		image.pos = hero.pos;</span>
+<span class="nc" id="L120">		GameScene.add(image, 1);</span>
+
+		int imageAttackPos;
+<span class="nc" id="L123">		Char enemyTarget = TargetHealthIndicator.instance.target();</span>
+<span class="nc bnc" id="L124" title="All 4 branches missed.">		if (enemyTarget != null &amp;&amp; enemyTarget.alignment == Char.Alignment.ENEMY){</span>
+<span class="nc" id="L125">			imageAttackPos = enemyTarget.pos;</span>
+		} else {
+<span class="nc" id="L127">			imageAttackPos = image.pos + (image.pos - target);</span>
+		}
+		//do a purely visual attack
+<span class="nc" id="L130">		hero.sprite.parent.add(new Delayer(0f){</span>
+			@Override
+			protected void onComplete() {
+<span class="nc" id="L133">				image.sprite.attack(imageAttackPos, new Callback() {</span>
+					@Override
+					public void call() {
+						//do nothing, attack is purely visual
+<span class="nc" id="L137">					}</span>
+				});
+<span class="nc" id="L139">			}</span>
+		});
+
+<span class="nc bnc" id="L142" title="All 2 branches missed.">		for (Mob m : Dungeon.level.mobs.toArray( new Mob[0] )){</span>
+<span class="nc bnc" id="L143" title="All 8 branches missed.">			if ((m.isTargeting(hero) &amp;&amp; m.state == m.HUNTING) ||</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">					(m.alignment == Char.Alignment.ENEMY &amp;&amp; m.state != m.PASSIVE &amp;&amp; Dungeon.level.distance(m.pos, image.pos) &lt;= 2)){</span>
+<span class="nc" id="L145">				m.aggro(image);</span>
+			}
+		}
+
+<span class="nc" id="L149">		armor.charge -= chargeUse(hero);</span>
+<span class="nc" id="L150">		Item.updateQuickslot();</span>
+<span class="nc" id="L151">	}</span>
+
+	@Override
+	public Talent[] talents() {
+<span class="nc" id="L155">		return new Talent[]{Talent.FEIGNED_RETREAT, Talent.EXPOSE_WEAKNESS, Talent.COUNTER_ABILITY, Talent.HEROIC_ENERGY};</span>
+	}
+
+<span class="nc" id="L158">	public static class AfterImage extends Mob {</span>
+
+		{
+<span class="nc" id="L161">			spriteClass = AfterImageSprite.class;</span>
+<span class="nc" id="L162">			defenseSkill = 0;</span>
+
+<span class="nc" id="L164">			properties.add(Property.IMMOVABLE);</span>
+
+<span class="nc" id="L166">			alignment = Alignment.ALLY;</span>
+<span class="nc" id="L167">			state = PASSIVE;</span>
+
+<span class="nc" id="L169">			HP = HT = 1;</span>
+
+			//fades just before the hero's next action
+<span class="nc" id="L172">			actPriority = Actor.HERO_PRIO+1;</span>
+		}
+
+		@Override
+		public boolean canInteract(Char c) {
+<span class="nc" id="L177">			return false;</span>
+		}
+
+		@Override
+		protected boolean act() {
+<span class="nc" id="L182">			destroy();</span>
+<span class="nc" id="L183">			sprite.die();</span>
+<span class="nc" id="L184">			return true;</span>
+		}
+
+		@Override
+		public void damage( int dmg, Object src ) {
+
+<span class="nc" id="L190">		}</span>
+
+		@Override
+		public int defenseSkill(Char enemy) {
+<span class="nc bnc" id="L194" title="All 2 branches missed.">			if (enemy.alignment == Alignment.ENEMY) {</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">				if (enemy instanceof Mob) {</span>
+<span class="nc" id="L196">					((Mob) enemy).clearEnemy();</span>
+				}
+<span class="nc" id="L198">				Buff.affect(enemy, FeintConfusion.class, 1);</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">				if (enemy.sprite != null) enemy.sprite.showLost();</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">				if (Dungeon.hero.hasTalent(Talent.FEIGNED_RETREAT)) {</span>
+<span class="nc" id="L201">					Buff.prolong(Dungeon.hero, Haste.class, 2f * Dungeon.hero.pointsInTalent(Talent.FEIGNED_RETREAT));</span>
+				}
+<span class="nc bnc" id="L203" title="All 2 branches missed.">				if (Dungeon.hero.hasTalent(Talent.EXPOSE_WEAKNESS)) {</span>
+<span class="nc" id="L204">					Buff.prolong(enemy, Vulnerable.class, 2f * Dungeon.hero.pointsInTalent(Talent.EXPOSE_WEAKNESS));</span>
+<span class="nc" id="L205">					Buff.prolong(enemy, Weakness.class, 2f * Dungeon.hero.pointsInTalent(Talent.EXPOSE_WEAKNESS));</span>
+				}
+<span class="nc bnc" id="L207" title="All 2 branches missed.">				if (Dungeon.hero.hasTalent(Talent.COUNTER_ABILITY)) {</span>
+<span class="nc" id="L208">					Buff.prolong(Dungeon.hero, Talent.CounterAbilityTacker.class, 3f);</span>
+				}
+			}
+<span class="nc" id="L211">			return 0;</span>
+		}
+
+		@Override
+		public boolean add( Buff buff ) {
+<span class="nc" id="L216">			return false;</span>
+		}
+
+		{
+<span class="nc" id="L220">			immunities.addAll(new BlobImmunity().immunities());</span>
+<span class="nc" id="L221">		}</span>
+
+		@Override
+		public CharSprite sprite() {
+<span class="nc" id="L225">			CharSprite s = super.sprite();</span>
+<span class="nc" id="L226">			((AfterImageSprite)s).updateArmor();</span>
+<span class="nc" id="L227">			return s;</span>
+		}
+
+<span class="nc" id="L230">		public static class FeintConfusion extends FlavourBuff {</span>
+
+		}
+
+<span class="nc" id="L234">		public static class AfterImageSprite extends MirrorSprite {</span>
+			@Override
+			public void updateArmor() {
+<span class="nc" id="L237">				updateArmor(6); //we can assume heroic armor</span>
+<span class="nc" id="L238">			}</span>
+
+			@Override
+			public void resetColor() {
+<span class="nc" id="L242">				super.resetColor();</span>
+<span class="nc" id="L243">				alpha(0.6f);</span>
+<span class="nc" id="L244">			}</span>
+
+			@Override
+			public void die() {
+				//don't interrupt current animation to start fading
+				//this ensures the fake attack animation plays
+<span class="nc bnc" id="L250" title="All 2 branches missed.">				if (parent != null) {</span>
+<span class="nc" id="L251">					parent.add( new AlphaTweener( this, 0, 3f ) {</span>
+						@Override
+						protected void onComplete() {
+<span class="nc" id="L254">							AfterImageSprite.this.killAndErase();</span>
+<span class="nc" id="L255">						}</span>
+					} );
+				}
+<span class="nc" id="L258">			}</span>
+		}
+
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

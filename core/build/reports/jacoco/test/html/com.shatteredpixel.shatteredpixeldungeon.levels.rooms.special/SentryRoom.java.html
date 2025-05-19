@@ -1,0 +1,460 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SentryRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special</a> &gt; <span class="el_source">SentryRoom.java</span></div><h1>SentryRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Eye;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.NPC;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Beam;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHaste;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Bestiary;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.EmptyRoom;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.MobSprite;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+import com.watabou.utils.Rect;
+
+<span class="nc" id="L59">public class SentryRoom extends SpecialRoom {</span>
+
+	@Override
+<span class="nc" id="L62">	public int minWidth() { return 7; }</span>
+<span class="nc" id="L63">	public int minHeight() { return 7; }</span>
+
+	@Override
+	public void paint(Level level) {
+
+<span class="nc" id="L68">		Painter.fill( level, this, Terrain.WALL );</span>
+<span class="nc" id="L69">		Painter.fill( level, this, 1, Terrain.EMPTY_SP );</span>
+
+<span class="nc" id="L71">		Door entrance = entrance();</span>
+
+		Point center;
+		do {
+<span class="nc" id="L75">			center = center();</span>
+<span class="nc bnc" id="L76" title="All 4 branches missed.">		} while (center.x == entrance.x || center.y == entrance.y);</span>
+
+<span class="nc" id="L78">		Point sentryPos = new Point();</span>
+<span class="nc" id="L79">		Point treasurePos = new Point();</span>
+
+		//length of dangerous path from entrance to treasure and back
+<span class="nc" id="L82">		int dangerDist = 0;</span>
+
+		//determine position of sentry, treasure, and paint safe tiles / statues
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if (entrance.x == left){</span>
+<span class="nc" id="L86">			sentryPos.set(right-1, center.y);</span>
+<span class="nc" id="L87">			Painter.fill(level, left+1, top+1, 1, height()-2, Terrain.EMPTY);</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">			if (entrance.y &gt; center.y){</span>
+<span class="nc" id="L89">				treasurePos.set(left+1, (top + 1 + center.y)/2);</span>
+<span class="nc" id="L90">				Painter.fill(level, left+1, top+1, 2, center.y-top-1, Terrain.EMPTY);</span>
+			} else {
+<span class="nc" id="L92">				treasurePos.set(left+1, (bottom + center.y)/2);</span>
+<span class="nc" id="L93">				Painter.fill(level, left+1, center.y+1, 2, bottom-center.y-1, Terrain.EMPTY);</span>
+			}
+<span class="nc bnc" id="L95" title="All 2 branches missed.">			for (int x = right-3; x &gt; left; x--){</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">				if (level.map[x + (center.y * level.width())] == Terrain.EMPTY_SP){</span>
+<span class="nc" id="L97">					Painter.set(level, x, center.y, Terrain.STATUE_SP);</span>
+				} else {
+<span class="nc" id="L99">					Painter.set(level, x, center.y, Terrain.STATUE);</span>
+				}
+			}
+<span class="nc" id="L102">			dangerDist = 2*(width()-5);</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		} else if (entrance.x == right){</span>
+<span class="nc" id="L104">			sentryPos.set(left+1, center.y);</span>
+<span class="nc" id="L105">			Painter.fill(level, right-1, top+1, 1, height()-2, Terrain.EMPTY);</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			if (entrance.y &gt; center.y){</span>
+<span class="nc" id="L107">				treasurePos.set(right-1, (top + 1 + center.y)/2);</span>
+<span class="nc" id="L108">				Painter.fill(level, right-2, top+1, 2, center.y-top-1, Terrain.EMPTY);</span>
+			} else {
+<span class="nc" id="L110">				treasurePos.set(right-1, (bottom + 1 + center.y)/2);</span>
+<span class="nc" id="L111">				Painter.fill(level, right-2, center.y+1, 2, bottom-center.y-1, Terrain.EMPTY);</span>
+			}
+<span class="nc bnc" id="L113" title="All 2 branches missed.">			for (int x = left+3; x &lt; right; x++){</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">				if (level.map[x + (center.y * level.width())] == Terrain.EMPTY_SP){</span>
+<span class="nc" id="L115">					Painter.set(level, x, center.y, Terrain.STATUE_SP);</span>
+				} else {
+<span class="nc" id="L117">					Painter.set(level, x, center.y, Terrain.STATUE);</span>
+				}
+			}
+<span class="nc" id="L120">			dangerDist = 2*(width()-5);</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">		} else if (entrance.y == top){</span>
+<span class="nc" id="L122">			sentryPos.set(center.x, bottom-1);</span>
+<span class="nc" id="L123">			Painter.fill(level, left+1, top+1, width()-2, 1, Terrain.EMPTY);</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">			if (entrance.x &gt; center.x){</span>
+<span class="nc" id="L125">				treasurePos.set((left + 1 + center.x)/2, top+1);</span>
+<span class="nc" id="L126">				Painter.fill(level, left+1, top+1, center.x-left-1, 2, Terrain.EMPTY);</span>
+			} else {
+<span class="nc" id="L128">				treasurePos.set((right + center.x)/2, top+1);</span>
+<span class="nc" id="L129">				Painter.fill(level, center.x+1, top+1, right - center.x-1, 2, Terrain.EMPTY);</span>
+			}
+<span class="nc bnc" id="L131" title="All 2 branches missed.">			for (int y = bottom-3; y &gt; top; y--){</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">				if (level.map[center.x + (y * level.width())] == Terrain.EMPTY_SP){</span>
+<span class="nc" id="L133">					Painter.set(level, center.x, y, Terrain.STATUE_SP);</span>
+				} else {
+<span class="nc" id="L135">					Painter.set(level, center.x, y, Terrain.STATUE);</span>
+				}
+			}
+<span class="nc" id="L138">			dangerDist = 2*(height()-5);</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed."> 		} else  if (entrance.y == bottom){</span>
+<span class="nc" id="L140">			sentryPos.set(center.x, top+1);</span>
+<span class="nc" id="L141">			Painter.fill(level, left+1, bottom-1, width()-2, 1, Terrain.EMPTY);</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">			if (entrance.x &gt; center.x){</span>
+<span class="nc" id="L143">				treasurePos.set((left + 1 + center.x)/2, bottom-1);</span>
+<span class="nc" id="L144">				Painter.fill(level, left+1, bottom-2, center.x-left-1, 2, Terrain.EMPTY);</span>
+			} else {
+<span class="nc" id="L146">				treasurePos.set((right + center.x)/2, bottom-1);</span>
+<span class="nc" id="L147">				Painter.fill(level, center.x+1, bottom-2, right - center.x-1, 2, Terrain.EMPTY);</span>
+			}
+<span class="nc bnc" id="L149" title="All 2 branches missed.">			for (int y = top+3; y &lt; bottom; y++){</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">				if (level.map[center.x + (y * level.width())] == Terrain.EMPTY_SP){</span>
+<span class="nc" id="L151">					Painter.set(level, center.x, y, Terrain.STATUE_SP);</span>
+				} else {
+<span class="nc" id="L153">					Painter.set(level, center.x, y, Terrain.STATUE);</span>
+				}
+			}
+<span class="nc" id="L156">			dangerDist = 2*(height()-5);</span>
+		}
+
+<span class="nc" id="L159">		Painter.set(level, sentryPos, Terrain.PEDESTAL);</span>
+<span class="nc" id="L160">		Sentry sentry = new Sentry();</span>
+<span class="nc" id="L161">		sentry.pos = level.pointToCell(sentryPos);</span>
+<span class="nc" id="L162">		sentry.room = new EmptyRoom();</span>
+<span class="nc" id="L163">		sentry.room.set((Rect)this);</span>
+<span class="nc" id="L164">		sentry.initialChargeDelay = sentry.curChargeDelay = dangerDist / 3f + 0.1f;</span>
+<span class="nc" id="L165">		level.mobs.add( sentry );</span>
+
+<span class="nc" id="L167">		Painter.set(level, treasurePos, Terrain.PEDESTAL);</span>
+<span class="nc" id="L168">		level.drop( prize( level ), level.pointToCell(treasurePos) ).type = Heap.Type.CHEST;</span>
+
+<span class="nc" id="L170">		level.addItemToSpawn(new PotionOfHaste());</span>
+
+<span class="nc" id="L172">		entrance.set( Door.Type.REGULAR );</span>
+<span class="nc" id="L173">	}</span>
+
+	private static Item prize(Level level ) {
+
+		Item prize;
+
+		//50% chance for prize item
+<span class="nc bnc" id="L180" title="All 2 branches missed.">		if (Random.Int(2) == 0){</span>
+<span class="nc" id="L181">			prize = level.findPrizeItem();</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">			if (prize != null)</span>
+<span class="nc" id="L183">				return prize;</span>
+		}
+
+		//1 floor set higher in probability, never cursed
+		//1 floor set higher in probability, never cursed
+<span class="nc bnc" id="L188" title="All 2 branches missed.">		if (Random.Int(2) == 0) {</span>
+<span class="nc" id="L189">			prize = Generator.randomWeapon((Dungeon.depth / 5) + 1);</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">			if (((Weapon)prize).hasCurseEnchant()){</span>
+<span class="nc" id="L191">				((Weapon) prize).enchant(null);</span>
+			}
+		} else {
+<span class="nc" id="L194">			prize = Generator.randomArmor((Dungeon.depth / 5) + 1);</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">			if (((Armor)prize).hasCurseGlyph()){</span>
+<span class="nc" id="L196">				((Armor) prize).inscribe(null);</span>
+			}
+		}
+<span class="nc" id="L199">		prize.cursed = false;</span>
+<span class="nc" id="L200">		prize.cursedKnown = true;</span>
+
+		//33% chance for an extra update.
+<span class="nc bnc" id="L203" title="All 2 branches missed.">		if (Random.Int(3) == 0){</span>
+<span class="nc" id="L204">			prize.upgrade();</span>
+		}
+
+<span class="nc" id="L207">		return prize;</span>
+	}
+
+	@Override
+	public boolean canConnect(Point p) {
+<span class="nc bnc" id="L212" title="All 2 branches missed.">		if (!super.canConnect(p)){</span>
+<span class="nc" id="L213">			return false;</span>
+		}
+		//don't place door in the exact center, if that exists
+<span class="nc bnc" id="L216" title="All 4 branches missed.">		if (width() % 2 == 1 &amp;&amp; p.x == center().x){</span>
+<span class="nc" id="L217">			return false;</span>
+		}
+<span class="nc bnc" id="L219" title="All 4 branches missed.">		if (height() % 2 == 1 &amp;&amp; p.y == center().y){</span>
+<span class="nc" id="L220">			return false;</span>
+		}
+<span class="nc" id="L222">		return true;</span>
+	}
+
+<span class="nc" id="L225">	public static class Sentry extends NPC {</span>
+
+		{
+<span class="nc" id="L228">			spriteClass = SentrySprite.class;</span>
+
+<span class="nc" id="L230">			properties.add(Property.IMMOVABLE);</span>
+<span class="nc" id="L231">		}</span>
+
+		private float initialChargeDelay;
+		private float curChargeDelay;
+
+		private EmptyRoom room;
+
+		@Override
+		protected boolean act() {
+<span class="nc bnc" id="L240" title="All 2 branches missed.">			if (Dungeon.level.heroFOV[pos]){</span>
+<span class="nc" id="L241">				Bestiary.setSeen(getClass());</span>
+			}
+
+<span class="nc bnc" id="L244" title="All 4 branches missed.">			if (fieldOfView == null || fieldOfView.length != Dungeon.level.length()){</span>
+<span class="nc" id="L245">				fieldOfView = new boolean[Dungeon.level.length()];</span>
+			}
+<span class="nc" id="L247">			Dungeon.level.updateFieldOfView( this, fieldOfView );</span>
+
+<span class="nc bnc" id="L249" title="All 2 branches missed.">			if (properties().contains(Property.IMMOVABLE)){</span>
+<span class="nc" id="L250">				throwItems();</span>
+			}
+
+<span class="nc bnc" id="L253" title="All 2 branches missed.">			if (Dungeon.hero != null){</span>
+<span class="nc bnc" id="L254" title="All 4 branches missed.">				if (fieldOfView[Dungeon.hero.pos]</span>
+						&amp;&amp; Dungeon.level.map[Dungeon.hero.pos] == Terrain.EMPTY_SP
+<span class="nc bnc" id="L256" title="All 2 branches missed.">						&amp;&amp; room.inside(Dungeon.level.cellToPoint(Dungeon.hero.pos))</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">						&amp;&amp; !Dungeon.hero.belongings.lostInventory()){</span>
+
+<span class="nc bnc" id="L259" title="All 2 branches missed.">					if (curChargeDelay &gt; 0.001f){ //helps prevent rounding errors</span>
+<span class="nc bnc" id="L260" title="All 2 branches missed.">						if (curChargeDelay == initialChargeDelay) {</span>
+<span class="nc" id="L261">							((SentrySprite) sprite).charge();</span>
+						}
+<span class="nc" id="L263">						curChargeDelay -= Dungeon.hero.cooldown();</span>
+						//pity mechanic so mistaps don't get people instakilled
+<span class="nc bnc" id="L265" title="All 2 branches missed.">						if (Dungeon.hero.cooldown() &gt;= 0.34f){</span>
+<span class="nc" id="L266">							Dungeon.hero.interrupt();</span>
+						}
+					}
+
+<span class="nc bnc" id="L270" title="All 2 branches missed.">					if (curChargeDelay &lt;= .001f){</span>
+<span class="nc" id="L271">						curChargeDelay = 1f;</span>
+<span class="nc" id="L272">						sprite.zap(Dungeon.hero.pos);</span>
+<span class="nc" id="L273">						((SentrySprite) sprite).charge();</span>
+					}
+
+<span class="nc" id="L276">					spend(Dungeon.hero.cooldown());</span>
+<span class="nc" id="L277">					return true;</span>
+
+				} else {
+<span class="nc" id="L280">					curChargeDelay = initialChargeDelay;</span>
+<span class="nc" id="L281">					sprite.idle();</span>
+				}
+
+<span class="nc" id="L284">				spend(Dungeon.hero.cooldown());</span>
+			} else {
+<span class="nc" id="L286">				spend(1f);</span>
+			}
+<span class="nc" id="L288">			return true;</span>
+		}
+
+		public void onZapComplete(){
+<span class="nc bnc" id="L292" title="All 2 branches missed.">			if (hit(this, Dungeon.hero, true)) {</span>
+<span class="nc" id="L293">				Dungeon.hero.damage(Random.NormalIntRange(2 + Dungeon.depth / 2, 4 + Dungeon.depth), new Eye.DeathGaze());</span>
+<span class="nc bnc" id="L294" title="All 2 branches missed.">				if (!Dungeon.hero.isAlive()) {</span>
+<span class="nc" id="L295">					Badges.validateDeathFromEnemyMagic();</span>
+<span class="nc" id="L296">					Dungeon.fail(this);</span>
+<span class="nc" id="L297">					GLog.n(Messages.capitalize(Messages.get(Char.class, &quot;kill&quot;, name())));</span>
+				}
+			} else {
+<span class="nc" id="L300">				Dungeon.hero.sprite.showStatus( CharSprite.NEUTRAL,  Dungeon.hero.defenseVerb() );</span>
+			}
+<span class="nc" id="L302">		}</span>
+
+		@Override
+		public int attackSkill(Char target) {
+<span class="nc" id="L306">			return 20 + Dungeon.depth * 2;</span>
+		}
+
+		@Override
+		public int defenseSkill( Char enemy ) {
+<span class="nc" id="L311">			return INFINITE_EVASION;</span>
+		}
+
+		@Override
+		public void damage( int dmg, Object src ) {
+			//do nothing
+<span class="nc" id="L317">		}</span>
+
+		@Override
+		public boolean add( Buff buff ) {
+<span class="nc" id="L321">			return false;</span>
+		}
+
+		@Override
+		public boolean reset() {
+<span class="nc" id="L326">			return true;</span>
+		}
+
+		@Override
+		public boolean interact(Char c) {
+<span class="nc" id="L331">			return true;</span>
+		}
+
+		private static final String INITIAL_DELAY = &quot;initial_delay&quot;;
+		private static final String CUR_DELAY = &quot;cur_delay&quot;;
+		private static final String ROOM = &quot;room&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L340">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L341">			bundle.put(INITIAL_DELAY, initialChargeDelay);</span>
+<span class="nc" id="L342">			bundle.put(CUR_DELAY, curChargeDelay);</span>
+<span class="nc" id="L343">			bundle.put(ROOM, room);</span>
+<span class="nc" id="L344">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L348">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L349">			initialChargeDelay = bundle.getFloat(INITIAL_DELAY);</span>
+<span class="nc" id="L350">			curChargeDelay = bundle.getFloat(CUR_DELAY);</span>
+<span class="nc" id="L351">			room = (EmptyRoom) bundle.get(ROOM);</span>
+<span class="nc" id="L352">		}</span>
+	}
+
+	public static class SentrySprite extends MobSprite {
+
+		private Animation charging;
+		private Emitter chargeParticles;
+
+<span class="nc" id="L360">		public SentrySprite(){</span>
+<span class="nc" id="L361">			texture( Assets.Sprites.RED_SENTRY );</span>
+
+<span class="nc" id="L363">			idle = new Animation(1, true);</span>
+<span class="nc" id="L364">			idle.frames(texture.uvRect(0, 0, 8, 15));</span>
+
+<span class="nc" id="L366">			run = idle.clone();</span>
+<span class="nc" id="L367">			attack = idle.clone();</span>
+<span class="nc" id="L368">			charging = idle.clone();</span>
+<span class="nc" id="L369">			die = idle.clone();</span>
+<span class="nc" id="L370">			zap = idle.clone();</span>
+
+<span class="nc" id="L372">			play( idle );</span>
+<span class="nc" id="L373">		}</span>
+
+		@Override
+		public void zap( int pos ) {
+<span class="nc" id="L377">			idle();</span>
+<span class="nc" id="L378">			flash();</span>
+<span class="nc" id="L379">			emitter().burst(MagicMissile.WardParticle.UP, 2);</span>
+<span class="nc bnc" id="L380" title="All 2 branches missed.">			if (Actor.findChar(pos) != null){</span>
+<span class="nc" id="L381">				parent.add(new Beam.DeathRay(center(), Actor.findChar(pos).sprite.center()));</span>
+			} else {
+<span class="nc" id="L383">				parent.add(new Beam.DeathRay(center(), DungeonTilemap.raisedTileCenterToWorld(pos)));</span>
+			}
+<span class="nc" id="L385">			((Sentry)ch).onZapComplete();</span>
+<span class="nc" id="L386">		}</span>
+
+		@Override
+		public void link(Char ch) {
+<span class="nc" id="L390">			super.link(ch);</span>
+
+<span class="nc" id="L392">			chargeParticles = centerEmitter();</span>
+<span class="nc" id="L393">			chargeParticles.autoKill = false;</span>
+<span class="nc" id="L394">			chargeParticles.pour(MagicMissile.MagicParticle.ATTRACTING, 0.05f);</span>
+<span class="nc" id="L395">			chargeParticles.on = false;</span>
+
+<span class="nc bnc" id="L397" title="All 2 branches missed.">			if (((Sentry)ch).curChargeDelay != ((Sentry) ch).initialChargeDelay){</span>
+<span class="nc" id="L398">				play(charging);</span>
+			}
+<span class="nc" id="L400">		}</span>
+
+		@Override
+		public void die() {
+<span class="nc" id="L404">			super.die();</span>
+<span class="nc bnc" id="L405" title="All 2 branches missed.">			if (chargeParticles != null){</span>
+<span class="nc" id="L406">				chargeParticles.on = false;</span>
+			}
+<span class="nc" id="L408">		}</span>
+
+		@Override
+		public void kill() {
+<span class="nc" id="L412">			super.kill();</span>
+<span class="nc bnc" id="L413" title="All 2 branches missed.">			if (chargeParticles != null){</span>
+<span class="nc" id="L414">				chargeParticles.killAndErase();</span>
+			}
+<span class="nc" id="L416">		}</span>
+
+		public void charge(){
+<span class="nc" id="L419">			play(charging);</span>
+<span class="nc bnc" id="L420" title="All 2 branches missed.">			if (visible) Sample.INSTANCE.play( Assets.Sounds.CHARGEUP );</span>
+<span class="nc" id="L421">		}</span>
+
+		@Override
+		public void play(Animation anim) {
+<span class="nc bnc" id="L425" title="All 4 branches missed.">			if (chargeParticles != null) chargeParticles.on = anim == charging;</span>
+<span class="nc" id="L426">			super.play(anim);</span>
+<span class="nc" id="L427">		}</span>
+
+<span class="nc" id="L429">		private float baseY = Float.NaN;</span>
+
+		@Override
+		public void place(int cell) {
+<span class="nc" id="L433">			super.place(cell);</span>
+<span class="nc" id="L434">			baseY = y;</span>
+<span class="nc" id="L435">		}</span>
+
+		@Override
+		public void turnTo(int from, int to) {
+			//do nothing
+<span class="nc" id="L440">		}</span>
+
+		@Override
+		public void update() {
+<span class="nc" id="L444">			super.update();</span>
+<span class="nc bnc" id="L445" title="All 2 branches missed.">			if (chargeParticles != null){</span>
+<span class="nc" id="L446">				chargeParticles.pos( center() );</span>
+<span class="nc" id="L447">				chargeParticles.visible = visible;</span>
+			}
+
+<span class="nc bnc" id="L450" title="All 2 branches missed.">			if (!paused){</span>
+<span class="nc bnc" id="L451" title="All 2 branches missed.">				if (Float.isNaN(baseY)) baseY = y;</span>
+<span class="nc" id="L452">				y = baseY + (float) Math.sin(Game.timeTotal);</span>
+<span class="nc" id="L453">				shadowOffset = 0.25f - 0.8f*(float) Math.sin(Game.timeTotal);</span>
+			}
+<span class="nc" id="L455">		}</span>
+
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

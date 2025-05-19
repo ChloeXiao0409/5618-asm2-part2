@@ -1,0 +1,583 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Rankings.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon</a> &gt; <span class="el_source">Rankings.java</span></div><h1>Rankings.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon;
+
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.CorpseDust;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.Trinket;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Toolbar;
+import com.shatteredpixel.shatteredpixeldungeon.utils.DungeonSeed;
+import com.watabou.noosa.Game;
+import com.watabou.utils.Bundlable;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.FileUtils;
+
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+<span class="nc" id="L60">public enum Rankings {</span>
+	
+<span class="nc" id="L62">	INSTANCE;</span>
+	
+	public static final int TABLE_SIZE	= 11;
+	
+	public static final String RANKINGS_FILE = &quot;rankings.dat&quot;;
+	
+	public ArrayList&lt;Record&gt; records;
+	public int lastRecord;
+	public int totalNumber;
+	public int wonNumber;
+
+	//The number of runs which are only present locally, not in the cloud
+	public int localTotal;
+	public int localWon;
+
+	public Record latestDaily;
+<span class="nc" id="L78">	public Record latestDailyReplay = null; //not stored, only meant to be temp</span>
+<span class="nc" id="L79">	public LinkedHashMap&lt;Long, Integer&gt; dailyScoreHistory = new LinkedHashMap&lt;&gt;();</span>
+
+	public void submit( boolean win, Object cause ) {
+
+<span class="nc" id="L83">		load();</span>
+		
+<span class="nc" id="L85">		Record rec = new Record();</span>
+
+		//we trim version to just the numbers, ignoring alpha/beta, etc.
+<span class="nc" id="L88">		Pattern p = Pattern.compile(&quot;\\d+\\.\\d+\\.\\d+&quot;);</span>
+<span class="nc" id="L89">		Matcher m = p.matcher(ShatteredPixelDungeon.version);</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		if (m.find()) {</span>
+<span class="nc" id="L91">			rec.version = &quot;v&quot; + m.group();</span>
+		} else {
+<span class="nc" id="L93">			rec.version = &quot;&quot;;</span>
+		}
+
+<span class="nc" id="L96">		DateFormat format = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;, Locale.ROOT);</span>
+<span class="nc" id="L97">		rec.date = format.format(new Date(Game.realTime));</span>
+
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		rec.cause = cause instanceof Class ? (Class)cause : cause.getClass();</span>
+<span class="nc" id="L100">		rec.win		= win;</span>
+<span class="nc" id="L101">		rec.heroClass	= Dungeon.hero.heroClass;</span>
+<span class="nc" id="L102">		rec.armorTier	= Dungeon.hero.tier();</span>
+<span class="nc" id="L103">		rec.herolevel	= Dungeon.hero.lvl;</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">		if (Statistics.highestAscent == 0){</span>
+<span class="nc" id="L105">			rec.depth = Statistics.deepestFloor;</span>
+<span class="nc" id="L106">			rec.ascending = false;</span>
+		} else {
+<span class="nc" id="L108">			rec.depth = Statistics.highestAscent;</span>
+<span class="nc" id="L109">			rec.ascending = true;</span>
+		}
+<span class="nc" id="L111">		rec.score       = calculateScore();</span>
+<span class="nc" id="L112">		rec.customSeed  = Dungeon.customSeedText;</span>
+<span class="nc" id="L113">		rec.daily       = Dungeon.daily;</span>
+
+<span class="nc" id="L115">		Badges.validateHighScore( rec.score );</span>
+		
+<span class="nc" id="L117">		INSTANCE.saveGameData(rec);</span>
+
+<span class="nc" id="L119">		rec.gameID = UUID.randomUUID().toString();</span>
+
+<span class="nc bnc" id="L121" title="All 2 branches missed.">		if (rec.daily){</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">			if (Dungeon.dailyReplay){</span>
+<span class="nc" id="L123">				latestDailyReplay = rec;</span>
+<span class="nc" id="L124">				return;</span>
+			}
+
+<span class="nc" id="L127">			latestDaily = rec;</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">			if (Dungeon.seed &lt;= DungeonSeed.TOTAL_SEEDS) {</span>
+<span class="nc" id="L129">				dailyScoreHistory.put(Dungeon.seed, rec.score);</span>
+			} else {
+<span class="nc" id="L131">				dailyScoreHistory.put(Dungeon.seed - DungeonSeed.TOTAL_SEEDS, rec.score);</span>
+			}
+<span class="nc" id="L133">			save();</span>
+<span class="nc" id="L134">			return;</span>
+		}
+
+<span class="nc" id="L137">		records.add( rec );</span>
+		
+<span class="nc" id="L139">		Collections.sort( records, scoreComparator );</span>
+		
+<span class="nc" id="L141">		lastRecord = records.indexOf( rec );</span>
+<span class="nc" id="L142">		int size = records.size();</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">		while (size &gt; TABLE_SIZE) {</span>
+
+<span class="nc bnc" id="L145" title="All 2 branches missed.">			if (lastRecord == size - 1) {</span>
+<span class="nc" id="L146">				records.remove( size - 2 );</span>
+<span class="nc" id="L147">				lastRecord--;</span>
+			} else {
+<span class="nc" id="L149">				records.remove( size - 1 );</span>
+			}
+
+<span class="nc" id="L152">			size = records.size();</span>
+		}
+
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		if (rec.customSeed.isEmpty()) {</span>
+<span class="nc" id="L156">			totalNumber++;</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">			if (win) {</span>
+<span class="nc" id="L158">				wonNumber++;</span>
+			}
+		}
+
+<span class="nc" id="L162">		Badges.validateGamesPlayed();</span>
+		
+<span class="nc" id="L164">		save();</span>
+<span class="nc" id="L165">	}</span>
+
+	private int score( boolean win ) {
+<span class="nc bnc" id="L168" title="All 4 branches missed.">		return (Statistics.goldCollected + Dungeon.hero.lvl * (win ? 26 : Dungeon.depth ) * 100) * (win ? 2 : 1);</span>
+	}
+
+	//assumes a ranking is loaded, or game is ending
+	public int calculateScore(){
+
+<span class="nc bnc" id="L174" title="All 2 branches missed.">		if (Dungeon.initialVersion &gt; ShatteredPixelDungeon.v1_2_3){</span>
+<span class="nc" id="L175">			Statistics.progressScore = Dungeon.hero.lvl * Statistics.deepestFloor * 65;</span>
+<span class="nc" id="L176">			Statistics.progressScore = Math.min(Statistics.progressScore, 50_000);</span>
+
+<span class="nc bnc" id="L178" title="All 2 branches missed.">			if (Statistics.heldItemValue == 0) {</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">				for (Item i : Dungeon.hero.belongings) {</span>
+<span class="nc" id="L180">					Statistics.heldItemValue += i.value();</span>
+<span class="nc bnc" id="L181" title="All 4 branches missed.">					if (i instanceof CorpseDust &amp;&amp; Statistics.deepestFloor &gt;= 10){</span>
+						// in case player kept the corpse dust, for a necromancer run
+<span class="nc" id="L183">						Statistics.questScores[1] = 2000;</span>
+					}
+<span class="nc" id="L185">				}</span>
+			}
+<span class="nc" id="L187">			Statistics.treasureScore = Statistics.goldCollected + Statistics.heldItemValue;</span>
+<span class="nc" id="L188">			Statistics.treasureScore = Math.min(Statistics.treasureScore, 20_000);</span>
+
+<span class="nc" id="L190">			Statistics.exploreScore = 0;</span>
+<span class="nc" id="L191">			int scorePerFloor = Statistics.floorsExplored.size * 50;</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">			for (Boolean b : Statistics.floorsExplored.valueList()){</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">				if (b) Statistics.exploreScore += scorePerFloor;</span>
+<span class="nc" id="L194">			}</span>
+
+<span class="nc" id="L196">			Statistics.totalBossScore = 0;</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">			for (int i : Statistics.bossScores){</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">				if (i &gt; 0) Statistics.totalBossScore += i;</span>
+			}
+
+<span class="nc" id="L201">			Statistics.totalQuestScore = 0;</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">			for (int i : Statistics.questScores){</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">				if (i &gt; 0) Statistics.totalQuestScore += i;</span>
+			}
+
+<span class="nc" id="L206">			Statistics.winMultiplier = 1f;</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">			if (Statistics.gameWon)         Statistics.winMultiplier += 1f;</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">			if (Statistics.ascended)        Statistics.winMultiplier += 0.5f;</span>
+
+		//pre v1.3.0 runs have different score calculations
+		//only progress and treasure score, and they are each up to 50% bigger
+		//win multiplier is a simple 2x if run was a win, challenge multi is the same as 1.3.0
+<span class="nc" id="L213">		} else {</span>
+<span class="nc" id="L214">			Statistics.progressScore = Dungeon.hero.lvl * Statistics.deepestFloor * 100;</span>
+<span class="nc" id="L215">			Statistics.treasureScore = Math.min(Statistics.goldCollected, 30_000);</span>
+
+<span class="nc" id="L217">			Statistics.exploreScore = Statistics.totalBossScore = Statistics.totalQuestScore = 0;</span>
+
+<span class="nc bnc" id="L219" title="All 2 branches missed.">			Statistics.winMultiplier = Statistics.gameWon ? 2 : 1;</span>
+
+		}
+
+<span class="nc" id="L223">		Statistics.chalMultiplier = (float)Math.pow(1.25, Challenges.activeChallenges());</span>
+<span class="nc" id="L224">		Statistics.chalMultiplier = Math.round(Statistics.chalMultiplier*20f)/20f;</span>
+
+<span class="nc" id="L226">		Statistics.totalScore = Statistics.progressScore + Statistics.treasureScore + Statistics.exploreScore</span>
+					+ Statistics.totalBossScore + Statistics.totalQuestScore;
+
+<span class="nc" id="L229">		Statistics.totalScore *= Statistics.winMultiplier * Statistics.chalMultiplier;</span>
+
+<span class="nc" id="L231">		return Statistics.totalScore;</span>
+	}
+
+	public static final String HERO         = &quot;hero&quot;;
+	public static final String STATS        = &quot;stats&quot;;
+	public static final String BADGES       = &quot;badges&quot;;
+	public static final String HANDLERS     = &quot;handlers&quot;;
+	public static final String CHALLENGES   = &quot;challenges&quot;;
+	public static final String GAME_VERSION = &quot;game_version&quot;;
+	public static final String SEED         = &quot;seed&quot;;
+	public static final String CUSTOM_SEED	= &quot;custom_seed&quot;;
+	public static final String DAILY	    = &quot;daily&quot;;
+	public static final String DAILY_REPLAY	= &quot;daily_replay&quot;;
+
+	public void saveGameData(Record rec){
+<span class="nc bnc" id="L246" title="All 2 branches missed.">		if (Dungeon.hero == null){</span>
+<span class="nc" id="L247">			rec.gameData = null;</span>
+<span class="nc" id="L248">			return;</span>
+		}
+
+<span class="nc" id="L251">		rec.gameData = new Bundle();</span>
+
+<span class="nc" id="L253">		Belongings belongings = Dungeon.hero.belongings;</span>
+
+		//save the hero and belongings
+<span class="nc" id="L256">		ArrayList&lt;Item&gt; allItems = (ArrayList&lt;Item&gt;) belongings.backpack.items.clone();</span>
+		//remove items that won't show up in the rankings screen
+<span class="nc bnc" id="L258" title="All 2 branches missed.">		for (Item item : belongings.backpack.items.toArray( new Item[0])) {</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">			if (item instanceof Bag){</span>
+<span class="nc bnc" id="L260" title="All 2 branches missed.">				for (Item bagItem : ((Bag) item).items.toArray( new Item[0])){</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">					if (Dungeon.quickslot.contains(bagItem)</span>
+<span class="nc bnc" id="L262" title="All 2 branches missed.">							&amp;&amp; !Dungeon.quickslot.contains(item)){</span>
+<span class="nc" id="L263">						belongings.backpack.items.add(bagItem);</span>
+					}
+				}
+			}
+<span class="nc bnc" id="L267" title="All 4 branches missed.">			if (!(item instanceof Trinket) &amp;&amp; !Dungeon.quickslot.contains(item)) {</span>
+<span class="nc" id="L268">				belongings.backpack.items.remove(item);</span>
+			}
+		}
+
+		//remove all buffs (ones tied to equipment will be re-applied)
+<span class="nc bnc" id="L273" title="All 2 branches missed.">		for(Buff b : Dungeon.hero.buffs()){</span>
+<span class="nc" id="L274">			Dungeon.hero.remove(b);</span>
+<span class="nc" id="L275">		}</span>
+
+<span class="nc" id="L277">		rec.gameData.put( HERO, Dungeon.hero );</span>
+
+		//save stats
+<span class="nc" id="L280">		Bundle stats = new Bundle();</span>
+<span class="nc" id="L281">		Statistics.storeInBundle(stats);</span>
+<span class="nc" id="L282">		rec.gameData.put( STATS, stats);</span>
+
+		//save badges
+<span class="nc" id="L285">		Bundle badges = new Bundle();</span>
+<span class="nc" id="L286">		Badges.saveLocal(badges);</span>
+<span class="nc" id="L287">		rec.gameData.put( BADGES, badges);</span>
+
+		//save handler information
+<span class="nc" id="L290">		Bundle handler = new Bundle();</span>
+<span class="nc" id="L291">		Scroll.saveSelectively(handler, belongings.backpack.items);</span>
+<span class="nc" id="L292">		Potion.saveSelectively(handler, belongings.backpack.items);</span>
+		//include potentially worn rings
+<span class="nc bnc" id="L294" title="All 2 branches missed.">		if (belongings.misc != null)        belongings.backpack.items.add(belongings.misc);</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">		if (belongings.ring != null)        belongings.backpack.items.add(belongings.ring);</span>
+<span class="nc" id="L296">		Ring.saveSelectively(handler, belongings.backpack.items);</span>
+<span class="nc" id="L297">		rec.gameData.put( HANDLERS, handler);</span>
+
+		//restore items now that we're done saving
+<span class="nc" id="L300">		belongings.backpack.items = allItems;</span>
+		
+		//save challenges
+<span class="nc" id="L303">		rec.gameData.put( CHALLENGES, Dungeon.challenges );</span>
+
+<span class="nc" id="L305">		rec.gameData.put( GAME_VERSION, Dungeon.initialVersion );</span>
+
+<span class="nc" id="L307">		rec.gameData.put( SEED, Dungeon.seed );</span>
+<span class="nc" id="L308">		rec.gameData.put( CUSTOM_SEED, Dungeon.customSeedText );</span>
+<span class="nc" id="L309">		rec.gameData.put( DAILY, Dungeon.daily );</span>
+<span class="nc" id="L310">		rec.gameData.put( DAILY_REPLAY, Dungeon.dailyReplay );</span>
+<span class="nc" id="L311">	}</span>
+
+	public void loadGameData(Record rec){
+<span class="nc" id="L314">		Bundle data = rec.gameData;</span>
+
+<span class="nc" id="L316">		Actor.clear();</span>
+<span class="nc" id="L317">		Dungeon.hero = null;</span>
+<span class="nc" id="L318">		Dungeon.level = null;</span>
+<span class="nc" id="L319">		Generator.fullReset();</span>
+<span class="nc" id="L320">		Notes.reset();</span>
+<span class="nc" id="L321">		Dungeon.quickslot.reset();</span>
+<span class="nc" id="L322">		QuickSlotButton.reset();</span>
+<span class="nc" id="L323">		Toolbar.swappedQuickslots = false;</span>
+
+<span class="nc bnc" id="L325" title="All 2 branches missed.">		if (data == null) return;</span>
+
+<span class="nc" id="L327">		Bundle handler = data.getBundle(HANDLERS);</span>
+<span class="nc" id="L328">		Scroll.restore(handler);</span>
+<span class="nc" id="L329">		Potion.restore(handler);</span>
+<span class="nc" id="L330">		Ring.restore(handler);</span>
+
+<span class="nc" id="L332">		Badges.loadLocal(data.getBundle(BADGES));</span>
+
+<span class="nc" id="L334">		Dungeon.hero = (Hero)data.get(HERO);</span>
+<span class="nc" id="L335">		Dungeon.hero.belongings.identify();</span>
+
+<span class="nc" id="L337">		Statistics.restoreFromBundle(data.getBundle(STATS));</span>
+		
+<span class="nc" id="L339">		Dungeon.challenges = data.getInt(CHALLENGES);</span>
+
+<span class="nc" id="L341">		Dungeon.initialVersion = data.getInt(GAME_VERSION);</span>
+
+<span class="nc bnc" id="L343" title="All 2 branches missed.">		if (Dungeon.initialVersion &lt;= ShatteredPixelDungeon.v1_2_3){</span>
+<span class="nc" id="L344">			Statistics.gameWon = rec.win;</span>
+		}
+<span class="nc" id="L346">		rec.score = calculateScore();</span>
+
+<span class="nc bnc" id="L348" title="All 2 branches missed.">		if (rec.gameData.contains(SEED)){</span>
+<span class="nc" id="L349">			Dungeon.seed = rec.gameData.getLong(SEED);</span>
+<span class="nc" id="L350">			Dungeon.customSeedText = rec.gameData.getString(CUSTOM_SEED);</span>
+<span class="nc" id="L351">			Dungeon.daily = rec.gameData.getBoolean(DAILY);</span>
+<span class="nc" id="L352">			Dungeon.dailyReplay = rec.gameData.getBoolean(DAILY_REPLAY);</span>
+		} else {
+<span class="nc" id="L354">			Dungeon.seed = -1;</span>
+<span class="nc" id="L355">			Dungeon.customSeedText = &quot;&quot;;</span>
+<span class="nc" id="L356">			Dungeon.daily = Dungeon.dailyReplay = false;</span>
+		}
+<span class="nc" id="L358">	}</span>
+	
+	private static final String RECORDS	= &quot;records&quot;;
+	private static final String LATEST	= &quot;latest&quot;;
+	private static final String TOTAL	= &quot;total&quot;;
+	private static final String WON     = &quot;won&quot;;
+
+	public static final String LATEST_DAILY	        = &quot;latest_daily&quot;;
+	public static final String DAILY_HISTORY_DATES  = &quot;daily_history_dates&quot;;
+	public static final String DAILY_HISTORY_SCORES = &quot;daily_history_scores&quot;;
+
+	public void save() {
+<span class="nc" id="L370">		Bundle bundle = new Bundle();</span>
+<span class="nc" id="L371">		bundle.put( RECORDS, records );</span>
+<span class="nc" id="L372">		bundle.put( LATEST, lastRecord );</span>
+<span class="nc" id="L373">		bundle.put( TOTAL, totalNumber );</span>
+<span class="nc" id="L374">		bundle.put( WON, wonNumber );</span>
+
+<span class="nc" id="L376">		bundle.put(LATEST_DAILY, latestDaily);</span>
+
+<span class="nc" id="L378">		long[] dates = new long[dailyScoreHistory.size()];</span>
+<span class="nc" id="L379">		int[] scores = new int[dailyScoreHistory.size()];</span>
+<span class="nc" id="L380">		int i = 0;</span>
+<span class="nc bnc" id="L381" title="All 2 branches missed.">		for (Long l : dailyScoreHistory.keySet()){</span>
+<span class="nc" id="L382">			dates[i] = l;</span>
+<span class="nc" id="L383">			scores[i] = dailyScoreHistory.get(l);</span>
+<span class="nc" id="L384">			i++;</span>
+<span class="nc" id="L385">		}</span>
+<span class="nc" id="L386">		bundle.put(DAILY_HISTORY_DATES, dates);</span>
+<span class="nc" id="L387">		bundle.put(DAILY_HISTORY_SCORES, scores);</span>
+
+		try {
+<span class="nc" id="L390">			FileUtils.bundleToFile( RANKINGS_FILE, bundle);</span>
+<span class="nc" id="L391">		} catch (IOException e) {</span>
+<span class="nc" id="L392">			ShatteredPixelDungeon.reportException(e);</span>
+<span class="nc" id="L393">		}</span>
+
+<span class="nc" id="L395">	}</span>
+	
+	public void load() {
+		
+<span class="nc bnc" id="L399" title="All 2 branches missed.">		if (records != null) {</span>
+<span class="nc" id="L400">			return;</span>
+		}
+		
+<span class="nc" id="L403">		records = new ArrayList&lt;&gt;();</span>
+		
+		try {
+<span class="nc" id="L406">			Bundle bundle = FileUtils.bundleFromFile( RANKINGS_FILE );</span>
+			
+<span class="nc bnc" id="L408" title="All 2 branches missed.">			for (Bundlable record : bundle.getCollection( RECORDS )) {</span>
+<span class="nc" id="L409">				records.add( (Record)record );</span>
+<span class="nc" id="L410">			}</span>
+<span class="nc" id="L411">			lastRecord = bundle.getInt( LATEST );</span>
+			
+<span class="nc" id="L413">			totalNumber = bundle.getInt( TOTAL );</span>
+<span class="nc bnc" id="L414" title="All 2 branches missed.">			if (totalNumber == 0) {</span>
+<span class="nc" id="L415">				totalNumber = records.size();</span>
+			}
+
+<span class="nc" id="L418">			wonNumber = bundle.getInt( WON );</span>
+<span class="nc bnc" id="L419" title="All 2 branches missed.">			if (wonNumber == 0) {</span>
+<span class="nc bnc" id="L420" title="All 2 branches missed.">				for (Record rec : records) {</span>
+<span class="nc bnc" id="L421" title="All 2 branches missed.">					if (rec.win) {</span>
+<span class="nc" id="L422">						wonNumber++;</span>
+					}
+<span class="nc" id="L424">				}</span>
+			}
+
+<span class="nc bnc" id="L427" title="All 2 branches missed.">			if (bundle.contains(LATEST_DAILY)){</span>
+<span class="nc" id="L428">				latestDaily = (Record) bundle.get(LATEST_DAILY);</span>
+
+<span class="nc" id="L430">				dailyScoreHistory.clear();</span>
+<span class="nc" id="L431">				int[] scores = bundle.getIntArray(DAILY_HISTORY_SCORES);</span>
+<span class="nc" id="L432">				int i = 0;</span>
+<span class="nc" id="L433">				long latestDate = 0;</span>
+<span class="nc bnc" id="L434" title="All 2 branches missed.">				for (long date : bundle.getLongArray(DAILY_HISTORY_DATES)){</span>
+<span class="nc" id="L435">					dailyScoreHistory.put(date, scores[i]);</span>
+<span class="nc bnc" id="L436" title="All 2 branches missed.">					if (date &gt; latestDate) latestDate = date;</span>
+<span class="nc" id="L437">					i++;</span>
+				}
+<span class="nc bnc" id="L439" title="All 2 branches missed.">				if (latestDate &gt; SPDSettings.lastDaily()){</span>
+<span class="nc" id="L440">					SPDSettings.lastDaily(latestDate);</span>
+				}
+			}
+
+<span class="nc" id="L444">		} catch (IOException e) {</span>
+<span class="nc" id="L445">		}</span>
+<span class="nc" id="L446">	}</span>
+	
+<span class="nc" id="L448">	public static class Record implements Bundlable {</span>
+
+		private static final String CAUSE   = &quot;cause&quot;;
+		private static final String WIN		= &quot;win&quot;;
+		private static final String SCORE	= &quot;score&quot;;
+		private static final String CLASS	= &quot;class&quot;;
+		private static final String TIER	= &quot;tier&quot;;
+		private static final String LEVEL	= &quot;level&quot;;
+		private static final String DEPTH	= &quot;depth&quot;;
+		private static final String ASCEND	= &quot;ascending&quot;;
+		private static final String DATA	= &quot;gameData&quot;;
+		private static final String ID      = &quot;gameID&quot;;
+		private static final String SEED    = &quot;custom_seed&quot;;
+		private static final String DAILY   = &quot;daily&quot;;
+
+		private static final String DATE    = &quot;date&quot;;
+		private static final String VERSION = &quot;version&quot;;
+
+		public Class cause;
+		public boolean win;
+
+		public HeroClass heroClass;
+		public int armorTier;
+		public int herolevel;
+		public int depth;
+		public boolean ascending;
+
+		public Bundle gameData;
+		public String gameID;
+
+		//Note this is for summary purposes, visible score should be re-calculated from game data
+		public int score;
+
+		public String customSeed;
+		public boolean daily;
+
+		public String date;
+		public String version;
+
+		public String desc(){
+<span class="nc bnc" id="L488" title="All 2 branches missed.">			if (win){</span>
+<span class="nc bnc" id="L489" title="All 2 branches missed.">				if (ascending){</span>
+<span class="nc" id="L490">					return Messages.get(this, &quot;ascended&quot;);</span>
+				} else {
+<span class="nc" id="L492">					return Messages.get(this, &quot;won&quot;);</span>
+				}
+<span class="nc bnc" id="L494" title="All 2 branches missed.">			} else if (cause == null) {</span>
+<span class="nc" id="L495">				return Messages.get(this, &quot;something&quot;);</span>
+			} else {
+<span class="nc" id="L497">				String result = Messages.get(cause, &quot;rankings_desc&quot;, (Messages.get(cause, &quot;name&quot;)));</span>
+<span class="nc bnc" id="L498" title="All 2 branches missed.">				if (result.contains(Messages.NO_TEXT_FOUND)){</span>
+<span class="nc" id="L499">					return Messages.get(this, &quot;something&quot;);</span>
+				} else {
+<span class="nc" id="L501">					return result;</span>
+				}
+			}
+		}
+		
+		@Override
+		public void restoreFromBundle( Bundle bundle ) {
+			
+<span class="nc bnc" id="L509" title="All 2 branches missed.">			if (bundle.contains( CAUSE )) {</span>
+<span class="nc" id="L510">				cause = bundle.getClass( CAUSE );</span>
+			} else {
+<span class="nc" id="L512">				cause = null;</span>
+			}
+			
+<span class="nc" id="L515">			win		    = bundle.getBoolean( WIN );</span>
+<span class="nc" id="L516">			score	    = bundle.getInt( SCORE );</span>
+<span class="nc" id="L517">			customSeed  = bundle.getString( SEED );</span>
+<span class="nc" id="L518">			daily       = bundle.getBoolean( DAILY );</span>
+
+<span class="nc" id="L520">			heroClass	= bundle.getEnum( CLASS, HeroClass.class );</span>
+<span class="nc" id="L521">			armorTier	= bundle.getInt( TIER );</span>
+<span class="nc" id="L522">			herolevel   = bundle.getInt( LEVEL );</span>
+<span class="nc" id="L523">			depth       = bundle.getInt( DEPTH );</span>
+<span class="nc" id="L524">			ascending   = bundle.getBoolean( ASCEND );</span>
+
+<span class="nc bnc" id="L526" title="All 2 branches missed.">			if (bundle.contains( DATE )){</span>
+<span class="nc" id="L527">				date = bundle.getString( DATE );</span>
+<span class="nc" id="L528">				version = bundle.getString( VERSION );</span>
+			} else {
+<span class="nc" id="L530">				date = version = null;</span>
+			}
+
+<span class="nc bnc" id="L533" title="All 2 branches missed.">			if (bundle.contains(DATA))  gameData = bundle.getBundle(DATA);</span>
+<span class="nc bnc" id="L534" title="All 2 branches missed.">			if (bundle.contains(ID))   gameID = bundle.getString(ID);</span>
+			
+<span class="nc bnc" id="L536" title="All 2 branches missed.">			if (gameID == null) gameID = UUID.randomUUID().toString();</span>
+
+<span class="nc" id="L538">		}</span>
+		
+		@Override
+		public void storeInBundle( Bundle bundle ) {
+			
+<span class="nc bnc" id="L543" title="All 2 branches missed.">			if (cause != null) bundle.put( CAUSE, cause );</span>
+
+<span class="nc" id="L545">			bundle.put( WIN, win );</span>
+<span class="nc" id="L546">			bundle.put( SCORE, score );</span>
+<span class="nc" id="L547">			bundle.put( SEED, customSeed );</span>
+<span class="nc" id="L548">			bundle.put( DAILY, daily );</span>
+
+<span class="nc" id="L550">			bundle.put( CLASS, heroClass );</span>
+<span class="nc" id="L551">			bundle.put( TIER, armorTier );</span>
+<span class="nc" id="L552">			bundle.put( LEVEL, herolevel );</span>
+<span class="nc" id="L553">			bundle.put( DEPTH, depth );</span>
+<span class="nc" id="L554">			bundle.put( ASCEND, ascending );</span>
+
+<span class="nc" id="L556">			bundle.put( DATE, date );</span>
+<span class="nc" id="L557">			bundle.put( VERSION, version );</span>
+
+<span class="nc bnc" id="L559" title="All 2 branches missed.">			if (gameData != null) bundle.put( DATA, gameData );</span>
+<span class="nc" id="L560">			bundle.put( ID, gameID );</span>
+<span class="nc" id="L561">		}</span>
+	}
+
+<span class="nc" id="L564">	public static final Comparator&lt;Record&gt; scoreComparator = new Comparator&lt;Rankings.Record&gt;() {</span>
+		@Override
+		public int compare( Record lhs, Record rhs ) {
+			//this covers custom seeded runs and dailies
+<span class="nc bnc" id="L568" title="All 4 branches missed.">			if (rhs.customSeed.isEmpty() &amp;&amp; !lhs.customSeed.isEmpty()){</span>
+<span class="nc" id="L569">				return +1;</span>
+<span class="nc bnc" id="L570" title="All 4 branches missed.">			} else if (lhs.customSeed.isEmpty() &amp;&amp; !rhs.customSeed.isEmpty()){</span>
+<span class="nc" id="L571">				return -1;</span>
+			}
+
+<span class="nc" id="L574">			int result = (int)Math.signum( rhs.score - lhs.score );</span>
+<span class="nc bnc" id="L575" title="All 2 branches missed.">			if (result == 0) {</span>
+<span class="nc" id="L576">				return (int)Math.signum( rhs.gameID.hashCode() - lhs.gameID.hashCode());</span>
+			} else {
+<span class="nc" id="L578">				return result;</span>
+			}
+		}
+	};
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

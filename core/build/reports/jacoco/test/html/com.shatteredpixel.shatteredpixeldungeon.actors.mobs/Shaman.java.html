@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Shaman.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">Shaman.java</span></div><h1>Shaman.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AscensionChallenge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Hex;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Vulnerable;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Weakness;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ShamanSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L44">public abstract class Shaman extends Mob {</span>
+	
+	{
+<span class="nc" id="L47">		HP = HT = 35;</span>
+<span class="nc" id="L48">		defenseSkill = 15;</span>
+		
+<span class="nc" id="L50">		EXP = 8;</span>
+<span class="nc" id="L51">		maxLvl = 16;</span>
+		
+<span class="nc" id="L53">		loot = Generator.Category.WAND;</span>
+<span class="nc" id="L54">		lootChance = 0.03f; //initially, see lootChance()</span>
+<span class="nc" id="L55">	}</span>
+	
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L59">		return Random.NormalIntRange( 5, 10 );</span>
+	}
+	
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L64">		return 18;</span>
+	}
+	
+	@Override
+	public int drRoll() {
+<span class="nc" id="L69">		return super.drRoll() + Random.NormalIntRange(0, 6);</span>
+	}
+
+	@Override
+	protected boolean canAttack( Char enemy ) {
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		return super.canAttack(enemy)</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">				|| new Ballistica( pos, enemy.pos, Ballistica.MAGIC_BOLT).collisionPos == enemy.pos;</span>
+	}
+
+	@Override
+	public float lootChance() {
+		//each drop makes future drops 1/3 as likely
+		// so loot chance looks like: 1/33, 1/100, 1/300, 1/900, etc.
+<span class="nc" id="L82">		return super.lootChance() * (float)Math.pow(1/3f, Dungeon.LimitedDrops.SHAMAN_WAND.count);</span>
+	}
+
+	@Override
+	public Item createLoot() {
+<span class="nc" id="L87">		Dungeon.LimitedDrops.SHAMAN_WAND.count++;</span>
+<span class="nc" id="L88">		return super.createLoot();</span>
+	}
+
+	protected boolean doAttack(Char enemy ) {
+
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		if (Dungeon.level.adjacent( pos, enemy.pos )</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">				|| new Ballistica( pos, enemy.pos, Ballistica.MAGIC_BOLT).collisionPos != enemy.pos) {</span>
+			
+<span class="nc" id="L96">			return super.doAttack( enemy );</span>
+			
+		} else {
+			
+<span class="nc bnc" id="L100" title="All 6 branches missed.">			if (sprite != null &amp;&amp; (sprite.visible || enemy.sprite.visible)) {</span>
+<span class="nc" id="L101">				sprite.zap( enemy.pos );</span>
+<span class="nc" id="L102">				return false;</span>
+			} else {
+<span class="nc" id="L104">				zap();</span>
+<span class="nc" id="L105">				return true;</span>
+			}
+		}
+	}
+	
+	//used so resistances can differentiate between melee and magical attacks
+<span class="nc" id="L111">	public static class EarthenBolt{}</span>
+	
+	private void zap() {
+<span class="nc" id="L114">		spend( 1f );</span>
+
+<span class="nc" id="L116">		Invisibility.dispel(this);</span>
+<span class="nc" id="L117">		Char enemy = this.enemy;</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		if (hit( this, enemy, true )) {</span>
+			
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			if (Random.Int( 2 ) == 0) {</span>
+<span class="nc" id="L121">				debuff( enemy );</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">				if (enemy == Dungeon.hero) Sample.INSTANCE.play( Assets.Sounds.DEBUFF );</span>
+			}
+			
+<span class="nc" id="L125">			int dmg = Random.NormalIntRange( 6, 15 );</span>
+<span class="nc" id="L126">			dmg = Math.round(dmg * AscensionChallenge.statModifier(this));</span>
+<span class="nc" id="L127">			enemy.damage( dmg, new EarthenBolt() );</span>
+			
+<span class="nc bnc" id="L129" title="All 4 branches missed.">			if (!enemy.isAlive() &amp;&amp; enemy == Dungeon.hero) {</span>
+<span class="nc" id="L130">				Badges.validateDeathFromEnemyMagic();</span>
+<span class="nc" id="L131">				Dungeon.fail( this );</span>
+<span class="nc" id="L132">				GLog.n( Messages.get(this, &quot;bolt_kill&quot;) );</span>
+			}
+<span class="nc" id="L134">		} else {</span>
+<span class="nc" id="L135">			enemy.sprite.showStatus( CharSprite.NEUTRAL,  enemy.defenseVerb() );</span>
+		}
+<span class="nc" id="L137">	}</span>
+	
+	protected abstract void debuff( Char enemy );
+	
+	public void onZapComplete() {
+<span class="nc" id="L142">		zap();</span>
+<span class="nc" id="L143">		next();</span>
+<span class="nc" id="L144">	}</span>
+	
+	@Override
+	public String description() {
+<span class="nc" id="L148">		return super.description() + &quot;\n\n&quot; + Messages.get(this, &quot;spell_desc&quot;);</span>
+	}
+	
+<span class="nc" id="L151">	public static class RedShaman extends Shaman {</span>
+		{
+<span class="nc" id="L153">			spriteClass = ShamanSprite.Red.class;</span>
+<span class="nc" id="L154">		}</span>
+		
+		@Override
+		protected void debuff( Char enemy ) {
+<span class="nc" id="L158">			Buff.prolong( enemy, Weakness.class, Weakness.DURATION );</span>
+<span class="nc" id="L159">		}</span>
+	}
+	
+<span class="nc" id="L162">	public static class BlueShaman extends Shaman {</span>
+		{
+<span class="nc" id="L164">			spriteClass = ShamanSprite.Blue.class;</span>
+<span class="nc" id="L165">		}</span>
+		
+		@Override
+		protected void debuff( Char enemy ) {
+<span class="nc" id="L169">			Buff.prolong( enemy, Vulnerable.class, Vulnerable.DURATION );</span>
+<span class="nc" id="L170">		}</span>
+	}
+	
+<span class="nc" id="L173">	public static class PurpleShaman extends Shaman {</span>
+		{
+<span class="nc" id="L175">			spriteClass = ShamanSprite.Purple.class;</span>
+<span class="nc" id="L176">		}</span>
+		
+		@Override
+		protected void debuff( Char enemy ) {
+<span class="nc" id="L180">			Buff.prolong( enemy, Hex.class, Hex.DURATION );</span>
+<span class="nc" id="L181">		}</span>
+	}
+	
+	public static Class&lt;? extends Shaman&gt; random(){
+<span class="nc" id="L185">		float roll = Random.Float();</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">		if (roll &lt; 0.4f){</span>
+<span class="nc" id="L187">			return RedShaman.class;</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">		} else if (roll &lt; 0.8f){</span>
+<span class="nc" id="L189">			return BlueShaman.class;</span>
+		} else {
+<span class="nc" id="L191">			return PurpleShaman.class;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

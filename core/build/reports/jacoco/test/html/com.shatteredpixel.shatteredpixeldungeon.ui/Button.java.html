@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Button.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">Button.java</span></div><h1>Button.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.watabou.input.ControllerHandler;
+import com.watabou.input.GameAction;
+import com.watabou.input.KeyBindings;
+import com.watabou.input.KeyEvent;
+import com.watabou.input.PointerEvent;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.PointerArea;
+import com.watabou.noosa.ui.Component;
+import com.watabou.utils.Signal;
+
+<span class="nc" id="L36">public class Button extends Component {</span>
+
+<span class="nc" id="L38">	public static float longClick = 0.5f;</span>
+	
+	protected PointerArea hotArea;
+	protected Tooltip hoverTip;
+
+	//only one button should be pressed at a time
+	protected static Button pressedButton;
+	protected float pressTime;
+	protected boolean clickReady;
+
+	@Override
+	protected void createChildren() {
+<span class="nc" id="L50">		hotArea = new PointerArea( 0, 0, 0, 0 ) {</span>
+			@Override
+			protected void onPointerDown( PointerEvent event ) {
+<span class="nc" id="L53">				pressedButton = Button.this;</span>
+<span class="nc" id="L54">				pressTime = 0;</span>
+<span class="nc" id="L55">				clickReady = true;</span>
+<span class="nc" id="L56">				Button.this.onPointerDown();</span>
+<span class="nc" id="L57">			}</span>
+			@Override
+			protected void onPointerUp( PointerEvent event ) {
+<span class="nc bnc" id="L60" title="All 2 branches missed.">				if (pressedButton == Button.this){</span>
+<span class="nc" id="L61">					pressedButton = null;</span>
+				} else {
+					//cancel any potential click, only one button can be activated at a time
+<span class="nc" id="L64">					clickReady = false;</span>
+				}
+<span class="nc" id="L66">				Button.this.onPointerUp();</span>
+<span class="nc" id="L67">			}</span>
+			@Override
+			protected void onClick( PointerEvent event ) {
+<span class="nc bnc" id="L70" title="All 2 branches missed.">				if (clickReady) {</span>
+<span class="nc" id="L71">					killTooltip();</span>
+<span class="nc bnc" id="L72" title="All 3 branches missed.">					switch (event.button){</span>
+						case PointerEvent.LEFT: default:
+<span class="nc" id="L74">							Button.this.onClick();</span>
+<span class="nc" id="L75">							break;</span>
+						case PointerEvent.RIGHT:
+<span class="nc" id="L77">							Button.this.onRightClick();</span>
+<span class="nc" id="L78">							break;</span>
+						case PointerEvent.MIDDLE:
+<span class="nc" id="L80">							Button.this.onMiddleClick();</span>
+							break;
+					}
+
+				}
+<span class="nc" id="L85">			}</span>
+
+			@Override
+			protected void onHoverStart(PointerEvent event) {
+<span class="nc" id="L89">				String text = hoverText();</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">				if (text != null){</span>
+<span class="nc" id="L91">					int key = 0;</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">					if (keyAction() != null){</span>
+<span class="nc" id="L93">						key = KeyBindings.getFirstKeyForAction(keyAction(), ControllerHandler.controllerActive);</span>
+					}
+
+<span class="nc bnc" id="L96" title="All 4 branches missed.">					if (key == 0 &amp;&amp; secondaryTooltipAction() != null){</span>
+<span class="nc" id="L97">						key = KeyBindings.getFirstKeyForAction(secondaryTooltipAction(), ControllerHandler.controllerActive);</span>
+					}
+
+<span class="nc bnc" id="L100" title="All 2 branches missed.">					if (key != 0){</span>
+<span class="nc" id="L101">						text += &quot; _(&quot; + KeyBindings.getKeyName(key) + &quot;)_&quot;;</span>
+					}
+<span class="nc" id="L103">					hoverTip = new Tooltip(Button.this, text, 80);</span>
+<span class="nc" id="L104">					Button.this.parent.addToFront(hoverTip);</span>
+<span class="nc" id="L105">					hoverTip.camera = camera();</span>
+<span class="nc" id="L106">					alignTooltip(hoverTip);</span>
+				}
+<span class="nc" id="L108">			}</span>
+
+			@Override
+			protected void onHoverEnd(PointerEvent event) {
+<span class="nc" id="L112">				killTooltip();</span>
+<span class="nc" id="L113">			}</span>
+		};
+<span class="nc" id="L115">		add( hotArea );</span>
+		
+<span class="nc" id="L117">		KeyEvent.addKeyListener( keyListener = new Signal.Listener&lt;KeyEvent&gt;() {</span>
+			@Override
+			public boolean onSignal ( KeyEvent event ) {
+<span class="nc bnc" id="L120" title="All 4 branches missed.">				if ( active &amp;&amp; KeyBindings.getActionForKey( event ) == keyAction()){</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">					if (event.pressed){</span>
+<span class="nc" id="L122">						pressedButton = Button.this;</span>
+<span class="nc" id="L123">						pressTime = 0;</span>
+<span class="nc" id="L124">						clickReady = true;</span>
+<span class="nc" id="L125">						Button.this.onPointerDown();</span>
+					} else {
+<span class="nc" id="L127">						Button.this.onPointerUp();</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">						if (pressedButton == Button.this) {</span>
+<span class="nc" id="L129">							pressedButton = null;</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">							if (clickReady) onClick();</span>
+						}
+					}
+<span class="nc" id="L133">					return true;</span>
+				}
+<span class="nc" id="L135">				return false;</span>
+			}
+		});
+<span class="nc" id="L138">	}</span>
+	
+	private Signal.Listener&lt;KeyEvent&gt; keyListener;
+	
+	public GameAction keyAction(){
+<span class="nc" id="L143">		return null;</span>
+	}
+
+	//used in cases where the main key action isn't bound, but a secondary action can be used for the tooltip
+	public GameAction secondaryTooltipAction(){
+<span class="nc" id="L148">		return null;</span>
+	}
+
+	@Override
+	public void update() {
+<span class="nc" id="L153">		super.update();</span>
+		
+<span class="nc" id="L155">		hotArea.active = visible;</span>
+		
+<span class="nc bnc" id="L157" title="All 4 branches missed.">		if (pressedButton == this &amp;&amp; (pressTime += Game.elapsed) &gt;= longClick) {</span>
+<span class="nc" id="L158">			pressedButton = null;</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">			if (onLongClick()) {</span>
+
+<span class="nc" id="L161">				hotArea.reset();</span>
+<span class="nc" id="L162">				clickReady = false; //did a long click, can't do a regular one</span>
+<span class="nc" id="L163">				onPointerUp();</span>
+
+<span class="nc bnc" id="L165" title="All 2 branches missed.">				if (SPDSettings.vibration()) {</span>
+<span class="nc" id="L166">					Game.vibrate(50);</span>
+				}
+			}
+		}
+<span class="nc" id="L170">	}</span>
+	
+<span class="nc" id="L172">	protected void onPointerDown() {}</span>
+<span class="nc" id="L173">	protected void onPointerUp() {}</span>
+<span class="nc" id="L174">	protected void onClick() {} //left click, default key type</span>
+<span class="nc" id="L175">	protected void onRightClick() {}</span>
+<span class="nc" id="L176">	protected void onMiddleClick() {}</span>
+	protected boolean onLongClick() {
+<span class="nc" id="L178">		return false;</span>
+	}
+
+	protected String hoverText() {
+<span class="nc" id="L182">		return null;</span>
+	}
+
+	//TODO might be nice for more flexibility here
+	private void alignTooltip( Tooltip tip ){
+<span class="nc" id="L187">		tip.setPos(x, y-tip.height()-1);</span>
+<span class="nc" id="L188">		Camera cam = camera();</span>
+		//shift left if there's no room on the right
+<span class="nc bnc" id="L190" title="All 2 branches missed.">		if (tip.right() &gt; (cam.width+cam.scroll.x)){</span>
+<span class="nc" id="L191">			tip.setPos(tip.left() - (tip.right() - (cam.width+cam.scroll.x)), tip.top());</span>
+		}
+		//move to the bottom if there's no room on top
+<span class="nc bnc" id="L194" title="All 2 branches missed.">		if (tip.top() &lt; 0){</span>
+<span class="nc" id="L195">			tip.setPos(tip.left(), bottom()+1);</span>
+		}
+<span class="nc" id="L197">	}</span>
+
+	public void killTooltip(){
+<span class="nc bnc" id="L200" title="All 2 branches missed.">		if (hoverTip != null){</span>
+<span class="nc" id="L201">			hoverTip.killAndErase();</span>
+<span class="nc" id="L202">			hoverTip = null;</span>
+		}
+<span class="nc" id="L204">	}</span>
+	
+	@Override
+	protected void layout() {
+<span class="nc" id="L208">		hotArea.x = x;</span>
+<span class="nc" id="L209">		hotArea.y = y;</span>
+<span class="nc" id="L210">		hotArea.width = width;</span>
+<span class="nc" id="L211">		hotArea.height = height;</span>
+<span class="nc" id="L212">	}</span>
+	
+	@Override
+	public synchronized void destroy () {
+<span class="nc" id="L216">		super.destroy();</span>
+<span class="nc" id="L217">		KeyEvent.removeKeyListener( keyListener );</span>
+<span class="nc" id="L218">		killTooltip();</span>
+<span class="nc" id="L219">	}</span>
+
+	public void givePointerPriority(){
+<span class="nc" id="L222">		hotArea.givePointerPriority();</span>
+<span class="nc" id="L223">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GooSprite.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.sprites</a> &gt; <span class="el_source">GooSprite.java</span></div><h1>GooSprite.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.sprites;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ElmoParticle;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.watabou.noosa.TextureFilm;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.noosa.particles.Emitter.Factory;
+import com.watabou.noosa.particles.PixelParticle;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+public class GooSprite extends MobSprite {
+	
+	private Animation pump;
+	private Animation pumpAttack;
+
+	private Emitter spray;
+<span class="nc" id="L46">	private ArrayList&lt;Emitter&gt; pumpUpEmitters = new ArrayList&lt;&gt;();</span>
+
+	public GooSprite() {
+<span class="nc" id="L49">		super();</span>
+		
+<span class="nc" id="L51">		texture( Assets.Sprites.GOO );</span>
+		
+<span class="nc" id="L53">		TextureFilm frames = new TextureFilm( texture, 20, 14 );</span>
+		
+<span class="nc" id="L55">		idle = new Animation( 10, true );</span>
+<span class="nc" id="L56">		idle.frames( frames, 2, 1, 0, 0, 1 );</span>
+		
+<span class="nc" id="L58">		run = new Animation( 15, true );</span>
+<span class="nc" id="L59">		run.frames( frames, 3, 2, 1, 2 );</span>
+		
+<span class="nc" id="L61">		pump = new Animation( 20, true );</span>
+<span class="nc" id="L62">		pump.frames( frames, 4, 3, 2, 1, 0 );</span>
+
+<span class="nc" id="L64">		pumpAttack = new Animation ( 20, false );</span>
+<span class="nc" id="L65">		pumpAttack.frames( frames, 4, 3, 2, 1, 0, 7);</span>
+
+<span class="nc" id="L67">		attack = new Animation( 10, false );</span>
+<span class="nc" id="L68">		attack.frames( frames, 8, 9, 10 );</span>
+		
+<span class="nc" id="L70">		die = new Animation( 10, false );</span>
+<span class="nc" id="L71">		die.frames( frames, 5, 6, 7 );</span>
+		
+<span class="nc" id="L73">		play(idle);</span>
+
+<span class="nc" id="L75">		spray = centerEmitter();</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		if (spray != null) {</span>
+<span class="nc" id="L77">			spray.autoKill = false;</span>
+<span class="nc" id="L78">			spray.pour(GooParticle.FACTORY, 0.04f);</span>
+<span class="nc" id="L79">			spray.on = false;</span>
+		}
+<span class="nc" id="L81">	}</span>
+
+	@Override
+	public void link(Char ch) {
+<span class="nc" id="L85">		super.link(ch);</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		if (ch.HP*2 &lt;= ch.HT)</span>
+<span class="nc" id="L87">			spray(true);</span>
+<span class="nc" id="L88">	}</span>
+
+	public void pumpUp( int warnDist ) {
+<span class="nc bnc" id="L91" title="All 2 branches missed.">		if (warnDist == 0){</span>
+<span class="nc" id="L92">			clearEmitters();</span>
+		} else {
+<span class="nc" id="L94">			play(pump);</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">			Sample.INSTANCE.play( Assets.Sounds.CHARGEUP, 1f, warnDist == 1 ? 0.8f : 1f );</span>
+<span class="nc bnc" id="L96" title="All 4 branches missed.">			if (ch.fieldOfView == null || ch.fieldOfView.length != Dungeon.level.length()){</span>
+<span class="nc" id="L97">				ch.fieldOfView = new boolean[Dungeon.level.length()];</span>
+<span class="nc" id="L98">				Dungeon.level.updateFieldOfView( ch, ch.fieldOfView );</span>
+			}
+<span class="nc bnc" id="L100" title="All 2 branches missed.">			for (int i = 0; i &lt; Dungeon.level.length(); i++){</span>
+<span class="nc bnc" id="L101" title="All 4 branches missed.">				if (ch.fieldOfView != null &amp;&amp; ch.fieldOfView[i]</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">						&amp;&amp; Dungeon.level.distance(i, ch.pos) &lt;= warnDist</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">						&amp;&amp; new Ballistica( ch.pos, i, Ballistica.STOP_TARGET | Ballistica.STOP_SOLID | Ballistica.IGNORE_SOFT_SOLID).collisionPos == i</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">						&amp;&amp; new Ballistica( i, ch.pos, Ballistica.STOP_TARGET | Ballistica.STOP_SOLID | Ballistica.IGNORE_SOFT_SOLID).collisionPos == ch.pos){</span>
+<span class="nc" id="L105">					Emitter e = CellEmitter.get(i);</span>
+<span class="nc" id="L106">					e.pour(GooParticle.FACTORY, 0.04f);</span>
+<span class="nc" id="L107">					pumpUpEmitters.add(e);</span>
+				}
+			}
+		}
+<span class="nc" id="L111">	}</span>
+
+	public void clearEmitters(){
+<span class="nc bnc" id="L114" title="All 2 branches missed.">		for (Emitter e : pumpUpEmitters){</span>
+<span class="nc" id="L115">			e.on = false;</span>
+<span class="nc" id="L116">		}</span>
+<span class="nc" id="L117">		pumpUpEmitters.clear();</span>
+<span class="nc" id="L118">	}</span>
+
+	public void triggerEmitters(){
+<span class="nc bnc" id="L121" title="All 2 branches missed.">		for (Emitter e : pumpUpEmitters){</span>
+<span class="nc" id="L122">			e.burst(ElmoParticle.FACTORY, 10);</span>
+<span class="nc" id="L123">		}</span>
+<span class="nc" id="L124">		Sample.INSTANCE.play( Assets.Sounds.BURNING );</span>
+<span class="nc" id="L125">		pumpUpEmitters.clear();</span>
+<span class="nc" id="L126">	}</span>
+
+<span class="nc" id="L128">	public void pumpAttack() { play(pumpAttack); }</span>
+
+	@Override
+	public void play(Animation anim) {
+<span class="nc bnc" id="L132" title="All 4 branches missed.">		if (anim != pump &amp;&amp; anim != pumpAttack){</span>
+<span class="nc" id="L133">			clearEmitters();</span>
+		}
+<span class="nc" id="L135">		super.play(anim);</span>
+<span class="nc" id="L136">	}</span>
+
+	@Override
+	public int blood() {
+<span class="nc" id="L140">		return 0xFF000000;</span>
+	}
+
+	public void spray(boolean on){
+<span class="nc" id="L144">		spray.on = on;</span>
+<span class="nc" id="L145">	}</span>
+
+	@Override
+	public void update() {
+<span class="nc" id="L149">		super.update();</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">		if (spray != null) {</span>
+<span class="nc" id="L151">			spray.pos(center());</span>
+<span class="nc" id="L152">			spray.visible = visible;</span>
+		}
+<span class="nc" id="L154">	}</span>
+
+	public static class GooParticle extends PixelParticle.Shrinking {
+
+<span class="nc" id="L158">		public static final Emitter.Factory FACTORY = new Factory() {</span>
+			@Override
+			public void emit( Emitter emitter, int index, float x, float y ) {
+<span class="nc" id="L161">				((GooParticle)emitter.recycle( GooParticle.class )).reset( x, y );</span>
+<span class="nc" id="L162">			}</span>
+		};
+
+		public GooParticle() {
+<span class="nc" id="L166">			super();</span>
+
+<span class="nc" id="L168">			color( 0x000000 );</span>
+<span class="nc" id="L169">			lifespan = 0.3f;</span>
+
+<span class="nc" id="L171">			acc.set( 0, +50 );</span>
+<span class="nc" id="L172">		}</span>
+
+		public void reset( float x, float y ) {
+<span class="nc" id="L175">			revive();</span>
+
+<span class="nc" id="L177">			this.x = x;</span>
+<span class="nc" id="L178">			this.y = y;</span>
+
+<span class="nc" id="L180">			left = lifespan;</span>
+
+<span class="nc" id="L182">			size = 4;</span>
+<span class="nc" id="L183">			speed.polar( -Random.Float( PointF.PI ), Random.Float( 32, 48 ) );</span>
+<span class="nc" id="L184">		}</span>
+
+		@Override
+		public void update() {
+<span class="nc" id="L188">			super.update();</span>
+<span class="nc" id="L189">			float p = left / lifespan;</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">			am = p &gt; 0.5f ? (1 - p) * 2f : 1;</span>
+<span class="nc" id="L191">		}</span>
+	}
+
+	@Override
+	public void onComplete( Animation anim ) {
+<span class="nc" id="L196">		super.onComplete(anim);</span>
+
+<span class="nc bnc" id="L198" title="All 2 branches missed.">		if (anim == pumpAttack) {</span>
+
+<span class="nc" id="L200">			triggerEmitters();</span>
+
+<span class="nc" id="L202">			idle();</span>
+<span class="nc" id="L203">			ch.onAttackComplete();</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">		} else if (anim == die) {</span>
+<span class="nc" id="L205">			spray.killAndErase();</span>
+		}
+<span class="nc" id="L207">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

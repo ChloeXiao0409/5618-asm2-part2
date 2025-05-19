@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Transmuting.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.effects</a> &gt; <span class="el_source">Transmuting.java</span></div><h1>Transmuting.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.effects;
+
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.TalentIcon;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.ui.Component;
+
+public class Transmuting extends Component {
+
+<span class="nc" id="L35">	private enum Phase {</span>
+<span class="nc" id="L36">		FADE_IN, TRANSMUTING, FADE_OUT</span>
+	}
+
+	private static final float FADE_IN_TIME		= 0.2f;
+	private static final float TRANSMUTING_TIME	= 1.4f;
+	private static final float FADE_OUT_TIME	= 0.4f;
+
+	private static final float ALPHA	= 0.6f;
+
+	Image oldSprite;
+	Image newSprite;
+
+	private Char target;
+
+	private Phase phase;
+	private float duration;
+	private float passed;
+
+<span class="nc" id="L54">	public Transmuting( Item oldItem, Item newItem ){</span>
+<span class="nc" id="L55">		oldSprite = new ItemSprite(oldItem);</span>
+<span class="nc" id="L56">		oldSprite.originToCenter();</span>
+<span class="nc" id="L57">		add(oldSprite);</span>
+<span class="nc" id="L58">		newSprite = new ItemSprite(newItem);</span>
+<span class="nc" id="L59">		newSprite.originToCenter();</span>
+<span class="nc" id="L60">		add(newSprite);</span>
+
+<span class="nc" id="L62">		oldSprite.alpha(0f);</span>
+<span class="nc" id="L63">		newSprite.alpha(0f);</span>
+
+<span class="nc" id="L65">		phase = Phase.FADE_IN;</span>
+<span class="nc" id="L66">		duration = FADE_IN_TIME;</span>
+<span class="nc" id="L67">		passed = 0;</span>
+<span class="nc" id="L68">	}</span>
+
+<span class="nc" id="L70">	public Transmuting( Talent oldTalent, Talent newTalent ){</span>
+<span class="nc" id="L71">		oldSprite = new TalentIcon(oldTalent);</span>
+<span class="nc" id="L72">		oldSprite.originToCenter();</span>
+<span class="nc" id="L73">		add(oldSprite);</span>
+<span class="nc" id="L74">		newSprite = new TalentIcon(newTalent);</span>
+<span class="nc" id="L75">		newSprite.originToCenter();</span>
+<span class="nc" id="L76">		add(newSprite);</span>
+
+<span class="nc" id="L78">		oldSprite.alpha(0f);</span>
+<span class="nc" id="L79">		newSprite.alpha(0f);</span>
+
+<span class="nc" id="L81">		phase = Phase.FADE_IN;</span>
+<span class="nc" id="L82">		duration = FADE_IN_TIME;</span>
+<span class="nc" id="L83">		passed = 0;</span>
+<span class="nc" id="L84">	}</span>
+
+	@Override
+	public void update() {
+<span class="nc" id="L88">		super.update();</span>
+
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		if (passed == 0) {</span>
+<span class="nc" id="L91">			oldSprite.x = target.sprite.center().x - oldSprite.width() / 2;</span>
+<span class="nc" id="L92">			oldSprite.y = target.sprite.y - oldSprite.height();</span>
+
+<span class="nc" id="L94">			newSprite.x = target.sprite.center().x - newSprite.width() / 2;</span>
+<span class="nc" id="L95">			newSprite.y = target.sprite.y - newSprite.height();</span>
+		}
+
+<span class="nc bnc" id="L98" title="All 4 branches missed.">		switch (phase) {</span>
+			case FADE_IN:
+<span class="nc" id="L100">				oldSprite.alpha( passed / duration * ALPHA );</span>
+<span class="nc" id="L101">				oldSprite.scale.set( passed / duration );</span>
+<span class="nc" id="L102">				break;</span>
+			case TRANSMUTING:
+<span class="nc" id="L104">				oldSprite.alpha((TRANSMUTING_TIME - passed)  / duration * ALPHA);</span>
+<span class="nc" id="L105">				newSprite.alpha(passed / duration * ALPHA);</span>
+<span class="nc" id="L106">				break;</span>
+			case FADE_OUT:
+<span class="nc" id="L108">				newSprite.alpha( (1 - passed / duration) * ALPHA );</span>
+<span class="nc" id="L109">				newSprite.scale.set( 1 + passed / duration );</span>
+				break;
+		}
+
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		if ((passed += Game.elapsed) &gt; duration) {</span>
+<span class="nc bnc" id="L114" title="All 4 branches missed.">			switch (phase) {</span>
+				case FADE_IN:
+<span class="nc" id="L116">					phase = Phase.TRANSMUTING;</span>
+<span class="nc" id="L117">					duration = TRANSMUTING_TIME;</span>
+<span class="nc" id="L118">					break;</span>
+				case TRANSMUTING:
+<span class="nc" id="L120">					phase = Phase.FADE_OUT;</span>
+<span class="nc" id="L121">					duration = FADE_OUT_TIME;</span>
+<span class="nc" id="L122">					break;</span>
+				case FADE_OUT:
+<span class="nc" id="L124">					kill();</span>
+					break;
+			}
+
+<span class="nc" id="L128">			passed = 0;</span>
+		}
+<span class="nc" id="L130">	}</span>
+
+	public static void show( Char ch, Item oldItem, Item newItem ) {
+
+<span class="nc bnc" id="L134" title="All 2 branches missed.">		if (!ch.sprite.visible) {</span>
+<span class="nc" id="L135">			return;</span>
+		}
+
+<span class="nc" id="L138">		Transmuting sprite = new Transmuting( oldItem, newItem );</span>
+<span class="nc" id="L139">		sprite.target = ch;</span>
+<span class="nc" id="L140">		ch.sprite.parent.add( sprite );</span>
+<span class="nc" id="L141">	}</span>
+
+	public static void show( Char ch, Talent oldTalent, Talent newTalent ) {
+
+<span class="nc bnc" id="L145" title="All 2 branches missed.">		if (!ch.sprite.visible) {</span>
+<span class="nc" id="L146">			return;</span>
+		}
+
+<span class="nc" id="L149">		Transmuting sprite = new Transmuting( oldTalent, newTalent );</span>
+<span class="nc" id="L150">		sprite.target = ch;</span>
+<span class="nc" id="L151">		ch.sprite.parent.add( sprite );</span>
+<span class="nc" id="L152">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LockedFloor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.buffs</a> &gt; <span class="el_source">LockedFloor.java</span></div><h1>LockedFloor.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.buffs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.watabou.utils.Bundle;
+
+<span class="nc" id="L29">public class LockedFloor extends Buff {</span>
+
+	//the amount of turns remaining before beneficial passive effects turn off
+	//starts at 50 turns normally, 20 with badder bosses
+<span class="nc bnc" id="L33" title="All 2 branches missed.">	private float left = Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? 20 : 50;</span>
+
+	@Override
+	public boolean act() {
+<span class="nc" id="L37">		spend(TICK);</span>
+
+<span class="nc bnc" id="L39" title="All 2 branches missed.">		if (!Dungeon.level.locked)</span>
+<span class="nc" id="L40">			detach();</span>
+
+<span class="nc bnc" id="L42" title="All 2 branches missed.">		if (left &gt;= 1)</span>
+<span class="nc" id="L43">			left --;</span>
+
+<span class="nc" id="L45">		return true;</span>
+	}
+
+	public void addTime(float time){
+<span class="nc" id="L49">		left += time;</span>
+<span class="nc" id="L50">		left = Math.min(left, 50); //cannot build to more than 50</span>
+<span class="nc" id="L51">	}</span>
+
+	public void removeTime(float time){
+<span class="nc" id="L54">		left -= time; //can go negative!</span>
+<span class="nc" id="L55">	}</span>
+
+	public boolean regenOn(){
+<span class="nc bnc" id="L58" title="All 2 branches missed.">		return left &gt;= 1;</span>
+	}
+
+<span class="nc" id="L61">	private final String LEFT = &quot;left&quot;;</span>
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L65">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L66">		bundle.put( LEFT, left );</span>
+<span class="nc" id="L67">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L71">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L72">		left = bundle.getFloat( LEFT );</span>
+<span class="nc" id="L73">	}</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L77">		return BuffIndicator.LOCKED_FLOOR;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

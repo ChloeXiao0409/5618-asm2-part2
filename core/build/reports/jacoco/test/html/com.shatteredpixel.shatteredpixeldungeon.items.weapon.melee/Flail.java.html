@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Flail.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee</a> &gt; <span class="el_source">Flail.java</span></div><h1>Flail.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+
+<span class="nc" id="L39">public class Flail extends MeleeWeapon {</span>
+
+	{
+<span class="nc" id="L42">		image = ItemSpriteSheet.FLAIL;</span>
+<span class="nc" id="L43">		hitSound = Assets.Sounds.HIT_CRUSH;</span>
+<span class="nc" id="L44">		hitSoundPitch = 0.8f;</span>
+
+<span class="nc" id="L46">		tier = 4;</span>
+<span class="nc" id="L47">		ACC = 0.8f; //0.8x accuracy</span>
+		//also cannot surprise attack, see Hero.canSurpriseAttack
+<span class="nc" id="L49">	}</span>
+
+	@Override
+	public int max(int lvl) {
+<span class="nc" id="L53">		return  Math.round(7*(tier+1)) +        //35 base, up from 25</span>
+<span class="nc" id="L54">				lvl*Math.round(1.6f*(tier+1));  //+8 per level, up from +5</span>
+	}
+
+<span class="nc" id="L57">	private static int spinBoost = 0;</span>
+
+	@Override
+	public int damageRoll(Char owner) {
+<span class="nc" id="L61">		int dmg = super.damageRoll(owner) + spinBoost;</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		if (spinBoost &gt; 0) Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);</span>
+<span class="nc" id="L63">		spinBoost = 0;</span>
+<span class="nc" id="L64">		return dmg;</span>
+	}
+
+	@Override
+	public float accuracyFactor(Char owner, Char target) {
+<span class="nc" id="L69">		SpinAbilityTracker spin = owner.buff(SpinAbilityTracker.class);</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		if (spin != null) {</span>
+<span class="nc" id="L71">			Actor.add(new Actor() {</span>
+<span class="nc" id="L72">				{ actPriority = VFX_PRIO; }</span>
+				@Override
+				protected boolean act() {
+<span class="nc bnc" id="L75" title="All 4 branches missed.">					if (owner instanceof Hero &amp;&amp; !target.isAlive()){</span>
+<span class="nc" id="L76">						onAbilityKill((Hero)owner, target);</span>
+					}
+<span class="nc" id="L78">					Actor.remove(this);</span>
+<span class="nc" id="L79">					return true;</span>
+				}
+			});
+			//we detach and calculate bonus here in case the attack misses (e.g. vs. monks)
+<span class="nc" id="L83">			spin.detach();</span>
+			//+(8+2*lvl) damage per spin, roughly +40% base damage, +45% scaling
+			// so +120% base dmg, +135% scaling at 3 spins
+<span class="nc" id="L86">			spinBoost = spin.spins * augment.damageFactor(8 + 2*buffedLvl());</span>
+<span class="nc" id="L87">			return Float.POSITIVE_INFINITY;</span>
+		} else {
+<span class="nc" id="L89">			spinBoost = 0;</span>
+<span class="nc" id="L90">			return super.accuracyFactor(owner, target);</span>
+		}
+	}
+
+	@Override
+	protected int baseChargeUse(Hero hero, Char target){
+<span class="nc bnc" id="L96" title="All 2 branches missed.">		if (Dungeon.hero.buff(SpinAbilityTracker.class) != null){</span>
+<span class="nc" id="L97">			return 0;</span>
+		} else {
+<span class="nc" id="L99">			return 1;</span>
+		}
+	}
+
+	@Override
+	protected void duelistAbility(Hero hero, Integer target) {
+
+<span class="nc" id="L106">		SpinAbilityTracker spin = hero.buff(SpinAbilityTracker.class);</span>
+<span class="nc bnc" id="L107" title="All 4 branches missed.">		if (spin != null &amp;&amp; spin.spins &gt;= 3){</span>
+<span class="nc" id="L108">			GLog.w(Messages.get(this, &quot;spin_warn&quot;));</span>
+<span class="nc" id="L109">			return;</span>
+		}
+
+<span class="nc" id="L112">		beforeAbilityUsed(hero, null);</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		if (spin == null){</span>
+<span class="nc" id="L114">			spin = Buff.affect(hero, SpinAbilityTracker.class, 3f);</span>
+		}
+
+<span class="nc" id="L117">		spin.spins++;</span>
+<span class="nc" id="L118">		Buff.prolong(hero, SpinAbilityTracker.class, 3f);</span>
+<span class="nc" id="L119">		Sample.INSTANCE.play(Assets.Sounds.CHAINS, 1, 1, 0.9f + 0.1f*spin.spins);</span>
+<span class="nc" id="L120">		hero.sprite.operate(hero.pos);</span>
+<span class="nc" id="L121">		hero.spendAndNext(Actor.TICK);</span>
+<span class="nc" id="L122">		BuffIndicator.refreshHero();</span>
+
+<span class="nc" id="L124">		afterAbilityUsed(hero);</span>
+<span class="nc" id="L125">	}</span>
+
+	@Override
+	public String abilityInfo() {
+<span class="nc bnc" id="L129" title="All 2 branches missed.">		int dmgBoost = levelKnown ? 8 + 2*buffedLvl() : 8;</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">		if (levelKnown){</span>
+<span class="nc" id="L131">			return Messages.get(this, &quot;ability_desc&quot;, augment.damageFactor(dmgBoost));</span>
+		} else {
+<span class="nc" id="L133">			return Messages.get(this, &quot;typical_ability_desc&quot;, augment.damageFactor(dmgBoost));</span>
+		}
+	}
+
+	public String upgradeAbilityStat(int level){
+<span class="nc" id="L138">		return &quot;+&quot; + augment.damageFactor(8 + 2*level);</span>
+	}
+
+<span class="nc" id="L141">	public static class SpinAbilityTracker extends FlavourBuff {</span>
+
+		{
+<span class="nc" id="L144">			type = buffType.POSITIVE;</span>
+		}
+
+<span class="nc" id="L147">		public int spins = 0;</span>
+
+		@Override
+		public int icon() {
+<span class="nc" id="L151">			return BuffIndicator.DUEL_SPIN;</span>
+		}
+
+		@Override
+		public void tintIcon(Image icon) {
+<span class="nc bnc" id="L156" title="All 3 branches missed.">			switch (spins){</span>
+				case 1: default:
+<span class="nc" id="L158">					icon.hardlight(0, 1, 0);</span>
+<span class="nc" id="L159">					break;</span>
+				case 2:
+<span class="nc" id="L161">					icon.hardlight(1, 1, 0);</span>
+<span class="nc" id="L162">					break;</span>
+				case 3:
+<span class="nc" id="L164">					icon.hardlight(1, 0, 0);</span>
+					break;
+			}
+<span class="nc" id="L167">		}</span>
+
+		@Override
+		public float iconFadePercent() {
+<span class="nc" id="L171">			return Math.max(0, (3 - visualcooldown()) / 3);</span>
+		}
+
+		@Override
+		public String desc() {
+<span class="nc" id="L176">			return Messages.get(this, &quot;desc&quot;, (int)Math.round((spins/3f)*100f), dispTurns());</span>
+		}
+
+<span class="nc" id="L179">		public static String SPINS = &quot;spins&quot;;</span>
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L183">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L184">			bundle.put(SPINS, spins);</span>
+<span class="nc" id="L185">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L189">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L190">			spins = bundle.getInt(SPINS);</span>
+<span class="nc" id="L191">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PhantomPiranha.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">PhantomPiranha.java</span></div><h1>PhantomPiranha.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Corruption;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.ClericSpell;
+import com.shatteredpixel.shatteredpixeldungeon.items.food.PhantomMeat;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.PhantomPiranhaSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L40">public class PhantomPiranha extends Piranha {</span>
+
+	{
+<span class="nc" id="L43">		spriteClass = PhantomPiranhaSprite.class;</span>
+
+<span class="nc" id="L45">		loot = PhantomMeat.class;</span>
+<span class="nc" id="L46">		lootChance = 1f;</span>
+<span class="nc" id="L47">	}</span>
+
+	@Override
+	public void damage(int dmg, Object src) {
+<span class="nc" id="L51">		Char dmgSource = null;</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">		if (src instanceof Char) dmgSource = (Char)src;</span>
+<span class="nc bnc" id="L53" title="All 4 branches missed.">		if (src instanceof Wand || src instanceof ClericSpell) dmgSource = Dungeon.hero;</span>
+
+<span class="nc bnc" id="L55" title="All 4 branches missed.">		if (dmgSource == null || !Dungeon.level.adjacent(pos, dmgSource.pos)){</span>
+<span class="nc" id="L56">			dmg = Math.round(dmg/2f); //halve damage taken if we are going to teleport</span>
+		}
+<span class="nc" id="L58">		super.damage(dmg, src);</span>
+
+<span class="nc bnc" id="L60" title="All 4 branches missed.">		if (isAlive() &amp;&amp; !(src instanceof Corruption)) {</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">			if (dmgSource != null) {</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">				if (!Dungeon.level.adjacent(pos, dmgSource.pos)) {</span>
+<span class="nc" id="L63">					ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">					for (int i : PathFinder.NEIGHBOURS8) {</span>
+<span class="nc bnc" id="L65" title="All 4 branches missed.">						if (Dungeon.level.water[dmgSource.pos + i] &amp;&amp; Actor.findChar(dmgSource.pos + i) == null) {</span>
+<span class="nc" id="L66">							candidates.add(dmgSource.pos + i);</span>
+						}
+					}
+<span class="nc bnc" id="L69" title="All 2 branches missed.">					if (!candidates.isEmpty()) {</span>
+<span class="nc" id="L70">						ScrollOfTeleportation.appear(this, Random.element(candidates));</span>
+<span class="nc" id="L71">						aggro(dmgSource);</span>
+					} else {
+<span class="nc" id="L73">						teleportAway();</span>
+					}
+<span class="nc" id="L75">				}</span>
+			} else {
+<span class="nc" id="L77">				teleportAway();</span>
+			}
+		}
+<span class="nc" id="L80">	}</span>
+
+	@Override
+	public int defenseProc(Char enemy, int damage) {
+<span class="nc" id="L84">		return super.defenseProc(enemy, damage);</span>
+	}
+
+	@Override
+	public void dieOnLand() {
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		if (!teleportAway()){</span>
+<span class="nc" id="L90">			super.dieOnLand();</span>
+		}
+<span class="nc" id="L92">	}</span>
+
+	private boolean teleportAway(){
+
+<span class="nc bnc" id="L96" title="All 2 branches missed.">		if (flying){</span>
+<span class="nc" id="L97">			return false;</span>
+		}
+
+<span class="nc" id="L100">		ArrayList&lt;Integer&gt; inFOVCandidates = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L101">		ArrayList&lt;Integer&gt; outFOVCandidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		for (int i = 0; i &lt; Dungeon.level.length(); i++){</span>
+<span class="nc bnc" id="L103" title="All 4 branches missed.">			if (Dungeon.level.water[i] &amp;&amp; Actor.findChar(i) == null){</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">				if (Dungeon.level.heroFOV[i]){</span>
+<span class="nc" id="L105">					inFOVCandidates.add(i);</span>
+				} else {
+<span class="nc" id="L107">					outFOVCandidates.add(i);</span>
+				}
+			}
+		}
+
+<span class="nc bnc" id="L112" title="All 2 branches missed.">		if (!outFOVCandidates.isEmpty()){</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">			if (Dungeon.level.heroFOV[pos]) GLog.i(Messages.get(this, &quot;teleport_away&quot;));</span>
+<span class="nc" id="L114">			ScrollOfTeleportation.appear(this, Random.element(outFOVCandidates));</span>
+<span class="nc" id="L115">			return true;</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		} else if (!inFOVCandidates.isEmpty()){</span>
+<span class="nc" id="L117">			ScrollOfTeleportation.appear(this, Random.element(inFOVCandidates));</span>
+<span class="nc" id="L118">			return true;</span>
+		}
+
+<span class="nc" id="L121">		return false;</span>
+
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

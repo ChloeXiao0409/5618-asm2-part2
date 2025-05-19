@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PlantsRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard</a> &gt; <span class="el_source">PlantsRoom.java</span></div><h1>PlantsRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard;
+
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+import com.watabou.utils.Rect;
+
+<span class="nc" id="L35">public class PlantsRoom extends StandardRoom {</span>
+	
+	@Override
+	public int minWidth() {
+<span class="nc" id="L39">		return Math.max(super.minWidth(), 5);</span>
+	}
+	
+	@Override
+	public int minHeight() {
+<span class="nc" id="L44">		return Math.max(super.minHeight(), 5);</span>
+	}
+	
+	@Override
+	public float[] sizeCatProbs() {
+<span class="nc" id="L49">		return new float[]{3, 1, 0};</span>
+	}
+	
+	@Override
+	public void merge(Level l, Room other, Rect merge, int mergeTerrain) {
+<span class="nc bnc" id="L54" title="All 6 branches missed.">		if (mergeTerrain == Terrain.EMPTY &amp;&amp;</span>
+				(other instanceof PlantsRoom || other instanceof GrassyGraveRoom)){
+<span class="nc" id="L56">			super.merge(l, other, merge, Terrain.GRASS);</span>
+		} else {
+<span class="nc" id="L58">			super.merge(l, other, merge, mergeTerrain);</span>
+		}
+<span class="nc" id="L60">	}</span>
+
+	@Override
+	public void paint(Level level) {
+<span class="nc" id="L64">		Painter.fill( level, this, Terrain.WALL );</span>
+<span class="nc" id="L65">		Painter.fill( level, this, 1, Terrain.GRASS );</span>
+<span class="nc" id="L66">		Painter.fill( level, this, 2, Terrain.HIGH_GRASS );</span>
+		
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		if (Math.min(width(), height()) &gt;= 7){</span>
+<span class="nc" id="L69">			Painter.fill( level, this, 3, Terrain.GRASS );</span>
+		}
+		
+<span class="nc" id="L72">		Point center = center();</span>
+		
+		//place at least 2 plants for rooms with at least 9 in one dimensions
+<span class="nc bnc" id="L75" title="All 2 branches missed.">		if (Math.max(width(), height()) &gt;= 9){</span>
+			
+			//place 4 plants for very large rooms
+<span class="nc bnc" id="L78" title="All 2 branches missed.">			if (Math.min(width(), height()) &gt;= 11) {</span>
+<span class="nc" id="L79">				Painter.drawLine(level, new Point(left+2, center.y), new Point(right-2, center.y), Terrain.HIGH_GRASS);</span>
+<span class="nc" id="L80">				Painter.drawLine(level, new Point(center.x, top+2), new Point(center.x, bottom-2), Terrain.HIGH_GRASS);</span>
+<span class="nc" id="L81">				level.plant( randomSeed(), level.pointToCell(new Point(center.x-1, center.y-1)));</span>
+<span class="nc" id="L82">				level.plant( randomSeed(), level.pointToCell(new Point(center.x+1, center.y-1)));</span>
+<span class="nc" id="L83">				level.plant( randomSeed(), level.pointToCell(new Point(center.x-1, center.y+1)));</span>
+<span class="nc" id="L84">				level.plant( randomSeed(), level.pointToCell(new Point(center.x+1, center.y+1)));</span>
+			
+			//place 2 plants otherwise
+			//left/right
+<span class="nc bnc" id="L88" title="All 6 branches missed.">			} else if (width() &gt; height() || (width() == height() &amp;&amp; Random.Int(2) == 0)){</span>
+<span class="nc" id="L89">				Painter.drawLine(level, new Point(center.x, top+2), new Point(center.x, bottom-2), Terrain.HIGH_GRASS);</span>
+<span class="nc" id="L90">				level.plant( randomSeed(), level.pointToCell(new Point(center.x-1, center.y)));</span>
+<span class="nc" id="L91">				level.plant( randomSeed(), level.pointToCell(new Point(center.x+1, center.y)));</span>
+			
+			//top/bottom
+			} else {
+<span class="nc" id="L95">				Painter.drawLine(level, new Point(left+2, center.y), new Point(right-2, center.y), Terrain.HIGH_GRASS);</span>
+<span class="nc" id="L96">				level.plant( randomSeed(), level.pointToCell(new Point(center.x, center.y-1)));</span>
+<span class="nc" id="L97">				level.plant( randomSeed(), level.pointToCell(new Point(center.x, center.y+1)));</span>
+			
+			}
+			
+		//place just one plant for smaller sized rooms
+		} else {
+<span class="nc" id="L103">			level.plant( randomSeed(), level.pointToCell(center));</span>
+		}
+		
+<span class="nc bnc" id="L106" title="All 2 branches missed.">		for (Door door : connected.values()) {</span>
+<span class="nc" id="L107">			door.set( Door.Type.REGULAR );</span>
+<span class="nc" id="L108">		}</span>
+<span class="nc" id="L109">	}</span>
+	
+	private static Plant.Seed randomSeed(){
+		Plant.Seed result;
+		do {
+<span class="nc" id="L114">			result = (Plant.Seed) Generator.randomUsingDefaults(Generator.Category.SEED);</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">		} while (result instanceof Firebloom.Seed);</span>
+<span class="nc" id="L116">		return result;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

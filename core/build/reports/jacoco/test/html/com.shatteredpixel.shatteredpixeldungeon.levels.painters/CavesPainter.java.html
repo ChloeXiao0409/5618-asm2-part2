@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CavesPainter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.painters</a> &gt; <span class="el_source">CavesPainter.java</span></div><h1>CavesPainter.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.painters;
+
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.StandardRoom;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTileSheet;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L33">public class CavesPainter extends RegularPainter {</span>
+	
+	@Override
+	protected void decorate(Level level, ArrayList&lt;Room&gt; rooms) {
+		
+<span class="nc" id="L38">		int w = level.width();</span>
+<span class="nc" id="L39">		int l = level.length();</span>
+<span class="nc" id="L40">		int[] map = level.map;</span>
+
+<span class="nc bnc" id="L42" title="All 2 branches missed.">		for (Room r : rooms) {</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">			for (Room n : r.neigbours) {</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">				if (!r.connected.containsKey( n )) {</span>
+<span class="nc" id="L45">					mergeRooms(level, r, n, null, Terrain.CHASM);</span>
+				}
+<span class="nc" id="L47">			}</span>
+<span class="nc" id="L48">		}</span>
+
+<span class="nc bnc" id="L50" title="All 2 branches missed.">		for (Room room : rooms) {</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">			if (!(room instanceof StandardRoom)) {</span>
+<span class="nc" id="L52">				continue;</span>
+			}
+			
+<span class="nc bnc" id="L55" title="All 4 branches missed.">			if (room.width() &lt;= 4 || room.height() &lt;= 4) {</span>
+<span class="nc" id="L56">				continue;</span>
+			}
+			
+<span class="nc" id="L59">			int s = room.square();</span>
+
+			//for each corner, we have a chance to fill based on room size
+			//but not if filling that corner blocks a connection or places a visible trap next to a wall
+<span class="nc bnc" id="L63" title="All 2 branches missed.">			if (Random.Int( s ) &gt; 8) {</span>
+<span class="nc" id="L64">				int corner = (room.left + 1) + (room.top + 1) * w;</span>
+<span class="nc bnc" id="L65" title="All 6 branches missed.">				if (map[corner-1] == Terrain.WALL &amp;&amp; !room.connected.containsValue(level.cellToPoint(corner-1))</span>
+<span class="nc bnc" id="L66" title="All 6 branches missed.">						&amp;&amp; map[corner-w] == Terrain.WALL &amp;&amp; !room.connected.containsValue(level.cellToPoint(corner-w))</span>
+						&amp;&amp; map[corner+1] != Terrain.TRAP &amp;&amp; map[corner+w] != Terrain.TRAP) {
+<span class="nc" id="L68">					map[corner] = Terrain.WALL;</span>
+<span class="nc" id="L69">					level.traps.remove(corner);</span>
+				}
+			}
+			
+<span class="nc bnc" id="L73" title="All 2 branches missed.">			if (Random.Int( s ) &gt; 8) {</span>
+<span class="nc" id="L74">				int corner = (room.right - 1) + (room.top + 1) * w;</span>
+<span class="nc bnc" id="L75" title="All 6 branches missed.">				if (map[corner+1] == Terrain.WALL &amp;&amp; !room.connected.containsValue(level.cellToPoint(corner+1))</span>
+<span class="nc bnc" id="L76" title="All 6 branches missed.">						&amp;&amp; map[corner-w] == Terrain.WALL &amp;&amp; !room.connected.containsValue(level.cellToPoint(corner-w))</span>
+						&amp;&amp; map[corner-1] != Terrain.TRAP &amp;&amp; map[corner+w] != Terrain.TRAP) {
+<span class="nc" id="L78">					map[corner] = Terrain.WALL;</span>
+<span class="nc" id="L79">					level.traps.remove(corner);</span>
+				}
+			}
+			
+<span class="nc bnc" id="L83" title="All 2 branches missed.">			if (Random.Int( s ) &gt; 8) {</span>
+<span class="nc" id="L84">				int corner = (room.left + 1) + (room.bottom - 1) * w;</span>
+<span class="nc bnc" id="L85" title="All 6 branches missed.">				if (map[corner-1] == Terrain.WALL &amp;&amp; !room.connected.containsValue(level.cellToPoint(corner-1))</span>
+<span class="nc bnc" id="L86" title="All 6 branches missed.">						&amp;&amp; map[corner+w] == Terrain.WALL &amp;&amp; !room.connected.containsValue(level.cellToPoint(corner+w))</span>
+						&amp;&amp; map[corner+1] != Terrain.TRAP &amp;&amp; map[corner-w] != Terrain.TRAP) {
+<span class="nc" id="L88">					map[corner] = Terrain.WALL;</span>
+<span class="nc" id="L89">					level.traps.remove(corner);</span>
+				}
+			}
+			
+<span class="nc bnc" id="L93" title="All 2 branches missed.">			if (Random.Int( s ) &gt; 8) {</span>
+<span class="nc" id="L94">				int corner = (room.right - 1) + (room.bottom - 1) * w;</span>
+<span class="nc bnc" id="L95" title="All 6 branches missed.">				if (map[corner+1] == Terrain.WALL &amp;&amp; !room.connected.containsValue(level.cellToPoint(corner+1))</span>
+<span class="nc bnc" id="L96" title="All 6 branches missed.">						&amp;&amp; map[corner+w] == Terrain.WALL &amp;&amp; !room.connected.containsValue(level.cellToPoint(corner+w))</span>
+						&amp;&amp; map[corner-1] != Terrain.TRAP &amp;&amp; map[corner-w] != Terrain.TRAP) {
+<span class="nc" id="L98">					map[corner] = Terrain.WALL;</span>
+<span class="nc" id="L99">					level.traps.remove(corner);</span>
+				}
+			}
+
+<span class="nc" id="L103">		}</span>
+
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		for (int i=w + 1; i &lt; l - w; i++) {</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			if (map[i] == Terrain.EMPTY) {</span>
+<span class="nc" id="L107">				int n = 0;</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">				if (map[i+1] == Terrain.WALL) {</span>
+<span class="nc" id="L109">					n++;</span>
+				}
+<span class="nc bnc" id="L111" title="All 2 branches missed.">				if (map[i-1] == Terrain.WALL) {</span>
+<span class="nc" id="L112">					n++;</span>
+				}
+<span class="nc bnc" id="L114" title="All 2 branches missed.">				if (map[i+w] == Terrain.WALL) {</span>
+<span class="nc" id="L115">					n++;</span>
+				}
+<span class="nc bnc" id="L117" title="All 2 branches missed.">				if (map[i-w] == Terrain.WALL) {</span>
+<span class="nc" id="L118">					n++;</span>
+				}
+<span class="nc bnc" id="L120" title="All 2 branches missed.">				if (Random.Int( 6 ) &lt;= n) {</span>
+<span class="nc" id="L121">					map[i] = Terrain.EMPTY_DECO;</span>
+				}
+			}
+		}
+		
+<span class="nc" id="L126">		generateGold(level, rooms);</span>
+
+<span class="nc" id="L128">	}</span>
+
+	protected void generateGold(Level level, ArrayList&lt;Room&gt; rooms){
+<span class="nc" id="L131">		int w = level.width();</span>
+<span class="nc" id="L132">		int l = level.length();</span>
+<span class="nc" id="L133">		int[] map = level.map;</span>
+
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		for (int i=0; i &lt; l - w; i++) {</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">			if (map[i] == Terrain.WALL &amp;&amp;</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">					DungeonTileSheet.floorTile(map[i + w])</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">					&amp;&amp; Random.Int( 4 ) == 0) {</span>
+<span class="nc" id="L139">				map[i] = Terrain.WALL_DECO;</span>
+			}
+		}
+<span class="nc" id="L142">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

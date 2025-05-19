@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Multiplicity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.armor.curses</a> &gt; <span class="el_source">Multiplicity.java</span></div><h1>Multiplicity.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.armor.curses;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.PinCushion;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.Ratmogrify;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DwarfKing;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Ghoul;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Statue;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Thief;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.MirrorImage;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.NPC;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L49">public class Multiplicity extends Armor.Glyph {</span>
+
+<span class="nc" id="L51">	private static ItemSprite.Glowing BLACK = new ItemSprite.Glowing( 0x000000 );</span>
+
+	@Override
+	public int proc(Armor armor, Char attacker, Char defender, int damage) {
+
+<span class="nc" id="L56">		float procChance = 1/20f * procChanceMultiplier(defender);</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		if ( Random.Float() &lt; procChance ) {</span>
+<span class="nc" id="L58">			ArrayList&lt;Integer&gt; spawnPoints = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L60" title="All 2 branches missed.">			for (int i = 0; i &lt; PathFinder.NEIGHBOURS8.length; i++) {</span>
+<span class="nc" id="L61">				int p = defender.pos + PathFinder.NEIGHBOURS8[i];</span>
+<span class="nc bnc" id="L62" title="All 6 branches missed.">				if (Actor.findChar( p ) == null &amp;&amp; (Dungeon.level.passable[p] || Dungeon.level.avoid[p])) {</span>
+<span class="nc" id="L63">					spawnPoints.add( p );</span>
+				}
+			}
+
+<span class="nc bnc" id="L67" title="All 2 branches missed.">			if (spawnPoints.size() &gt; 0) {</span>
+
+<span class="nc" id="L69">				Mob m = null;</span>
+<span class="nc bnc" id="L70" title="All 4 branches missed.">				if (Random.Int(2) == 0 &amp;&amp; defender instanceof Hero){</span>
+<span class="nc" id="L71">					m = new MirrorImage();</span>
+<span class="nc" id="L72">					((MirrorImage)m).duplicate( (Hero)defender );</span>
+
+				} else {
+<span class="nc" id="L75">					Char toDuplicate = attacker;</span>
+
+<span class="nc bnc" id="L77" title="All 2 branches missed.">					if (toDuplicate instanceof Ratmogrify.TransmogRat){</span>
+<span class="nc" id="L78">						toDuplicate = ((Ratmogrify.TransmogRat)attacker).getOriginal();</span>
+					}
+
+					//FIXME should probably have a mob property for this
+<span class="nc bnc" id="L82" title="All 2 branches missed.">					if (!(toDuplicate instanceof Mob)</span>
+<span class="nc bnc" id="L83" title="All 10 branches missed.">							|| toDuplicate.properties().contains(Char.Property.BOSS) || toDuplicate.properties().contains(Char.Property.MINIBOSS)</span>
+							|| toDuplicate instanceof Mimic || toDuplicate instanceof Statue || toDuplicate instanceof NPC) {
+<span class="nc" id="L85">						m = Dungeon.level.createMob();</span>
+					} else {
+<span class="nc" id="L87">						Actor.fixTime();</span>
+
+<span class="nc" id="L89">						m = (Mob)Reflection.newInstance(toDuplicate.getClass());</span>
+						
+<span class="nc bnc" id="L91" title="All 2 branches missed.">						if (m != null) {</span>
+							
+<span class="nc" id="L93">							Bundle store = new Bundle();</span>
+<span class="nc" id="L94">							attacker.storeInBundle(store);</span>
+<span class="nc" id="L95">							m.restoreFromBundle(store);</span>
+<span class="nc" id="L96">							m.pos = 0;</span>
+<span class="nc" id="L97">							m.HP = m.HT;</span>
+
+							//don't duplicate stuck projectiles
+<span class="nc" id="L100">							m.remove(PinCushion.class);</span>
+							//don't duplicate pending damage to dwarf king
+<span class="nc" id="L102">							m.remove(DwarfKing.KingDamager.class);</span>
+							//don't duplicate downed ghouls
+<span class="nc" id="L104">							m.remove(Ghoul.GhoulLifeLink.class);</span>
+							
+							//If a thief has stolen an item, that item is not duplicated.
+<span class="nc bnc" id="L107" title="All 2 branches missed.">							if (m instanceof Thief) {</span>
+<span class="nc" id="L108">								((Thief) m).item = null;</span>
+							}
+						}
+					}
+				}
+
+<span class="nc bnc" id="L114" title="All 2 branches missed.">				if (m != null) {</span>
+
+<span class="nc bnc" id="L116" title="All 2 branches missed.">					if (Char.hasProp(m, Char.Property.LARGE)){</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">						for ( int i : spawnPoints.toArray(new Integer[0])){</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">							if (!Dungeon.level.openSpace[i]){</span>
+								//remove the value, not at the index
+<span class="nc" id="L120">								spawnPoints.remove((Integer) i);</span>
+							}
+						}
+					}
+
+<span class="nc bnc" id="L125" title="All 2 branches missed.">					if (!spawnPoints.isEmpty()) {</span>
+<span class="nc" id="L126">						m.pos = Random.element(spawnPoints);</span>
+<span class="nc" id="L127">						GameScene.add(m);</span>
+<span class="nc" id="L128">						ScrollOfTeleportation.appear(m, m.pos);</span>
+					}
+				}
+
+			}
+		}
+
+<span class="nc" id="L135">		return damage;</span>
+	}
+
+	@Override
+	public ItemSprite.Glowing glowing() {
+<span class="nc" id="L140">		return BLACK;</span>
+	}
+
+	@Override
+	public boolean curse() {
+<span class="nc" id="L145">		return true;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

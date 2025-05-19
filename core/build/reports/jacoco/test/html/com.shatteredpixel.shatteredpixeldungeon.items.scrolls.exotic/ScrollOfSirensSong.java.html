@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScrollOfSirensSong.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic</a> &gt; <span class="el_source">ScrollOfSirensSong.java</span></div><h1>ScrollOfSirensSong.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AllyBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Charm;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+
+<span class="nc" id="L42">public class ScrollOfSirensSong extends ExoticScroll {</span>
+	
+	{
+<span class="nc" id="L45">		icon = ItemSpriteSheet.Icons.SCROLL_SIREN;</span>
+	}
+
+<span class="nc" id="L48">	protected static boolean identifiedByUse = false;</span>
+	
+	@Override
+	public void doRead() {
+<span class="nc bnc" id="L52" title="All 2 branches missed.">		if (!isKnown()) {</span>
+<span class="nc" id="L53">			identify();</span>
+<span class="nc" id="L54">			curItem = detach(curUser.belongings.backpack);</span>
+<span class="nc" id="L55">			identifiedByUse = true;</span>
+		} else {
+<span class="nc" id="L57">			identifiedByUse = false;</span>
+		}
+<span class="nc" id="L59">		GameScene.selectCell(targeter);</span>
+<span class="nc" id="L60">	}</span>
+
+<span class="nc" id="L62">	private CellSelector.Listener targeter = new CellSelector.Listener() {</span>
+
+		@Override
+		public void onSelect(Integer cell) {
+<span class="nc bnc" id="L66" title="All 4 branches missed.">			if (cell == null &amp;&amp; isKnown()){</span>
+<span class="nc" id="L67">				return;</span>
+			}
+
+<span class="nc" id="L70">			Mob target = null;</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">			if (cell != null){</span>
+<span class="nc" id="L72">				Char ch = Actor.findChar(cell);</span>
+<span class="nc bnc" id="L73" title="All 6 branches missed.">				if (ch != null &amp;&amp; ch.alignment != Char.Alignment.ALLY &amp;&amp; ch instanceof Mob){</span>
+<span class="nc" id="L74">					target = (Mob)ch;</span>
+				}
+			}
+
+<span class="nc bnc" id="L78" title="All 6 branches missed.">			if (target == null &amp;&amp; !anonymous &amp;&amp; !identifiedByUse){</span>
+<span class="nc" id="L79">				GLog.w(Messages.get(ScrollOfSirensSong.class, &quot;cancel&quot;));</span>
+<span class="nc" id="L80">				return;</span>
+
+			} else {
+
+<span class="nc" id="L84">				curUser.sprite.centerEmitter().start( Speck.factory( Speck.HEART ), 0.2f, 5 );</span>
+<span class="nc" id="L85">				Sample.INSTANCE.play( Assets.Sounds.CHARMS );</span>
+<span class="nc" id="L86">				Sample.INSTANCE.playDelayed( Assets.Sounds.LULLABY, 0.1f );</span>
+
+<span class="nc bnc" id="L88" title="All 2 branches missed.">				for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {</span>
+<span class="nc bnc" id="L89" title="All 6 branches missed.">					if (Dungeon.level.heroFOV[mob.pos] &amp;&amp; mob != target &amp;&amp; mob.alignment != Char.Alignment.ALLY) {</span>
+<span class="nc" id="L90">						Buff.affect( mob, Charm.class, Charm.DURATION ).object = curUser.id();</span>
+<span class="nc" id="L91">						mob.sprite.centerEmitter().start( Speck.factory( Speck.HEART ), 0.2f, 5 );</span>
+					}
+				}
+
+<span class="nc bnc" id="L95" title="All 2 branches missed.">				if (target != null){</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">					if (!target.isImmune(Enthralled.class)){</span>
+<span class="nc" id="L97">						AllyBuff.affectAndLoot(target, curUser, Enthralled.class);</span>
+
+					} else {
+<span class="nc" id="L100">						Buff.affect( target, Charm.class, Charm.DURATION ).object = curUser.id();</span>
+
+					}
+<span class="nc" id="L103">					target.sprite.centerEmitter().burst( Speck.factory( Speck.HEART ), 10 );</span>
+				} else {
+<span class="nc" id="L105">					GLog.w(Messages.get(ScrollOfSirensSong.class, &quot;no_target&quot;));</span>
+				}
+
+<span class="nc bnc" id="L108" title="All 2 branches missed.">				if (!identifiedByUse) {</span>
+<span class="nc" id="L109">					curItem.detach(curUser.belongings.backpack);</span>
+				}
+<span class="nc" id="L111">				identifiedByUse = false;</span>
+
+<span class="nc" id="L113">				readAnimation();</span>
+
+			}
+<span class="nc" id="L116">		}</span>
+
+		@Override
+		public String prompt() {
+<span class="nc" id="L120">			return Messages.get(ScrollOfSirensSong.class, &quot;prompt&quot;);</span>
+		}
+
+	};
+
+<span class="nc" id="L125">	public static class Enthralled extends AllyBuff {</span>
+
+		{
+<span class="nc" id="L128">			type = buffType.NEGATIVE;</span>
+<span class="nc" id="L129">			announced = true;</span>
+<span class="nc" id="L130">		}</span>
+
+		@Override
+		public void fx(boolean on) {
+<span class="nc bnc" id="L134" title="All 2 branches missed.">			if (on) target.sprite.add(CharSprite.State.HEARTS);</span>
+<span class="nc" id="L135">			else    target.sprite.remove(CharSprite.State.HEARTS);</span>
+<span class="nc" id="L136">		}</span>
+
+		@Override
+		public int icon() {
+<span class="nc" id="L140">			return BuffIndicator.HEART;</span>
+		}
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

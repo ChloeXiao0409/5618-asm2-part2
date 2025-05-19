@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SPDSettings.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon</a> &gt; <span class="el_source">SPDSettings.java</span></div><h1>SPDSettings.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon;
+
+import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.audio.Music;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.DeviceCompat;
+import com.watabou.utils.GameSettings;
+import com.watabou.utils.Point;
+
+import java.util.Locale;
+
+<span class="nc" id="L36">public class SPDSettings extends GameSettings {</span>
+	
+	//Version info
+	
+	public static final String KEY_VERSION      = &quot;version&quot;;
+	
+	public static void version( int value)  {
+<span class="nc" id="L43">		put( KEY_VERSION, value );</span>
+<span class="nc" id="L44">	}</span>
+	
+	public static int version() {
+<span class="nc" id="L47">		return getInt( KEY_VERSION, 0 );</span>
+	}
+	
+	//Display
+	
+	public static final String KEY_FULLSCREEN	= &quot;fullscreen&quot;;
+	public static final String KEY_LANDSCAPE	= &quot;landscape&quot;;
+	public static final String KEY_POWER_SAVER 	= &quot;power_saver&quot;;
+	public static final String KEY_ZOOM			= &quot;zoom&quot;;
+	public static final String KEY_BRIGHTNESS	= &quot;brightness&quot;;
+	public static final String KEY_GRID 	    = &quot;visual_grid&quot;;
+	public static final String KEY_CAMERA_FOLLOW= &quot;camera_follow&quot;;
+	public static final String KEY_SCREEN_SHAKE = &quot;screen_shake&quot;;
+	
+	public static void fullscreen( boolean value ) {
+<span class="nc" id="L62">		put( KEY_FULLSCREEN, value );</span>
+		
+<span class="nc" id="L64">		ShatteredPixelDungeon.updateSystemUI();</span>
+<span class="nc" id="L65">	}</span>
+	
+	public static boolean fullscreen() {
+<span class="nc" id="L68">		return getBoolean( KEY_FULLSCREEN, DeviceCompat.isDesktop() );</span>
+	}
+	
+	public static void landscape( boolean value ){
+<span class="nc" id="L72">		put( KEY_LANDSCAPE, value );</span>
+<span class="nc" id="L73">		((ShatteredPixelDungeon)ShatteredPixelDungeon.instance).updateDisplaySize();</span>
+<span class="nc" id="L74">	}</span>
+	
+	//can return null because we need to directly handle the case of landscape not being set
+	// as there are different defaults for different devices
+	public static Boolean landscape(){
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if (contains(KEY_LANDSCAPE)){</span>
+<span class="nc" id="L80">			return getBoolean(KEY_LANDSCAPE, false);</span>
+		} else {
+<span class="nc" id="L82">			return null;</span>
+		}
+	}
+	
+	public static void powerSaver( boolean value ){
+<span class="nc" id="L87">		put( KEY_POWER_SAVER, value );</span>
+<span class="nc" id="L88">		((ShatteredPixelDungeon)ShatteredPixelDungeon.instance).updateDisplaySize();</span>
+<span class="nc" id="L89">	}</span>
+	
+	public static boolean powerSaver(){
+<span class="nc" id="L92">		return getBoolean( KEY_POWER_SAVER, false );</span>
+	}
+	
+	public static void zoom( int value ) {
+<span class="nc" id="L96">		put( KEY_ZOOM, value );</span>
+<span class="nc" id="L97">	}</span>
+	
+	public static int zoom() {
+<span class="nc" id="L100">		return getInt( KEY_ZOOM, 0 );</span>
+	}
+	
+	public static void brightness( int value ) {
+<span class="nc" id="L104">		put( KEY_BRIGHTNESS, value );</span>
+<span class="nc" id="L105">		GameScene.updateFog();</span>
+<span class="nc" id="L106">	}</span>
+	
+	public static int brightness() {
+<span class="nc" id="L109">		return getInt( KEY_BRIGHTNESS, 0, -1, 1 );</span>
+	}
+	
+	public static void visualGrid( int value ){
+<span class="nc" id="L113">		put( KEY_GRID, value );</span>
+<span class="nc" id="L114">		GameScene.updateMap();</span>
+<span class="nc" id="L115">	}</span>
+	
+	public static int visualGrid() {
+<span class="nc" id="L118">		return getInt( KEY_GRID, 0, -1, 2 );</span>
+	}
+
+	public static void cameraFollow( int value ){
+<span class="nc" id="L122">		put( KEY_CAMERA_FOLLOW, value );</span>
+<span class="nc" id="L123">	}</span>
+
+	public static int cameraFollow() {
+<span class="nc" id="L126">		return getInt( KEY_CAMERA_FOLLOW, 4, 1, 4 );</span>
+	}
+
+	public static void screenShake( int value ){
+<span class="nc" id="L130">		put( KEY_SCREEN_SHAKE, value );</span>
+<span class="nc" id="L131">	}</span>
+
+	public static int screenShake() {
+<span class="nc" id="L134">		return getInt( KEY_SCREEN_SHAKE, 2, 0, 4 );</span>
+	}
+	
+	//Interface
+
+	public static final String KEY_UI_SIZE 	    = &quot;full_ui&quot;;
+	public static final String KEY_SCALE		= &quot;scale&quot;;
+	public static final String KEY_QUICK_SWAP	= &quot;quickslot_swapper&quot;;
+	public static final String KEY_FLIPTOOLBAR	= &quot;flipped_ui&quot;;
+	public static final String KEY_FLIPTAGS 	= &quot;flip_tags&quot;;
+	public static final String KEY_BARMODE		= &quot;toolbar_mode&quot;;
+	public static final String KEY_SLOTWATERSKIN= &quot;quickslot_waterskin&quot;;
+	public static final String KEY_SYSTEMFONT	= &quot;system_font&quot;;
+	public static final String KEY_VIBRATION    = &quot;vibration&quot;;
+
+	public static final String KEY_GAMES_SORT    = &quot;games_sort&quot;;
+
+	//0 = mobile, 1 = mixed (large without inventory in main UI), 2 = large
+	public static void interfaceSize( int value ){
+<span class="nc" id="L153">		put( KEY_UI_SIZE, value );</span>
+<span class="nc" id="L154">	}</span>
+
+	public static int interfaceSize(){
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		int size = getInt( KEY_UI_SIZE, DeviceCompat.isDesktop() ? 2 : 0 );</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">		if (size &gt; 0){</span>
+			//force mobile UI if there is not enough space for full UI
+<span class="nc" id="L160">			float wMin = Game.width / PixelScene.MIN_WIDTH_FULL;</span>
+<span class="nc" id="L161">			float hMin = Game.height / PixelScene.MIN_HEIGHT_FULL;</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">			if (Math.min(wMin, hMin) &lt; 2*Game.density){</span>
+<span class="nc" id="L163">				size = 0;</span>
+			}
+		}
+<span class="nc" id="L166">		return size;</span>
+	}
+
+	public static void scale( int value ) {
+<span class="nc" id="L170">		put( KEY_SCALE, value );</span>
+<span class="nc" id="L171">	}</span>
+
+	public static int scale() {
+<span class="nc" id="L174">		return getInt( KEY_SCALE, 0 );</span>
+	}
+	
+<span class="nc" id="L177">	public static void quickSwapper(boolean value ){ put( KEY_QUICK_SWAP, value ); }</span>
+	
+<span class="nc" id="L179">	public static boolean quickSwapper(){ return getBoolean( KEY_QUICK_SWAP, true); }</span>
+	
+	public static void flipToolbar( boolean value) {
+<span class="nc" id="L182">		put(KEY_FLIPTOOLBAR, value );</span>
+<span class="nc" id="L183">	}</span>
+	
+<span class="nc" id="L185">	public static boolean flipToolbar(){ return getBoolean(KEY_FLIPTOOLBAR, false); }</span>
+	
+	public static void flipTags( boolean value) {
+<span class="nc" id="L188">		put(KEY_FLIPTAGS, value );</span>
+<span class="nc" id="L189">	}</span>
+	
+<span class="nc" id="L191">	public static boolean flipTags(){ return getBoolean(KEY_FLIPTAGS, false); }</span>
+	
+	public static void toolbarMode( String value ) {
+<span class="nc" id="L194">		put( KEY_BARMODE, value );</span>
+<span class="nc" id="L195">	}</span>
+	
+	public static String toolbarMode() {
+<span class="nc bnc" id="L198" title="All 2 branches missed.">		return getString(KEY_BARMODE, PixelScene.landscape() ? &quot;GROUP&quot; : &quot;SPLIT&quot;);</span>
+	}
+
+	public static void quickslotWaterskin( boolean value ){
+<span class="nc" id="L202">		put( KEY_SLOTWATERSKIN, value);</span>
+<span class="nc" id="L203">	}</span>
+
+	public static boolean quickslotWaterskin(){
+<span class="nc" id="L206">		return getBoolean( KEY_SLOTWATERSKIN, true );</span>
+	}
+
+	public static void systemFont(boolean value){
+<span class="nc" id="L210">		put(KEY_SYSTEMFONT, value);</span>
+<span class="nc" id="L211">	}</span>
+
+	public static boolean systemFont(){
+<span class="nc" id="L214">		return getBoolean(KEY_SYSTEMFONT,</span>
+<span class="nc bnc" id="L215" title="All 6 branches missed.">				(language() == Languages.KOREAN || language() == Languages.CHINESE || language() == Languages.JAPANESE));</span>
+	}
+
+	public static void vibration(boolean value){
+<span class="nc" id="L219">		put(KEY_VIBRATION, value);</span>
+<span class="nc" id="L220">	}</span>
+
+	public static boolean vibration(){
+<span class="nc" id="L223">		return getBoolean(KEY_VIBRATION, true);</span>
+	}
+
+	public static String gamesInProgressSort(){
+<span class="nc" id="L227">		return getString(KEY_GAMES_SORT, &quot;level&quot;);</span>
+	}
+
+	public static void gamesInProgressSort(String value){
+<span class="nc" id="L231">		put(KEY_GAMES_SORT, value);</span>
+<span class="nc" id="L232">	}</span>
+
+	//Game State
+	
+	public static final String KEY_LAST_CLASS	= &quot;last_class&quot;;
+	public static final String KEY_CHALLENGES	= &quot;challenges&quot;;
+	public static final String KEY_CUSTOM_SEED	= &quot;custom_seed&quot;;
+	public static final String KEY_LAST_DAILY	= &quot;last_daily&quot;;
+	public static final String KEY_INTRO		= &quot;intro&quot;;
+
+	public static final String KEY_SUPPORT_NAGGED= &quot;support_nagged&quot;;
+	public static final String KEY_VICTORY_NAGGED= &quot;victory_nagged&quot;;
+	
+	public static void intro( boolean value ) {
+<span class="nc" id="L246">		put( KEY_INTRO, value );</span>
+<span class="nc" id="L247">	}</span>
+	
+	public static boolean intro() {
+<span class="nc" id="L250">		return getBoolean( KEY_INTRO, true );</span>
+	}
+	
+	public static void lastClass( int value ) {
+<span class="nc" id="L254">		put( KEY_LAST_CLASS, value );</span>
+<span class="nc" id="L255">	}</span>
+	
+	public static int lastClass() {
+<span class="nc" id="L258">		return getInt( KEY_LAST_CLASS, 0, 0, 3 );</span>
+	}
+	
+	public static void challenges( int value ) {
+<span class="nc" id="L262">		put( KEY_CHALLENGES, value );</span>
+<span class="nc" id="L263">	}</span>
+	
+	public static int challenges() {
+<span class="nc" id="L266">		return getInt( KEY_CHALLENGES, 0, 0, Challenges.MAX_VALUE );</span>
+	}
+
+	public static void customSeed( String value ){
+<span class="nc" id="L270">		put( KEY_CUSTOM_SEED, value );</span>
+<span class="nc" id="L271">	}</span>
+
+	public static String customSeed() {
+<span class="nc" id="L274">		return getString( KEY_CUSTOM_SEED, &quot;&quot;, 20);</span>
+	}
+
+	public static void lastDaily( long value ){
+<span class="nc" id="L278">		put( KEY_LAST_DAILY, value );</span>
+<span class="nc" id="L279">	}</span>
+
+	public static long lastDaily() {
+<span class="nc" id="L282">		return getLong( KEY_LAST_DAILY, 0);</span>
+	}
+
+	public static void supportNagged( boolean value ) {
+<span class="nc" id="L286">		put( KEY_SUPPORT_NAGGED, value );</span>
+<span class="nc" id="L287">	}</span>
+
+	public static boolean supportNagged() {
+<span class="nc" id="L290">		return getBoolean(KEY_SUPPORT_NAGGED, false);</span>
+	}
+
+	public static void victoryNagged( boolean value ) {
+<span class="nc" id="L294">		put( KEY_VICTORY_NAGGED, value );</span>
+<span class="nc" id="L295">	}</span>
+
+	public static boolean victoryNagged() {
+<span class="nc" id="L298">		return getBoolean(KEY_VICTORY_NAGGED, false);</span>
+	}
+
+	//Input
+
+	public static final String KEY_CONTROLLER_SENS  = &quot;controller_sens&quot;;
+	public static final String KEY_MOVE_SENS        = &quot;move_sens&quot;;
+
+	public static void controllerPointerSensitivity( int value ){
+<span class="nc" id="L307">		put( KEY_CONTROLLER_SENS, value );</span>
+<span class="nc" id="L308">	}</span>
+
+	public static int controllerPointerSensitivity(){
+<span class="nc" id="L311">		return getInt(KEY_CONTROLLER_SENS, 5, 1, 10);</span>
+	}
+
+	public static void movementHoldSensitivity( int value ){
+<span class="nc" id="L315">		put( KEY_MOVE_SENS, value );</span>
+<span class="nc" id="L316">	}</span>
+
+	public static int movementHoldSensitivity(){
+<span class="nc" id="L319">		return getInt(KEY_MOVE_SENS, 3, 0, 4);</span>
+	}
+
+	//Connectivity
+
+	public static final String KEY_NEWS     = &quot;news&quot;;
+	public static final String KEY_UPDATES	= &quot;updates&quot;;
+	public static final String KEY_BETAS	= &quot;betas&quot;;
+	public static final String KEY_WIFI     = &quot;wifi&quot;;
+
+	public static final String KEY_NEWS_LAST_READ = &quot;news_last_read&quot;;
+
+	public static void news(boolean value){
+<span class="nc" id="L332">		put(KEY_NEWS, value);</span>
+<span class="nc" id="L333">	}</span>
+
+	public static boolean news(){
+<span class="nc" id="L336">		return getBoolean(KEY_NEWS, true);</span>
+	}
+
+	public static void updates(boolean value){
+<span class="nc" id="L340">		put(KEY_UPDATES, value);</span>
+<span class="nc" id="L341">	}</span>
+
+	public static boolean updates(){
+<span class="nc" id="L344">		return getBoolean(KEY_UPDATES, true);</span>
+	}
+
+	public static void betas(boolean value){
+<span class="nc" id="L348">		put(KEY_BETAS, value);</span>
+<span class="nc" id="L349">	}</span>
+
+	public static boolean betas(){
+<span class="nc bnc" id="L352" title="All 4 branches missed.">		return getBoolean(KEY_BETAS, Game.version.contains(&quot;BETA&quot;) || Game.version.contains(&quot;RC&quot;));</span>
+	}
+
+	public static void WiFi(boolean value){
+<span class="nc" id="L356">		put(KEY_WIFI, value);</span>
+<span class="nc" id="L357">	}</span>
+
+	public static boolean WiFi(){
+<span class="nc" id="L360">		return getBoolean(KEY_WIFI, true);</span>
+	}
+
+	public static void newsLastRead(long lastRead){
+<span class="nc" id="L364">		put(KEY_NEWS_LAST_READ, lastRead);</span>
+<span class="nc" id="L365">	}</span>
+
+	public static long newsLastRead(){
+<span class="nc" id="L368">		return getLong(KEY_NEWS_LAST_READ, 0);</span>
+	}
+
+	//Audio
+	
+	public static final String KEY_MUSIC		= &quot;music&quot;;
+	public static final String KEY_MUSIC_VOL    = &quot;music_vol&quot;;
+	public static final String KEY_SOUND_FX		= &quot;soundfx&quot;;
+	public static final String KEY_SFX_VOL      = &quot;sfx_vol&quot;;
+	public static final String KEY_IGNORE_SILENT= &quot;ignore_silent&quot;;
+	public static final String KEY_MUSIC_BG     = &quot;music_bg&quot;;
+	
+	public static void music( boolean value ) {
+<span class="nc" id="L381">		Music.INSTANCE.enable( value );</span>
+<span class="nc" id="L382">		put( KEY_MUSIC, value );</span>
+<span class="nc" id="L383">	}</span>
+	
+	public static boolean music() {
+<span class="nc" id="L386">		return getBoolean( KEY_MUSIC, true );</span>
+	}
+	
+	public static void musicVol( int value ){
+<span class="nc" id="L390">		Music.INSTANCE.volume(value*value/100f);</span>
+<span class="nc" id="L391">		put( KEY_MUSIC_VOL, value );</span>
+<span class="nc" id="L392">	}</span>
+	
+	public static int musicVol(){
+<span class="nc" id="L395">		return getInt( KEY_MUSIC_VOL, 10, 0, 10 );</span>
+	}
+	
+	public static void soundFx( boolean value ) {
+<span class="nc" id="L399">		Sample.INSTANCE.enable( value );</span>
+<span class="nc" id="L400">		put( KEY_SOUND_FX, value );</span>
+<span class="nc" id="L401">	}</span>
+	
+	public static boolean soundFx() {
+<span class="nc" id="L404">		return getBoolean( KEY_SOUND_FX, true );</span>
+	}
+	
+	public static void SFXVol( int value ) {
+<span class="nc" id="L408">		Sample.INSTANCE.volume(value*value/100f);</span>
+<span class="nc" id="L409">		put( KEY_SFX_VOL, value );</span>
+<span class="nc" id="L410">	}</span>
+	
+	public static int SFXVol() {
+<span class="nc" id="L413">		return getInt( KEY_SFX_VOL, 10, 0, 10 );</span>
+	}
+
+	public static void ignoreSilentMode( boolean value ){
+<span class="nc" id="L417">		put( KEY_IGNORE_SILENT, value);</span>
+<span class="nc bnc" id="L418" title="All 2 branches missed.">		Game.platform.setHonorSilentSwitch(!value);</span>
+<span class="nc" id="L419">	}</span>
+
+	public static boolean ignoreSilentMode(){
+<span class="nc" id="L422">		return getBoolean( KEY_IGNORE_SILENT, false);</span>
+	}
+
+	public static void playMusicInBackground( boolean value ){
+<span class="nc" id="L426">		put( KEY_MUSIC_BG, value);</span>
+<span class="nc" id="L427">	}</span>
+
+	public static boolean playMusicInBackground(){
+<span class="nc" id="L430">		return getBoolean( KEY_MUSIC_BG, true);</span>
+	}
+	
+	//Languages
+	
+	public static final String KEY_LANG         = &quot;language&quot;;
+	
+	public static void language(Languages lang) {
+<span class="nc" id="L438">		put( KEY_LANG, lang.code());</span>
+<span class="nc" id="L439">	}</span>
+	
+	public static Languages language() {
+<span class="nc" id="L442">		String code = getString(KEY_LANG, null);</span>
+<span class="nc bnc" id="L443" title="All 2 branches missed.">		if (code == null){</span>
+<span class="nc" id="L444">			return Languages.matchLocale(Locale.getDefault());</span>
+		} else {
+<span class="nc" id="L446">			return Languages.matchCode(code);</span>
+		}
+	}
+
+	//Window management (desktop only atm)
+	
+	public static final String KEY_WINDOW_WIDTH     = &quot;window_width&quot;;
+	public static final String KEY_WINDOW_HEIGHT    = &quot;window_height&quot;;
+	public static final String KEY_WINDOW_MAXIMIZED = &quot;window_maximized&quot;;
+	public static final String KEY_FULLSCREEN_MONITOR = &quot;fullscreen_monitor&quot;;
+
+	public static void windowResolution( Point p ){
+<span class="nc" id="L458">		put(KEY_WINDOW_WIDTH, p.x);</span>
+<span class="nc" id="L459">		put(KEY_WINDOW_HEIGHT, p.y);</span>
+<span class="nc" id="L460">	}</span>
+	
+	public static Point windowResolution(){
+<span class="nc" id="L463">		return new Point(</span>
+<span class="nc" id="L464">				getInt( KEY_WINDOW_WIDTH, 800, 720, Integer.MAX_VALUE ),</span>
+<span class="nc" id="L465">				getInt( KEY_WINDOW_HEIGHT, 600, 400, Integer.MAX_VALUE )</span>
+		);
+	}
+	
+	public static void windowMaximized( boolean value ){
+<span class="nc" id="L470">		put( KEY_WINDOW_MAXIMIZED, value );</span>
+<span class="nc" id="L471">	}</span>
+	
+	public static boolean windowMaximized(){
+<span class="nc" id="L474">		return getBoolean( KEY_WINDOW_MAXIMIZED, false );</span>
+	}
+
+	public static void fulLScreenMonitor( int value ){
+<span class="nc" id="L478">		put( KEY_FULLSCREEN_MONITOR, value);</span>
+<span class="nc" id="L479">	}</span>
+
+	public static int fulLScreenMonitor(){
+<span class="nc" id="L482">		return getInt( KEY_FULLSCREEN_MONITOR, 0 );</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

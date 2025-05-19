@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RecallInscription.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells</a> &gt; <span class="el_source">RecallInscription.java</span></div><h1>RecallInscription.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Enchanting;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTransmutation;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ExoticScroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfEnchantment;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfMetamorphosis;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.InventoryStone;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.Runestone;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfAugmentation;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfEnchantment;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.Reflection;
+
+<span class="nc" id="L48">public class RecallInscription extends ClericSpell {</span>
+
+<span class="nc" id="L50">	public static RecallInscription INSTANCE = new RecallInscription();</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L54">		return HeroIcon.RECALL_GLYPH;</span>
+	}
+
+	@Override
+	public String desc() {
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		return Messages.get(this, &quot;desc&quot;, Dungeon.hero.pointsInTalent(Talent.RECALL_INSCRIPTION) == 2 ? 300 : 10) + &quot;\n\n&quot; + Messages.get(this, &quot;charge_cost&quot;, (int)chargeUse(Dungeon.hero));</span>
+	}
+
+	@Override
+	public void onCast(HolyTome tome, Hero hero) {
+
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		if (hero.buff(UsedItemTracker.class) == null){</span>
+<span class="nc" id="L66">			return;</span>
+		}
+
+<span class="nc" id="L69">		Item item = Reflection.newInstance(hero.buff(UsedItemTracker.class).item);</span>
+
+<span class="nc" id="L71">		item.setCurrent(hero);</span>
+
+<span class="nc" id="L73">		hero.sprite.operate(hero.pos);</span>
+<span class="nc" id="L74">		Enchanting.show(hero, item);</span>
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		if (item instanceof Scroll){</span>
+<span class="nc" id="L77">			((Scroll) item).anonymize();</span>
+<span class="nc" id="L78">			((Scroll) item).doRead();</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		} else if (item instanceof Runestone){</span>
+<span class="nc" id="L80">			((Runestone) item).anonymize();</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">			if (item instanceof InventoryStone){</span>
+<span class="nc" id="L82">				((InventoryStone) item).directActivate();</span>
+			} else {
+				//we're already on the render thread, but we want to delay this
+				//as things like time freeze cancel can stop stone throwing from working
+<span class="nc" id="L86">				ShatteredPixelDungeon.runOnRenderThread(new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L89">						item.doThrow(hero);</span>
+<span class="nc" id="L90">					}</span>
+				});
+			}
+		}
+
+<span class="nc" id="L95">		onSpellCast(tome, hero);</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">		if (hero.buff(UsedItemTracker.class) != null){</span>
+<span class="nc" id="L97">			hero.buff(UsedItemTracker.class).detach();</span>
+		}
+
+<span class="nc" id="L100">	}</span>
+
+	@Override
+	public float chargeUse(Hero hero) {
+<span class="nc bnc" id="L104" title="All 2 branches missed.">		if (hero.buff(UsedItemTracker.class) != null){</span>
+<span class="nc" id="L105">			Class&lt;? extends Item&gt; item = hero.buff(UsedItemTracker.class).item;</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			if (ExoticScroll.class.isAssignableFrom(item)){</span>
+<span class="nc bnc" id="L107" title="All 4 branches missed.">				if (item == ScrollOfMetamorphosis.class || item == ScrollOfEnchantment.class){</span>
+<span class="nc" id="L108">					return 8;</span>
+				} else {
+<span class="nc" id="L110">					return 4;</span>
+				}
+<span class="nc bnc" id="L112" title="All 2 branches missed.">			} else if (Scroll.class.isAssignableFrom(item)){</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">				if (item == ScrollOfTransmutation.class){</span>
+<span class="nc" id="L114">					return 6;</span>
+				} else {
+<span class="nc" id="L116">					return 3;</span>
+				}
+<span class="nc bnc" id="L118" title="All 2 branches missed.">			} else if (Runestone.class.isAssignableFrom(item)){</span>
+<span class="nc bnc" id="L119" title="All 4 branches missed.">				if (item == StoneOfAugmentation.class || item == StoneOfEnchantment.class){</span>
+<span class="nc" id="L120">					return 4;</span>
+				} else {
+<span class="nc" id="L122">					return 2;</span>
+				}
+			}
+		}
+<span class="nc" id="L126">		return 0;</span>
+	}
+
+	@Override
+	public boolean canCast(Hero hero) {
+<span class="nc bnc" id="L131" title="All 2 branches missed.">		return super.canCast(hero)</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">				&amp;&amp; hero.hasTalent(Talent.RECALL_INSCRIPTION)</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">				&amp;&amp; hero.buff(UsedItemTracker.class) != null;</span>
+	}
+
+<span class="nc" id="L136">	public static class UsedItemTracker extends FlavourBuff {</span>
+
+		{
+<span class="nc" id="L139">			type = buffType.POSITIVE;</span>
+<span class="nc" id="L140">		}</span>
+
+		public Class&lt;?extends Item&gt; item;
+
+		@Override
+		public int icon() {
+<span class="nc" id="L146">			return BuffIndicator.GLYPH_RECALL;</span>
+		}
+
+		@Override
+		public float iconFadePercent() {
+<span class="nc bnc" id="L151" title="All 2 branches missed.">			float duration = Dungeon.hero.pointsInTalent(Talent.RECALL_INSCRIPTION) == 2 ? 300 : 10;</span>
+<span class="nc" id="L152">			return Math.max(0, (duration - visualcooldown()) / duration);</span>
+		}
+
+		@Override
+		public String desc() {
+<span class="nc" id="L157">			return Messages.get(this, &quot;desc&quot;, Messages.titleCase(Reflection.newInstance(item).name()), dispTurns());</span>
+		}
+
+<span class="nc" id="L160">		private static String ITEM = &quot;item&quot;;</span>
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L164">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L165">			bundle.put(ITEM, item);</span>
+<span class="nc" id="L166">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L170">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L171">			item = bundle.getClass(ITEM);</span>
+<span class="nc" id="L172">		}</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

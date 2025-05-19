@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ArmorAbility.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities</a> &gt; <span class="el_source">ArmorAbility.java</span></div><h1>ArmorAbility.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities;
+
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.watabou.utils.Bundlable;
+import com.watabou.utils.Bundle;
+
+<span class="nc" id="L36">public abstract class ArmorAbility implements Bundlable {</span>
+
+<span class="nc" id="L38">	protected float baseChargeUse = 35;</span>
+
+	public void use( ClassArmor armor, Hero hero ){
+<span class="nc bnc" id="L41" title="All 2 branches missed.">		if (targetingPrompt() == null){</span>
+<span class="nc" id="L42">			activate(armor, hero, hero.pos);</span>
+		} else {
+<span class="nc" id="L44">			GameScene.selectCell(new CellSelector.Listener() {</span>
+				@Override
+				public void onSelect(Integer cell) {
+<span class="nc" id="L47">					activate(armor, hero, cell);</span>
+<span class="nc" id="L48">				}</span>
+
+				@Override
+				public String prompt() {
+<span class="nc" id="L52">					return targetingPrompt();</span>
+				}
+			});
+		}
+<span class="nc" id="L56">	}</span>
+
+	//leave null for no targeting
+	public String targetingPrompt(){
+<span class="nc" id="L60">		return null;</span>
+	}
+
+	public boolean useTargeting(){
+<span class="nc bnc" id="L64" title="All 2 branches missed.">		return targetingPrompt() != null;</span>
+	}
+
+	public int targetedPos( Char user, int dst ){
+<span class="nc" id="L68">		return new Ballistica( user.pos, dst, Ballistica.PROJECTILE ).collisionPos;</span>
+	}
+
+	public float chargeUse( Hero hero ){
+<span class="nc" id="L72">		float chargeUse = baseChargeUse;</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">		if (hero.hasTalent(Talent.HEROIC_ENERGY)){</span>
+			//reduced charge use by 12%/23%/32%/40%
+<span class="nc bnc" id="L75" title="All 4 branches missed.">			switch (hero.pointsInTalent(Talent.HEROIC_ENERGY)){</span>
+				case 1: default:
+<span class="nc" id="L77">					chargeUse *= 0.88f;</span>
+<span class="nc" id="L78">					break;</span>
+				case 2:
+<span class="nc" id="L80">					chargeUse *= 0.77f;</span>
+<span class="nc" id="L81">					break;</span>
+				case 3:
+<span class="nc" id="L83">					chargeUse *= 0.68f;</span>
+<span class="nc" id="L84">					break;</span>
+				case 4:
+<span class="nc" id="L86">					chargeUse *= 0.6f;</span>
+					break;
+			}
+		}
+<span class="nc" id="L90">		return chargeUse;</span>
+	}
+
+	protected abstract void activate( ClassArmor armor, Hero hero, Integer target );
+
+	public String name(){
+<span class="nc" id="L96">		return Messages.get(this, &quot;name&quot;);</span>
+	}
+
+	public String shortDesc(){
+<span class="nc" id="L100">		return Messages.get(this, &quot;short_desc&quot;);</span>
+	}
+
+	public String desc(){
+<span class="nc" id="L104">		return Messages.get(this, &quot;desc&quot;) + &quot;\n\n&quot; + Messages.get(this, &quot;cost&quot;, (int)baseChargeUse);</span>
+	}
+
+	public int icon(){
+<span class="nc" id="L108">		return HeroIcon.NONE;</span>
+	}
+
+	public abstract Talent[] talents();
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L115">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L119">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

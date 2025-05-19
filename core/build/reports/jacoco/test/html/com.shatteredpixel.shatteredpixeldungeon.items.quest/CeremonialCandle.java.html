@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CeremonialCandle.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.quest</a> &gt; <span class="el_source">CeremonialCandle.java</span></div><h1>CeremonialCandle.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.quest;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Elemental;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ElmoParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.levels.PrisonLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.RegularLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest.RitualSiteRoom;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+
+<span class="nc" id="L48">public class CeremonialCandle extends Item {</span>
+
+	//generated with the wandmaker quest
+	public static int ritualPos;
+
+	{
+<span class="nc" id="L54">		image = ItemSpriteSheet.CANDLE;</span>
+
+<span class="nc" id="L56">		defaultAction = AC_THROW;</span>
+
+<span class="nc" id="L58">		unique = true;</span>
+<span class="nc" id="L59">		stackable = true;</span>
+	}
+
+	@Override
+	public boolean isUpgradable() {
+<span class="nc" id="L64">		return false;</span>
+	}
+
+	@Override
+	public boolean isIdentified() {
+<span class="nc" id="L69">		return true;</span>
+	}
+
+	@Override
+	public void doDrop(Hero hero) {
+<span class="nc" id="L74">		super.doDrop(hero);</span>
+<span class="nc" id="L75">		aflame = false;</span>
+<span class="nc" id="L76">		checkCandles();</span>
+<span class="nc" id="L77">	}</span>
+
+	@Override
+	protected void onThrow(int cell) {
+<span class="nc" id="L81">		super.onThrow(cell);</span>
+<span class="nc" id="L82">		aflame = false;</span>
+<span class="nc" id="L83">		checkCandles();</span>
+<span class="nc" id="L84">	}</span>
+
+	@Override
+	public boolean doPickUp(Hero hero, int pos) {
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		if (super.doPickUp(hero, pos)){</span>
+<span class="nc" id="L89">			aflame = false;</span>
+<span class="nc" id="L90">			return true;</span>
+		}
+<span class="nc" id="L92">		return false;</span>
+	}
+
+<span class="nc" id="L95">	public boolean aflame = false;</span>
+
+<span class="nc" id="L97">	public static String AFLAME = &quot;aflame&quot;;</span>
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L101">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L102">		bundle.put(AFLAME, aflame);</span>
+<span class="nc" id="L103">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L107">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L108">		aflame = bundle.getBoolean(AFLAME);</span>
+<span class="nc" id="L109">	}</span>
+
+	@Override
+	public Emitter emitter() {
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		if (aflame) {</span>
+<span class="nc" id="L114">			Emitter emitter = new Emitter();</span>
+<span class="nc" id="L115">			emitter.pos(6, 0);</span>
+<span class="nc" id="L116">			emitter.fillTarget = false;</span>
+<span class="nc" id="L117">			emitter.pour(ElmoParticle.FACTORY, 0.25f);</span>
+<span class="nc" id="L118">			return emitter;</span>
+		}
+<span class="nc" id="L120">		return super.emitter();</span>
+	}
+
+	private static void checkCandles(){
+<span class="nc bnc" id="L124" title="All 2 branches missed.">		if (!(Dungeon.level instanceof RegularLevel)){</span>
+<span class="nc" id="L125">			return;</span>
+		}
+
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		if (!(((RegularLevel) Dungeon.level).room(ritualPos) instanceof RitualSiteRoom)){</span>
+<span class="nc" id="L129">			return;</span>
+		}
+
+<span class="nc" id="L132">		Heap[] candleHeaps = new Heap[4];</span>
+
+<span class="nc" id="L134">		candleHeaps[0] = Dungeon.level.heaps.get(ritualPos - Dungeon.level.width());</span>
+<span class="nc" id="L135">		candleHeaps[1] = Dungeon.level.heaps.get(ritualPos + 1);</span>
+<span class="nc" id="L136">		candleHeaps[2] = Dungeon.level.heaps.get(ritualPos + Dungeon.level.width());</span>
+<span class="nc" id="L137">		candleHeaps[3] = Dungeon.level.heaps.get(ritualPos - 1);</span>
+
+<span class="nc" id="L139">		boolean allCandles = true;</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">		for (Heap h : candleHeaps){</span>
+<span class="nc bnc" id="L141" title="All 4 branches missed.">			if (h != null &amp;&amp; h.type == Heap.Type.HEAP){</span>
+<span class="nc" id="L142">				boolean foundCandle = false;</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">				for (Item i : h.items){</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">					if (i instanceof CeremonialCandle){</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">						if (!((CeremonialCandle) i).aflame) {</span>
+<span class="nc" id="L146">							((CeremonialCandle) i).aflame = true;</span>
+<span class="nc" id="L147">							h.sprite.view(h).place(h.pos);</span>
+						}
+<span class="nc" id="L149">						foundCandle = true;</span>
+					}
+<span class="nc" id="L151">				}</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">				if (!foundCandle){</span>
+<span class="nc" id="L153">					allCandles = false;</span>
+				}
+<span class="nc" id="L155">			} else {</span>
+<span class="nc" id="L156">				allCandles = false;</span>
+			}
+		}
+
+<span class="nc bnc" id="L160" title="All 2 branches missed.">		if (allCandles){</span>
+
+<span class="nc bnc" id="L162" title="All 2 branches missed.">			for (Heap h : candleHeaps) {</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">				for (Item i : h.items.toArray(new Item[0])){</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">					if (i instanceof CeremonialCandle){</span>
+<span class="nc" id="L165">						h.remove(i);</span>
+					}
+				}
+			}
+				
+<span class="nc" id="L170">			Elemental.NewbornFireElemental elemental = new Elemental.NewbornFireElemental();</span>
+<span class="nc" id="L171">			Char ch = Actor.findChar( ritualPos );</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">			if (ch != null) {</span>
+<span class="nc" id="L173">				ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">				for (int n : PathFinder.NEIGHBOURS8) {</span>
+<span class="nc" id="L175">					int cell = ritualPos + n;</span>
+<span class="nc bnc" id="L176" title="All 6 branches missed.">					if ((Dungeon.level.passable[cell] || Dungeon.level.avoid[cell]) &amp;&amp; Actor.findChar( cell ) == null) {</span>
+<span class="nc" id="L177">						candidates.add( cell );</span>
+					}
+				}
+<span class="nc bnc" id="L180" title="All 2 branches missed.">				if (candidates.size() &gt; 0) {</span>
+<span class="nc" id="L181">					elemental.pos = Random.element( candidates );</span>
+				} else {
+<span class="nc" id="L183">					elemental.pos = ritualPos;</span>
+				}
+<span class="nc" id="L185">			} else {</span>
+<span class="nc" id="L186">				elemental.pos = ritualPos;</span>
+			}
+<span class="nc" id="L188">			elemental.state = elemental.HUNTING;</span>
+<span class="nc" id="L189">			GameScene.add(elemental, 1);</span>
+
+<span class="nc bnc" id="L191" title="All 2 branches missed.">			if (Dungeon.level instanceof PrisonLevel){</span>
+<span class="nc" id="L192">				((PrisonLevel) Dungeon.level).updateWandmakerQuestMusic();</span>
+			}
+
+<span class="nc bnc" id="L195" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS9){</span>
+<span class="nc" id="L196">				CellEmitter.get(ritualPos+i).burst(ElmoParticle.FACTORY, 10);</span>
+			}
+<span class="nc" id="L198">			Sample.INSTANCE.play(Assets.Sounds.BURNING);</span>
+		}
+
+<span class="nc" id="L201">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

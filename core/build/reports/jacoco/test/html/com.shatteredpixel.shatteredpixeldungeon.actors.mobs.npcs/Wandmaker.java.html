@@ -1,0 +1,453 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Wandmaker.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs</a> &gt; <span class="el_source">Wandmaker.java</span></div><h1>Wandmaker.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AscensionChallenge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Elemental;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.RotHeart;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.CeremonialCandle;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.CorpseDust;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.Embers;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.RegularLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest.MassGraveRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest.RitualSiteRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest.RotGardenRoom;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Rotberry;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.WandmakerSprite;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndQuest;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndWandmaker;
+import com.watabou.noosa.Game;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L61">public class Wandmaker extends NPC {</span>
+
+	{
+<span class="nc" id="L64">		spriteClass = WandmakerSprite.class;</span>
+
+<span class="nc" id="L66">		properties.add(Property.IMMOVABLE);</span>
+<span class="nc" id="L67">	}</span>
+
+	@Override
+	public Notes.Landmark landmark() {
+<span class="nc" id="L71">		return Notes.Landmark.WANDMAKER;</span>
+	}
+
+	@Override
+	protected boolean act() {
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		if (Dungeon.hero.buff(AscensionChallenge.class) != null){</span>
+<span class="nc" id="L77">			die(null);</span>
+<span class="nc" id="L78">			return true;</span>
+		}
+<span class="nc" id="L80">		return super.act();</span>
+	}
+	
+	@Override
+	public int defenseSkill( Char enemy ) {
+<span class="nc" id="L85">		return INFINITE_EVASION;</span>
+	}
+
+	@Override
+	public void damage( int dmg, Object src ) {
+		//do nothing
+<span class="nc" id="L91">	}</span>
+
+	@Override
+	public boolean add( Buff buff ) {
+<span class="nc" id="L95">		return false;</span>
+	}
+	
+	@Override
+	public boolean reset() {
+<span class="nc" id="L100">		return true;</span>
+	}
+	
+	@Override
+	public boolean interact(Char c) {
+<span class="nc" id="L105">		sprite.turnTo( pos, Dungeon.hero.pos );</span>
+
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		if (c != Dungeon.hero){</span>
+<span class="nc" id="L108">			return true;</span>
+		}
+
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		if (Quest.given) {</span>
+			
+			Item item;
+<span class="nc bnc" id="L114" title="All 3 branches missed.">			switch (Quest.type) {</span>
+				case 1:
+				default:
+<span class="nc" id="L117">					item = Dungeon.hero.belongings.getItem(CorpseDust.class);</span>
+<span class="nc" id="L118">					break;</span>
+				case 2:
+<span class="nc" id="L120">					item = Dungeon.hero.belongings.getItem(Embers.class);</span>
+<span class="nc" id="L121">					break;</span>
+				case 3:
+<span class="nc" id="L123">					item = Dungeon.hero.belongings.getItem(Rotberry.Seed.class);</span>
+					break;
+			}
+
+<span class="nc bnc" id="L127" title="All 2 branches missed.">			if (item != null) {</span>
+<span class="nc" id="L128">				Game.runOnRenderThread(new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L131">						GameScene.show( new WndWandmaker( Wandmaker.this, item ) );</span>
+<span class="nc" id="L132">					}</span>
+				});
+			} else {
+				String msg;
+<span class="nc bnc" id="L136" title="All 3 branches missed.">				switch(Quest.type){</span>
+					case 1: default:
+<span class="nc" id="L138">						msg = Messages.get(this, &quot;reminder_dust&quot;, Messages.titleCase(Dungeon.hero.name()));</span>
+<span class="nc" id="L139">						break;</span>
+					case 2:
+<span class="nc" id="L141">						msg = Messages.get(this, &quot;reminder_ember&quot;, Messages.titleCase(Dungeon.hero.name()));</span>
+<span class="nc" id="L142">						break;</span>
+					case 3:
+<span class="nc" id="L144">						msg = Messages.get(this, &quot;reminder_berry&quot;, Messages.titleCase(Dungeon.hero.name()));</span>
+						break;
+				}
+<span class="nc" id="L147">				Game.runOnRenderThread(new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L150">						GameScene.show(new WndQuest(Wandmaker.this, msg));</span>
+<span class="nc" id="L151">					}</span>
+				});
+			}
+			
+<span class="nc" id="L155">		} else {</span>
+
+<span class="nc" id="L157">			String msg1 = &quot;&quot;;</span>
+<span class="nc" id="L158">			String msg2 = &quot;&quot;;</span>
+<span class="nc bnc" id="L159" title="All 7 branches missed.">			switch(Dungeon.hero.heroClass){</span>
+				case WARRIOR:
+<span class="nc" id="L161">					msg1 += Messages.get(this, &quot;intro_warrior&quot;);</span>
+<span class="nc" id="L162">					break;</span>
+				case ROGUE:
+<span class="nc" id="L164">					msg1 += Messages.get(this, &quot;intro_rogue&quot;);</span>
+<span class="nc" id="L165">					break;</span>
+				case MAGE:
+<span class="nc" id="L167">					msg1 += Messages.get(this, &quot;intro_mage&quot;, Messages.titleCase(Dungeon.hero.name()));</span>
+<span class="nc" id="L168">					break;</span>
+				case HUNTRESS:
+<span class="nc" id="L170">					msg1 += Messages.get(this, &quot;intro_huntress&quot;);</span>
+<span class="nc" id="L171">					break;</span>
+				case DUELIST:
+<span class="nc" id="L173">					msg1 += Messages.get(this, &quot;intro_duelist&quot;);</span>
+<span class="nc" id="L174">					break;</span>
+				case CLERIC:
+<span class="nc" id="L176">					msg1 += Messages.get(this, &quot;intro_cleric&quot;);</span>
+					break;
+			}
+
+<span class="nc" id="L180">			msg1 += Messages.get(this, &quot;intro_1&quot;);</span>
+
+<span class="nc bnc" id="L182" title="All 4 branches missed.">			switch (Quest.type){</span>
+				case 1:
+<span class="nc" id="L184">					msg2 += Messages.get(this, &quot;intro_dust&quot;);</span>
+<span class="nc" id="L185">					break;</span>
+				case 2:
+<span class="nc" id="L187">					msg2 += Messages.get(this, &quot;intro_ember&quot;);</span>
+<span class="nc" id="L188">					break;</span>
+				case 3:
+<span class="nc" id="L190">					msg2 += Messages.get(this, &quot;intro_berry&quot;);</span>
+					break;
+			}
+
+<span class="nc" id="L194">			msg2 += Messages.get(this, &quot;intro_2&quot;);</span>
+<span class="nc" id="L195">			final String msg1Final = msg1;</span>
+<span class="nc" id="L196">			final String msg2Final = msg2;</span>
+			
+<span class="nc" id="L198">			Game.runOnRenderThread(new Callback() {</span>
+				@Override
+				public void call() {
+<span class="nc" id="L201">					GameScene.show(new WndQuest(Wandmaker.this, msg1Final){</span>
+						@Override
+						public void hide() {
+<span class="nc" id="L204">							super.hide();</span>
+<span class="nc" id="L205">							GameScene.show(new WndQuest(Wandmaker.this, msg2Final));</span>
+<span class="nc" id="L206">						}</span>
+					});
+<span class="nc" id="L208">				}</span>
+			});
+
+<span class="nc" id="L211">			Quest.given = true;</span>
+		}
+
+<span class="nc" id="L214">		return true;</span>
+	}
+	
+<span class="nc" id="L217">	public static class Quest {</span>
+
+		private static int type;
+		// 1 = corpse dust quest
+		// 2 = elemental embers quest
+		// 3 = rotberry quest
+		
+		private static boolean spawned;
+		
+		private static boolean given;
+		
+		public static Wand wand1;
+		public static Wand wand2;
+		
+		public static void reset() {
+<span class="nc" id="L232">			spawned = false;</span>
+<span class="nc" id="L233">			type = 0;</span>
+
+<span class="nc" id="L235">			wand1 = null;</span>
+<span class="nc" id="L236">			wand2 = null;</span>
+<span class="nc" id="L237">		}</span>
+		
+		private static final String NODE		= &quot;wandmaker&quot;;
+		
+		private static final String SPAWNED		= &quot;spawned&quot;;
+		private static final String TYPE		= &quot;type&quot;;
+		private static final String GIVEN		= &quot;given&quot;;
+		private static final String WAND1		= &quot;wand1&quot;;
+		private static final String WAND2		= &quot;wand2&quot;;
+
+		private static final String RITUALPOS	= &quot;ritualpos&quot;;
+		
+		public static void storeInBundle( Bundle bundle ) {
+			
+<span class="nc" id="L251">			Bundle node = new Bundle();</span>
+			
+<span class="nc" id="L253">			node.put( SPAWNED, spawned );</span>
+			
+<span class="nc bnc" id="L255" title="All 2 branches missed.">			if (spawned) {</span>
+				
+<span class="nc" id="L257">				node.put( TYPE, type );</span>
+				
+<span class="nc" id="L259">				node.put( GIVEN, given );</span>
+				
+<span class="nc" id="L261">				node.put( WAND1, wand1 );</span>
+<span class="nc" id="L262">				node.put( WAND2, wand2 );</span>
+
+<span class="nc bnc" id="L264" title="All 2 branches missed.">				if (type == 2){</span>
+<span class="nc" id="L265">					node.put( RITUALPOS, CeremonialCandle.ritualPos );</span>
+				}
+
+			}
+			
+<span class="nc" id="L270">			bundle.put( NODE, node );</span>
+<span class="nc" id="L271">		}</span>
+		
+		public static void restoreFromBundle( Bundle bundle ) {
+
+<span class="nc" id="L275">			Bundle node = bundle.getBundle( NODE );</span>
+			
+<span class="nc bnc" id="L277" title="All 4 branches missed.">			if (!node.isNull() &amp;&amp; (spawned = node.getBoolean( SPAWNED ))) {</span>
+
+<span class="nc" id="L279">				type = node.getInt(TYPE);</span>
+				
+<span class="nc" id="L281">				given = node.getBoolean( GIVEN );</span>
+				
+<span class="nc" id="L283">				wand1 = (Wand)node.get( WAND1 );</span>
+<span class="nc" id="L284">				wand2 = (Wand)node.get( WAND2 );</span>
+
+<span class="nc bnc" id="L286" title="All 2 branches missed.">				if (type == 2){</span>
+<span class="nc" id="L287">					CeremonialCandle.ritualPos = node.getInt( RITUALPOS );</span>
+				}
+
+			} else {
+<span class="nc" id="L291">				reset();</span>
+			}
+<span class="nc" id="L293">		}</span>
+		
+		private static boolean questRoomSpawned;
+		
+		public static void spawnWandmaker( Level level, Room room ) {
+<span class="nc bnc" id="L298" title="All 2 branches missed.">			if (questRoomSpawned) {</span>
+				
+<span class="nc" id="L300">				questRoomSpawned = false;</span>
+				
+<span class="nc" id="L302">				Wandmaker npc = new Wandmaker();</span>
+				boolean validPos;
+				//Do not spawn wandmaker on the entrance, in front of a door, or on bad terrain.
+				do {
+<span class="nc" id="L306">					validPos = true;</span>
+<span class="nc bnc" id="L307" title="All 4 branches missed.">					npc.pos = level.pointToCell(room.random((room.width() &gt; 6 &amp;&amp; room.height() &gt; 6) ? 2 : 1));</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">					if (npc.pos == level.entrance()){</span>
+<span class="nc" id="L309">						validPos = false;</span>
+					}
+<span class="nc bnc" id="L311" title="All 2 branches missed.">					for (Point door : room.connected.values()){</span>
+<span class="nc bnc" id="L312" title="All 2 branches missed.">						if (level.trueDistance( npc.pos, level.pointToCell( door ) ) &lt;= 1){</span>
+<span class="nc" id="L313">							validPos = false;</span>
+						}
+<span class="nc" id="L315">					}</span>
+<span class="nc bnc" id="L316" title="All 6 branches missed.">					if (level.traps.get(npc.pos) != null</span>
+							|| !level.passable[npc.pos]
+							|| level.map[npc.pos] == Terrain.EMPTY_SP){
+<span class="nc" id="L319">						validPos = false;</span>
+					}
+<span class="nc bnc" id="L321" title="All 2 branches missed.">				} while (!validPos);</span>
+<span class="nc" id="L322">				level.mobs.add( npc );</span>
+
+<span class="nc" id="L324">				spawned = true;</span>
+
+<span class="nc" id="L326">				given = false;</span>
+<span class="nc" id="L327">				wand1 = (Wand) Generator.random(Generator.Category.WAND);</span>
+<span class="nc" id="L328">				wand1.cursed = false;</span>
+<span class="nc" id="L329">				wand1.upgrade();</span>
+
+<span class="nc" id="L331">				wand2 = (Wand) Generator.random(Generator.Category.WAND);</span>
+<span class="nc" id="L332">				ArrayList&lt;Item&gt; toUndo = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">				while (wand2.getClass() == wand1.getClass()) {</span>
+<span class="nc" id="L334">					toUndo.add(wand2);</span>
+<span class="nc" id="L335">					wand2 = (Wand) Generator.random(Generator.Category.WAND);</span>
+				}
+<span class="nc bnc" id="L337" title="All 2 branches missed.">				for (Item i :toUndo){</span>
+<span class="nc" id="L338">					Generator.undoDrop(i);</span>
+<span class="nc" id="L339">				}</span>
+<span class="nc" id="L340">				wand2.cursed = false;</span>
+<span class="nc" id="L341">				wand2.upgrade();</span>
+				
+			}
+<span class="nc" id="L344">		}</span>
+		
+		public static ArrayList&lt;Room&gt; spawnRoom( ArrayList&lt;Room&gt; rooms) {
+<span class="nc" id="L347">			questRoomSpawned = false;</span>
+<span class="nc bnc" id="L348" title="All 8 branches missed.">			if (!spawned &amp;&amp; (type != 0 || (Dungeon.depth &gt; 6 &amp;&amp; Random.Int( 10 - Dungeon.depth ) == 0))) {</span>
+
+				// decide between 1,2, or 3 for quest type.
+<span class="nc bnc" id="L351" title="All 2 branches missed.">				if (type == 0) type = Random.Int(3)+1;</span>
+				
+<span class="nc bnc" id="L353" title="All 3 branches missed.">				switch (type){</span>
+					case 1: default:
+<span class="nc" id="L355">						rooms.add(new MassGraveRoom());</span>
+<span class="nc" id="L356">						break;</span>
+					case 2:
+<span class="nc" id="L358">						rooms.add(new RitualSiteRoom());</span>
+<span class="nc" id="L359">						break;</span>
+					case 3:
+<span class="nc" id="L361">						rooms.add(new RotGardenRoom());</span>
+						break;
+				}
+		
+<span class="nc" id="L365">				questRoomSpawned = true;</span>
+				
+			}
+<span class="nc" id="L368">			return rooms;</span>
+		}
+
+		//quest is active if:
+		public static boolean active(){
+			//it is not completed
+<span class="nc bnc" id="L374" title="All 8 branches missed.">			if (wand1 == null || wand2 == null</span>
+					|| !(Dungeon.level instanceof RegularLevel) || Dungeon.hero == null){
+<span class="nc" id="L376">				return false;</span>
+			}
+
+			//and...
+<span class="nc bnc" id="L380" title="All 2 branches missed.">			if (type == 1){</span>
+				//hero is in the mass grave room
+<span class="nc bnc" id="L382" title="All 2 branches missed.">				if (((RegularLevel) Dungeon.level).room(Dungeon.hero.pos) instanceof MassGraveRoom) {</span>
+<span class="nc" id="L383">					return true;</span>
+				}
+
+				//or if they are corpse dust cursed
+<span class="nc bnc" id="L387" title="All 2 branches missed.">				for (Buff b : Dungeon.hero.buffs()) {</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">					if (b instanceof CorpseDust.DustGhostSpawner) {</span>
+<span class="nc" id="L389">						return true;</span>
+					}
+<span class="nc" id="L391">				}</span>
+
+<span class="nc" id="L393">				return false;</span>
+<span class="nc bnc" id="L394" title="All 2 branches missed.">			} else if (type == 2){</span>
+				//hero has summoned the newborn elemental
+<span class="nc bnc" id="L396" title="All 2 branches missed.">				for (Mob m : Dungeon.level.mobs) {</span>
+<span class="nc bnc" id="L397" title="All 2 branches missed.">					if (m instanceof Elemental.NewbornFireElemental) {</span>
+<span class="nc" id="L398">						return true;</span>
+					}
+<span class="nc" id="L400">				}</span>
+
+				//or hero is in the ritual room and all 4 candles are with them
+<span class="nc bnc" id="L403" title="All 2 branches missed.">				if (((RegularLevel) Dungeon.level).room(Dungeon.hero.pos) instanceof RitualSiteRoom) {</span>
+<span class="nc" id="L404">					int candles = 0;</span>
+<span class="nc bnc" id="L405" title="All 2 branches missed.">					if (Dungeon.hero.belongings.getItem(CeremonialCandle.class) != null){</span>
+<span class="nc" id="L406">						candles += Dungeon.hero.belongings.getItem(CeremonialCandle.class).quantity();</span>
+					}
+
+<span class="nc bnc" id="L409" title="All 2 branches missed.">					if (candles &gt;= 4){</span>
+<span class="nc" id="L410">						return true;</span>
+					}
+
+<span class="nc bnc" id="L413" title="All 2 branches missed.">					for (Heap h : Dungeon.level.heaps.valueList()){</span>
+<span class="nc bnc" id="L414" title="All 2 branches missed.">						if (((RegularLevel) Dungeon.level).room(h.pos) instanceof RitualSiteRoom){</span>
+<span class="nc bnc" id="L415" title="All 2 branches missed.">							for (Item i : h.items){</span>
+<span class="nc bnc" id="L416" title="All 2 branches missed.">								if (i instanceof CeremonialCandle){</span>
+<span class="nc" id="L417">									candles += i.quantity();</span>
+								}
+<span class="nc" id="L419">							}</span>
+						}
+<span class="nc" id="L421">					}</span>
+
+<span class="nc bnc" id="L423" title="All 2 branches missed.">					if (candles &gt;= 4){</span>
+<span class="nc" id="L424">						return true;</span>
+					}
+
+				}
+
+<span class="nc" id="L429">				return false;</span>
+			} else {
+				//hero is in the rot garden room and the rot heart is alive
+<span class="nc bnc" id="L432" title="All 2 branches missed.">				if (((RegularLevel) Dungeon.level).room(Dungeon.hero.pos) instanceof RotGardenRoom) {</span>
+<span class="nc bnc" id="L433" title="All 2 branches missed.">					for (Mob m : Dungeon.level.mobs) {</span>
+<span class="nc bnc" id="L434" title="All 2 branches missed.">						if (m instanceof RotHeart) {</span>
+<span class="nc" id="L435">							return true;</span>
+						}
+<span class="nc" id="L437">					}</span>
+				}
+
+<span class="nc" id="L440">				return false;</span>
+			}
+		}
+		
+		public static void complete() {
+<span class="nc" id="L445">			wand1 = null;</span>
+<span class="nc" id="L446">			wand2 = null;</span>
+			
+<span class="nc" id="L448">			Notes.remove( Notes.Landmark.WANDMAKER );</span>
+<span class="nc" id="L449">			Statistics.questScores[1] = 2000;</span>
+<span class="nc" id="L450">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

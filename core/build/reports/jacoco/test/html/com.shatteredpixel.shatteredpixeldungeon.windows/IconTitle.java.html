@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IconTitle.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.windows</a> &gt; <span class="el_source">IconTitle.java</span></div><h1>IconTitle.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.windows;
+
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HealthBar;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.ui.Component;
+
+public class IconTitle extends Component {
+
+	private static final float FONT_SIZE = 9;
+
+	private static final float GAP = 2;
+
+	protected Image imIcon;
+	protected RenderedTextBlock tfLabel;
+	protected HealthBar health;
+
+<span class="nc" id="L45">	private float healthLvl = Float.NaN;</span>
+
+	public IconTitle() {
+<span class="nc" id="L48">		super();</span>
+<span class="nc" id="L49">	}</span>
+
+<span class="nc" id="L51">	public IconTitle( Item item ) {</span>
+<span class="nc" id="L52">		ItemSprite icon = new ItemSprite();</span>
+<span class="nc" id="L53">		icon( icon );</span>
+<span class="nc" id="L54">		label( Messages.titleCase( item.title() ) );</span>
+<span class="nc" id="L55">		icon.view( item );</span>
+<span class="nc" id="L56">		layout();</span>
+<span class="nc" id="L57">	}</span>
+	
+<span class="nc" id="L59">	public IconTitle( Heap heap ){</span>
+<span class="nc" id="L60">		ItemSprite icon = new ItemSprite();</span>
+<span class="nc" id="L61">		icon( icon );</span>
+<span class="nc" id="L62">		label( Messages.titleCase( heap.title() ) );</span>
+<span class="nc" id="L63">		icon.view( heap );</span>
+<span class="nc" id="L64">		layout();</span>
+<span class="nc" id="L65">	}</span>
+
+<span class="nc" id="L67">	public IconTitle( Image icon, String label ) {</span>
+<span class="nc" id="L68">		icon( icon );</span>
+<span class="nc" id="L69">		label( label );</span>
+<span class="nc" id="L70">		layout();</span>
+<span class="nc" id="L71">	}</span>
+
+	@Override
+	protected void createChildren() {
+<span class="nc" id="L75">		imIcon = new Image();</span>
+<span class="nc" id="L76">		add( imIcon );</span>
+
+<span class="nc" id="L78">		tfLabel = PixelScene.renderTextBlock( (int)FONT_SIZE );</span>
+<span class="nc" id="L79">		tfLabel.hardlight( Window.TITLE_COLOR );</span>
+<span class="nc" id="L80">		tfLabel.setHightlighting(false);</span>
+<span class="nc" id="L81">		add( tfLabel );</span>
+
+<span class="nc" id="L83">		health = new HealthBar();</span>
+<span class="nc" id="L84">		add( health );</span>
+<span class="nc" id="L85">	}</span>
+
+	@Override
+	protected void layout() {
+
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		health.visible = !Float.isNaN( healthLvl );</span>
+
+<span class="nc" id="L92">		imIcon.x = x + (Math.max(0, 8 - imIcon.width()/2));</span>
+<span class="nc" id="L93">		imIcon.y = y + (Math.max(0, 8 - imIcon.height()/2));</span>
+<span class="nc" id="L94">		PixelScene.align(imIcon);</span>
+
+<span class="nc" id="L96">		int imWidth = (int)Math.max(imIcon.width(), 16);</span>
+<span class="nc" id="L97">		int imHeight = (int)Math.max(imIcon.height(), 16);</span>
+
+<span class="nc" id="L99">		tfLabel.maxWidth((int)(width - (imWidth + GAP)));</span>
+<span class="nc" id="L100">		tfLabel.setPos(x + imWidth + GAP,</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">						imHeight &gt; tfLabel.height() ? y +(imHeight - tfLabel.height()) / 2 : y);</span>
+<span class="nc" id="L102">		PixelScene.align(tfLabel);</span>
+
+<span class="nc bnc" id="L104" title="All 2 branches missed.">		if (health.visible) {</span>
+<span class="nc" id="L105">			health.setRect( tfLabel.left(), tfLabel.bottom(), tfLabel.maxWidth(), 0 );</span>
+<span class="nc" id="L106">			height = Math.max( imHeight, health.bottom() );</span>
+		} else {
+<span class="nc" id="L108">			height = Math.max( imHeight, tfLabel.height() );</span>
+		}
+<span class="nc" id="L110">	}</span>
+
+	public float reqWidth(){
+<span class="nc" id="L113">		return imIcon.width() + tfLabel.width() + GAP;</span>
+	}
+
+	public void icon( Image icon ) {
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		if (icon != null) {</span>
+<span class="nc" id="L118">			remove(imIcon);</span>
+<span class="nc" id="L119">			add(imIcon = icon);</span>
+		}
+<span class="nc" id="L121">	}</span>
+
+	public void label( String label ) {
+<span class="nc" id="L124">		tfLabel.text( label );</span>
+<span class="nc" id="L125">	}</span>
+
+	public void label( String label, int color ) {
+<span class="nc" id="L128">		tfLabel.text( label );</span>
+<span class="nc" id="L129">		tfLabel.hardlight( color );</span>
+<span class="nc" id="L130">	}</span>
+
+	public void color( int color ) {
+<span class="nc" id="L133">		tfLabel.hardlight( color );</span>
+<span class="nc" id="L134">	}</span>
+
+	public float alpha(){
+<span class="nc" id="L137">		return imIcon.alpha();</span>
+	}
+
+	public void alpha( float value ){
+<span class="nc" id="L141">		tfLabel.alpha(value);</span>
+<span class="nc" id="L142">		imIcon.alpha(value);</span>
+<span class="nc" id="L143">	}</span>
+
+	public void health( float value ) {
+<span class="nc" id="L146">		health.level( healthLvl = value );</span>
+<span class="nc" id="L147">		layout();</span>
+<span class="nc" id="L148">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

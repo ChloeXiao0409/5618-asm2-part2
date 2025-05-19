@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Recycle.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.spells</a> &gt; <span class="el_source">Recycle.java</span></div><h1>Recycle.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.spells;
+
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Transmuting;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.brews.Brew;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs.Elixir;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.ExoticPotion;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTransmutation;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ExoticScroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.Runestone;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.TippedDart;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.Reflection;
+
+<span class="nc" id="L45">public class Recycle extends InventorySpell {</span>
+	
+	{
+<span class="nc" id="L48">		image = ItemSpriteSheet.RECYCLE;</span>
+
+<span class="nc" id="L50">		talentFactor = 2;</span>
+<span class="nc" id="L51">		talentChance = 1/(float)Recipe.OUT_QUANTITY;</span>
+<span class="nc" id="L52">	}</span>
+
+	@Override
+	protected boolean usableOnItem(Item item) {
+<span class="nc bnc" id="L56" title="All 14 branches missed.">		return (item instanceof Potion &amp;&amp; !(item instanceof Elixir || item instanceof Brew)) ||</span>
+				item instanceof Scroll ||
+				item instanceof Plant.Seed ||
+				item instanceof Runestone ||
+				item instanceof TippedDart;
+	}
+
+	@Override
+	protected void onItemSelected(Item item) {
+		Item result;
+		do {
+<span class="nc bnc" id="L67" title="All 2 branches missed.">			if (item instanceof Potion) {</span>
+<span class="nc" id="L68">				result = Generator.randomUsingDefaults(Generator.Category.POTION);</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">				if (item instanceof ExoticPotion){</span>
+<span class="nc" id="L70">					result = Reflection.newInstance(ExoticPotion.regToExo.get(result.getClass()));</span>
+				}
+<span class="nc bnc" id="L72" title="All 2 branches missed.">			} else if (item instanceof Scroll) {</span>
+<span class="nc" id="L73">				result = Generator.randomUsingDefaults(Generator.Category.SCROLL);</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">				if (item instanceof ExoticScroll){</span>
+<span class="nc" id="L75">					result = Reflection.newInstance(ExoticScroll.regToExo.get(result.getClass()));</span>
+				}
+<span class="nc bnc" id="L77" title="All 2 branches missed.">			} else if (item instanceof Plant.Seed) {</span>
+<span class="nc" id="L78">				result = Generator.randomUsingDefaults(Generator.Category.SEED);</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">			} else if (item instanceof Runestone) {</span>
+<span class="nc" id="L80">				result = Generator.randomUsingDefaults(Generator.Category.STONE);</span>
+			} else {
+<span class="nc" id="L82">				result = TippedDart.randomTipped(1);</span>
+			}
+<span class="nc bnc" id="L84" title="All 4 branches missed.">		} while (result.getClass() == item.getClass() || Challenges.isItemBlocked(result));</span>
+		
+<span class="nc" id="L86">		item.detach(curUser.belongings.backpack);</span>
+<span class="nc" id="L87">		GLog.p(Messages.get(this, &quot;recycled&quot;, result.name()));</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		if (!result.collect()){</span>
+<span class="nc" id="L89">			Dungeon.level.drop(result, curUser.pos).sprite.drop();</span>
+		}
+<span class="nc" id="L91">		Transmuting.show(curUser, item, result);</span>
+<span class="nc" id="L92">		curUser.sprite.emitter().start(Speck.factory(Speck.CHANGE), 0.2f, 10);</span>
+<span class="nc" id="L93">	}</span>
+	
+	@Override
+	public int value() {
+<span class="nc" id="L97">		return (int)(60 * (quantity/(float)Recipe.OUT_QUANTITY));</span>
+	}
+
+	@Override
+	public int energyVal() {
+<span class="nc" id="L102">		return (int)(12 * (quantity/(float)Recipe.OUT_QUANTITY));</span>
+	}
+	
+<span class="nc" id="L105">	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe.SimpleRecipe {</span>
+
+		private static final int OUT_QUANTITY = 12;
+		
+		{
+<span class="nc" id="L110">			inputs =  new Class[]{ScrollOfTransmutation.class};</span>
+<span class="nc" id="L111">			inQuantity = new int[]{1};</span>
+			
+<span class="nc" id="L113">			cost = 12;</span>
+			
+<span class="nc" id="L115">			output = Recycle.class;</span>
+<span class="nc" id="L116">			outQuantity = OUT_QUANTITY;</span>
+<span class="nc" id="L117">		}</span>
+		
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

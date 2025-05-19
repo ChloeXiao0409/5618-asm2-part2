@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CrystalWispSprite.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.sprites</a> &gt; <span class="el_source">CrystalWispSprite.java</span></div><h1>CrystalWispSprite.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.sprites;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.CrystalWisp;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Beam;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TorchHalo;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.TextureFilm;
+import com.watabou.noosa.tweeners.AlphaTweener;
+import com.watabou.utils.PointF;
+
+public abstract class CrystalWispSprite extends MobSprite {
+
+	private TorchHalo light;
+
+	public CrystalWispSprite() {
+<span class="nc" id="L41">		super();</span>
+
+<span class="nc" id="L43">		int c = texOffset();</span>
+
+<span class="nc" id="L45">		texture( Assets.Sprites.CRYSTAL_WISP );</span>
+
+<span class="nc" id="L47">		TextureFilm frames = new TextureFilm( texture, 12, 14 );</span>
+
+<span class="nc" id="L49">		idle = new Animation( 1, true );</span>
+<span class="nc" id="L50">		idle.frames( frames, c+0 );</span>
+
+<span class="nc" id="L52">		run = new Animation( 12, true );</span>
+<span class="nc" id="L53">		run.frames( frames, c+0, c+0, c+0, c+1 );</span>
+
+<span class="nc" id="L55">		attack = new Animation( 16, false );</span>
+<span class="nc" id="L56">		attack.frames( frames, c+2, c+3, c+4, c+5 );</span>
+
+<span class="nc" id="L58">		zap = attack.clone();</span>
+
+<span class="nc" id="L60">		die = new Animation( 15, false );</span>
+<span class="nc" id="L61">		die.frames( frames, c+6, c+7, c+8, c+9, c+10, c+11, c+12, c+11 );</span>
+
+<span class="nc" id="L63">		play( idle );</span>
+<span class="nc" id="L64">	}</span>
+
+	public void zap( int cell ) {
+
+<span class="nc" id="L68">		super.zap( cell );</span>
+
+<span class="nc" id="L70">		parent.add(new AlphaTweener(light, 1f, 0.2f) {</span>
+			@Override
+			public void onComplete() {
+<span class="nc" id="L73">				light.alpha(0.3f);</span>
+<span class="nc" id="L74">				((CrystalWisp)ch).onZapComplete();</span>
+<span class="nc" id="L75">				Beam ray = new Beam.LightRay(center(), DungeonTilemap.raisedTileCenterToWorld(cell));</span>
+<span class="nc" id="L76">				ray.hardlight(blood() &amp; 0x00FFFFFF);</span>
+<span class="nc" id="L77">				parent.add( ray );</span>
+<span class="nc" id="L78">			}</span>
+		});
+
+<span class="nc" id="L81">	}</span>
+
+	@Override
+	public synchronized void attack(int cell) {
+<span class="nc" id="L85">		super.attack(cell);</span>
+<span class="nc" id="L86">		parent.add(new AlphaTweener(light, 1f, 0.2f) {</span>
+			@Override
+			public void onComplete() {
+<span class="nc" id="L89">				light.alpha(0.3f);</span>
+<span class="nc" id="L90">			}</span>
+		});
+<span class="nc" id="L92">	}</span>
+
+	@Override
+	public void link(Char ch) {
+<span class="nc" id="L96">		super.link(ch);</span>
+<span class="nc" id="L97">		light = new TorchHalo( this );</span>
+<span class="nc" id="L98">		light.hardlight(blood() &amp; 0x00FFFFFF);</span>
+<span class="nc" id="L99">		light.alpha(0.3f);</span>
+<span class="nc" id="L100">		light.radius(10);</span>
+
+<span class="nc" id="L102">		GameScene.effect(light);</span>
+<span class="nc" id="L103">	}</span>
+
+	@Override
+	public void die() {
+<span class="nc" id="L107">		super.die();</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		if (light != null){</span>
+<span class="nc" id="L109">			light.putOut();</span>
+		}
+<span class="nc" id="L111">	}</span>
+
+	@Override
+	public void kill() {
+<span class="nc" id="L115">		super.kill();</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		if (light != null){</span>
+<span class="nc" id="L117">			light.killAndErase();</span>
+		}
+<span class="nc" id="L119">	}</span>
+
+	@Override
+	public void onComplete( Animation anim ) {
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		if (anim == zap) {</span>
+<span class="nc" id="L124">			idle();</span>
+		}
+<span class="nc" id="L126">		super.onComplete( anim );</span>
+<span class="nc" id="L127">	}</span>
+
+<span class="nc" id="L129">	private float baseY = Float.NaN;</span>
+
+	@Override
+	public void place(int cell) {
+<span class="nc" id="L133">		super.place(cell);</span>
+<span class="nc" id="L134">		baseY = y;</span>
+<span class="nc" id="L135">	}</span>
+
+	@Override
+	public PointF point(PointF p) {
+<span class="nc" id="L139">		super.point(p);</span>
+<span class="nc" id="L140">		baseY = y;</span>
+<span class="nc" id="L141">		return p;</span>
+	}
+
+	@Override
+	public void move(int from, int to) {
+<span class="nc" id="L146">		super.move(from, to);</span>
+<span class="nc" id="L147">	}</span>
+
+	@Override
+	public void update() {
+<span class="nc" id="L151">		super.update();</span>
+
+<span class="nc bnc" id="L153" title="All 4 branches missed.">		if (!paused &amp;&amp; curAnim != die){</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">			if (Float.isNaN(baseY)) baseY = y;</span>
+<span class="nc" id="L155">			y = baseY + Math.abs((float)Math.sin(Game.timeTotal));</span>
+<span class="nc" id="L156">			shadowOffset = 0.25f - 0.8f*Math.abs((float)Math.sin(Game.timeTotal));</span>
+		}
+
+<span class="nc bnc" id="L159" title="All 2 branches missed.">		if (light != null){</span>
+<span class="nc" id="L160">			light.visible = visible;</span>
+<span class="nc" id="L161">			light.point(center());</span>
+
+		}
+<span class="nc" id="L164">	}</span>
+
+	@Override
+	public void turnTo(int from, int to) {
+		//do nothing
+<span class="nc" id="L169">	}</span>
+
+	protected abstract int texOffset();
+
+<span class="nc" id="L173">	public static class Blue extends CrystalWispSprite {</span>
+		@Override
+		protected int texOffset() {
+<span class="nc" id="L176">			return 0;</span>
+		}
+		@Override
+		public int blood() {
+<span class="nc" id="L180">			return 0xFF66B3FF;</span>
+		}
+	}
+
+<span class="nc" id="L184">	public static class Green extends CrystalWispSprite {</span>
+		@Override
+		protected int texOffset() {
+<span class="nc" id="L187">			return 13;</span>
+		}
+		@Override
+		public int blood() {
+<span class="nc" id="L191">			return 0xFF2EE62E;</span>
+		}
+	}
+
+<span class="nc" id="L195">	public static class Red extends CrystalWispSprite {</span>
+		@Override
+		protected int texOffset() {
+<span class="nc" id="L198">			return 26;</span>
+		}
+		@Override
+		public int blood() {
+<span class="nc" id="L202">			return 0xFFFF7F00;</span>
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

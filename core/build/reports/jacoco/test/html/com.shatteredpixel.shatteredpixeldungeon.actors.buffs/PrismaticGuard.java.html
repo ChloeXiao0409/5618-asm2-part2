@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PrismaticGuard.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.buffs</a> &gt; <span class="el_source">PrismaticGuard.java</span></div><h1>PrismaticGuard.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.buffs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.PowerOfMany;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.PrismaticImage;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.watabou.noosa.Image;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+
+<span class="nc" id="L38">public class PrismaticGuard extends Buff {</span>
+	
+	{
+<span class="nc" id="L41">		type = buffType.POSITIVE;</span>
+	}
+	
+	private float HP;
+
+<span class="nc" id="L46">	private float powerOfManyTurns = 0;</span>
+	
+	@Override
+	public boolean act() {
+		
+<span class="nc" id="L51">		Hero hero = (Hero)target;</span>
+		
+<span class="nc" id="L53">		Mob closest = null;</span>
+<span class="nc" id="L54">		int v = hero.visibleEnemies();</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		for (int i=0; i &lt; v; i++) {</span>
+<span class="nc" id="L56">			Mob mob = hero.visibleEnemy( i );</span>
+<span class="nc bnc" id="L57" title="All 10 branches missed.">			if ( mob.isAlive() &amp;&amp; !mob.isInvulnerable(PrismaticImage.class)</span>
+<span class="nc bnc" id="L58" title="All 4 branches missed.">					&amp;&amp; mob.state != mob.PASSIVE &amp;&amp; mob.state != mob.WANDERING &amp;&amp; mob.state != mob.SLEEPING &amp;&amp; !hero.mindVisionEnemies.contains(mob)</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">					&amp;&amp; (closest == null || Dungeon.level.distance(hero.pos, mob.pos) &lt; Dungeon.level.distance(hero.pos, closest.pos))) {</span>
+<span class="nc" id="L60">				closest = mob;</span>
+			}
+		}
+		
+<span class="nc bnc" id="L64" title="All 4 branches missed.">		if (closest != null &amp;&amp; Dungeon.level.distance(hero.pos, closest.pos) &lt; 5){</span>
+			//spawn guardian
+<span class="nc" id="L66">			int bestPos = -1;</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">			for (int i = 0; i &lt; PathFinder.NEIGHBOURS8.length; i++) {</span>
+<span class="nc" id="L68">				int p = hero.pos + PathFinder.NEIGHBOURS8[i];</span>
+<span class="nc bnc" id="L69" title="All 4 branches missed.">				if (Actor.findChar( p ) == null &amp;&amp; Dungeon.level.passable[p]) {</span>
+<span class="nc bnc" id="L70" title="All 4 branches missed.">					if (bestPos == -1 || Dungeon.level.trueDistance(p, closest.pos) &lt; Dungeon.level.trueDistance(bestPos, closest.pos)){</span>
+<span class="nc" id="L71">						bestPos = p;</span>
+					}
+				}
+			}
+<span class="nc bnc" id="L75" title="All 2 branches missed.">			if (bestPos != -1) {</span>
+<span class="nc" id="L76">				PrismaticImage pris = new PrismaticImage();</span>
+<span class="nc" id="L77">				pris.duplicate(hero, (int)Math.floor(HP) );</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">				if (powerOfManyTurns &gt; 0){</span>
+<span class="nc" id="L79">					Buff.affect(pris, PowerOfMany.PowerBuff.class, powerOfManyTurns);</span>
+				}
+<span class="nc" id="L81">				pris.state = pris.HUNTING;</span>
+<span class="nc" id="L82">				GameScene.add(pris, 1);</span>
+<span class="nc" id="L83">				ScrollOfTeleportation.appear(pris, bestPos);</span>
+				
+<span class="nc" id="L85">				detach();</span>
+<span class="nc" id="L86">			} else {</span>
+<span class="nc" id="L87">				spend( TICK );</span>
+			}
+			
+			
+<span class="nc" id="L91">		} else {</span>
+<span class="nc" id="L92">			spend(TICK);</span>
+		}
+		
+<span class="nc bnc" id="L95" title="All 4 branches missed.">		if (HP &lt; maxHP() &amp;&amp; Regeneration.regenOn()){</span>
+<span class="nc" id="L96">			HP += 0.1f;</span>
+		}
+<span class="nc bnc" id="L98" title="All 2 branches missed.">		if (powerOfManyTurns &gt; 0){</span>
+<span class="nc" id="L99">			powerOfManyTurns--;</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">			if (powerOfManyTurns &lt;= 0){</span>
+<span class="nc" id="L101">				powerOfManyTurns = 0;</span>
+<span class="nc" id="L102">				BuffIndicator.refreshHero();</span>
+			}
+		}
+		
+<span class="nc" id="L106">		return true;</span>
+	}
+	
+	public void set( int HP ){
+<span class="nc" id="L110">		this.HP = HP;</span>
+<span class="nc" id="L111">		powerOfManyTurns = 0;</span>
+<span class="nc" id="L112">	}</span>
+
+	public void set( PrismaticImage img){
+<span class="nc" id="L115">		this.HP = img.HP;</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		if (img.buff(PowerOfMany.PowerBuff.class) != null){</span>
+<span class="nc" id="L117">			powerOfManyTurns = img.buff(PowerOfMany.PowerBuff.class).cooldown()+1;</span>
+		} else {
+<span class="nc" id="L119">			powerOfManyTurns = 0;</span>
+		}
+<span class="nc" id="L121">	}</span>
+	
+	public int maxHP(){
+<span class="nc" id="L124">		return maxHP((Hero)target);</span>
+	}
+	
+	public static int maxHP( Hero hero ){
+<span class="nc" id="L128">		return 10 + (int)Math.floor(hero.lvl * 2.5f); //half of hero's HP</span>
+	}
+
+	public boolean isEmpowered(){
+<span class="nc bnc" id="L132" title="All 2 branches missed.">		return powerOfManyTurns &gt; 0;</span>
+	}
+	
+	@Override
+	public int icon() {
+<span class="nc" id="L137">		return BuffIndicator.ARMOR;</span>
+	}
+	
+	@Override
+	public void tintIcon(Image icon) {
+<span class="nc bnc" id="L142" title="All 2 branches missed.">		if (isEmpowered()){</span>
+<span class="nc" id="L143">			icon.hardlight(3f, 3f, 2f);</span>
+		} else {
+<span class="nc" id="L145">			icon.hardlight(1f, 1f, 2f);</span>
+		}
+<span class="nc" id="L147">	}</span>
+
+	@Override
+	public float iconFadePercent() {
+<span class="nc" id="L151">		return 1f - HP/(float)maxHP();</span>
+	}
+
+	@Override
+	public String iconTextDisplay() {
+<span class="nc" id="L156">		return Integer.toString((int)HP);</span>
+	}
+	
+	@Override
+	public String desc() {
+<span class="nc" id="L161">		String desc = Messages.get(this, &quot;desc&quot;, (int)HP, maxHP());</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">		if (isEmpowered()){</span>
+<span class="nc" id="L163">			desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_many&quot;, (int)powerOfManyTurns);</span>
+		}
+<span class="nc" id="L165">		return desc;</span>
+	}
+	
+	private static final String HEALTH = &quot;hp&quot;;
+	private static final String POWER_TURNS = &quot;power_turns&quot;;
+	
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L173">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L174">		bundle.put(HEALTH, HP);</span>
+<span class="nc" id="L175">		bundle.put(POWER_TURNS, powerOfManyTurns);</span>
+<span class="nc" id="L176">	}</span>
+	
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L180">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L181">		HP = bundle.getFloat(HEALTH);</span>
+<span class="nc" id="L182">		powerOfManyTurns = bundle.getFloat(POWER_TURNS);</span>
+<span class="nc" id="L183">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Thief.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">Thief.java</span></div><h1>Thief.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Gold;
+import com.shatteredpixel.shatteredpixeldungeon.items.Honeypot;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ThiefSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L39">public class Thief extends Mob {</span>
+	
+	public Item item;
+	
+	{
+<span class="nc" id="L44">		spriteClass = ThiefSprite.class;</span>
+		
+<span class="nc" id="L46">		HP = HT = 20;</span>
+<span class="nc" id="L47">		defenseSkill = 12;</span>
+		
+<span class="nc" id="L49">		EXP = 5;</span>
+<span class="nc" id="L50">		maxLvl = 11;</span>
+
+<span class="nc" id="L52">		loot = Random.oneOf(Generator.Category.RING, Generator.Category.ARTIFACT);</span>
+<span class="nc" id="L53">		lootChance = 0.03f; //initially, see lootChance()</span>
+
+<span class="nc" id="L55">		WANDERING = new Wandering();</span>
+<span class="nc" id="L56">		FLEEING = new Fleeing();</span>
+
+<span class="nc" id="L58">		properties.add(Property.UNDEAD);</span>
+<span class="nc" id="L59">	}</span>
+
+	private static final String ITEM = &quot;item&quot;;
+
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L65">		super.storeInBundle( bundle );</span>
+<span class="nc" id="L66">		bundle.put( ITEM, item );</span>
+<span class="nc" id="L67">	}</span>
+
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L71">		super.restoreFromBundle( bundle );</span>
+<span class="nc" id="L72">		item = (Item)bundle.get( ITEM );</span>
+<span class="nc" id="L73">	}</span>
+
+	@Override
+	public float speed() {
+<span class="nc bnc" id="L77" title="All 2 branches missed.">		if (item != null) return (5*super.speed())/6;</span>
+<span class="nc" id="L78">		else return super.speed();</span>
+	}
+
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L83">		return Random.NormalIntRange( 1, 10 );</span>
+	}
+
+	@Override
+	public float attackDelay() {
+<span class="nc" id="L88">		return super.attackDelay()*0.5f;</span>
+	}
+
+	@Override
+	public float lootChance() {
+		//each drop makes future drops 1/3 as likely
+		// so loot chance looks like: 1/33, 1/100, 1/300, 1/900, etc.
+<span class="nc" id="L95">		return super.lootChance() * (float)Math.pow(1/3f, Dungeon.LimitedDrops.THEIF_MISC.count);</span>
+	}
+
+	@Override
+	public void rollToDropLoot() {
+<span class="nc bnc" id="L100" title="All 2 branches missed.">		if (item != null) {</span>
+<span class="nc" id="L101">			Dungeon.level.drop( item, pos ).sprite.drop();</span>
+			//updates position
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			if (item instanceof Honeypot.ShatteredPot) ((Honeypot.ShatteredPot)item).dropPot( this, pos );</span>
+<span class="nc" id="L104">			item = null;</span>
+		}
+<span class="nc" id="L106">		super.rollToDropLoot();</span>
+<span class="nc" id="L107">	}</span>
+
+	@Override
+	public Item createLoot() {
+<span class="nc" id="L111">		Dungeon.LimitedDrops.THEIF_MISC.count++;</span>
+<span class="nc" id="L112">		return super.createLoot();</span>
+	}
+
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L117">		return 12;</span>
+	}
+
+	@Override
+	public int drRoll() {
+<span class="nc" id="L122">		return super.drRoll() + Random.NormalIntRange(0, 3);</span>
+	}
+
+	@Override
+	public int attackProc( Char enemy, int damage ) {
+<span class="nc" id="L127">		damage = super.attackProc( enemy, damage );</span>
+		
+<span class="nc bnc" id="L129" title="All 6 branches missed.">		if (alignment == Alignment.ENEMY &amp;&amp; item == null</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">				&amp;&amp; enemy instanceof Hero &amp;&amp; steal( (Hero)enemy )) {</span>
+<span class="nc" id="L131">			state = FLEEING;</span>
+		}
+
+<span class="nc" id="L134">		return damage;</span>
+	}
+
+	@Override
+	public int defenseProc(Char enemy, int damage) {
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		if (state == FLEEING) {</span>
+<span class="nc" id="L140">			Dungeon.level.drop( new Gold(), pos ).sprite.drop();</span>
+		}
+
+<span class="nc" id="L143">		return super.defenseProc(enemy, damage);</span>
+	}
+
+	protected boolean steal( Hero hero ) {
+
+<span class="nc" id="L148">		Item toSteal = hero.belongings.randomUnequipped();</span>
+
+<span class="nc bnc" id="L150" title="All 6 branches missed.">		if (toSteal != null &amp;&amp; !toSteal.unique &amp;&amp; toSteal.level() &lt; 1 ) {</span>
+
+<span class="nc" id="L152">			GLog.w( Messages.get(Thief.class, &quot;stole&quot;, toSteal.name()) );</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">			if (!toSteal.stackable) {</span>
+<span class="nc" id="L154">				Dungeon.quickslot.convertToPlaceholder(toSteal);</span>
+			}
+<span class="nc" id="L156">			Item.updateQuickslot();</span>
+
+<span class="nc" id="L158">			item = toSteal.detach( hero.belongings.backpack );</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">			if (item instanceof Honeypot){</span>
+<span class="nc" id="L160">				item = ((Honeypot)item).shatter(this, this.pos);</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">			} else if (item instanceof Honeypot.ShatteredPot) {</span>
+<span class="nc" id="L162">				((Honeypot.ShatteredPot)item).pickupPot(this);</span>
+			}
+
+<span class="nc" id="L165">			return true;</span>
+		} else {
+<span class="nc" id="L167">			return false;</span>
+		}
+	}
+
+	@Override
+	public String description() {
+<span class="nc" id="L173">		String desc = super.description();</span>
+
+<span class="nc bnc" id="L175" title="All 2 branches missed.">		if (item != null) {</span>
+<span class="nc" id="L176">			desc += Messages.get(this, &quot;carries&quot;, item.name() );</span>
+		}
+
+<span class="nc" id="L179">		return desc;</span>
+	}
+	
+<span class="nc" id="L182">	private class Wandering extends Mob.Wandering {</span>
+		
+		@Override
+		public boolean act(boolean enemyInFOV, boolean justAlerted) {
+<span class="nc" id="L186">			super.act(enemyInFOV, justAlerted);</span>
+			
+			//if an enemy is just noticed and the thief posses an item, run, don't fight.
+<span class="nc bnc" id="L189" title="All 4 branches missed.">			if (state == HUNTING &amp;&amp; item != null){</span>
+<span class="nc" id="L190">				state = FLEEING;</span>
+			}
+			
+<span class="nc" id="L193">			return true;</span>
+		}
+	}
+
+<span class="nc" id="L197">	private class Fleeing extends Mob.Fleeing {</span>
+		@Override
+		protected void escaped() {
+<span class="nc bnc" id="L200" title="All 4 branches missed.">			if (item != null</span>
+					&amp;&amp; !Dungeon.level.heroFOV[pos]
+<span class="nc bnc" id="L202" title="All 2 branches missed.">					&amp;&amp; Dungeon.level.distance(Dungeon.hero.pos, pos) &gt;= 6) {</span>
+
+<span class="nc" id="L204">				int count = 32;</span>
+				int newPos;
+				do {
+<span class="nc" id="L207">					newPos = Dungeon.level.randomRespawnCell( Thief.this );</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">					if (count-- &lt;= 0) {</span>
+<span class="nc" id="L209">						break;</span>
+					}
+<span class="nc bnc" id="L211" title="All 6 branches missed.">				} while (newPos == -1 || Dungeon.level.heroFOV[newPos] || Dungeon.level.distance(newPos, pos) &lt; (count/3));</span>
+
+<span class="nc bnc" id="L213" title="All 2 branches missed.">				if (newPos != -1) {</span>
+
+<span class="nc" id="L215">					pos = newPos;</span>
+<span class="nc" id="L216">					sprite.place( pos );</span>
+<span class="nc" id="L217">					sprite.visible = Dungeon.level.heroFOV[pos];</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">					if (Dungeon.level.heroFOV[pos]) CellEmitter.get(pos).burst(Speck.factory(Speck.WOOL), 6);</span>
+
+				}
+
+<span class="nc bnc" id="L222" title="All 2 branches missed.">				if (item != null) GLog.n( Messages.get(Thief.class, &quot;escapes&quot;, item.name()));</span>
+<span class="nc" id="L223">				item = null;</span>
+<span class="nc" id="L224">				state = WANDERING;</span>
+<span class="nc" id="L225">			} else {</span>
+<span class="nc" id="L226">				state = WANDERING;</span>
+			}
+<span class="nc" id="L228">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

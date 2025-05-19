@@ -1,0 +1,595 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WndRanking.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.windows</a> &gt; <span class="el_source">WndRanking.java</span></div><h1>WndRanking.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.windows;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.QuickSlot;
+import com.shatteredpixel.shatteredpixeldungeon.Rankings;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.Trinket;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BadgesGrid;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BadgesList;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Button;
+import com.shatteredpixel.shatteredpixeldungeon.ui.CheckBox;
+import com.shatteredpixel.shatteredpixeldungeon.ui.IconButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ItemSlot;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.TalentButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.TalentsPane;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.utils.DungeonSeed;
+import com.watabou.noosa.ColorBlock;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Group;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.ui.Component;
+import com.watabou.utils.DeviceCompat;
+
+import java.text.NumberFormat;
+import java.util.Locale;
+
+public class WndRanking extends WndTabbed {
+	
+	private static final int WIDTH			= 115;
+	private static final int HEIGHT			= 144;
+	
+	private static WndRanking INSTANCE;
+	
+	private String gameID;
+	private Rankings.Record record;
+	
+	public WndRanking( final Rankings.Record rec ) {
+		
+<span class="nc" id="L76">		super();</span>
+<span class="nc" id="L77">		resize( WIDTH, HEIGHT );</span>
+
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if (INSTANCE != null){</span>
+<span class="nc" id="L80">			INSTANCE.hide();</span>
+		}
+<span class="nc" id="L82">		INSTANCE = this;</span>
+
+<span class="nc" id="L84">		this.gameID = rec.gameID;</span>
+<span class="nc" id="L85">		this.record = rec;</span>
+
+		try {
+<span class="nc" id="L88">			Badges.loadGlobal();</span>
+<span class="nc" id="L89">			Rankings.INSTANCE.loadGameData( rec );</span>
+<span class="nc" id="L90">			createControls();</span>
+<span class="nc" id="L91">		} catch ( Exception e ) {</span>
+<span class="nc" id="L92">			Game.reportException( new RuntimeException(&quot;Rankings Display Failed!&quot;,e));</span>
+<span class="nc" id="L93">			Dungeon.hero = null;</span>
+<span class="nc" id="L94">			createControls();</span>
+<span class="nc" id="L95">		}</span>
+<span class="nc" id="L96">	}</span>
+	
+	@Override
+	public void destroy() {
+<span class="nc" id="L100">		super.destroy();</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (INSTANCE == this){</span>
+<span class="nc" id="L102">			INSTANCE = null;</span>
+		}
+<span class="nc" id="L104">	}</span>
+	
+	private void createControls() {
+
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		if (Dungeon.hero != null) {</span>
+<span class="nc" id="L109">			Icons[] icons =</span>
+					{Icons.RANKINGS, Icons.TALENT, Icons.BACKPACK_LRG, Icons.BADGES, Icons.CHALLENGE_COLOR};
+<span class="nc" id="L111">			Group[] pages =</span>
+					{new StatsTab(), new TalentsTab(), new ItemsTab(), new BadgesTab(), null};
+
+<span class="nc bnc" id="L114" title="All 2 branches missed.">			if (Dungeon.challenges != 0) pages[4] = new ChallengesTab();</span>
+
+<span class="nc bnc" id="L116" title="All 2 branches missed.">			for (int i = 0; i &lt; pages.length; i++) {</span>
+
+<span class="nc bnc" id="L118" title="All 2 branches missed.">				if (pages[i] == null) {</span>
+<span class="nc" id="L119">					break;</span>
+				}
+
+<span class="nc" id="L122">				add(pages[i]);</span>
+
+<span class="nc" id="L124">				Tab tab = new RankingTab(icons[i], pages[i]);</span>
+<span class="nc" id="L125">				add(tab);</span>
+			}
+
+<span class="nc" id="L128">			layoutTabs();</span>
+
+<span class="nc" id="L130">			select(0);</span>
+<span class="nc" id="L131">		} else {</span>
+<span class="nc" id="L132">			StatsTab tab = new StatsTab();</span>
+<span class="nc" id="L133">			add(tab);</span>
+
+		}
+<span class="nc" id="L136">	}</span>
+
+	private class RankingTab extends IconTab {
+		
+		private Group page;
+		
+<span class="nc" id="L142">		public RankingTab( Icons icon, Group page ) {</span>
+<span class="nc" id="L143">			super( Icons.get(icon) );</span>
+<span class="nc" id="L144">			this.page = page;</span>
+<span class="nc" id="L145">		}</span>
+		
+		@Override
+		protected void select( boolean value ) {
+<span class="nc" id="L149">			super.select( value );</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">			if (page != null) {</span>
+<span class="nc" id="L151">				page.visible = page.active = selected;</span>
+			}
+<span class="nc" id="L153">		}</span>
+	}
+	
+	private class StatsTab extends Group {
+
+<span class="nc" id="L158">		private int GAP	= 4;</span>
+		
+<span class="nc" id="L160">		public StatsTab() {</span>
+<span class="nc" id="L161">			super();</span>
+			
+<span class="nc" id="L163">			String heroClass = record.heroClass.name();</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">			if (Dungeon.hero != null){</span>
+<span class="nc" id="L165">				heroClass = Dungeon.hero.className();</span>
+			}
+			
+<span class="nc" id="L168">			IconTitle title = new IconTitle();</span>
+<span class="nc" id="L169">			title.icon( HeroSprite.avatar( record.heroClass, record.armorTier ) );</span>
+<span class="nc" id="L170">			title.label( Messages.get(this, &quot;title&quot;, record.herolevel, heroClass ).toUpperCase( Locale.ENGLISH ) );</span>
+<span class="nc" id="L171">			title.color(Window.TITLE_COLOR);</span>
+<span class="nc" id="L172">			title.setRect( 0, 0, WIDTH, 0 );</span>
+<span class="nc" id="L173">			add( title );</span>
+
+<span class="nc bnc" id="L175" title="All 4 branches missed.">			if (Dungeon.hero != null &amp;&amp; Dungeon.seed != -1){</span>
+<span class="nc" id="L176">				GAP--;</span>
+			}
+			
+<span class="nc" id="L179">			float pos = title.bottom() + 1;</span>
+
+<span class="nc" id="L181">			RenderedTextBlock date = PixelScene.renderTextBlock(record.date, 7);</span>
+<span class="nc" id="L182">			date.hardlight(0xCCCCCC);</span>
+<span class="nc" id="L183">			date.setPos(0, pos);</span>
+<span class="nc" id="L184">			add(date);</span>
+
+<span class="nc" id="L186">			RenderedTextBlock version = PixelScene.renderTextBlock(record.version, 7);</span>
+<span class="nc" id="L187">			version.hardlight(0xCCCCCC);</span>
+<span class="nc" id="L188">			version.setPos(WIDTH-version.width(), pos);</span>
+<span class="nc" id="L189">			add(version);</span>
+
+<span class="nc" id="L191">			pos = date.bottom()+5;</span>
+
+<span class="nc" id="L193">			NumberFormat num = NumberFormat.getInstance(Messages.locale());</span>
+
+<span class="nc bnc" id="L195" title="All 2 branches missed.">			if (Dungeon.hero == null){</span>
+<span class="nc" id="L196">				pos = statSlot( this, Messages.get(this, &quot;score&quot;), num.format( record.score ), pos );</span>
+<span class="nc" id="L197">				pos += GAP;</span>
+
+<span class="nc" id="L199">				Image errorIcon = Icons.WARNING.get();</span>
+<span class="nc" id="L200">				errorIcon.y = pos;</span>
+<span class="nc" id="L201">				add(errorIcon);</span>
+
+<span class="nc" id="L203">				RenderedTextBlock errorText = PixelScene.renderTextBlock(Messages.get(WndRanking.class, &quot;error&quot;), 6);</span>
+<span class="nc" id="L204">				errorText.maxWidth((int)(WIDTH-errorIcon.width()-GAP));</span>
+<span class="nc" id="L205">				errorText.setPos(errorIcon.width()+GAP, pos + (errorIcon.height()-errorText.height())/2);</span>
+<span class="nc" id="L206">				add(errorText);</span>
+
+<span class="nc" id="L208">			} else {</span>
+
+<span class="nc" id="L210">				pos = statSlot(this, Messages.get(this, &quot;score&quot;), num.format(Statistics.totalScore), pos);</span>
+
+<span class="nc" id="L212">				IconButton scoreInfo = new IconButton(Icons.get(Icons.INFO)) {</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L215">						super.onClick();</span>
+<span class="nc" id="L216">						ShatteredPixelDungeon.scene().addToFront(new WndScoreBreakdown());</span>
+<span class="nc" id="L217">					}</span>
+				};
+<span class="nc" id="L219">				scoreInfo.setSize(16, 16);</span>
+<span class="nc" id="L220">				scoreInfo.setPos(WIDTH - scoreInfo.width(), pos - 10 - GAP);</span>
+<span class="nc" id="L221">				add(scoreInfo);</span>
+
+<span class="nc" id="L223">				pos += GAP;</span>
+
+<span class="nc" id="L225">				int strBonus = Dungeon.hero.STR() - Dungeon.hero.STR;</span>
+<span class="nc bnc" id="L226" title="All 2 branches missed.">				if (strBonus &gt; 0)</span>
+<span class="nc" id="L227">					pos = statSlot(this, Messages.get(this, &quot;str&quot;), Dungeon.hero.STR + &quot; + &quot; + strBonus, pos);</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">				else if (strBonus &lt; 0)</span>
+<span class="nc" id="L229">					pos = statSlot(this, Messages.get(this, &quot;str&quot;), Dungeon.hero.STR + &quot; - &quot; + -strBonus, pos);</span>
+				else
+<span class="nc" id="L231">					pos = statSlot(this, Messages.get(this, &quot;str&quot;), Integer.toString(Dungeon.hero.STR), pos);</span>
+<span class="nc" id="L232">				pos = statSlot(this, Messages.get(this, &quot;duration&quot;), num.format((int) Statistics.duration), pos);</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">				if (Statistics.highestAscent == 0) {</span>
+<span class="nc" id="L234">					pos = statSlot(this, Messages.get(this, &quot;depth&quot;), num.format(Statistics.deepestFloor), pos);</span>
+				} else {
+<span class="nc" id="L236">					pos = statSlot(this, Messages.get(this, &quot;ascent&quot;), num.format(Statistics.highestAscent), pos);</span>
+				}
+<span class="nc bnc" id="L238" title="All 2 branches missed.">				if (Dungeon.seed != -1) {</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">					if (Dungeon.daily) {</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">						if (Dungeon.dailyReplay) {</span>
+<span class="nc" id="L241">							pos = statSlot(this, Messages.get(this, &quot;replay_for&quot;), &quot;_&quot; + Dungeon.customSeedText + &quot;_&quot;, pos);</span>
+						} else {
+<span class="nc" id="L243">							pos = statSlot(this, Messages.get(this, &quot;daily_for&quot;), &quot;_&quot; + Dungeon.customSeedText + &quot;_&quot;, pos);</span>
+						}
+<span class="nc bnc" id="L245" title="All 2 branches missed.">					} else if (!Dungeon.customSeedText.isEmpty()) {</span>
+<span class="nc" id="L246">						pos = statSlot(this, Messages.get(this, &quot;custom_seed&quot;), &quot;_&quot; + Dungeon.customSeedText + &quot;_&quot;, pos);</span>
+					} else {
+<span class="nc" id="L248">						pos = statSlot(this, Messages.get(this, &quot;seed&quot;), DungeonSeed.convertToCode(Dungeon.seed), pos);</span>
+					}
+				} else {
+<span class="nc" id="L251">					pos += GAP + 5;</span>
+				}
+
+<span class="nc" id="L254">				pos += GAP;</span>
+
+<span class="nc" id="L256">				pos = statSlot(this, Messages.get(this, &quot;enemies&quot;), num.format(Statistics.enemiesSlain), pos);</span>
+<span class="nc" id="L257">				pos = statSlot(this, Messages.get(this, &quot;gold&quot;), num.format(Statistics.goldCollected), pos);</span>
+<span class="nc" id="L258">				pos = statSlot(this, Messages.get(this, &quot;food&quot;), num.format(Statistics.foodEaten), pos);</span>
+<span class="nc" id="L259">				pos = statSlot(this, Messages.get(this, &quot;alchemy&quot;), num.format(Statistics.itemsCrafted), pos);</span>
+			}
+
+<span class="nc" id="L262">			int buttontop = HEIGHT - 16;</span>
+
+<span class="nc bnc" id="L264" title="All 6 branches missed.">			if (Dungeon.hero != null &amp;&amp; Dungeon.seed != -1 &amp;&amp; !Dungeon.daily &amp;&amp;</span>
+<span class="nc bnc" id="L265" title="All 4 branches missed.">					(DeviceCompat.isDebug() || Badges.isUnlocked(Badges.Badge.VICTORY))){</span>
+<span class="nc" id="L266">				final Image icon = Icons.get(Icons.SEED);</span>
+<span class="nc" id="L267">				RedButton btnSeed = new RedButton(Messages.get(this, &quot;copy_seed&quot;)){</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L270">						super.onClick();</span>
+<span class="nc" id="L271">						ShatteredPixelDungeon.scene().addToFront(new WndOptions(new Image(icon),</span>
+<span class="nc" id="L272">								Messages.get(WndRanking.StatsTab.this, &quot;copy_seed&quot;),</span>
+<span class="nc" id="L273">								Messages.get(WndRanking.StatsTab.this, &quot;copy_seed_desc&quot;),</span>
+<span class="nc" id="L274">								Messages.get(WndRanking.StatsTab.this, &quot;copy_seed_copy&quot;),</span>
+<span class="nc" id="L275">								Messages.get(WndRanking.StatsTab.this, &quot;copy_seed_cancel&quot;)){</span>
+							@Override
+							protected void onSelect(int index) {
+<span class="nc" id="L278">								super.onSelect(index);</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">								if (index == 0){</span>
+<span class="nc" id="L280">									SPDSettings.customSeed(DungeonSeed.convertToCode(Dungeon.seed));</span>
+<span class="nc" id="L281">									icon.hardlight(1f, 1.5f, 0.67f);</span>
+								}
+<span class="nc" id="L283">							}</span>
+						});
+<span class="nc" id="L285">					}</span>
+				};
+<span class="nc bnc" id="L287" title="All 2 branches missed.">				if (DungeonSeed.convertFromText(SPDSettings.customSeed()) == Dungeon.seed){</span>
+<span class="nc" id="L288">					icon.hardlight(1f, 1.5f, 0.67f);</span>
+				}
+<span class="nc" id="L290">				btnSeed.icon(icon);</span>
+<span class="nc" id="L291">				btnSeed.setRect(0, buttontop, 115, 16);</span>
+<span class="nc" id="L292">				add(btnSeed);</span>
+			}
+
+<span class="nc" id="L295">		}</span>
+		
+		private float statSlot( Group parent, String label, String value, float pos ) {
+			
+<span class="nc" id="L299">			RenderedTextBlock txt = PixelScene.renderTextBlock( label, 7 );</span>
+<span class="nc" id="L300">			txt.setPos(0, pos);</span>
+<span class="nc" id="L301">			parent.add( txt );</span>
+			
+<span class="nc" id="L303">			txt = PixelScene.renderTextBlock( value, 7 );</span>
+<span class="nc" id="L304">			txt.setPos(WIDTH * 0.6f, pos);</span>
+<span class="nc" id="L305">			PixelScene.align(txt);</span>
+<span class="nc" id="L306">			parent.add( txt );</span>
+			
+<span class="nc" id="L308">			return pos + GAP + txt.height();</span>
+		}
+	}
+
+	private class TalentsTab extends Group{
+
+<span class="nc" id="L314">		public TalentsTab(){</span>
+<span class="nc" id="L315">			super();</span>
+
+<span class="nc" id="L317">			camera = WndRanking.this.camera;</span>
+
+<span class="nc" id="L319">			int tiers = 1;</span>
+<span class="nc bnc" id="L320" title="All 2 branches missed.">			if (Dungeon.hero.lvl &gt;= 6) tiers++;</span>
+<span class="nc bnc" id="L321" title="All 4 branches missed.">			if (Dungeon.hero.lvl &gt;= 12 &amp;&amp; Dungeon.hero.subClass != HeroSubClass.NONE) tiers++;</span>
+<span class="nc bnc" id="L322" title="All 4 branches missed.">			if (Dungeon.hero.lvl &gt;= 20 &amp;&amp; Dungeon.hero.armorAbility != null) tiers++;</span>
+<span class="nc bnc" id="L323" title="All 2 branches missed.">			while (Dungeon.hero.talents.size() &gt; tiers){</span>
+<span class="nc" id="L324">				Dungeon.hero.talents.remove(Dungeon.hero.talents.size()-1);</span>
+			}
+
+<span class="nc" id="L327">			TalentsPane p = new TalentsPane(TalentButton.Mode.INFO);</span>
+<span class="nc" id="L328">			add(p);</span>
+<span class="nc" id="L329">			p.setPos(0, 0);</span>
+<span class="nc" id="L330">			p.setSize(WIDTH, HEIGHT);</span>
+<span class="nc" id="L331">			p.setPos(0, 0);</span>
+
+<span class="nc" id="L333">		}</span>
+
+	}
+
+	private class ItemsTab extends Group {
+		
+		private float pos;
+		
+<span class="nc" id="L341">		public ItemsTab() {</span>
+<span class="nc" id="L342">			super();</span>
+			
+<span class="nc" id="L344">			Belongings stuff = Dungeon.hero.belongings;</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">			if (stuff.weapon != null) {</span>
+<span class="nc" id="L346">				addItem( stuff.weapon );</span>
+			}
+<span class="nc bnc" id="L348" title="All 2 branches missed.">			if (stuff.armor != null) {</span>
+<span class="nc" id="L349">				addItem( stuff.armor );</span>
+			}
+<span class="nc bnc" id="L351" title="All 2 branches missed.">			if (stuff.artifact != null) {</span>
+<span class="nc" id="L352">				addItem( stuff.artifact );</span>
+			}
+<span class="nc bnc" id="L354" title="All 2 branches missed.">			if (stuff.misc != null) {</span>
+<span class="nc" id="L355">				addItem( stuff.misc );</span>
+			}
+<span class="nc bnc" id="L357" title="All 2 branches missed.">			if (stuff.ring != null) {</span>
+<span class="nc" id="L358">				addItem( stuff.ring );</span>
+			}
+
+<span class="nc" id="L361">			pos = 0;</span>
+
+<span class="nc" id="L363">			int slotsActive = 0;</span>
+<span class="nc bnc" id="L364" title="All 2 branches missed.">			for (int i = 0; i &lt; QuickSlot.SIZE; i++){</span>
+<span class="nc bnc" id="L365" title="All 2 branches missed.">				if (Dungeon.quickslot.isNonePlaceholder(i)){</span>
+<span class="nc" id="L366">					slotsActive++;</span>
+				}
+			}
+
+<span class="nc" id="L370">			Trinket trinket = stuff.getItem(Trinket.class);</span>
+<span class="nc bnc" id="L371" title="All 2 branches missed.">			if (trinket != null){</span>
+<span class="nc" id="L372">				slotsActive++;</span>
+			}
+
+<span class="nc" id="L375">			float slotWidth = Math.min(28, ((WIDTH - slotsActive + 1) / (float)slotsActive));</span>
+
+<span class="nc bnc" id="L377" title="All 2 branches missed.">			for (int i = -1; i &lt; QuickSlot.SIZE; i++){</span>
+<span class="nc" id="L378">				Item item = null;</span>
+<span class="nc bnc" id="L379" title="All 2 branches missed.">				if (i == -1){</span>
+<span class="nc" id="L380">					item = trinket;</span>
+<span class="nc bnc" id="L381" title="All 2 branches missed.">				} else if (Dungeon.quickslot.isNonePlaceholder(i)) {</span>
+<span class="nc" id="L382">					item = Dungeon.quickslot.getItem(i);</span>
+				}
+<span class="nc bnc" id="L384" title="All 2 branches missed.">				if (item != null){</span>
+<span class="nc" id="L385">					QuickSlotButton slot = new QuickSlotButton(item);</span>
+
+<span class="nc" id="L387">					slot.setRect( pos, 120, slotWidth, 23 );</span>
+<span class="nc" id="L388">					PixelScene.align(slot);</span>
+
+<span class="nc" id="L390">					add(slot);</span>
+
+<span class="nc" id="L392">					pos += slotWidth + 1;</span>
+
+				}
+			}
+<span class="nc" id="L396">		}</span>
+		
+		private void addItem( Item item ) {
+<span class="nc" id="L399">			ItemButton slot = new ItemButton( item );</span>
+<span class="nc" id="L400">			slot.setRect( 0, pos, width, ItemButton.HEIGHT );</span>
+<span class="nc" id="L401">			add( slot );</span>
+			
+<span class="nc" id="L403">			pos += slot.height() + 1;</span>
+<span class="nc" id="L404">		}</span>
+	}
+	
+	private class BadgesTab extends Group {
+		
+<span class="nc" id="L409">		public BadgesTab() {</span>
+<span class="nc" id="L410">			super();</span>
+			
+<span class="nc" id="L412">			camera = WndRanking.this.camera;</span>
+
+			Component badges;
+<span class="nc bnc" id="L415" title="All 2 branches missed.">			if (Badges.filterReplacedBadges(false).size() &lt;= 8){</span>
+<span class="nc" id="L416">				badges = new BadgesList(false);</span>
+			} else {
+<span class="nc" id="L418">				badges = new BadgesGrid(false);</span>
+			}
+<span class="nc" id="L420">			add(badges);</span>
+<span class="nc" id="L421">			badges.setSize( WIDTH, HEIGHT );</span>
+<span class="nc" id="L422">		}</span>
+	}
+
+	private class ChallengesTab extends Group{
+
+<span class="nc" id="L427">		public ChallengesTab(){</span>
+<span class="nc" id="L428">			super();</span>
+
+<span class="nc" id="L430">			camera = WndRanking.this.camera;</span>
+
+<span class="nc" id="L432">			float pos = 0;</span>
+
+<span class="nc bnc" id="L434" title="All 2 branches missed.">			for (int i=0; i &lt; Challenges.NAME_IDS.length; i++) {</span>
+
+<span class="nc" id="L436">				final String challenge = Challenges.NAME_IDS[i];</span>
+
+<span class="nc" id="L438">				CheckBox cb = new CheckBox( Messages.titleCase(Messages.get(Challenges.class, challenge)) );</span>
+<span class="nc bnc" id="L439" title="All 2 branches missed.">				cb.checked( (Dungeon.challenges &amp; Challenges.MASKS[i]) != 0 );</span>
+<span class="nc" id="L440">				cb.active = false;</span>
+
+<span class="nc bnc" id="L442" title="All 2 branches missed.">				if (i &gt; 0) {</span>
+<span class="nc" id="L443">					pos += 1;</span>
+				}
+<span class="nc" id="L445">				cb.setRect( 0, pos, WIDTH-16, 15 );</span>
+
+<span class="nc" id="L447">				add( cb );</span>
+
+<span class="nc" id="L449">				IconButton info = new IconButton(Icons.get(Icons.INFO)){</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L452">						super.onClick();</span>
+<span class="nc" id="L453">						ShatteredPixelDungeon.scene().add(</span>
+<span class="nc" id="L454">								new WndMessage(Messages.get(Challenges.class, challenge+&quot;_desc&quot;))</span>
+						);
+<span class="nc" id="L456">					}</span>
+				};
+<span class="nc" id="L458">				info.setRect(cb.right(), pos, 16, 15);</span>
+<span class="nc" id="L459">				add(info);</span>
+
+<span class="nc" id="L461">				pos = cb.bottom();</span>
+			}
+<span class="nc" id="L463">		}</span>
+
+	}
+
+	private class ItemButton extends Button {
+		
+		public static final int HEIGHT	= 23;
+		
+		private Item item;
+		
+		private ItemSlot slot;
+		private ColorBlock bg;
+		private RenderedTextBlock name;
+		
+<span class="nc" id="L477">		public ItemButton( Item item ) {</span>
+			
+<span class="nc" id="L479">			super();</span>
+
+<span class="nc" id="L481">			this.item = item;</span>
+			
+<span class="nc" id="L483">			slot.item( item );</span>
+<span class="nc bnc" id="L484" title="All 4 branches missed.">			if (item.cursed &amp;&amp; item.cursedKnown) {</span>
+<span class="nc" id="L485">				bg.ra = +0.2f;</span>
+<span class="nc" id="L486">				bg.ga = -0.1f;</span>
+<span class="nc bnc" id="L487" title="All 2 branches missed.">			} else if (!item.isIdentified()) {</span>
+<span class="nc" id="L488">				bg.ra = 0.1f;</span>
+<span class="nc" id="L489">				bg.ba = 0.1f;</span>
+			}
+<span class="nc" id="L491">		}</span>
+		
+		@Override
+		protected void createChildren() {
+			
+<span class="nc" id="L496">			bg = new ColorBlock( 28, HEIGHT, 0x9953564D );</span>
+<span class="nc" id="L497">			add( bg );</span>
+			
+<span class="nc" id="L499">			slot = new ItemSlot();</span>
+<span class="nc" id="L500">			add( slot );</span>
+			
+<span class="nc" id="L502">			name = PixelScene.renderTextBlock( 7 );</span>
+<span class="nc" id="L503">			add( name );</span>
+			
+<span class="nc" id="L505">			super.createChildren();</span>
+<span class="nc" id="L506">		}</span>
+		
+		@Override
+		protected void layout() {
+<span class="nc" id="L510">			bg.x = x;</span>
+<span class="nc" id="L511">			bg.y = y;</span>
+			
+<span class="nc" id="L513">			slot.setRect( x, y, 28, HEIGHT );</span>
+<span class="nc" id="L514">			PixelScene.align(slot);</span>
+			
+<span class="nc" id="L516">			name.maxWidth((int)(width - slot.width() - 2));</span>
+<span class="nc" id="L517">			name.text(Messages.titleCase(item.name()));</span>
+<span class="nc" id="L518">			name.setPos(</span>
+<span class="nc" id="L519">					slot.right()+2,</span>
+<span class="nc" id="L520">					y + (height - name.height()) / 2</span>
+			);
+<span class="nc" id="L522">			PixelScene.align(name);</span>
+			
+<span class="nc" id="L524">			super.layout();</span>
+<span class="nc" id="L525">		}</span>
+		
+		@Override
+		protected void onPointerDown() {
+<span class="nc" id="L529">			bg.brightness( 1.5f );</span>
+<span class="nc" id="L530">			Sample.INSTANCE.play( Assets.Sounds.CLICK, 0.7f, 0.7f, 1.2f );</span>
+<span class="nc" id="L531">		}</span>
+		
+		protected void onPointerUp() {
+<span class="nc" id="L534">			bg.brightness( 1.0f );</span>
+<span class="nc" id="L535">		}</span>
+		
+		@Override
+		protected void onClick() {
+<span class="nc" id="L539">			Game.scene().add( new WndInfoItem( item ) );</span>
+<span class="nc" id="L540">		}</span>
+	}
+
+	private class QuickSlotButton extends ItemSlot{
+
+		private Item item;
+		private ColorBlock bg;
+
+<span class="nc" id="L548">		QuickSlotButton(Item item){</span>
+<span class="nc" id="L549">			super(item);</span>
+<span class="nc" id="L550">			this.item = item;</span>
+
+<span class="nc bnc" id="L552" title="All 4 branches missed.">			if (item.cursed &amp;&amp; item.cursedKnown) {</span>
+<span class="nc" id="L553">				bg.ra = +0.2f;</span>
+<span class="nc" id="L554">				bg.ga = -0.1f;</span>
+<span class="nc bnc" id="L555" title="All 2 branches missed.">			} else if (!item.isIdentified()) {</span>
+<span class="nc" id="L556">				bg.ra = 0.1f;</span>
+<span class="nc" id="L557">				bg.ba = 0.1f;</span>
+			}
+<span class="nc" id="L559">		}</span>
+
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L563">			bg = new ColorBlock( 1, 1, 0x9953564D );</span>
+<span class="nc" id="L564">			add( bg );</span>
+
+<span class="nc" id="L566">			super.createChildren();</span>
+<span class="nc" id="L567">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L571">			bg.x = x;</span>
+<span class="nc" id="L572">			bg.y = y;</span>
+
+<span class="nc" id="L574">			bg.size( width(), height() );</span>
+
+<span class="nc" id="L576">			super.layout();</span>
+<span class="nc" id="L577">		}</span>
+
+		@Override
+		protected void onPointerDown() {
+<span class="nc" id="L581">			bg.brightness( 1.5f );</span>
+<span class="nc" id="L582">			Sample.INSTANCE.play( Assets.Sounds.CLICK, 0.7f, 0.7f, 1.2f );</span>
+<span class="nc" id="L583">		}</span>
+
+		protected void onPointerUp() {
+<span class="nc" id="L586">			bg.brightness( 1.0f );</span>
+<span class="nc" id="L587">		}</span>
+
+		@Override
+		protected void onClick() {
+<span class="nc" id="L591">			Game.scene().add(new WndInfoItem(item));</span>
+<span class="nc" id="L592">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

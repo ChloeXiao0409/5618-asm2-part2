@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WandOfTransfusion.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.wands</a> &gt; <span class="el_source">WandOfTransfusion.java</span></div><h1>WandOfTransfusion.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.wands;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Charm;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Beam;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.BloodParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L53">public class WandOfTransfusion extends DamageWand {</span>
+
+	{
+<span class="nc" id="L56">		image = ItemSpriteSheet.WAND_TRANSFUSION;</span>
+
+<span class="nc" id="L58">		collisionProperties = Ballistica.PROJECTILE;</span>
+	}
+
+	@Override
+	public int min(int level) {
+<span class="nc" id="L63">		return 3 + level;</span>
+	}
+
+	@Override
+	public int max(int level) {
+<span class="nc" id="L68">		return 6 + 2*level;</span>
+	}
+
+<span class="nc" id="L71">	private boolean freeCharge = false;</span>
+
+	@Override
+	public void onZap(Ballistica beam) {
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		for (int c : beam.subPath(0, beam.dist))</span>
+<span class="nc" id="L77">			CellEmitter.center(c).burst( BloodParticle.BURST, 1 );</span>
+
+<span class="nc" id="L79">		int cell = beam.collisionPos;</span>
+
+<span class="nc" id="L81">		Char ch = Actor.findChar(cell);</span>
+
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if (ch instanceof Mob){</span>
+			
+<span class="nc" id="L85">			wandProc(ch, chargesPerCast());</span>
+			
+			//this wand does different things depending on the target.
+			
+			//heals/shields an ally or a charmed enemy while damaging self
+<span class="nc bnc" id="L90" title="All 4 branches missed.">			if (ch.alignment == Char.Alignment.ALLY || ch.buff(Charm.class) != null){</span>
+				
+				// 5% of max hp
+<span class="nc" id="L93">				int selfDmg = Math.round(curUser.HT*0.05f);</span>
+				
+<span class="nc" id="L95">				int healing = selfDmg + 3*buffedLvl();</span>
+<span class="nc" id="L96">				int shielding = (ch.HP + healing) - ch.HT;</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">				if (shielding &gt; 0){</span>
+<span class="nc" id="L98">					healing -= shielding;</span>
+<span class="nc" id="L99">					Buff.affect(ch, Barrier.class).setShield(shielding);</span>
+				} else {
+<span class="nc" id="L101">					shielding = 0;</span>
+				}
+				
+<span class="nc" id="L104">				ch.HP += healing;</span>
+				
+<span class="nc" id="L106">				ch.sprite.emitter().burst(Speck.factory(Speck.HEALING), 2 + buffedLvl() / 2);</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">				if (healing &gt; 0) {</span>
+<span class="nc" id="L108">					ch.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(healing), FloatingText.HEALING);</span>
+				}
+<span class="nc bnc" id="L110" title="All 2 branches missed.">				if (shielding &gt; 0){</span>
+<span class="nc" id="L111">					ch.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shielding), FloatingText.SHIELDING);</span>
+				}
+				
+<span class="nc bnc" id="L114" title="All 2 branches missed.">				if (!freeCharge) {</span>
+<span class="nc" id="L115">					damageHero(selfDmg);</span>
+				} else {
+<span class="nc" id="L117">					freeCharge = false;</span>
+				}
+
+			//for enemies...
+			//(or for mimics which are hiding, special case)
+<span class="nc bnc" id="L122" title="All 4 branches missed.">			} else if (ch.alignment == Char.Alignment.ENEMY || ch instanceof Mimic) {</span>
+
+				//grant a self-shield, and...
+<span class="nc" id="L125">				Buff.affect(curUser, Barrier.class).setShield((5 + buffedLvl()));</span>
+<span class="nc" id="L126">				curUser.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(5+buffedLvl()), FloatingText.SHIELDING);</span>
+				
+				//charms living enemies
+<span class="nc bnc" id="L129" title="All 2 branches missed.">				if (!ch.properties().contains(Char.Property.UNDEAD)) {</span>
+<span class="nc" id="L130">					Charm charm = Buff.affect(ch, Charm.class, Charm.DURATION/2f);</span>
+<span class="nc" id="L131">					charm.object = curUser.id();</span>
+<span class="nc" id="L132">					charm.ignoreHeroAllies = true;</span>
+<span class="nc" id="L133">					ch.sprite.centerEmitter().start( Speck.factory( Speck.HEART ), 0.2f, 3 );</span>
+				
+				//harms the undead
+<span class="nc" id="L136">				} else {</span>
+<span class="nc" id="L137">					ch.damage(damageRoll(), this);</span>
+<span class="nc" id="L138">					ch.sprite.emitter().start(ShadowParticle.UP, 0.05f, 10 + buffedLvl());</span>
+<span class="nc" id="L139">					Sample.INSTANCE.play(Assets.Sounds.BURNING);</span>
+				}
+
+			}
+			
+		}
+		
+<span class="nc" id="L146">	}</span>
+
+	//this wand costs health too
+	private void damageHero(int damage){
+		
+<span class="nc" id="L151">		curUser.damage(damage, this);</span>
+
+<span class="nc bnc" id="L153" title="All 2 branches missed.">		if (!curUser.isAlive()){</span>
+<span class="nc" id="L154">			Badges.validateDeathFromFriendlyMagic();</span>
+<span class="nc" id="L155">			Dungeon.fail( this );</span>
+<span class="nc" id="L156">			GLog.n( Messages.get(this, &quot;ondeath&quot;) );</span>
+		}
+<span class="nc" id="L158">	}</span>
+
+	@Override
+	public void onHit(MagesStaff staff, Char attacker, Char defender, int damage) {
+<span class="nc bnc" id="L162" title="All 4 branches missed.">		if (defender.buff(Charm.class) != null &amp;&amp; defender.buff(Charm.class).object == attacker.id()){</span>
+			//grants a free use of the staff and shields self
+<span class="nc" id="L164">			freeCharge = true;</span>
+<span class="nc" id="L165">			int shieldToGive = Math.round((2*(5 + buffedLvl()))*procChanceMultiplier(attacker));</span>
+<span class="nc" id="L166">			Buff.affect(attacker, Barrier.class).setShield(shieldToGive);</span>
+<span class="nc" id="L167">			attacker.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shieldToGive), FloatingText.SHIELDING);</span>
+<span class="nc" id="L168">			GLog.p( Messages.get(this, &quot;charged&quot;) );</span>
+<span class="nc" id="L169">			attacker.sprite.emitter().burst(BloodParticle.BURST, 20);</span>
+		}
+<span class="nc" id="L171">	}</span>
+
+	@Override
+	public void fx(Ballistica beam, Callback callback) {
+<span class="nc" id="L175">		curUser.sprite.parent.add(</span>
+<span class="nc" id="L176">				new Beam.HealthRay(curUser.sprite.center(), DungeonTilemap.raisedTileCenterToWorld(beam.collisionPos)));</span>
+<span class="nc" id="L177">		callback.call();</span>
+<span class="nc" id="L178">	}</span>
+
+	@Override
+	public void staffFx(MagesStaff.StaffParticle particle) {
+<span class="nc" id="L182">		particle.color( 0xCC0000 );</span>
+<span class="nc" id="L183">		particle.am = 0.6f;</span>
+<span class="nc" id="L184">		particle.setLifespan(1f);</span>
+<span class="nc" id="L185">		particle.speed.polar( Random.Float(PointF.PI2), 2f );</span>
+<span class="nc" id="L186">		particle.setSize( 1f, 2f);</span>
+<span class="nc" id="L187">		particle.radiateXY(0.5f);</span>
+<span class="nc" id="L188">	}</span>
+
+	@Override
+	public String statsDesc() {
+<span class="nc bnc" id="L192" title="All 2 branches missed.">		int selfDMG = Dungeon.hero != null ? Math.round(Dungeon.hero.HT*0.05f): 1;</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">		if (levelKnown)</span>
+<span class="nc" id="L194">			return Messages.get(this, &quot;stats_desc&quot;, selfDMG, selfDMG + 3*buffedLvl(), 5+buffedLvl(), min(), max());</span>
+		else
+<span class="nc" id="L196">			return Messages.get(this, &quot;stats_desc&quot;, selfDMG, selfDMG, 5, min(0), max(0));</span>
+	}
+
+	@Override
+	public String upgradeStat1(int level) {
+<span class="nc bnc" id="L201" title="All 2 branches missed.">		int selfDMG = Dungeon.hero != null ? Math.round(Dungeon.hero.HT*0.05f): 1;</span>
+<span class="nc" id="L202">		return Integer.toString(selfDMG + 3*level);</span>
+	}
+
+	@Override
+	public String upgradeStat2(int level) {
+<span class="nc" id="L207">		return Integer.toString(5 + level);</span>
+	}
+
+	@Override
+	public String upgradeStat3(int level) {
+<span class="nc" id="L212">		return super.upgradeStat1(level); //damage</span>
+	}
+
+	private static final String FREECHARGE = &quot;freecharge&quot;;
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L219">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L220">		freeCharge = bundle.getBoolean( FREECHARGE );</span>
+<span class="nc" id="L221">	}</span>
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L225">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L226">		bundle.put( FREECHARGE, freeCharge );</span>
+<span class="nc" id="L227">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

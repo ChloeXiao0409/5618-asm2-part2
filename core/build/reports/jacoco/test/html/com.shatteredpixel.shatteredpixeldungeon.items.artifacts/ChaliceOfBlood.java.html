@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChaliceOfBlood.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.artifacts</a> &gt; <span class="el_source">ChaliceOfBlood.java</span></div><h1>ChaliceOfBlood.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfLivingEarth;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Earthroot;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L48">public class ChaliceOfBlood extends Artifact {</span>
+
+	{
+<span class="nc" id="L51">		image = ItemSpriteSheet.ARTIFACT_CHALICE1;</span>
+
+<span class="nc" id="L53">		levelCap = 10;</span>
+<span class="nc" id="L54">	}</span>
+
+	public static final String AC_PRICK = &quot;PRICK&quot;;
+
+	@Override
+	public ArrayList&lt;String&gt; actions( Hero hero ) {
+<span class="nc" id="L60">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if (isEquipped( hero )</span>
+<span class="nc bnc" id="L62" title="All 4 branches missed.">				&amp;&amp; level() &lt; levelCap</span>
+				&amp;&amp; !cursed
+<span class="nc bnc" id="L64" title="All 2 branches missed.">				&amp;&amp; !hero.isInvulnerable(getClass())</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">				&amp;&amp; hero.buff(MagicImmune.class) == null)</span>
+<span class="nc" id="L66">			actions.add(AC_PRICK);</span>
+<span class="nc" id="L67">		return actions;</span>
+	}
+
+	@Override
+	public void execute(Hero hero, String action ) {
+<span class="nc" id="L72">		super.execute(hero, action);</span>
+
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		if (action.equals(AC_PRICK)){</span>
+
+<span class="nc" id="L76">			int damage = 5 + 3*(level()*level());</span>
+
+<span class="nc bnc" id="L78" title="All 2 branches missed.">			if (damage &gt; hero.HP*0.75) {</span>
+
+<span class="nc" id="L80">				GameScene.show(</span>
+					new WndOptions(new ItemSprite(this),
+<span class="nc" id="L82">							Messages.titleCase(name()),</span>
+<span class="nc" id="L83">							Messages.get(this, &quot;prick_warn&quot;),</span>
+<span class="nc" id="L84">							Messages.get(this, &quot;yes&quot;),</span>
+<span class="nc" id="L85">							Messages.get(this, &quot;no&quot;)) {</span>
+						@Override
+						protected void onSelect(int index) {
+<span class="nc bnc" id="L88" title="All 2 branches missed.">							if (index == 0)</span>
+<span class="nc" id="L89">								prick(Dungeon.hero);</span>
+<span class="nc" id="L90">						}</span>
+					}
+				);
+
+			} else {
+<span class="nc" id="L95">				prick(hero);</span>
+			}
+		}
+<span class="nc" id="L98">	}</span>
+
+	private void prick(Hero hero){
+<span class="nc" id="L101">		int damage = 5 + 3*(level()*level());</span>
+
+<span class="nc" id="L103">		Earthroot.Armor armor = hero.buff(Earthroot.Armor.class);</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">		if (armor != null) {</span>
+<span class="nc" id="L105">			damage = armor.absorb(damage);</span>
+		}
+
+<span class="nc" id="L108">		WandOfLivingEarth.RockArmor rockArmor = hero.buff(WandOfLivingEarth.RockArmor.class);</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		if (rockArmor != null) {</span>
+<span class="nc" id="L110">			damage = rockArmor.absorb(damage);</span>
+		}
+
+<span class="nc" id="L113">		damage -= hero.drRoll();</span>
+
+<span class="nc" id="L115">		hero.sprite.operate( hero.pos );</span>
+<span class="nc" id="L116">		hero.busy();</span>
+<span class="nc" id="L117">		hero.spend(3f);</span>
+<span class="nc" id="L118">		GLog.w( Messages.get(this, &quot;onprick&quot;) );</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">		if (damage &lt;= 0){</span>
+<span class="nc" id="L120">			damage = 1;</span>
+		} else {
+<span class="nc" id="L122">			Sample.INSTANCE.play(Assets.Sounds.CURSED);</span>
+<span class="nc" id="L123">			hero.sprite.emitter().burst( ShadowParticle.CURSE, 4+(damage/10) );</span>
+		}
+
+<span class="nc" id="L126">		hero.damage(damage, this);</span>
+
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		if (!hero.isAlive()) {</span>
+<span class="nc" id="L129">			Badges.validateDeathFromFriendlyMagic();</span>
+<span class="nc" id="L130">			Dungeon.fail( this );</span>
+<span class="nc" id="L131">			GLog.n( Messages.get(this, &quot;ondeath&quot;) );</span>
+		} else {
+<span class="nc" id="L133">			upgrade();</span>
+<span class="nc" id="L134">			Catalog.countUse(getClass());</span>
+		}
+<span class="nc" id="L136">	}</span>
+
+	@Override
+	public Item upgrade() {
+<span class="nc bnc" id="L140" title="All 2 branches missed.">		if (level() &gt;= 6)</span>
+<span class="nc" id="L141">			image = ItemSpriteSheet.ARTIFACT_CHALICE3;</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">		else if (level() &gt;= 2)</span>
+<span class="nc" id="L143">			image = ItemSpriteSheet.ARTIFACT_CHALICE2;</span>
+<span class="nc" id="L144">		return super.upgrade();</span>
+	}
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L149">		super.restoreFromBundle(bundle);</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">		if (level() &gt;= 7) image = ItemSpriteSheet.ARTIFACT_CHALICE3;</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">		else if (level() &gt;= 3) image = ItemSpriteSheet.ARTIFACT_CHALICE2;</span>
+<span class="nc" id="L152">	}</span>
+
+	@Override
+	protected ArtifactBuff passiveBuff() {
+<span class="nc" id="L156">		return new chaliceRegen();</span>
+	}
+	
+	@Override
+	public void charge(Hero target, float amount) {
+<span class="nc bnc" id="L161" title="All 4 branches missed.">		if (cursed || target.buff(MagicImmune.class) != null) return;</span>
+
+		//grants 5 turns of healing up-front, if hero isn't starving
+<span class="nc bnc" id="L164" title="All 2 branches missed.">		if (target.isStarving()) return;</span>
+
+<span class="nc" id="L166">		float healDelay = 10f - (1.33f + level()*0.667f);</span>
+<span class="nc" id="L167">		healDelay /= amount;</span>
+<span class="nc" id="L168">		float heal = 5f/healDelay;</span>
+		//effectively 0.5/1/1.5/2/2.5 HP per turn at +0/+6/+8/+9/+10
+<span class="nc bnc" id="L170" title="All 2 branches missed.">		if (Random.Float() &lt; heal%1){</span>
+<span class="nc" id="L171">			heal++;</span>
+		}
+<span class="nc bnc" id="L173" title="All 4 branches missed.">		if (heal &gt;= 1f &amp;&amp; target.HP &lt; target.HT) {</span>
+<span class="nc" id="L174">			target.HP = Math.min(target.HT, target.HP + (int)heal);</span>
+<span class="nc" id="L175">			target.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString((int)heal), FloatingText.HEALING);</span>
+
+<span class="nc bnc" id="L177" title="All 4 branches missed.">			if (target.HP == target.HT &amp;&amp; target instanceof Hero) {</span>
+<span class="nc" id="L178">				((Hero) target).resting = false;</span>
+			}
+		}
+<span class="nc" id="L181">	}</span>
+	
+	@Override
+	public String desc() {
+<span class="nc" id="L185">		String desc = super.desc();</span>
+
+<span class="nc bnc" id="L187" title="All 2 branches missed.">		if (isEquipped (Dungeon.hero)){</span>
+<span class="nc" id="L188">			desc += &quot;\n\n&quot;;</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">			if (cursed)</span>
+<span class="nc" id="L190">				desc += Messages.get(this, &quot;desc_cursed&quot;);</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">			else if (level() == 0)</span>
+<span class="nc" id="L192">				desc += Messages.get(this, &quot;desc_1&quot;);</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">			else if (level() &lt; levelCap)</span>
+<span class="nc" id="L194">				desc += Messages.get(this, &quot;desc_2&quot;);</span>
+			else
+<span class="nc" id="L196">				desc += Messages.get(this, &quot;desc_3&quot;);</span>
+		}
+
+<span class="nc" id="L199">		return desc;</span>
+	}
+
+<span class="nc" id="L202">	public class chaliceRegen extends ArtifactBuff {</span>
+		//see Regeneration.class for effect
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

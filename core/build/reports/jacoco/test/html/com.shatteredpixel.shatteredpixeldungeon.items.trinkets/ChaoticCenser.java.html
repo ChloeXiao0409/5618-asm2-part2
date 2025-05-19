@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChaoticCenser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.trinkets</a> &gt; <span class="el_source">ChaoticCenser.java</span></div><h1>ChaoticCenser.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.trinkets;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blizzard;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ConfusionGas;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.CorrosiveGas;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Inferno;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Regrowth;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SmokeScreen;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.StenchGas;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.StormCloud;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ToxicGas;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.TargetHealthIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.BArray;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.HashMap;
+
+<span class="nc" id="L56">public class ChaoticCenser extends Trinket {</span>
+
+	{
+<span class="nc" id="L59">		image = ItemSpriteSheet.CHAOTIC_CENSER;</span>
+<span class="nc" id="L60">	}</span>
+
+	@Override
+	protected int upgradeEnergyCost() {
+		//6 -&gt; 8(14) -&gt; 10(24) -&gt; 12(36)
+<span class="nc" id="L65">		return 6+2*level();</span>
+	}
+
+	@Override
+	public String statsDesc() {
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		if (isIdentified()){</span>
+<span class="nc" id="L71">			return Messages.get(this, &quot;stats_desc&quot;, averageTurnsUntilGas(buffedLvl()));</span>
+		} else {
+<span class="nc" id="L73">			return Messages.get(this, &quot;stats_desc&quot;, averageTurnsUntilGas(0));</span>
+		}
+	}
+
+	public static int averageTurnsUntilGas(){
+<span class="nc" id="L78">		return averageTurnsUntilGas(trinketLevel(ChaoticCenser.class));</span>
+	}
+
+	public static int averageTurnsUntilGas(int level){
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		if (level &lt;= -1){</span>
+<span class="nc" id="L83">			return -1;</span>
+		} else {
+<span class="nc" id="L85">			return 300 / (level + 1);</span>
+		}
+	}
+
+<span class="nc" id="L89">	public static class CenserGasTracker extends Buff {</span>
+
+<span class="nc" id="L91">		private int left = Integer.MAX_VALUE;</span>
+<span class="nc" id="L92">		private int safeAreaDelay = 100;</span>
+
+		@Override
+		public boolean act() {
+
+<span class="nc" id="L97">			int avgTurns = averageTurnsUntilGas();</span>
+
+<span class="nc bnc" id="L99" title="All 2 branches missed.">			if (avgTurns == -1){</span>
+<span class="nc" id="L100">				spend(Random.NormalIntRange(1, 5));</span>
+<span class="nc" id="L101">				return true;</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">			} else if (left &gt; avgTurns*1.2f){</span>
+<span class="nc" id="L103">				left = Random.IntRange((int) (avgTurns*0.833f), (int) (avgTurns*1.2f));</span>
+			}
+
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			if (left &lt;= 0) {</span>
+
+<span class="nc" id="L108">				Char enemy = null;</span>
+
+<span class="nc bnc" id="L110" title="All 4 branches missed.">				if (TargetHealthIndicator.instance != null &amp;&amp; TargetHealthIndicator.instance.isVisible()</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">						&amp;&amp; TargetHealthIndicator.instance.target() != null</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">						&amp;&amp; TargetHealthIndicator.instance.target().alignment == Char.Alignment.ENEMY</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">						&amp;&amp; TargetHealthIndicator.instance.target().isAlive()) {</span>
+
+<span class="nc bnc" id="L115" title="All 2 branches missed.">					if (produceGas(TargetHealthIndicator.instance.target())){</span>
+<span class="nc" id="L116">						Sample.INSTANCE.play(Assets.Sounds.GAS, 0.5f);</span>
+<span class="nc" id="L117">						Dungeon.hero.interrupt();</span>
+<span class="nc" id="L118">						left += Random.IntRange((int) (avgTurns * 0.9f), (int) (avgTurns * 1.1f));</span>
+					}
+				}
+
+			}
+
+			//buff ticks an average of every 3 turns
+<span class="nc" id="L125">			int delay = Random.NormalIntRange(1, 3);</span>
+<span class="nc" id="L126">			spend(delay);</span>
+<span class="nc" id="L127">			left = (int)Math.max(left-delay, -avgTurns/3f);</span>
+
+<span class="nc" id="L129">			return true;</span>
+		}
+
+<span class="nc" id="L132">		private static String LEFT = &quot;left&quot;;</span>
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L136">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L137">			bundle.put(LEFT, left);</span>
+<span class="nc" id="L138">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L142">			super.restoreFromBundle(bundle);</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">			if (bundle.contains(LEFT)){</span>
+<span class="nc" id="L144">				left = bundle.getInt(LEFT);</span>
+			}
+<span class="nc" id="L146">		}</span>
+	}
+
+	private static boolean produceGas( Char target ){
+<span class="nc" id="L150">		int level = trinketLevel(ChaoticCenser.class);</span>
+
+<span class="nc bnc" id="L152" title="All 4 branches missed.">		if (level &lt; 0 || level &gt; 3){</span>
+<span class="nc" id="L153">			return false;</span>
+		}
+
+		Class&lt;?extends Blob&gt; gasToSpawn;
+		float gasQuantity;
+<span class="nc bnc" id="L158" title="All 3 branches missed.">		switch (Random.chances(GAS_CAT_CHANCES[level])){</span>
+			case 0: default:
+				do {
+<span class="nc" id="L161">					gasToSpawn = Random.element(COMMON_GASSES.keySet());</span>
+<span class="nc bnc" id="L162" title="All 4 branches missed.">				} while (!Regeneration.regenOn() &amp;&amp; gasToSpawn == Regrowth.class);</span>
+<span class="nc" id="L163">				gasQuantity = COMMON_GASSES.get(gasToSpawn);</span>
+<span class="nc" id="L164">				break;</span>
+			case 1:
+<span class="nc" id="L166">				gasToSpawn = Random.element(UNCOMMON_GASSES.keySet());</span>
+<span class="nc" id="L167">				gasQuantity = UNCOMMON_GASSES.get(gasToSpawn);</span>
+<span class="nc" id="L168">				break;</span>
+			case 2:
+<span class="nc" id="L170">				gasToSpawn = Random.element(RARE_GASSES.keySet());</span>
+<span class="nc" id="L171">				gasQuantity = RARE_GASSES.get(gasToSpawn);</span>
+				break;
+		}
+
+<span class="nc" id="L175">		HashMap&lt;Integer, Float&gt; candidateCells = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L176">		PathFinder.buildDistanceMap(Dungeon.hero.pos, BArray.not(Dungeon.level.solid, null), 6);</span>
+
+		//spawn gas in a random visible cell 2-6 tiles away
+<span class="nc bnc" id="L179" title="All 2 branches missed.">		for (int i = 0; i &lt; Dungeon.level.length(); i++){</span>
+<span class="nc bnc" id="L180" title="All 4 branches missed.">			if (Dungeon.level.heroFOV[i] &amp;&amp; PathFinder.distance[i] &lt; Integer.MAX_VALUE) {</span>
+<span class="nc bnc" id="L181" title="All 4 branches missed.">				if (PathFinder.distance[i] &gt;= 2 &amp;&amp; PathFinder.distance[i] &lt;= 6) {</span>
+<span class="nc" id="L182">					candidateCells.put(i, 0f);</span>
+				}
+			}
+		}
+
+		//strongly prefer cells closer to target
+<span class="nc" id="L188">		int targetpos = target.pos;</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">		if (Dungeon.level.trueDistance(target.pos, Dungeon.hero.pos) &gt;= 4){</span>
+			//if target is a distance from the hero, aim in front of them instead
+<span class="nc bnc" id="L191" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">				while (!Dungeon.level.solid[targetpos+i]</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">						&amp;&amp; Dungeon.level.trueDistance(target.pos+i, Dungeon.hero.pos) &lt; Dungeon.level.trueDistance(targetpos, Dungeon.hero.pos)){</span>
+<span class="nc" id="L194">					targetpos = target.pos+i;</span>
+				}
+			}
+		}
+<span class="nc" id="L198">		float closest = 100;</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">		for (int cell : candidateCells.keySet()){</span>
+<span class="nc" id="L200">			float dist = Dungeon.level.distance(cell, targetpos);</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">			if (dist &lt; closest){</span>
+<span class="nc" id="L202">				closest = dist;</span>
+			}
+<span class="nc" id="L204">		}</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">		for (int cell : candidateCells.keySet()){</span>
+<span class="nc" id="L206">			float dist = Dungeon.level.distance(cell, targetpos);</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">			if (dist - closest == 0) {</span>
+<span class="nc" id="L208">				candidateCells.put(cell, 8f);</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">			} else if (dist - closest &lt;= 1) {</span>
+<span class="nc" id="L210">				candidateCells.put(cell, 1f);</span>
+			} else {
+<span class="nc" id="L212">				candidateCells.put(cell, 0f);</span>
+			}
+<span class="nc" id="L214">		}</span>
+
+<span class="nc bnc" id="L216" title="All 2 branches missed.">		if (!candidateCells.isEmpty()) {</span>
+<span class="nc" id="L217">			Integer targetCell = Random.chances(candidateCells);</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">			if (targetCell != null) {</span>
+<span class="nc" id="L219">				Buff.affect(Dungeon.hero, GasSpewer.class, Dungeon.hero.cooldown()).set(targetCell, gasToSpawn, (int)gasQuantity);</span>
+<span class="nc" id="L220">				GLog.w(Messages.get(ChaoticCenser.class, &quot;spew&quot;, Messages.titleCase(Messages.get(gasToSpawn, &quot;name&quot;)) ));</span>
+<span class="nc bnc" id="L221" title="All 4 branches missed.">				if (target.sprite != null &amp;&amp; target.sprite.parent != null) {</span>
+<span class="nc" id="L222">					target.sprite.parent.addToBack(new TargetedCell(targetCell, 0xFF0000));</span>
+				}
+<span class="nc" id="L224">				return true;</span>
+			}
+		}
+
+<span class="nc" id="L228">		return false;</span>
+
+	}
+
+<span class="nc" id="L232">	public static class GasSpewer extends FlavourBuff {</span>
+
+		private int targetCell;
+
+		private int depth;
+		private int branch;
+
+		private Class&lt;?extends Blob&gt; gasType;
+		private int gasQuantity;
+
+		public void set( int targetCell, Class&lt;?extends Blob&gt; gasType, int gasQuantity){
+<span class="nc" id="L243">			this.targetCell = targetCell;</span>
+
+<span class="nc" id="L245">			depth = Dungeon.depth;</span>
+<span class="nc" id="L246">			branch = Dungeon.branch;</span>
+
+<span class="nc" id="L248">			this.gasType = gasType;</span>
+<span class="nc" id="L249">			this.gasQuantity = gasQuantity;</span>
+<span class="nc" id="L250">		}</span>
+
+		@Override
+		public boolean act() {
+
+<span class="nc bnc" id="L255" title="All 4 branches missed.">			if (depth == Dungeon.depth &amp;&amp; branch == Dungeon.branch){</span>
+<span class="nc" id="L256">				GameScene.add(Blob.seed(targetCell, gasQuantity, gasType));</span>
+
+				//corrosion starts at the same level as potion of corrosive gas
+<span class="nc bnc" id="L259" title="All 2 branches missed.">				if (gasType == CorrosiveGas.class){</span>
+<span class="nc" id="L260">					((CorrosiveGas)Dungeon.level.blobs.get(CorrosiveGas.class)).setStrength( 2 + Dungeon.scalingDepth()/5, ChaoticCenser.class);</span>
+				}
+
+<span class="nc" id="L263">				MagicMissile.boltFromChar(Dungeon.hero.sprite.parent, MISSILE_VFX.get(gasType), Dungeon.hero.sprite, targetCell, null);</span>
+<span class="nc" id="L264">				Sample.INSTANCE.play(Assets.Sounds.GAS);</span>
+			}
+
+<span class="nc" id="L267">			detach();</span>
+<span class="nc" id="L268">			return true;</span>
+		}
+
+		private static final String CELL = &quot;cell&quot;;
+		private static final String DEPTH = &quot;depth&quot;;
+		private static final String BRANCH = &quot;branch&quot;;
+		private static final String GAS_TYPE = &quot;gas_type&quot;;
+		private static final String GAS_QUANTITY = &quot;gas_quantity&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L279">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L280">			bundle.put(CELL, targetCell);</span>
+<span class="nc" id="L281">			bundle.put(DEPTH, depth);</span>
+<span class="nc" id="L282">			bundle.put(BRANCH, branch);</span>
+<span class="nc" id="L283">			bundle.put(GAS_TYPE, gasType);</span>
+<span class="nc" id="L284">			bundle.put(GAS_QUANTITY, gasQuantity);</span>
+<span class="nc" id="L285">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L289">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L290">			targetCell = bundle.getInt(CELL);</span>
+<span class="nc" id="L291">			depth = bundle.getInt(DEPTH);</span>
+<span class="nc" id="L292">			branch = bundle.getInt(BRANCH);</span>
+<span class="nc" id="L293">			gasType = bundle.getClass(GAS_TYPE);</span>
+<span class="nc" id="L294">			gasQuantity = bundle.getInt(GAS_QUANTITY);</span>
+<span class="nc" id="L295">		}</span>
+	}
+
+<span class="nc" id="L298">	private static final float[][] GAS_CAT_CHANCES = new float[4][3];</span>
+	static {
+<span class="nc" id="L300">		GAS_CAT_CHANCES[0] = new float[]{70, 25, 5};</span>
+<span class="nc" id="L301">		GAS_CAT_CHANCES[1] = new float[]{60, 30, 10};</span>
+<span class="nc" id="L302">		GAS_CAT_CHANCES[2] = new float[]{50, 35, 15};</span>
+<span class="nc" id="L303">		GAS_CAT_CHANCES[3] = new float[]{40, 40, 20};</span>
+	}
+
+<span class="nc" id="L306">	private static final HashMap&lt;Class&lt;? extends Blob&gt;, Float&gt; COMMON_GASSES = new HashMap&lt;&gt;();</span>
+	static {
+<span class="nc" id="L308">		COMMON_GASSES.put(ToxicGas.class, 300f);</span>
+<span class="nc" id="L309">		COMMON_GASSES.put(ConfusionGas.class, 300f);</span>
+<span class="nc" id="L310">		COMMON_GASSES.put(Regrowth.class, 200f);</span>
+	}
+
+<span class="nc" id="L313">	private static final HashMap&lt;Class&lt;? extends Blob&gt;, Float&gt; UNCOMMON_GASSES = new HashMap&lt;&gt;();</span>
+	static {
+<span class="nc" id="L315">		UNCOMMON_GASSES.put(StormCloud.class, 300f);</span>
+<span class="nc" id="L316">		UNCOMMON_GASSES.put(SmokeScreen.class, 300f);</span>
+<span class="nc" id="L317">		UNCOMMON_GASSES.put(StenchGas.class, 200f);</span>
+	}
+
+<span class="nc" id="L320">	private static final HashMap&lt;Class&lt;? extends Blob&gt;, Float&gt; RARE_GASSES = new HashMap&lt;&gt;();</span>
+	static {
+<span class="nc" id="L322">		RARE_GASSES.put(Inferno.class, 300f);</span>
+<span class="nc" id="L323">		RARE_GASSES.put(Blizzard.class, 300f);</span>
+<span class="nc" id="L324">		RARE_GASSES.put(CorrosiveGas.class, 200f);</span>
+	}
+
+<span class="nc" id="L327">	private static final HashMap&lt;Class&lt;? extends Blob&gt;, Integer&gt; MISSILE_VFX = new HashMap&lt;&gt;();</span>
+	static {
+<span class="nc" id="L329">		MISSILE_VFX.put(ToxicGas.class, MagicMissile.SPECK + Speck.TOXIC);</span>
+<span class="nc" id="L330">		MISSILE_VFX.put(ConfusionGas.class, MagicMissile.SPECK + Speck.CONFUSION);</span>
+<span class="nc" id="L331">		MISSILE_VFX.put(Regrowth.class, MagicMissile.FOLIAGE);</span>
+<span class="nc" id="L332">		MISSILE_VFX.put(StormCloud.class, MagicMissile.SPECK + Speck.STORM);</span>
+<span class="nc" id="L333">		MISSILE_VFX.put(SmokeScreen.class, MagicMissile.SPECK + Speck.SMOKE);</span>
+<span class="nc" id="L334">		MISSILE_VFX.put(StenchGas.class, MagicMissile.SPECK + Speck.STENCH);</span>
+<span class="nc" id="L335">		MISSILE_VFX.put(Inferno.class, MagicMissile.SPECK + Speck.INFERNO);</span>
+<span class="nc" id="L336">		MISSILE_VFX.put(Blizzard.class, MagicMissile.SPECK + Speck.BLIZZARD);</span>
+<span class="nc" id="L337">		MISSILE_VFX.put(CorrosiveGas.class, MagicMissile.SPECK + Speck.CORROSION);</span>
+<span class="nc" id="L338">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

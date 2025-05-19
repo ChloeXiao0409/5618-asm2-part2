@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScrollOfUpgrade.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.scrolls</a> &gt; <span class="el_source">ScrollOfUpgrade.java</span></div><h1>ScrollOfUpgrade.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.scrolls;
+
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Degrade;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndUpgrade;
+
+<span class="nc" id="L44">public class ScrollOfUpgrade extends InventoryScroll {</span>
+	
+	{
+<span class="nc" id="L47">		icon = ItemSpriteSheet.Icons.SCROLL_UPGRADE;</span>
+<span class="nc" id="L48">		preferredBag = Belongings.Backpack.class;</span>
+
+<span class="nc" id="L50">		unique = true;</span>
+
+<span class="nc" id="L52">		talentFactor = 2f;</span>
+<span class="nc" id="L53">	}</span>
+
+	@Override
+	protected boolean usableOnItem(Item item) {
+<span class="nc" id="L57">		return item.isUpgradable();</span>
+	}
+
+	@Override
+	protected void onItemSelected( Item item ) {
+
+<span class="nc" id="L63">		GameScene.show(new WndUpgrade(this, item, identifiedByUse));</span>
+
+<span class="nc" id="L65">	}</span>
+
+	public void reShowSelector(boolean force){
+<span class="nc" id="L68">		identifiedByUse = force;</span>
+<span class="nc" id="L69">		curItem = this;</span>
+<span class="nc" id="L70">		GameScene.selectItem(itemSelector);</span>
+<span class="nc" id="L71">	}</span>
+
+	public Item upgradeItem( Item item ){
+<span class="nc" id="L74">		upgrade( curUser );</span>
+
+<span class="nc" id="L76">		Degrade.detach( curUser, Degrade.class );</span>
+
+		//logic for telling the user when item properties change from upgrades
+		//...yes this is rather messy
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		if (item instanceof Weapon){</span>
+<span class="nc" id="L81">			Weapon w = (Weapon) item;</span>
+<span class="nc" id="L82">			boolean wasCursed = w.cursed;</span>
+<span class="nc" id="L83">			boolean wasHardened = w.enchantHardened;</span>
+<span class="nc" id="L84">			boolean hadCursedEnchant = w.hasCurseEnchant();</span>
+<span class="nc" id="L85">			boolean hadGoodEnchant = w.hasGoodEnchant();</span>
+
+<span class="nc" id="L87">			item = w.upgrade();</span>
+
+<span class="nc bnc" id="L89" title="All 6 branches missed.">			if (w.cursedKnown &amp;&amp; hadCursedEnchant &amp;&amp; !w.hasCurseEnchant()){</span>
+<span class="nc" id="L90">				removeCurse( Dungeon.hero );</span>
+<span class="nc bnc" id="L91" title="All 6 branches missed.">			} else if (w.cursedKnown &amp;&amp; wasCursed &amp;&amp; !w.cursed){</span>
+<span class="nc" id="L92">				weakenCurse( Dungeon.hero );</span>
+			}
+<span class="nc bnc" id="L94" title="All 4 branches missed.">			if (wasHardened &amp;&amp; !w.enchantHardened){</span>
+<span class="nc" id="L95">				GLog.w( Messages.get(Weapon.class, &quot;hardening_gone&quot;) );</span>
+<span class="nc bnc" id="L96" title="All 4 branches missed.">			} else if (hadGoodEnchant &amp;&amp; !w.hasGoodEnchant()){</span>
+<span class="nc" id="L97">				GLog.w( Messages.get(Weapon.class, &quot;incompatible&quot;) );</span>
+			}
+
+<span class="nc bnc" id="L100" title="All 2 branches missed.">		} else if (item instanceof Armor){</span>
+<span class="nc" id="L101">			Armor a = (Armor) item;</span>
+<span class="nc" id="L102">			boolean wasCursed = a.cursed;</span>
+<span class="nc" id="L103">			boolean wasHardened = a.glyphHardened;</span>
+<span class="nc" id="L104">			boolean hadCursedGlyph = a.hasCurseGlyph();</span>
+<span class="nc" id="L105">			boolean hadGoodGlyph = a.hasGoodGlyph();</span>
+
+<span class="nc" id="L107">			item = a.upgrade();</span>
+
+<span class="nc bnc" id="L109" title="All 6 branches missed.">			if (a.cursedKnown &amp;&amp; hadCursedGlyph &amp;&amp; !a.hasCurseGlyph()){</span>
+<span class="nc" id="L110">				removeCurse( Dungeon.hero );</span>
+<span class="nc bnc" id="L111" title="All 6 branches missed.">			} else if (a.cursedKnown &amp;&amp; wasCursed &amp;&amp; !a.cursed){</span>
+<span class="nc" id="L112">				weakenCurse( Dungeon.hero );</span>
+			}
+<span class="nc bnc" id="L114" title="All 4 branches missed.">			if (wasHardened &amp;&amp; !a.glyphHardened){</span>
+<span class="nc" id="L115">				GLog.w( Messages.get(Armor.class, &quot;hardening_gone&quot;) );</span>
+<span class="nc bnc" id="L116" title="All 4 branches missed.">			} else if (hadGoodGlyph &amp;&amp; !a.hasGoodGlyph()){</span>
+<span class="nc" id="L117">				GLog.w( Messages.get(Armor.class, &quot;incompatible&quot;) );</span>
+			}
+
+<span class="nc bnc" id="L120" title="All 4 branches missed.">		} else if (item instanceof Wand || item instanceof Ring) {</span>
+<span class="nc" id="L121">			boolean wasCursed = item.cursed;</span>
+
+<span class="nc" id="L123">			item = item.upgrade();</span>
+
+<span class="nc bnc" id="L125" title="All 6 branches missed.">			if (item.cursedKnown &amp;&amp; wasCursed &amp;&amp; !item.cursed){</span>
+<span class="nc" id="L126">				removeCurse( Dungeon.hero );</span>
+			}
+
+<span class="nc" id="L129">		} else {</span>
+<span class="nc" id="L130">			item = item.upgrade();</span>
+		}
+
+<span class="nc" id="L133">		Badges.validateItemLevelAquired( item );</span>
+<span class="nc" id="L134">		Statistics.upgradesUsed++;</span>
+<span class="nc" id="L135">		Badges.validateMageUnlock();</span>
+
+<span class="nc" id="L137">		Catalog.countUse(item.getClass());</span>
+
+<span class="nc" id="L139">		return item;</span>
+	}
+	
+	public static void upgrade( Hero hero ) {
+<span class="nc" id="L143">		hero.sprite.emitter().start( Speck.factory( Speck.UP ), 0.2f, 3 );</span>
+<span class="nc" id="L144">	}</span>
+
+	public static void weakenCurse( Hero hero ){
+<span class="nc" id="L147">		GLog.p( Messages.get(ScrollOfUpgrade.class, &quot;weaken_curse&quot;) );</span>
+<span class="nc" id="L148">		hero.sprite.emitter().start( ShadowParticle.UP, 0.05f, 5 );</span>
+<span class="nc" id="L149">	}</span>
+
+	public static void removeCurse( Hero hero ){
+<span class="nc" id="L152">		GLog.p( Messages.get(ScrollOfUpgrade.class, &quot;remove_curse&quot;) );</span>
+<span class="nc" id="L153">		hero.sprite.emitter().start( ShadowParticle.UP, 0.05f, 10 );</span>
+<span class="nc" id="L154">		Badges.validateClericUnlock();</span>
+<span class="nc" id="L155">	}</span>
+	
+	@Override
+	public int value() {
+<span class="nc bnc" id="L159" title="All 2 branches missed.">		return isKnown() ? 50 * quantity : super.value();</span>
+	}
+
+	@Override
+	public int energyVal() {
+<span class="nc bnc" id="L164" title="All 2 branches missed.">		return isKnown() ? 10 * quantity : super.energyVal();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

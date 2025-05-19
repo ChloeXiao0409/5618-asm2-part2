@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SuperNovaTracker.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.buffs</a> &gt; <span class="el_source">SuperNovaTracker.java</span></div><h1>SuperNovaTracker.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.buffs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
+import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.ShadowCaster;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Halo;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Point;
+import com.watabou.utils.PointF;
+
+<span class="nc" id="L43">public class SuperNovaTracker extends Buff {</span>
+
+	public int pos;
+<span class="nc" id="L46">	private int depth = Dungeon.depth;</span>
+<span class="nc" id="L47">	private int branch = Dungeon.branch;</span>
+
+<span class="nc" id="L49">	private int turnsLeft = 10;</span>
+<span class="nc" id="L50">	public boolean harmsAllies = true;</span>
+
+	private boolean[] fieldOfView;
+	private NovaVFX halo;
+
+	private static final int DIST = 8;
+
+	@Override
+	public boolean act() {
+
+<span class="nc bnc" id="L60" title="All 4 branches missed.">		if (branch != Dungeon.branch || depth != Dungeon.depth){</span>
+<span class="nc" id="L61">			spend(TICK);</span>
+<span class="nc" id="L62">			return true;</span>
+		}
+
+<span class="nc" id="L65">		PointF p = DungeonTilemap.raisedTileCenterToWorld(pos);</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (fieldOfView == null){</span>
+<span class="nc" id="L67">			fieldOfView = new boolean[Dungeon.level.length()];</span>
+		}
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		if (halo == null){</span>
+<span class="nc" id="L70">			halo = new NovaVFX();</span>
+<span class="nc" id="L71">			halo.point(p.x, p.y);</span>
+<span class="nc" id="L72">			halo.hardlight(1, 1, 0f);</span>
+<span class="nc" id="L73">			GameScene.effect(halo);</span>
+		}
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		if (turnsLeft &gt; 0){</span>
+
+<span class="nc" id="L78">			FloatingText.show(p.x, p.y, pos, turnsLeft + &quot;...&quot;, CharSprite.WARNING);</span>
+<span class="nc" id="L79">			halo.radius(5 + 2*(10-turnsLeft));</span>
+<span class="nc" id="L80">			halo.alpha(1.25f - 0.075f*turnsLeft);</span>
+<span class="nc" id="L81">			halo.point(p.x, p.y);</span>
+		}
+
+<span class="nc" id="L84">		Point c = Dungeon.level.cellToPoint(pos);</span>
+<span class="nc" id="L85">		ShadowCaster.castShadow(c.x, c.y, Dungeon.level.width(), fieldOfView, Dungeon.level.solid, Math.min(DIST, 11-turnsLeft));</span>
+
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		if (turnsLeft &lt;= 0){</span>
+<span class="nc" id="L88">			detach();</span>
+<span class="nc" id="L89">			halo.killAndErase();</span>
+
+			//if positive only, bombs do not harm allies
+<span class="nc bnc" id="L92" title="All 2 branches missed.">			if (!harmsAllies) {</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">				for (Char ch : Actor.chars()) {</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">					if (ch.alignment == Char.Alignment.ALLY) {</span>
+<span class="nc" id="L95">						Buff.affect(ch, NovaBombImmune.class, 0f);</span>
+					}
+<span class="nc" id="L97">				}</span>
+			}
+
+<span class="nc" id="L100">			Sample.INSTANCE.play(Assets.Sounds.BLAST);</span>
+<span class="nc" id="L101">			Sample.INSTANCE.playDelayed(Assets.Sounds.BLAST, 0.25f);</span>
+<span class="nc" id="L102">			Sample.INSTANCE.playDelayed(Assets.Sounds.BLAST, 0.5f);</span>
+<span class="nc" id="L103">			PixelScene.shake( 5, 2f );</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">			for (int i = 0; i &lt; Dungeon.level.length(); i++){</span>
+<span class="nc bnc" id="L105" title="All 4 branches missed.">				if (fieldOfView[i] &amp;&amp; !Dungeon.level.solid[i]){</span>
+<span class="nc" id="L106">					new Bomb.ConjuredBomb().explode(i); //yes, a bomb at every cell</span>
+					//this means that something in the blast effectively takes:
+					//9x bomb dmg when fully inside
+					//6x when along straight edge
+					//3x when outside straight edge
+<span class="nc" id="L111">					Dungeon.level.destroy(i);</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">					if (Actor.findChar(i) == Dungeon.hero){</span>
+<span class="nc" id="L113">						GameScene.flash(0x80FFFFFF);</span>
+					}
+				}
+			}
+<span class="nc" id="L117">			GameScene.updateMap();</span>
+
+		} else {
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			for (int i = 0; i &lt; Dungeon.level.length(); i++){</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">				if (fieldOfView[i]){</span>
+<span class="nc" id="L122">					target.sprite.parent.add(new TargetedCell(i, 0xFF0000));</span>
+				}
+			}
+		}
+
+<span class="nc" id="L127">		turnsLeft--;</span>
+<span class="nc" id="L128">		spend(TICK);</span>
+<span class="nc" id="L129">		return true;</span>
+
+	}
+
+<span class="nc" id="L133">	public static class NovaBombImmune extends FlavourBuff{</span>
+		{
+<span class="nc" id="L135">			immunities.add(Bomb.ConjuredBomb.class);</span>
+<span class="nc" id="L136">		}</span>
+	}
+
+	@Override
+	public void fx(boolean on) {
+<span class="nc bnc" id="L141" title="All 10 branches missed.">		if (on &amp;&amp; depth == Dungeon.depth &amp;&amp; branch == Dungeon.branch</span>
+				&amp;&amp; (halo == null || halo.parent == null)){
+<span class="nc" id="L143">			halo = new NovaVFX();</span>
+<span class="nc" id="L144">			PointF p = DungeonTilemap.raisedTileCenterToWorld(pos);</span>
+<span class="nc" id="L145">			halo.hardlight(1, 1, 0f);</span>
+<span class="nc" id="L146">			halo.radius(5 + 2*(10-turnsLeft));</span>
+<span class="nc" id="L147">			halo.alpha(1.25f - 0.075f*turnsLeft);</span>
+<span class="nc" id="L148">			halo.point(p.x, p.y);</span>
+<span class="nc" id="L149">			GameScene.effect(halo);</span>
+		}
+<span class="nc" id="L151">		super.fx(on);</span>
+<span class="nc" id="L152">	}</span>
+
+	public static final String POS = &quot;pos&quot;;
+	public static final String DEPTH = &quot;depth&quot;;
+	public static final String BRANCH = &quot;branch&quot;;
+
+	public static final String LEFT = &quot;left&quot;;
+	public static final String HARMS_ALLIES = &quot;harms_allies&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L163">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L164">		bundle.put(POS, pos);</span>
+<span class="nc" id="L165">		bundle.put(DEPTH, depth);</span>
+<span class="nc" id="L166">		bundle.put(BRANCH, branch);</span>
+<span class="nc" id="L167">		bundle.put(LEFT, turnsLeft);</span>
+<span class="nc" id="L168">		bundle.put(HARMS_ALLIES, harmsAllies);</span>
+<span class="nc" id="L169">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L173">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L174">		pos = bundle.getInt(POS);</span>
+<span class="nc" id="L175">		depth = bundle.getInt(DEPTH);</span>
+<span class="nc" id="L176">		branch = bundle.getInt(BRANCH);</span>
+<span class="nc" id="L177">		turnsLeft = bundle.getInt(LEFT);</span>
+<span class="nc" id="L178">		harmsAllies = bundle.getBoolean(HARMS_ALLIES);</span>
+<span class="nc" id="L179">	}</span>
+
+<span class="nc" id="L181">	public class NovaVFX extends Halo {</span>
+
+		@Override
+		public void update() {
+<span class="nc" id="L185">			am = brightness + 0.1f*(float)Math.cos(20*Game.timeTotal);</span>
+<span class="nc" id="L186">			scale.set((radius + (float)Math.cos(20*Game.timeTotal))/RADIUS);</span>
+<span class="nc" id="L187">			PointF p = DungeonTilemap.raisedTileCenterToWorld(pos);</span>
+<span class="nc" id="L188">			point(p.x, p.y);</span>
+<span class="nc" id="L189">			super.update();</span>
+<span class="nc" id="L190">		}</span>
+
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

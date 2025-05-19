@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BadgeBanner.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.effects</a> &gt; <span class="el_source">BadgeBanner.java</span></div><h1>BadgeBanner.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.effects;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.watabou.gltextures.SmartTexture;
+import com.watabou.gltextures.TextureCache;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.TextureFilm;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Point;
+import com.watabou.utils.PointF;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+public class BadgeBanner extends Image {
+
+<span class="nc" id="L40">	private enum State {</span>
+<span class="nc" id="L41">		FADE_IN, STATIC, FADE_OUT</span>
+	}
+	private State state;
+
+	public static final float DEFAULT_SCALE	= 3;
+	public static final int SIZE = 16;
+	
+	private static final float FADE_IN_TIME		= 0.25f;
+	private static final float STATIC_TIME		= 1f;
+	private static final float FADE_OUT_TIME	= 1.75f;
+	
+	private int index;
+	private float time;
+	
+	private static TextureFilm atlas;
+	
+<span class="nc" id="L57">	public static ArrayList&lt;BadgeBanner&gt; showing = new ArrayList&lt;&gt;();</span>
+	
+	private BadgeBanner( int index ) {
+		
+<span class="nc" id="L61">		super( Assets.Interfaces.BADGES );</span>
+		
+<span class="nc bnc" id="L63" title="All 2 branches missed.">		if (atlas == null) {</span>
+<span class="nc" id="L64">			atlas = new TextureFilm( texture, SIZE, SIZE );</span>
+		}
+		
+<span class="nc" id="L67">		setup(index);</span>
+<span class="nc" id="L68">	}</span>
+	
+	public void setup( int index ){
+<span class="nc" id="L71">		this.index = index;</span>
+		
+<span class="nc" id="L73">		frame( atlas.get( index ) );</span>
+<span class="nc" id="L74">		origin.set( width / 2, height / 2 );</span>
+		
+<span class="nc" id="L76">		alpha( 0 );</span>
+<span class="nc" id="L77">		scale.set( 2 * DEFAULT_SCALE );</span>
+		
+<span class="nc" id="L79">		state = State.FADE_IN;</span>
+<span class="nc" id="L80">		time = FADE_IN_TIME;</span>
+		
+<span class="nc" id="L82">		Sample.INSTANCE.play( Assets.Sounds.BADGE );</span>
+<span class="nc" id="L83">	}</span>
+	
+	@Override
+	public void update() {
+<span class="nc" id="L87">		super.update();</span>
+		
+<span class="nc" id="L89">		time -= Game.elapsed;</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		if (time &gt;= 0) {</span>
+			
+<span class="nc bnc" id="L92" title="All 4 branches missed.">			switch (state) {</span>
+			case FADE_IN:
+<span class="nc" id="L94">				float p = time / FADE_IN_TIME;</span>
+<span class="nc" id="L95">				scale.set( (1 + p) * DEFAULT_SCALE );</span>
+<span class="nc" id="L96">				alpha( 1 - p );</span>
+<span class="nc" id="L97">				break;</span>
+			case STATIC:
+<span class="nc" id="L99">				break;</span>
+			case FADE_OUT:
+<span class="nc" id="L101">				alpha( time /  FADE_OUT_TIME );</span>
+<span class="nc" id="L102">				break;</span>
+			}
+			
+		} else {
+			
+<span class="nc bnc" id="L107" title="All 4 branches missed.">			switch (state) {</span>
+			case FADE_IN:
+<span class="nc" id="L109">				time = STATIC_TIME;</span>
+<span class="nc" id="L110">				state = State.STATIC;</span>
+<span class="nc" id="L111">				scale.set( DEFAULT_SCALE );</span>
+<span class="nc" id="L112">				alpha( 1 );</span>
+<span class="nc" id="L113">				highlight( this, index );</span>
+<span class="nc" id="L114">				break;</span>
+			case STATIC:
+<span class="nc" id="L116">				time = FADE_OUT_TIME;</span>
+<span class="nc" id="L117">				state = State.FADE_OUT;</span>
+<span class="nc" id="L118">				break;</span>
+			case FADE_OUT:
+<span class="nc" id="L120">				killAndErase();</span>
+				break;
+			}
+			
+		}
+<span class="nc" id="L125">	}</span>
+	
+	@Override
+	public void kill() {
+<span class="nc" id="L129">		showing.remove(this);</span>
+<span class="nc" id="L130">		super.kill();</span>
+<span class="nc" id="L131">	}</span>
+
+	@Override
+	public void destroy() {
+<span class="nc" id="L135">		showing.remove(this);</span>
+<span class="nc" id="L136">		super.destroy();</span>
+<span class="nc" id="L137">	}</span>
+
+	//map to cache highlight positions so we don't have to keep looking at texture pixels
+<span class="nc" id="L140">	private static HashMap&lt;Integer, Point&gt; highlightPositions = new HashMap&lt;&gt;();</span>
+
+	//we also hardcode any special cases
+	static {
+<span class="nc" id="L144">		highlightPositions.put(Badges.Badge.MASTERY_COMBO.image, new Point(3, 7));</span>
+<span class="nc" id="L145">	}</span>
+
+	//adds a shine to an appropriate pixel on a badge
+	public static void highlight( Image image, int index ) {
+		
+<span class="nc" id="L150">		PointF p = new PointF();</span>
+
+<span class="nc bnc" id="L152" title="All 2 branches missed.">		if (highlightPositions.containsKey(index)){</span>
+<span class="nc" id="L153">			p.x = highlightPositions.get(index).x * image.scale.x;</span>
+<span class="nc" id="L154">			p.y = highlightPositions.get(index).y * image.scale.y;</span>
+		} else {
+
+<span class="nc" id="L157">			SmartTexture tx = TextureCache.get(Assets.Interfaces.BADGES);</span>
+
+<span class="nc" id="L159">			int size = 16;</span>
+
+<span class="nc" id="L161">			int cols = tx.width / size;</span>
+<span class="nc" id="L162">			int row = index / cols;</span>
+<span class="nc" id="L163">			int col = index % cols;</span>
+
+<span class="nc" id="L165">			int x = 3;</span>
+<span class="nc" id="L166">			int y = 4;</span>
+<span class="nc" id="L167">			int bgColor = tx.getPixel(col * size + x, row * size + y);</span>
+<span class="nc" id="L168">			int curColor = 0;</span>
+
+<span class="nc bnc" id="L170" title="All 2 branches missed.">			for (x = 3; x &lt;= 12; x++) {</span>
+<span class="nc" id="L171">				curColor = tx.getPixel(col * size + x, row * size + y);</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">				if (curColor != bgColor) break;</span>
+			}
+
+<span class="nc bnc" id="L175" title="All 2 branches missed.">			if (curColor == bgColor) {</span>
+<span class="nc" id="L176">				y++;</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">				for (x = 3; x &lt;= 12; x++) {</span>
+<span class="nc" id="L178">					curColor = tx.getPixel(col * size + x, row * size + y);</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">					if (curColor != bgColor) break;</span>
+				}
+			}
+
+<span class="nc" id="L183">			p.x = x * image.scale.x;</span>
+<span class="nc" id="L184">			p.y = y * image.scale.y;</span>
+
+<span class="nc" id="L186">			highlightPositions.put(index, new Point(x, y));</span>
+		}
+
+<span class="nc" id="L189">		p.offset(</span>
+			-image.origin.x * (image.scale.x - 1),
+			-image.origin.y * (image.scale.y - 1) );
+<span class="nc" id="L192">		p.offset( image.point() );</span>
+		
+<span class="nc" id="L194">		Speck star = new Speck();</span>
+<span class="nc" id="L195">		star.reset( 0, p.x, p.y, Speck.DISCOVER );</span>
+<span class="nc" id="L196">		star.camera = image.camera();</span>
+<span class="nc" id="L197">		image.parent.add( star );</span>
+<span class="nc" id="L198">	}</span>
+	
+	public static BadgeBanner show( int image ) {
+<span class="nc" id="L201">		BadgeBanner banner = new BadgeBanner(image);</span>
+<span class="nc" id="L202">		showing.add(banner);</span>
+<span class="nc" id="L203">		return banner;</span>
+	}
+
+	public static boolean isShowingBadges(){
+<span class="nc bnc" id="L207" title="All 2 branches missed.">		return !showing.isEmpty();</span>
+	}
+	
+	public static Image image( int index ) {
+<span class="nc" id="L211">		Image image = new Image( Assets.Interfaces.BADGES );</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">		if (atlas == null) {</span>
+<span class="nc" id="L213">			atlas = new TextureFilm( image.texture, 16, 16 );</span>
+		}
+<span class="nc" id="L215">		image.frame( atlas.get( index ) );</span>
+<span class="nc" id="L216">		return image;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

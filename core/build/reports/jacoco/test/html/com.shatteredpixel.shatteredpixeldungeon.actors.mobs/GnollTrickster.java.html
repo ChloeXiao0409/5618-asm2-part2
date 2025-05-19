@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GnollTrickster.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">GnollTrickster.java</span></div><h1>GnollTrickster.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Fire;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Poison;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Ghost;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.GnollTricksterSprite;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L42">public class GnollTrickster extends Gnoll {</span>
+
+	{
+<span class="nc" id="L45">		spriteClass = GnollTricksterSprite.class;</span>
+
+<span class="nc" id="L47">		HP = HT = 20;</span>
+<span class="nc" id="L48">		defenseSkill = 5;</span>
+
+<span class="nc" id="L50">		EXP = 5;</span>
+
+<span class="nc" id="L52">		WANDERING = new Wandering();</span>
+<span class="nc" id="L53">		state = WANDERING;</span>
+
+		//at half quantity, see createLoot()
+<span class="nc" id="L56">		loot = Generator.Category.MISSILE;</span>
+<span class="nc" id="L57">		lootChance = 1f;</span>
+
+<span class="nc" id="L59">		properties.add(Property.MINIBOSS);</span>
+	}
+
+<span class="nc" id="L62">	private int combo = 0;</span>
+
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L66">		return 16;</span>
+	}
+
+	@Override
+	protected boolean canAttack( Char enemy ) {
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		return !Dungeon.level.adjacent( pos, enemy.pos )</span>
+<span class="nc bnc" id="L72" title="All 4 branches missed.">				&amp;&amp; (super.canAttack(enemy) || new Ballistica( pos, enemy.pos, Ballistica.PROJECTILE).collisionPos == enemy.pos);</span>
+	}
+
+	@Override
+	public int attackProc( Char enemy, int damage ) {
+<span class="nc" id="L77">		damage = super.attackProc( enemy, damage );</span>
+		//The gnoll's attacks get more severe the more the player lets it hit them
+<span class="nc" id="L79">		combo++;</span>
+<span class="nc" id="L80">		int effect = Random.Int(4)+combo;</span>
+
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		if (effect &gt; 2) {</span>
+
+<span class="nc bnc" id="L84" title="All 4 branches missed.">			if (effect &gt;=6 &amp;&amp; enemy.buff(Burning.class) == null){</span>
+
+<span class="nc bnc" id="L86" title="All 2 branches missed.">				if (Dungeon.level.flamable[enemy.pos])</span>
+<span class="nc" id="L87">					GameScene.add(Blob.seed(enemy.pos, 4, Fire.class));</span>
+<span class="nc" id="L88">				Buff.affect(enemy, Burning.class).reignite( enemy );</span>
+
+			} else
+<span class="nc" id="L91">				Buff.affect( enemy, Poison.class).set((effect-2) );</span>
+
+		}
+<span class="nc" id="L94">		return damage;</span>
+	}
+
+	@Override
+	protected boolean getCloser( int target ) {
+<span class="nc" id="L99">		combo = 0; //if he's moving, he isn't attacking, reset combo.</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">		if (state == HUNTING) {</span>
+<span class="nc bnc" id="L101" title="All 4 branches missed.">			return enemySeen &amp;&amp; getFurther( target );</span>
+		} else {
+<span class="nc" id="L103">			return super.getCloser( target );</span>
+		}
+	}
+
+	@Override
+	public void aggro(Char ch) {
+		//cannot be aggroed to something it can't see
+		//skip this check if FOV isn't initialized
+<span class="nc bnc" id="L111" title="All 4 branches missed.">		if (ch == null || fieldOfView == null</span>
+<span class="nc bnc" id="L112" title="All 4 branches missed.">				|| fieldOfView.length != Dungeon.level.length() || fieldOfView[ch.pos]) {</span>
+<span class="nc" id="L113">			super.aggro(ch);</span>
+		}
+<span class="nc" id="L115">	}</span>
+	
+	@Override
+	public Item createLoot() {
+<span class="nc" id="L119">		MissileWeapon drop = (MissileWeapon)super.createLoot();</span>
+		//half quantity, rounded up
+<span class="nc" id="L121">		drop.quantity((drop.quantity()+1)/2);</span>
+<span class="nc" id="L122">		return drop;</span>
+	}
+	
+	@Override
+	public void die( Object cause ) {
+<span class="nc" id="L127">		super.die( cause );</span>
+
+<span class="nc" id="L129">		Ghost.Quest.process();</span>
+<span class="nc" id="L130">	}</span>
+
+<span class="nc" id="L132">	protected class Wandering extends Mob.Wandering{</span>
+		@Override
+		protected int randomDestination() {
+			//of two potential wander positions, picks the one closest to the hero
+<span class="nc" id="L136">			int pos1 = super.randomDestination();</span>
+<span class="nc" id="L137">			int pos2 = super.randomDestination();</span>
+<span class="nc" id="L138">			PathFinder.buildDistanceMap(Dungeon.hero.pos, Dungeon.level.passable);</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">			if (PathFinder.distance[pos2] &lt; PathFinder.distance[pos1]){</span>
+<span class="nc" id="L140">				return pos2;</span>
+			} else {
+<span class="nc" id="L142">				return pos1;</span>
+			}
+		}
+	}
+
+	private static final String COMBO = &quot;combo&quot;;
+
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L151">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L152">		bundle.put(COMBO, combo);</span>
+<span class="nc" id="L153">	}</span>
+
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L157">		super.restoreFromBundle( bundle );</span>
+<span class="nc" id="L158">		combo = bundle.getInt( COMBO );</span>
+<span class="nc" id="L159">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

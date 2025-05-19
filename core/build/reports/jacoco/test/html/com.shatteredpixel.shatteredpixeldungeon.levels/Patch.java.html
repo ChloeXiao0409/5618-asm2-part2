@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Patch.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels</a> &gt; <span class="el_source">Patch.java</span></div><h1>Patch.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels;
+
+import com.watabou.utils.Random;
+
+<span class="nc" id="L26">public class Patch {</span>
+
+	/*
+	 * fill is the initial seeded fill rate when creating a random boolean array.
+	 *
+	 * clustering is the number of clustering passes done on then array, to create patches.
+	 * each clustering pass is basically a 3x3 mask filter but with rounding to true or false
+	 * high clustering values will produce more concentrated patches,
+	 * but any amount of clustering will rapidly push fill rates towards 1.0f or 0.0f
+	 * The closer the fill rate is to 0.5f the weaker this pushing will be.
+	 *
+	 * forceFillRate adjusts the algorithm to force fill rate to be consistent despite clustering.
+	 * this is achieved by firstly pulling the initial fill value towards 0.5f
+	 * and then by manually filling in or emptying cells after clustering, until the fill rate is
+	 * achieved. This is tracked with the fillDiff variable.
+	*/
+	public static boolean[] generate( int w, int h, float fill, int clustering, boolean forceFillRate ) {
+		
+<span class="nc" id="L44">		int length = w * h;</span>
+
+<span class="nc" id="L46">		boolean[] cur = new boolean[length];</span>
+<span class="nc" id="L47">		boolean[] off = new boolean[length];</span>
+
+<span class="nc" id="L49">		int fillDiff = -Math.round(length * fill);</span>
+
+<span class="nc bnc" id="L51" title="All 4 branches missed.">		if (forceFillRate &amp;&amp; clustering &gt; 0) {</span>
+<span class="nc" id="L52">			fill += (0.5f - fill) * 0.5f;</span>
+		}
+
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		for (int i=0; i &lt; length; i++) {</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">			off[i] = Random.Float() &lt; fill;</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">			if (off[i]) fillDiff++;</span>
+		}
+		
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		for (int i=0; i &lt; clustering; i++) {</span>
+
+<span class="nc bnc" id="L62" title="All 2 branches missed.">			for (int y=0; y &lt; h; y++) {</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">				for (int x=0; x &lt; w; x++) {</span>
+					
+<span class="nc" id="L65">					int pos = x + y * w;</span>
+<span class="nc" id="L66">					int count = 0;</span>
+<span class="nc" id="L67">					int neighbours = 0;</span>
+
+<span class="nc bnc" id="L69" title="All 2 branches missed.">					if (y &gt; 0) {</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">						if (x &gt; 0){</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">							if (off[pos - w - 1]) count++;</span>
+<span class="nc" id="L72">							neighbours++;</span>
+						}
+<span class="nc bnc" id="L74" title="All 2 branches missed.">						if (off[pos - w]) count++;</span>
+<span class="nc" id="L75">						neighbours++;</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">						if (x &lt; (w - 1)){</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">							if (off[pos - w + 1]) count++;</span>
+<span class="nc" id="L78">							neighbours++;</span>
+						}
+					}
+
+<span class="nc bnc" id="L82" title="All 2 branches missed.">					if (x &gt; 0){</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">						if (off[pos - 1]) count++;</span>
+<span class="nc" id="L84">						neighbours++;</span>
+					}
+<span class="nc bnc" id="L86" title="All 2 branches missed.">					if (off[pos]) count++;</span>
+<span class="nc" id="L87">					neighbours++;</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">					if (x &lt; (w-1)){</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">						if (off[pos + 1]) count++;</span>
+<span class="nc" id="L90">						neighbours++;</span>
+					}
+
+<span class="nc bnc" id="L93" title="All 2 branches missed.">					if (y &lt; (h-1)) {</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">						if (x &gt; 0){</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">							if (off[pos + w - 1]) count++;</span>
+<span class="nc" id="L96">							neighbours++;</span>
+						}
+<span class="nc bnc" id="L98" title="All 2 branches missed.">						if (off[pos + w]) count++;</span>
+<span class="nc" id="L99">						neighbours++;</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">						if (x &lt; (w-1)){</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">							if (off[pos + w + 1]) count++;</span>
+<span class="nc" id="L102">							neighbours++;</span>
+						}
+					}
+
+<span class="nc bnc" id="L106" title="All 2 branches missed.">					cur[pos] = 2*count &gt;= neighbours;</span>
+<span class="nc bnc" id="L107" title="All 4 branches missed.">					if (cur[pos] != off[pos]) fillDiff += cur[pos] ? +1 : -1;</span>
+
+				}
+			}
+			
+<span class="nc" id="L112">			boolean[] tmp = cur;</span>
+<span class="nc" id="L113">			cur = off;</span>
+<span class="nc" id="L114">			off = tmp;</span>
+		}
+
+		//even if force fill rate is on, only do this if we have some kind of border
+<span class="nc bnc" id="L118" title="All 4 branches missed.">		if (forceFillRate &amp;&amp; Math.min(w, h) &gt; 2) {</span>
+<span class="nc" id="L119">			int[] neighbours = new int[]{-w - 1, -w, -w + 1, -1, 0, +1, +w - 1, +w, +w + 1};</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			boolean growing = fillDiff &lt; 0;</span>
+
+<span class="nc bnc" id="L122" title="All 2 branches missed.">			while (fillDiff != 0) {</span>
+				int cell;
+<span class="nc" id="L124">				int tries = 0;</span>
+
+				//random cell, not in the map's borders
+				// try length/10 times to find a cell we can grow from, and not start a new patch/hole
+				do {
+<span class="nc" id="L129">					cell = Random.Int(1, w - 1) + Random.Int(1, h - 1) * w;</span>
+<span class="nc" id="L130">					tries++;</span>
+<span class="nc bnc" id="L131" title="All 4 branches missed.">				} while (off[cell] != growing &amp;&amp; tries * 10 &lt; length);</span>
+
+<span class="nc bnc" id="L133" title="All 2 branches missed.">				for (int i : neighbours) {</span>
+<span class="nc bnc" id="L134" title="All 4 branches missed.">					if (fillDiff != 0 &amp;&amp; off[cell + i] != growing) {</span>
+<span class="nc" id="L135">						off[cell + i] = growing;</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">						fillDiff += growing ? +1 : -1;</span>
+					}
+				}
+<span class="nc" id="L139">			}</span>
+		}
+		
+<span class="nc" id="L142">		return off;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

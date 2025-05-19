@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ElixirOfAquaticRejuvenation.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs</a> &gt; <span class="el_source">ElixirOfAquaticRejuvenation.java</span></div><h1>ElixirOfAquaticRejuvenation.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.GooBlob;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.watabou.noosa.Image;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L44">public class ElixirOfAquaticRejuvenation extends Elixir {</span>
+	
+	{
+<span class="nc" id="L47">		image = ItemSpriteSheet.ELIXIR_AQUA;</span>
+<span class="nc" id="L48">	}</span>
+	
+	@Override
+	public void apply(Hero hero) {
+<span class="nc bnc" id="L52" title="All 2 branches missed.">		if (Dungeon.isChallenged(Challenges.NO_HEALING)){</span>
+<span class="nc" id="L53">			PotionOfHealing.pharmacophobiaProc(hero);</span>
+		} else {
+<span class="nc" id="L55">			Buff.affect(hero, AquaHealing.class).set(Math.round(hero.HT * 1.5f));</span>
+		}
+<span class="nc" id="L57">	}</span>
+	
+<span class="nc" id="L59">	public static class AquaHealing extends Buff {</span>
+		
+		{
+<span class="nc" id="L62">			type = buffType.POSITIVE;</span>
+<span class="nc" id="L63">			announced = true;</span>
+<span class="nc" id="L64">		}</span>
+		
+		private int left;
+		
+		public void set( int amount ){
+<span class="nc bnc" id="L69" title="All 2 branches missed.">			if (amount &gt; left) left = amount;</span>
+<span class="nc" id="L70">		}</span>
+
+		public void extend( float duration ) {
+<span class="nc" id="L73">			left += duration;</span>
+<span class="nc" id="L74">		}</span>
+		
+		@Override
+		public boolean act() {
+			
+<span class="nc bnc" id="L79" title="All 6 branches missed.">			if (!target.flying &amp;&amp; Dungeon.level.water[target.pos] &amp;&amp; target.HP &lt; target.HT){</span>
+<span class="nc" id="L80">				float healAmt = GameMath.gate( 1, target.HT/50f, left );</span>
+<span class="nc" id="L81">				healAmt = Math.min(healAmt, target.HT - target.HP);</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">				if (Random.Float() &lt; (healAmt % 1)){</span>
+<span class="nc" id="L83">					healAmt = (float)Math.ceil(healAmt);</span>
+				} else {
+<span class="nc" id="L85">					healAmt = (float)Math.floor(healAmt);</span>
+				}
+<span class="nc" id="L87">				target.HP += (int)healAmt;</span>
+<span class="nc" id="L88">				left -= (int)healAmt;</span>
+<span class="nc" id="L89">				target.sprite.showStatusWithIcon( CharSprite.POSITIVE, Integer.toString((int)healAmt), FloatingText.HEALING );</span>
+
+<span class="nc bnc" id="L91" title="All 2 branches missed.">				if (target.HP &gt;= target.HT) {</span>
+<span class="nc" id="L92">					target.HP = target.HT;</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">					if (target instanceof Hero) {</span>
+<span class="nc" id="L94">						((Hero) target).resting = false;</span>
+					}
+				}
+			}
+			
+<span class="nc bnc" id="L99" title="All 2 branches missed.">			if (left &lt;= 0){</span>
+<span class="nc" id="L100">				detach();</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">				if (target instanceof Hero) {</span>
+<span class="nc" id="L102">					((Hero) target).resting = false;</span>
+				}
+			} else {
+<span class="nc" id="L105">				spend(TICK);</span>
+			}
+<span class="nc" id="L107">			return true;</span>
+		}
+		
+		@Override
+		public int icon() {
+<span class="nc" id="L112">			return BuffIndicator.HEALING;</span>
+		}
+
+		@Override
+		public void tintIcon(Image icon) {
+<span class="nc" id="L117">			icon.hardlight(0, 0.75f, 0.75f);</span>
+<span class="nc" id="L118">		}</span>
+
+		@Override
+		public float iconFadePercent() {
+<span class="nc" id="L122">			float max = Math.round(target.HT * 1.5f);</span>
+<span class="nc" id="L123">			return Math.max(0, (max - left) / max);</span>
+		}
+
+		@Override
+		public String iconTextDisplay() {
+<span class="nc" id="L128">			return Integer.toString(left);</span>
+		}
+		
+		@Override
+		public String desc() {
+<span class="nc" id="L133">			return Messages.get(this, &quot;desc&quot;, left);</span>
+		}
+		
+		private static final String LEFT = &quot;left&quot;;
+		
+		@Override
+		public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L140">			super.storeInBundle( bundle );</span>
+<span class="nc" id="L141">			bundle.put( LEFT, left );</span>
+<span class="nc" id="L142">		}</span>
+		
+		@Override
+		public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L146">			super.restoreFromBundle( bundle );</span>
+<span class="nc" id="L147">			left = bundle.getInt( LEFT );</span>
+			
+<span class="nc" id="L149">		}</span>
+	}
+	
+<span class="nc" id="L152">	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe.SimpleRecipe {</span>
+		
+		{
+<span class="nc" id="L155">			inputs =  new Class[]{PotionOfHealing.class, GooBlob.class};</span>
+<span class="nc" id="L156">			inQuantity = new int[]{1, 1};</span>
+			
+<span class="nc" id="L158">			cost = 6;</span>
+			
+<span class="nc" id="L160">			output = ElixirOfAquaticRejuvenation.class;</span>
+<span class="nc" id="L161">			outQuantity = 1;</span>
+<span class="nc" id="L162">		}</span>
+
+		@Override
+		public Item brew(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc" id="L166">			Catalog.countUse(GooBlob.class);</span>
+<span class="nc" id="L167">			return super.brew(ingredients);</span>
+		}
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

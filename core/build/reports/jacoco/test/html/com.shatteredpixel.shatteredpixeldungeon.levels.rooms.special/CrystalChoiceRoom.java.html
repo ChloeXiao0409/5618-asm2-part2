@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CrystalChoiceRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special</a> &gt; <span class="el_source">CrystalChoiceRoom.java</span></div><h1>CrystalChoiceRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.keys.CrystalKey;
+import com.shatteredpixel.shatteredpixeldungeon.items.keys.IronKey;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.EmptyRoom;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L38">public class CrystalChoiceRoom extends SpecialRoom {</span>
+
+	@Override
+<span class="nc" id="L41">	public int minWidth() { return 7; }</span>
+<span class="nc" id="L42">	public int minHeight() { return 7; }</span>
+
+	@Override
+	public void paint(Level level) {
+
+<span class="nc" id="L47">		Painter.fill( level, this, Terrain.WALL );</span>
+
+<span class="nc" id="L49">		Door entrance = entrance();</span>
+
+<span class="nc" id="L51">		Room entry = new EmptyRoom();</span>
+
+<span class="nc" id="L53">		Room room1 = new EmptyRoom();</span>
+<span class="nc" id="L54">		Room room2 = new EmptyRoom();</span>
+
+<span class="nc bnc" id="L56" title="All 2 branches missed.">		if (entrance.x == left){</span>
+<span class="nc" id="L57">			entry.set(left+1, top+1, left+2, bottom-1);</span>
+
+<span class="nc" id="L59">			room1.set(entry.right+2, top+1, right-1, center().y-1);</span>
+<span class="nc" id="L60">			room2.set(entry.right+2, room1.bottom+2, right-1, bottom-1);</span>
+
+<span class="nc" id="L62">			Painter.set(level, new Point(entry.right+1, (room1.top + room1.bottom + 1)/2), Terrain.CRYSTAL_DOOR);</span>
+<span class="nc" id="L63">			Painter.set(level, new Point(entry.right+1, (room2.top + room2.bottom)/2), Terrain.CRYSTAL_DOOR);</span>
+
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		} else if (entrance.y == top){</span>
+<span class="nc" id="L66">			entry.set(left+1, top+1, right-1, top+2);</span>
+
+<span class="nc" id="L68">			room1.set(left+1, entry.bottom+2, center().x-1, bottom-1);</span>
+<span class="nc" id="L69">			room2.set(room1.right+2, entry.bottom+2, right-1, bottom-1);</span>
+
+<span class="nc" id="L71">			Painter.set(level, new Point((room1.left + room1.right + 1)/2, entry.bottom+1), Terrain.CRYSTAL_DOOR);</span>
+<span class="nc" id="L72">			Painter.set(level, new Point((room2.left + room2.right)/2, entry.bottom+1), Terrain.CRYSTAL_DOOR);</span>
+
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		} else if (entrance.x == right){</span>
+<span class="nc" id="L75">			entry.set(right-2, top+1, right-1, bottom-1);</span>
+<span class="nc" id="L76">			Painter.drawLine(level, new Point(right-1, top+1), new Point(right-1, bottom-1), Terrain.EMPTY);</span>
+
+<span class="nc" id="L78">			room1.set(left+1, top+1, entry.left-2, center().y-1);</span>
+<span class="nc" id="L79">			room2.set(left+1, room1.bottom+2, entry.left-2, bottom-1);</span>
+
+<span class="nc" id="L81">			Painter.set(level, new Point(entry.left-1, (room1.top + room1.bottom + 1)/2), Terrain.CRYSTAL_DOOR);</span>
+<span class="nc" id="L82">			Painter.set(level, new Point(entry.left-1, (room2.top + room2.bottom)/2), Terrain.CRYSTAL_DOOR);</span>
+
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		} else if (entrance.y == bottom){</span>
+<span class="nc" id="L85">			entry.set(left+1, bottom-2, right-1, bottom-1);</span>
+
+<span class="nc" id="L87">			room1.set(left+1, top+1, center().x-1, entry.top-2);</span>
+<span class="nc" id="L88">			room2.set(room1.right+2, top+1, right-1, entry.top-2);</span>
+
+<span class="nc" id="L90">			Painter.set(level, new Point((room1.left + room1.right + 1)/2, entry.top-1), Terrain.CRYSTAL_DOOR);</span>
+<span class="nc" id="L91">			Painter.set(level, new Point((room2.left + room2.right)/2, entry.top-1), Terrain.CRYSTAL_DOOR);</span>
+
+		}
+
+<span class="nc" id="L95">		Painter.fill(level, entry, Terrain.EMPTY);</span>
+<span class="nc" id="L96">		Painter.fill(level, room1, Terrain.EMPTY_SP);</span>
+<span class="nc" id="L97">		Painter.fill(level, room2, Terrain.EMPTY_SP);</span>
+
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		if (Random.Int(2) == 0){</span>
+<span class="nc" id="L100">			Room tmp = room1;</span>
+<span class="nc" id="L101">			room1 = room2;</span>
+<span class="nc" id="L102">			room2 = tmp;</span>
+		}
+
+<span class="nc" id="L105">		int n = Random.NormalIntRange(3, 4);</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">		for (int i = 0; i &lt; n; i++){</span>
+<span class="nc" id="L107">			Item reward = Generator.random(Random.oneOf(</span>
+					Generator.Category.POTION,
+					Generator.Category.SCROLL
+			));
+			int pos;
+			do {
+<span class="nc bnc" id="L113" title="All 2 branches missed.">				if (room1.square() &gt;= 16){</span>
+<span class="nc" id="L114">					pos = level.pointToCell(room1.random(1));</span>
+				} else {
+<span class="nc" id="L116">					pos = level.pointToCell(room1.random(0));</span>
+				}
+<span class="nc bnc" id="L118" title="All 2 branches missed.">			} while (level.heaps.get(pos) != null);</span>
+<span class="nc" id="L119">			level.drop(reward, pos);</span>
+		}
+
+<span class="nc" id="L122">		Item hidden = Generator.random(Random.oneOf(</span>
+				Generator.Category.WAND,
+				Generator.Category.RING,
+				Generator.Category.ARTIFACT
+		));
+<span class="nc" id="L127">		Heap chest = level.drop(hidden, level.pointToCell(room2.center()));</span>
+<span class="nc" id="L128">		chest.type = Heap.Type.CHEST;</span>
+		//opening the chest is optional, so it doesn't count for exploration bonus
+<span class="nc" id="L130">		chest.autoExplored = true;</span>
+
+<span class="nc" id="L132">		level.addItemToSpawn( new CrystalKey( Dungeon.depth ) );</span>
+
+<span class="nc" id="L134">		entrance().set( Door.Type.LOCKED );</span>
+<span class="nc" id="L135">		level.addItemToSpawn( new IronKey( Dungeon.depth ) );</span>
+
+<span class="nc" id="L137">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

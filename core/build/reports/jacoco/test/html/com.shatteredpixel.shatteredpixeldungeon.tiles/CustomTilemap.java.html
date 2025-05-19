@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CustomTilemap.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.tiles</a> &gt; <span class="el_source">CustomTilemap.java</span></div><h1>CustomTilemap.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.tiles;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.NoosaScript;
+import com.watabou.noosa.TextureFilm;
+import com.watabou.noosa.Tilemap;
+import com.watabou.utils.Bundlable;
+import com.watabou.utils.Bundle;
+
+<span class="nc" id="L33">public abstract class CustomTilemap implements Bundlable {</span>
+
+	protected static final int SIZE = DungeonTilemap.SIZE;
+
+	public int tileX, tileY;   //x and y coords for texture within a level
+<span class="nc" id="L38">	public int tileW = 1, tileH = 1; //width and height in tiles</span>
+	
+	protected Object texture;
+<span class="nc" id="L41">	protected Tilemap vis = null;</span>
+
+	public void pos(int pos) {
+<span class="nc" id="L44">		pos( pos, Dungeon.level );</span>
+<span class="nc" id="L45">	}</span>
+
+	public void pos(int pos, Level level) {
+<span class="nc" id="L48">		pos( pos%level.width(), pos/level.width() );</span>
+<span class="nc" id="L49">	}</span>
+
+	public void pos(int tileX, int tileY){
+<span class="nc" id="L52">		this.tileX = tileX;</span>
+<span class="nc" id="L53">		this.tileY = tileY;</span>
+<span class="nc" id="L54">	}</span>
+
+	public void setRect(int topLeft, int bottomRight){
+<span class="nc" id="L57">		setRect( topLeft%Dungeon.level.width(),</span>
+<span class="nc" id="L58">				topLeft/Dungeon.level.width(),</span>
+<span class="nc" id="L59">				bottomRight%Dungeon.level.width() - topLeft%Dungeon.level.width(),</span>
+<span class="nc" id="L60">				bottomRight/Dungeon.level.width() - topLeft/Dungeon.level.width()</span>
+		);
+<span class="nc" id="L62">	}</span>
+
+	public void setRect(int tileX, int tileY, int tileW, int tileH){
+<span class="nc" id="L65">		this.tileX = tileX;</span>
+<span class="nc" id="L66">		this.tileY = tileY;</span>
+<span class="nc" id="L67">		this.tileW = tileW;</span>
+<span class="nc" id="L68">		this.tileH = tileH;</span>
+<span class="nc" id="L69">	}</span>
+	
+	//utility method for getting data for a simple image
+	//assumes tileW and tileH have already been set
+	protected int[] mapSimpleImage(int txX, int txY, int texW){
+<span class="nc" id="L74">		int[] data = new int[tileW * tileH];</span>
+<span class="nc" id="L75">		int texTileWidth = texW/SIZE;</span>
+<span class="nc" id="L76">		int x = txX, y = txY;</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">		for (int i = 0; i &lt; data.length; i++){</span>
+<span class="nc" id="L78">			data[i] = x + (texTileWidth*y);</span>
+			
+<span class="nc" id="L80">			x++;</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">			if ((x - txX) == tileW){</span>
+<span class="nc" id="L82">				x = txX;</span>
+<span class="nc" id="L83">				y++;</span>
+			}
+		}
+<span class="nc" id="L86">		return data;</span>
+	}
+	
+	public Tilemap create(){
+<span class="nc bnc" id="L90" title="All 4 branches missed.">		if (vis != null &amp;&amp; vis.alive) vis.killAndErase();</span>
+<span class="nc" id="L91">		vis = new Tilemap(texture, new TextureFilm( texture, SIZE, SIZE )){</span>
+			@Override
+			protected NoosaScript script() {
+				//allow lighting for custom tilemaps
+<span class="nc" id="L95">				return NoosaScript.get();</span>
+			}
+		};
+<span class="nc" id="L98">		vis.x = tileX*SIZE;</span>
+<span class="nc" id="L99">		vis.y = tileY*SIZE;</span>
+<span class="nc" id="L100">		return vis;</span>
+	}
+
+	//x and y here are the coordinates tapped within the tile visual
+	public Image image(int tileX, int tileY){
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		if (vis == null){</span>
+<span class="nc" id="L106">			return null;</span>
+		} else {
+<span class="nc" id="L108">			return vis.image(tileX, tileY);</span>
+		}
+	}
+
+	public String name(int tileX, int tileY){
+<span class="nc" id="L113">		return null;</span>
+	}
+
+	public String desc(int tileX, int tileY){
+<span class="nc" id="L117">		return null;</span>
+	}
+
+	private static final String TILE_X  = &quot;tileX&quot;;
+	private static final String TILE_Y  = &quot;tileY&quot;;
+
+	private static final String TILE_W  = &quot;tileW&quot;;
+	private static final String TILE_H  = &quot;tileH&quot;;
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L128">		tileX = bundle.getInt(TILE_X);</span>
+<span class="nc" id="L129">		tileY = bundle.getInt(TILE_Y);</span>
+
+<span class="nc" id="L131">		tileW = bundle.getInt(TILE_W);</span>
+<span class="nc" id="L132">		tileH = bundle.getInt(TILE_H);</span>
+<span class="nc" id="L133">	}</span>
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L137">		bundle.put(TILE_X, tileX);</span>
+<span class="nc" id="L138">		bundle.put(TILE_Y, tileY);</span>
+
+<span class="nc" id="L140">		bundle.put(TILE_W, tileW);</span>
+<span class="nc" id="L141">		bundle.put(TILE_H, tileH);</span>
+<span class="nc" id="L142">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

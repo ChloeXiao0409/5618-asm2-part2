@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WndGameInProgress.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.windows</a> &gt; <span class="el_source">WndGameInProgress.java</span></div><h1>WndGameInProgress.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.windows;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.StartScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ActionIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.utils.DungeonSeed;
+import com.watabou.noosa.Game;
+
+import java.util.Locale;
+
+public class WndGameInProgress extends Window {
+	
+	private static final int WIDTH    = 120;
+	
+<span class="nc" id="L48">	private int GAP	  = 6;</span>
+	
+	private float pos;
+	
+<span class="nc" id="L52">	public WndGameInProgress(final int slot){</span>
+		
+<span class="nc" id="L54">		final GamesInProgress.Info info = GamesInProgress.check(slot);</span>
+		
+<span class="nc" id="L56">		String className = null;</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		if (info.subClass != HeroSubClass.NONE){</span>
+<span class="nc" id="L58">			className = info.subClass.title();</span>
+		} else {
+<span class="nc" id="L60">			className = info.heroClass.title();</span>
+		}
+		
+<span class="nc" id="L63">		IconTitle title = new IconTitle();</span>
+<span class="nc" id="L64">		title.icon( HeroSprite.avatar(info.heroClass, info.armorTier) );</span>
+<span class="nc" id="L65">		title.label((Messages.get(this, &quot;title&quot;, info.level, className)).toUpperCase(Locale.ENGLISH));</span>
+<span class="nc" id="L66">		title.color(Window.TITLE_COLOR);</span>
+<span class="nc" id="L67">		title.setRect( 0, 0, WIDTH, 0 );</span>
+<span class="nc" id="L68">		add(title);</span>
+		
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		if (info.challenges &gt; 0) GAP -= 2;</span>
+		
+<span class="nc" id="L72">		pos = title.bottom() + GAP;</span>
+		
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		if (info.challenges &gt; 0) {</span>
+<span class="nc" id="L75">			RedButton btnChallenges = new RedButton( Messages.get(this, &quot;challenges&quot;) ) {</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L78">					Game.scene().add( new WndChallenges( info.challenges, false ) );</span>
+<span class="nc" id="L79">				}</span>
+			};
+<span class="nc" id="L81">			btnChallenges.icon(Icons.get(Icons.CHALLENGE_COLOR));</span>
+<span class="nc" id="L82">			float btnW = btnChallenges.reqWidth() + 2;</span>
+<span class="nc" id="L83">			btnChallenges.setRect( (WIDTH - btnW)/2, pos, btnW , 18 );</span>
+<span class="nc" id="L84">			add( btnChallenges );</span>
+			
+<span class="nc" id="L86">			pos = btnChallenges.bottom() + GAP;</span>
+		}
+		
+<span class="nc" id="L89">		pos += GAP;</span>
+
+<span class="nc" id="L91">		int strBonus = info.strBonus;</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		if (strBonus &gt; 0)           statSlot( Messages.get(this, &quot;str&quot;), info.str + &quot; + &quot; + strBonus );</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		else if (strBonus &lt; 0)      statSlot( Messages.get(this, &quot;str&quot;), info.str + &quot; - &quot; + -strBonus );</span>
+<span class="nc" id="L94">		else                        statSlot( Messages.get(this, &quot;str&quot;), info.str );</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		if (info.shld &gt; 0)  statSlot( Messages.get(this, &quot;health&quot;), info.hp + &quot;+&quot; + info.shld + &quot;/&quot; + info.ht );</span>
+<span class="nc" id="L96">		else                statSlot( Messages.get(this, &quot;health&quot;), (info.hp) + &quot;/&quot; + info.ht );</span>
+<span class="nc" id="L97">		statSlot( Messages.get(this, &quot;exp&quot;), info.exp + &quot;/&quot; + Hero.maxExp(info.level) );</span>
+		
+<span class="nc" id="L99">		pos += GAP;</span>
+<span class="nc" id="L100">		statSlot( Messages.get(this, &quot;gold&quot;), info.goldCollected );</span>
+<span class="nc" id="L101">		statSlot( Messages.get(this, &quot;depth&quot;), info.maxDepth );</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if (info.daily) {</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			if (info.dailyReplay) {</span>
+<span class="nc" id="L104">				statSlot(Messages.get(this, &quot;replay_for&quot;), &quot;_&quot; + info.customSeed + &quot;_&quot;);</span>
+			} else {
+<span class="nc" id="L106">				statSlot(Messages.get(this, &quot;daily_for&quot;), &quot;_&quot; + info.customSeed + &quot;_&quot;);</span>
+			}
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		} else if (!info.customSeed.isEmpty()){</span>
+<span class="nc" id="L109">			statSlot( Messages.get(this, &quot;custom_seed&quot;), &quot;_&quot; + info.customSeed + &quot;_&quot; );</span>
+		} else {
+<span class="nc" id="L111">			statSlot( Messages.get(this, &quot;dungeon_seed&quot;), DungeonSeed.convertToCode(info.seed) );</span>
+		}
+		
+<span class="nc" id="L114">		pos += GAP;</span>
+		
+<span class="nc" id="L116">		RedButton cont = new RedButton(Messages.get(this, &quot;continue&quot;)){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L119">				super.onClick();</span>
+				
+<span class="nc" id="L121">				GamesInProgress.curSlot = slot;</span>
+				
+<span class="nc" id="L123">				Dungeon.hero = null;</span>
+<span class="nc" id="L124">				Dungeon.daily = Dungeon.dailyReplay = false;</span>
+<span class="nc" id="L125">				ActionIndicator.clearAction();</span>
+<span class="nc" id="L126">				InterlevelScene.mode = InterlevelScene.Mode.CONTINUE;</span>
+<span class="nc" id="L127">				ShatteredPixelDungeon.switchScene(InterlevelScene.class);</span>
+<span class="nc" id="L128">			}</span>
+		};
+		
+<span class="nc" id="L131">		RedButton erase = new RedButton( Messages.get(this, &quot;erase&quot;)){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L134">				super.onClick();</span>
+				
+<span class="nc" id="L136">				ShatteredPixelDungeon.scene().add(new WndOptions(Icons.get(Icons.WARNING),</span>
+<span class="nc" id="L137">						Messages.get(WndGameInProgress.class, &quot;erase_warn_title&quot;),</span>
+<span class="nc" id="L138">						Messages.get(WndGameInProgress.class, &quot;erase_warn_body&quot;),</span>
+<span class="nc" id="L139">						Messages.get(WndGameInProgress.class, &quot;erase_warn_yes&quot;),</span>
+<span class="nc" id="L140">						Messages.get(WndGameInProgress.class, &quot;erase_warn_no&quot;) ) {</span>
+					@Override
+					protected void onSelect( int index ) {
+<span class="nc bnc" id="L143" title="All 2 branches missed.">						if (index == 0) {</span>
+<span class="nc" id="L144">							Dungeon.deleteGame(slot, true);</span>
+<span class="nc" id="L145">							ShatteredPixelDungeon.switchNoFade(StartScene.class);</span>
+						}
+<span class="nc" id="L147">					}</span>
+				} );
+<span class="nc" id="L149">			}</span>
+		};
+
+<span class="nc" id="L152">		cont.icon(Icons.get(Icons.ENTER));</span>
+<span class="nc" id="L153">		cont.setRect(0, pos, WIDTH/2 -1, 20);</span>
+<span class="nc" id="L154">		add(cont);</span>
+
+<span class="nc" id="L156">		erase.icon(Icons.get(Icons.CLOSE));</span>
+<span class="nc" id="L157">		erase.setRect(WIDTH/2 + 1, pos, WIDTH/2 - 1, 20);</span>
+<span class="nc" id="L158">		add(erase);</span>
+		
+<span class="nc" id="L160">		resize(WIDTH, (int)cont.bottom()+1);</span>
+<span class="nc" id="L161">	}</span>
+	
+	private void statSlot( String label, String value ) {
+		
+<span class="nc" id="L165">		RenderedTextBlock txt = PixelScene.renderTextBlock( label, 8 );</span>
+<span class="nc" id="L166">		txt.setPos(0, pos);</span>
+<span class="nc" id="L167">		add( txt );</span>
+
+<span class="nc" id="L169">		int size = 8;</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">		if (value.length() &gt;= 14) size -=2;</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">		if (value.length() &gt;= 18) size -=1;</span>
+<span class="nc" id="L172">		txt = PixelScene.renderTextBlock( value, size );</span>
+<span class="nc" id="L173">		txt.setPos(WIDTH * 0.55f, pos + (6 - txt.height())/2);</span>
+<span class="nc" id="L174">		PixelScene.align(txt);</span>
+<span class="nc" id="L175">		add( txt );</span>
+		
+<span class="nc" id="L177">		pos += GAP + txt.height();</span>
+<span class="nc" id="L178">	}</span>
+	
+	private void statSlot( String label, int value ) {
+<span class="nc" id="L181">		statSlot( label, Integer.toString( value ) );</span>
+<span class="nc" id="L182">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TreasuryRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special</a> &gt; <span class="el_source">TreasuryRoom.java</span></div><h1>TreasuryRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic;
+import com.shatteredpixel.shatteredpixeldungeon.items.Gold;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.keys.IronKey;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.MimicTooth;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.TrinketCatalyst;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L37">public class TreasuryRoom extends SpecialRoom {</span>
+
+	public void paint( Level level ) {
+		
+<span class="nc" id="L41">		Painter.fill( level, this, Terrain.WALL );</span>
+<span class="nc" id="L42">		Painter.fill( level, this, 1, Terrain.EMPTY );</span>
+		
+<span class="nc" id="L44">		Painter.set( level, center(), Terrain.STATUE );</span>
+		
+<span class="nc bnc" id="L46" title="All 2 branches missed.">		Heap.Type heapType = Random.Int( 2 ) == 0 ? Heap.Type.CHEST : Heap.Type.HEAP;</span>
+		
+<span class="nc" id="L48">		int n = Random.IntRange( 2, 3 );</span>
+<span class="nc" id="L49">		float mimicChance = 1/5f * MimicTooth.mimicChanceMultiplier();</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">		for (int i=0; i &lt; n; i++) {</span>
+<span class="nc" id="L51">			Item item = level.findPrizeItem(TrinketCatalyst.class);</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">			if (item == null) item = new Gold().random();</span>
+
+			int pos;
+			do {
+<span class="nc" id="L56">				pos = level.pointToCell(random());</span>
+<span class="nc bnc" id="L57" title="All 6 branches missed.">			} while (level.map[pos] != Terrain.EMPTY || level.heaps.get( pos ) != null || level.findMob(pos) != null);</span>
+<span class="nc bnc" id="L58" title="All 6 branches missed.">			if (heapType == Heap.Type.CHEST &amp;&amp; Dungeon.depth &gt; 1 &amp;&amp; Random.Float() &lt; mimicChance){</span>
+<span class="nc" id="L59">				level.mobs.add(Mimic.spawnAt(pos, item));</span>
+			} else {
+<span class="nc" id="L61">				level.drop( item, pos ).type = heapType;</span>
+			}
+		}
+		
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		if (heapType == Heap.Type.HEAP) {</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">			for (int i=0; i &lt; 6; i++) {</span>
+				int pos;
+				do {
+<span class="nc" id="L69">					pos = level.pointToCell(random());</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">				} while (level.map[pos] != Terrain.EMPTY);</span>
+<span class="nc" id="L71">				level.drop( new Gold( Random.IntRange( 5, 12 ) ), pos );</span>
+			}
+		}
+		
+<span class="nc" id="L75">		entrance().set( Door.Type.LOCKED );</span>
+<span class="nc" id="L76">		level.addItemToSpawn( new IronKey( Dungeon.depth ) );</span>
+<span class="nc" id="L77">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,883 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GnollGeomancer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">GnollGeomancer.java</span></div><h1>GnollGeomancer.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ShieldBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Blacksmith;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.DarkGold;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.Pickaxe;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfBlastWave;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.GnollGeomancerSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L64">public class GnollGeomancer extends Mob {</span>
+
+	{
+<span class="nc" id="L67">		HP = HT = 150;</span>
+<span class="nc" id="L68">		spriteClass = GnollGeomancerSprite.class;</span>
+
+<span class="nc" id="L70">		EXP = 20;</span>
+
+		//acts after other mobs, just like sappers
+<span class="nc" id="L73">		actPriority = MOB_PRIO-1;</span>
+
+<span class="nc" id="L75">		SLEEPING = new Sleeping();</span>
+<span class="nc" id="L76">		HUNTING = new Hunting();</span>
+<span class="nc" id="L77">		state = SLEEPING;</span>
+
+		//FOV is used to attack hero when they are in open space created by geomancer
+		// but geomancer will lose sight and stop attacking if the hero flees behind walls.
+		// Because of this geomancer can see through high grass and shrouding fod
+<span class="nc" id="L82">		viewDistance = 12;</span>
+
+<span class="nc" id="L84">		properties.add(Property.BOSS);</span>
+<span class="nc" id="L85">		properties.add(Property.IMMOVABLE); //moves itself via ability, otherwise is static</span>
+	}
+
+<span class="nc" id="L88">	private int abilityCooldown = Random.NormalIntRange(3, 5);</span>
+	private boolean lastAbilityWasRockfall;
+
+<span class="nc" id="L91">	private int[] throwingRocksFromPos = null;</span>
+<span class="nc" id="L92">	private int throwingRockToPos = -1; //only need 1 to pos, it's always the same.</span>
+
+<span class="nc" id="L94">	private int sapperID = -1;</span>
+<span class="nc" id="L95">	private int[] sapperSpawns = null;</span>
+
+	@Override
+	protected boolean act() {
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		if (sapperSpawns == null){</span>
+<span class="nc" id="L100">			sapperSpawns = new int[3];</span>
+<span class="nc" id="L101">			int i = 0;</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">			for (Mob m : Dungeon.level.mobs){</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">				if (m instanceof GnollSapper){</span>
+<span class="nc" id="L104">					sapperSpawns[i] = ((GnollSapper) m).spawnPos;</span>
+<span class="nc" id="L105">					i++;</span>
+				}
+<span class="nc bnc" id="L107" title="All 2 branches missed.">				if (i == 3) break;</span>
+<span class="nc" id="L108">			}</span>
+		}
+
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		if (throwingRocksFromPos != null){</span>
+<span class="nc" id="L112">			boolean attacked = false;</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">			for (int rock : throwingRocksFromPos) {</span>
+<span class="nc bnc" id="L114" title="All 4 branches missed.">				if (rock != -1 &amp;&amp; Dungeon.level.map[rock] == Terrain.MINE_BOULDER) {</span>
+<span class="nc" id="L115">					attacked = true;</span>
+<span class="nc" id="L116">					GnollGeomancer.doRockThrowAttack(this, rock, throwingRockToPos);</span>
+				}
+			}
+
+<span class="nc" id="L120">			throwingRocksFromPos = null;</span>
+<span class="nc" id="L121">			throwingRockToPos = -1;</span>
+
+<span class="nc" id="L123">			spend(TICK);</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">			return !attacked;</span>
+		} else {
+<span class="nc" id="L126">			return super.act();</span>
+		}
+
+	}
+
+	@Override
+	public boolean isInvulnerable(Class effect) {
+<span class="nc bnc" id="L133" title="All 2 branches missed.">		return super.isInvulnerable(effect)</span>
+<span class="nc bnc" id="L134" title="All 4 branches missed.">				|| (buff(RockArmor.class) != null &amp;&amp; effect != Pickaxe.class)</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">				|| hasSapper();</span>
+	}
+
+	@Override
+	public boolean add(Buff buff) {
+		//immune to buffs and debuff (except its own buffs) while sleeping
+<span class="nc bnc" id="L141" title="All 6 branches missed.">		if (state == SLEEPING &amp;&amp; !(buff instanceof RockArmor || buff instanceof DelayedRockFall)){</span>
+<span class="nc" id="L142">			return false;</span>
+		} else {
+<span class="nc" id="L144">			return super.add(buff);</span>
+		}
+	}
+
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L150">		return Random.NormalIntRange( 3, 6 );</span>
+	}
+
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L155">		return 20;</span>
+	}
+
+	@Override
+	public int drRoll() {
+<span class="nc" id="L160">		return super.drRoll() + Random.NormalIntRange(0, 6);</span>
+	}
+
+	@Override
+	public boolean reset() {
+<span class="nc" id="L165">		return true;</span>
+	}
+
+	@Override
+	public float spawningWeight() {
+<span class="nc" id="L170">		return 0;</span>
+	}
+
+	@Override
+	public boolean heroShouldInteract() {
+<span class="nc bnc" id="L175" title="All 4 branches missed.">		return super.heroShouldInteract() || buff(RockArmor.class) != null;</span>
+	}
+
+	@Override
+	protected boolean getCloser(int target) {
+<span class="nc" id="L180">		return false;</span>
+	}
+
+	@Override
+	protected boolean getFurther(int target) {
+<span class="nc" id="L185">		return false;</span>
+	}
+
+<span class="nc" id="L188">	int hits = 0;</span>
+
+	@Override
+	public boolean interact(Char c) {
+<span class="nc bnc" id="L192" title="All 4 branches missed.">		if (c != Dungeon.hero || buff(RockArmor.class) == null) {</span>
+<span class="nc" id="L193">			return super.interact(c);</span>
+		} else {
+<span class="nc" id="L195">			final Pickaxe p = Dungeon.hero.belongings.getItem(Pickaxe.class);</span>
+
+<span class="nc bnc" id="L197" title="All 2 branches missed.">			if (p == null){</span>
+<span class="nc" id="L198">				return true;</span>
+			}
+
+<span class="nc" id="L201">			Dungeon.hero.sprite.attack(pos, new Callback() {</span>
+				@Override
+				public void call() {
+					//does its own special damage calculation that's only influenced by pickaxe level and augment
+					//we pretend the geomancer is the owner here so that properties like hero str or or other equipment do not factor in
+<span class="nc" id="L206">					int dmg = p.damageRoll(GnollGeomancer.this);</span>
+
+<span class="nc bnc" id="L208" title="All 2 branches missed.">					boolean wasSleeping = state == SLEEPING;</span>
+
+					//ensure we don't do enough damage to break the armor at the start
+<span class="nc bnc" id="L211" title="All 2 branches missed.">					if (wasSleeping) dmg = Math.min(dmg, 15);</span>
+
+<span class="nc" id="L213">					dmg = Math.min(dmg, buff(RockArmor.class).shielding());</span>
+
+<span class="nc" id="L215">					damage(dmg, p);</span>
+<span class="nc" id="L216">					sprite.bloodBurstA(Dungeon.hero.sprite.center(), dmg);</span>
+<span class="nc" id="L217">					sprite.flash();</span>
+
+<span class="nc" id="L219">					hits++;</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">					if (hits == 1){</span>
+<span class="nc" id="L221">						GLog.w( Messages.get(GnollGeomancer.this, &quot;warning&quot;));</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">					} if (hits == 3){</span>
+<span class="nc" id="L223">						GLog.n( Messages.get(GnollGeomancer.this, &quot;alert&quot;));</span>
+<span class="nc" id="L224">						wasSleeping = false;</span>
+<span class="nc" id="L225">						spend(TICK);</span>
+<span class="nc" id="L226">						sprite.idle();</span>
+
+<span class="nc" id="L228">						carveRockAndDash();</span>
+
+<span class="nc" id="L230">						state = HUNTING;</span>
+<span class="nc" id="L231">						enemy = Dungeon.hero;</span>
+<span class="nc" id="L232">						BossHealthBar.assignBoss(GnollGeomancer.this);</span>
+
+<span class="nc bnc" id="L234" title="All 2 branches missed.">						for (Mob m : Dungeon.level.mobs){</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">							if (m instanceof GnollGuard){</span>
+<span class="nc" id="L236">								m.aggro(Dungeon.hero);</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">								if (!((GnollGuard) m).hasSapper()){</span>
+<span class="nc" id="L238">									m.beckon(pos);</span>
+								}
+<span class="nc bnc" id="L240" title="All 2 branches missed.">							} else if (m instanceof GnollSapper){</span>
+<span class="nc" id="L241">								m.aggro(Dungeon.hero);</span>
+							}
+<span class="nc" id="L243">						}</span>
+					}
+
+<span class="nc bnc" id="L246" title="All 2 branches missed.">					if (wasSleeping) {</span>
+<span class="nc" id="L247">						state = SLEEPING;</span>
+<span class="nc" id="L248">						alerted = false;</span>
+					}
+
+<span class="nc bnc" id="L251" title="All 2 branches missed.">					if (buff(RockArmor.class) == null){</span>
+<span class="nc" id="L252">						Splash.around(sprite, 0x555555, 30);</span>
+<span class="nc" id="L253">						sprite.idle();</span>
+					}
+
+<span class="nc" id="L256">					Sample.INSTANCE.play(Assets.Sounds.MINE, 1f, Random.Float(0.85f, 1.15f));</span>
+<span class="nc" id="L257">					Invisibility.dispel(Dungeon.hero);</span>
+<span class="nc" id="L258">					Dungeon.hero.spendAndNext(p.delayFactor(GnollGeomancer.this));</span>
+<span class="nc" id="L259">				}</span>
+			});
+
+<span class="nc" id="L262">			return false;</span>
+		}
+	}
+
+	@Override
+	public void damage(int dmg, Object src) {
+<span class="nc" id="L268">		int hpBracket = HT / 3;</span>
+
+<span class="nc" id="L270">		int curbracket = HP / hpBracket;</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">		if (curbracket == 3) curbracket--; //full HP isn't its own bracket</span>
+
+<span class="nc bnc" id="L273" title="All 2 branches missed.">		inFinalBracket = curbracket == 0;</span>
+
+<span class="nc" id="L275">		super.damage(dmg, src);</span>
+
+<span class="nc" id="L277">		abilityCooldown -= dmg/10f;</span>
+
+<span class="nc" id="L279">		int newBracket =  HP / hpBracket;</span>
+<span class="nc bnc" id="L280" title="All 2 branches missed.">		if (newBracket == 3) newBracket--; //full HP isn't its own bracket</span>
+
+<span class="nc bnc" id="L282" title="All 2 branches missed.">		if (newBracket != curbracket) {</span>
+			//cannot be hit through multiple brackets at a time
+<span class="nc bnc" id="L284" title="All 2 branches missed.">			if (HP &lt;= (curbracket-1)*hpBracket){</span>
+<span class="nc" id="L285">				HP = (curbracket-1)*hpBracket + 1;</span>
+			}
+
+<span class="nc bnc" id="L288" title="All 2 branches missed.">			BossHealthBar.bleed(newBracket &lt;= 0);</span>
+
+<span class="nc" id="L290">			carveRockAndDash();</span>
+<span class="nc" id="L291">			Buff.affect(this, RockArmor.class).setShield(25);</span>
+		}
+<span class="nc" id="L293">	}</span>
+
+<span class="nc" id="L295">	private boolean inFinalBracket = false;</span>
+
+	@Override
+	public boolean isAlive() {
+		//cannot die until final HP bracket, regardless of incoming dmg
+<span class="nc bnc" id="L300" title="All 4 branches missed.">		return super.isAlive() || !inFinalBracket;</span>
+	}
+
+	public void linkSapper( GnollSapper sapper ){
+<span class="nc" id="L304">		this.sapperID = sapper.id();</span>
+<span class="nc bnc" id="L305" title="All 2 branches missed.">		if (sprite instanceof GnollGeomancerSprite){</span>
+<span class="nc" id="L306">			((GnollGeomancerSprite) sprite).setupArmor();</span>
+		}
+<span class="nc" id="L308">	}</span>
+
+	public boolean hasSapper(){
+<span class="nc bnc" id="L311" title="All 2 branches missed.">		return sapperID != -1</span>
+<span class="nc bnc" id="L312" title="All 2 branches missed.">				&amp;&amp; Actor.findById(sapperID) instanceof GnollSapper</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">				&amp;&amp; ((GnollSapper)Actor.findById(sapperID)).isAlive();</span>
+	}
+
+	public void loseSapper(){
+<span class="nc bnc" id="L317" title="All 2 branches missed.">		if (sapperID != -1){</span>
+<span class="nc" id="L318">			sapperID = -1;</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">			if (sprite instanceof GnollGeomancerSprite){</span>
+<span class="nc" id="L320">				((GnollGeomancerSprite) sprite).loseArmor();</span>
+			}
+		}
+<span class="nc" id="L323">	}</span>
+
+	private void carveRockAndDash(){
+
+		//aim for closest sapper, preferring living ones within 16 tiles
+<span class="nc" id="L328">		int closestSapperPos = -1;</span>
+<span class="nc" id="L329">		boolean closestisAlive = false;</span>
+<span class="nc bnc" id="L330" title="All 2 branches missed.">		for (int i = 0; i &lt; sapperSpawns.length; i++){</span>
+<span class="nc bnc" id="L331" title="All 2 branches missed.">			if (sapperSpawns[i] == -1){</span>
+<span class="nc" id="L332">				continue;</span>
+			}
+
+<span class="nc bnc" id="L335" title="All 2 branches missed.">			if (closestSapperPos == -1) {</span>
+<span class="nc" id="L336">				closestSapperPos = sapperSpawns[i];</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">				for (Mob m : Dungeon.level.mobs){</span>
+<span class="nc bnc" id="L338" title="All 4 branches missed.">					if (m instanceof GnollSapper &amp;&amp; ((GnollSapper) m).spawnPos == closestSapperPos){</span>
+<span class="nc" id="L339">						closestisAlive = true;</span>
+<span class="nc" id="L340">						break;</span>
+					}
+<span class="nc" id="L342">				}</span>
+<span class="nc" id="L343">				continue;</span>
+			}
+
+<span class="nc" id="L346">			boolean sapperAlive = false;</span>
+<span class="nc bnc" id="L347" title="All 2 branches missed.">			for (Mob m : Dungeon.level.mobs){</span>
+<span class="nc bnc" id="L348" title="All 4 branches missed.">				if (m instanceof GnollSapper &amp;&amp; ((GnollSapper) m).spawnPos == sapperSpawns[i]){</span>
+<span class="nc" id="L349">					sapperAlive = true;</span>
+<span class="nc" id="L350">					break;</span>
+				}
+<span class="nc" id="L352">			}</span>
+
+<span class="nc bnc" id="L354" title="All 6 branches missed.">			if ((sapperAlive &amp;&amp; !closestisAlive &amp;&amp; Dungeon.level.distance(pos, sapperSpawns[i]) &lt;= 16)</span>
+<span class="nc bnc" id="L355" title="All 2 branches missed.">					|| Dungeon.level.trueDistance(pos, sapperSpawns[i]) &lt; Dungeon.level.trueDistance(pos, closestSapperPos)) {</span>
+<span class="nc" id="L356">				closestSapperPos = sapperSpawns[i];</span>
+<span class="nc" id="L357">				closestisAlive = sapperAlive;</span>
+			}
+		}
+
+<span class="nc" id="L361">		int dashPos = closestSapperPos;</span>
+
+		//can only dash 3 times
+<span class="nc bnc" id="L364" title="All 2 branches missed.">		if (dashPos == -1){</span>
+<span class="nc" id="L365">			return;</span>
+		}
+
+		//if spawn pos is more than 12 tiles away, get as close as possible
+<span class="nc" id="L369">		Ballistica path = new Ballistica(pos, dashPos, Ballistica.STOP_TARGET);</span>
+
+<span class="nc bnc" id="L371" title="All 2 branches missed.">		if (path.dist &gt; 12){</span>
+<span class="nc" id="L372">			dashPos = path.path.get(12);</span>
+		}
+
+<span class="nc bnc" id="L375" title="All 4 branches missed.">		if (Actor.findChar(dashPos) != null || Dungeon.level.traps.get(dashPos) != null){</span>
+<span class="nc" id="L376">			ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L377" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L378" title="All 4 branches missed.">				if (Actor.findChar(dashPos+i) == null &amp;&amp; Dungeon.level.traps.get(dashPos+i) == null){</span>
+<span class="nc" id="L379">					candidates.add(dashPos+i);</span>
+				}
+			}
+<span class="nc bnc" id="L382" title="All 2 branches missed.">			if (!candidates.isEmpty()) {</span>
+<span class="nc" id="L383">				dashPos = Random.element(candidates);</span>
+			}
+		}
+
+<span class="nc bnc" id="L387" title="All 2 branches missed.">		for (int i = 0; i &lt; sapperSpawns.length; i++){</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">			if (sapperSpawns[i] == closestSapperPos){</span>
+<span class="nc" id="L389">				sapperSpawns[i] = -1;</span>
+			}
+		}
+
+<span class="nc" id="L393">		path = new Ballistica(pos, dashPos, Ballistica.STOP_TARGET);</span>
+
+<span class="nc" id="L395">		ArrayList&lt;Integer&gt; cells = new ArrayList&lt;&gt;(path.subPath(0, path.dist));</span>
+<span class="nc" id="L396">		cells.addAll(spreadDiamondAOE(cells));</span>
+<span class="nc" id="L397">		cells.addAll(spreadDiamondAOE(cells));</span>
+<span class="nc" id="L398">		cells.addAll(spreadDiamondAOE(cells));</span>
+
+<span class="nc" id="L400">		ArrayList&lt;Integer&gt; exteriorCells = spreadDiamondAOE(cells);</span>
+
+<span class="nc bnc" id="L402" title="All 2 branches missed.">		for (int i : cells){</span>
+<span class="nc bnc" id="L403" title="All 2 branches missed.">			if (Dungeon.level.map[i] == Terrain.WALL_DECO){</span>
+<span class="nc" id="L404">				Dungeon.level.drop(new DarkGold(), i).sprite.drop();</span>
+<span class="nc" id="L405">				Dungeon.level.map[i] = Terrain.EMPTY_DECO;</span>
+<span class="nc bnc" id="L406" title="All 2 branches missed.">			} else if (Dungeon.level.solid[i]){</span>
+<span class="nc bnc" id="L407" title="All 2 branches missed.">				if (Random.Int(3) == 0){</span>
+<span class="nc" id="L408">					Dungeon.level.map[i] = Terrain.MINE_BOULDER;</span>
+				} else {
+<span class="nc" id="L410">					Dungeon.level.map[i] = Terrain.EMPTY_DECO;</span>
+				}
+<span class="nc bnc" id="L412" title="All 4 branches missed.">			} else if (Dungeon.level.map[i] == Terrain.HIGH_GRASS || Dungeon.level.map[i] == Terrain.FURROWED_GRASS){</span>
+<span class="nc" id="L413">				Dungeon.level.map[i] = Terrain.GRASS;</span>
+			}
+<span class="nc" id="L415">			CellEmitter.get( i - Dungeon.level.width() ).start(Speck.factory(Speck.ROCK), 0.07f, 10);</span>
+<span class="nc" id="L416">		}</span>
+<span class="nc bnc" id="L417" title="All 2 branches missed.">		for (int i : exteriorCells){</span>
+<span class="nc bnc" id="L418" title="All 4 branches missed.">			if (!Dungeon.level.solid[i]</span>
+					&amp;&amp; Dungeon.level.map[i] != Terrain.EMPTY_SP
+<span class="nc bnc" id="L420" title="All 2 branches missed.">					&amp;&amp; !Dungeon.level.adjacent(i, Dungeon.level.entrance())</span>
+<span class="nc bnc" id="L421" title="All 2 branches missed.">					&amp;&amp; Dungeon.level.traps.get(i) == null</span>
+<span class="nc bnc" id="L422" title="All 2 branches missed.">					&amp;&amp; Dungeon.level.plants.get(i) == null</span>
+<span class="nc bnc" id="L423" title="All 2 branches missed.">					&amp;&amp; Actor.findChar(i) == null){</span>
+<span class="nc" id="L424">				Dungeon.level.map[i] = Terrain.MINE_BOULDER;</span>
+			}
+<span class="nc" id="L426">		}</span>
+<span class="nc bnc" id="L427" title="All 2 branches missed.">		if (Dungeon.level.solid[dashPos]){</span>
+<span class="nc" id="L428">			Dungeon.level.map[dashPos] = Terrain.EMPTY_DECO;</span>
+		}
+		//we potentially update a lot of cells, so might as well just reset properties instead of incrementally updating
+<span class="nc" id="L431">		Dungeon.level.buildFlagMaps();</span>
+<span class="nc" id="L432">		Dungeon.level.cleanWalls();</span>
+<span class="nc" id="L433">		GameScene.updateMap();</span>
+<span class="nc" id="L434">		GameScene.updateFog();</span>
+<span class="nc" id="L435">		Dungeon.observe();</span>
+
+<span class="nc" id="L437">		PixelScene.shake(3, 0.7f);</span>
+<span class="nc" id="L438">		Sample.INSTANCE.play(Assets.Sounds.ROCKS);</span>
+
+<span class="nc" id="L440">		int oldpos = pos;</span>
+<span class="nc" id="L441">		pos = dashPos;</span>
+<span class="nc" id="L442">		spend(TICK);</span>
+<span class="nc" id="L443">		abilityCooldown = 1;</span>
+<span class="nc" id="L444">		Actor.add(new Pushing(this, oldpos, pos));</span>
+
+<span class="nc bnc" id="L446" title="All 2 branches missed.">		if (closestisAlive){</span>
+<span class="nc" id="L447">			GnollSapper closest = null;</span>
+<span class="nc bnc" id="L448" title="All 2 branches missed.">			for (Mob m : Dungeon.level.mobs){</span>
+<span class="nc bnc" id="L449" title="All 4 branches missed.">				if (m instanceof GnollSapper &amp;&amp; ((GnollSapper) m).spawnPos == closestSapperPos){</span>
+<span class="nc" id="L450">					closest = (GnollSapper) m;</span>
+<span class="nc" id="L451">					break;</span>
+				}
+<span class="nc" id="L453">			}</span>
+<span class="nc bnc" id="L454" title="All 2 branches missed.">			if (closest != null){</span>
+<span class="nc" id="L455">				Actor guard = closest.getPartner();</span>
+<span class="nc" id="L456">				closest.linkPartner(this);</span>
+				//moves sapper and its guard toward geomancer if it is too far away
+<span class="nc bnc" id="L458" title="All 2 branches missed.">				if (Dungeon.level.distance(closest.pos, dashPos) &gt; 3){</span>
+<span class="nc" id="L459">					ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L460" title="All 2 branches missed.">					for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L461" title="All 2 branches missed.">						if (!Dungeon.level.solid[dashPos+i]</span>
+<span class="nc bnc" id="L462" title="All 2 branches missed.">								&amp;&amp; Dungeon.level.traps.get(dashPos+i) == null</span>
+<span class="nc bnc" id="L463" title="All 2 branches missed.">								&amp;&amp; Dungeon.level.plants.get(dashPos+i) == null</span>
+<span class="nc bnc" id="L464" title="All 2 branches missed.">								&amp;&amp; Actor.findChar(dashPos+i) == null){</span>
+<span class="nc" id="L465">							candidates.add(dashPos+i);</span>
+						}
+					}
+
+<span class="nc bnc" id="L469" title="All 2 branches missed.">					if (!candidates.isEmpty()){</span>
+<span class="nc" id="L470">						int newSapperPos = Random.element(candidates);</span>
+<span class="nc" id="L471">						ScrollOfTeleportation.appear(closest, newSapperPos);</span>
+<span class="nc" id="L472">						closest.spawnPos = newSapperPos;</span>
+<span class="nc" id="L473">						candidates.remove((Integer)newSapperPos);</span>
+
+<span class="nc bnc" id="L475" title="All 4 branches missed.">						if (guard instanceof GnollGuard &amp;&amp; !candidates.isEmpty()){</span>
+<span class="nc" id="L476">							ScrollOfTeleportation.appear((GnollGuard)guard, Random.element(candidates));</span>
+						}
+
+					}
+				}
+			}
+		}
+<span class="nc" id="L483">	}</span>
+
+	private ArrayList&lt;Integer&gt; spreadDiamondAOE(ArrayList&lt;Integer&gt; currentCells){
+<span class="nc" id="L486">		ArrayList&lt;Integer&gt; spreadCells = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L487" title="All 2 branches missed.">		for (int i : currentCells){</span>
+<span class="nc bnc" id="L488" title="All 2 branches missed.">			for (int j : PathFinder.NEIGHBOURS4){</span>
+<span class="nc bnc" id="L489" title="All 6 branches missed.">				if (Dungeon.level.insideMap(i+j) &amp;&amp; !spreadCells.contains(i+j) &amp;&amp; !currentCells.contains(i+j)){</span>
+<span class="nc" id="L490">					spreadCells.add(i+j);</span>
+				}
+			}
+<span class="nc" id="L493">		}</span>
+<span class="nc" id="L494">		return spreadCells;</span>
+	}
+
+	@Override
+	public String description() {
+<span class="nc bnc" id="L499" title="All 2 branches missed.">		if (state == SLEEPING){</span>
+<span class="nc" id="L500">			return Messages.get(this, &quot;desc_sleeping&quot;);</span>
+		} else {
+<span class="nc" id="L502">			String desc = super.description();</span>
+<span class="nc bnc" id="L503" title="All 2 branches missed.">			if (buff(RockArmor.class) != null){</span>
+<span class="nc bnc" id="L504" title="All 2 branches missed.">				if (hasSapper()){</span>
+<span class="nc" id="L505">					desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_armor_sapper&quot;);</span>
+				} else {
+<span class="nc" id="L507">					desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_armor&quot;);</span>
+				}
+			}
+<span class="nc" id="L510">			return desc;</span>
+		}
+	}
+
+	@Override
+	public void die(Object cause) {
+<span class="nc" id="L516">		super.die(cause);</span>
+<span class="nc" id="L517">		Blacksmith.Quest.beatBoss();</span>
+<span class="nc" id="L518">		Sample.INSTANCE.playDelayed(Assets.Sounds.ROCKS, 0.1f);</span>
+<span class="nc" id="L519">		PixelScene.shake( 3, 0.7f );</span>
+
+<span class="nc bnc" id="L521" title="All 2 branches missed.">		for (int i = 0; i &lt; Dungeon.level.length(); i++){</span>
+<span class="nc bnc" id="L522" title="All 4 branches missed.">			if (Dungeon.level.map[i] == Terrain.MINE_BOULDER &amp;&amp; Dungeon.level.trueDistance(i, pos) &lt;= 6){</span>
+<span class="nc" id="L523">				Level.set(i, Terrain.EMPTY_DECO);</span>
+<span class="nc" id="L524">				GameScene.updateMap(i);</span>
+<span class="nc" id="L525">				Splash.at(i, 0x555555, 15);</span>
+			}
+		}
+<span class="nc" id="L528">	}</span>
+
+	@Override
+	public void beckon(int cell) {
+<span class="nc bnc" id="L532" title="All 2 branches missed.">		if (state == SLEEPING){</span>
+			//do nothing
+		} else {
+<span class="nc" id="L535">			super.beckon(cell);</span>
+		}
+<span class="nc" id="L537">	}</span>
+
+<span class="nc" id="L539">	private class Sleeping extends Mob.Sleeping {</span>
+
+		@Override
+		protected void awaken(boolean enemyInFOV) {
+			//do nothing, has special awakening rules
+<span class="nc" id="L544">		}</span>
+	}
+
+<span class="nc" id="L547">	private class Hunting extends Mob.Hunting {</span>
+
+		@Override
+		public boolean act(boolean enemyInFOV, boolean justAlerted) {
+<span class="nc bnc" id="L551" title="All 2 branches missed.">			if (!enemyInFOV){</span>
+<span class="nc" id="L552">				spend(TICK);</span>
+<span class="nc" id="L553">				return true;</span>
+			} else {
+<span class="nc" id="L555">				enemySeen = true;</span>
+
+				//use abilities more frequently on the hero's initial approach or if sapper is alive
+				// but only if hero isn't stunned, to prevent stunlocking
+<span class="nc bnc" id="L559" title="All 4 branches missed.">				if ((Dungeon.level.distance(pos, enemy.pos) &gt; 2 || hasSapper())</span>
+<span class="nc bnc" id="L560" title="All 2 branches missed.">						&amp;&amp; buff(RockArmor.class) != null</span>
+<span class="nc bnc" id="L561" title="All 2 branches missed.">						&amp;&amp; enemy.buff(Paralysis.class) == null){</span>
+<span class="nc" id="L562">					abilityCooldown -= 1f;</span>
+				}
+
+<span class="nc bnc" id="L565" title="All 2 branches missed.">				if (hasSapper()){</span>
+<span class="nc" id="L566">					((GnollSapper)Actor.findById(sapperID)).aggro(enemy);</span>
+				}
+
+<span class="nc bnc" id="L569" title="All 2 branches missed.">				if (abilityCooldown-- &lt;= 0){</span>
+
+<span class="nc" id="L571">					boolean targetNextToBarricade = false;</span>
+<span class="nc bnc" id="L572" title="All 2 branches missed.">					for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L573" title="All 4 branches missed.">						if (Dungeon.level.map[enemy.pos+i] == Terrain.BARRICADE</span>
+								|| Dungeon.level.map[enemy.pos+i] == Terrain.ENTRANCE){
+<span class="nc" id="L575">							targetNextToBarricade = true;</span>
+<span class="nc" id="L576">							break;</span>
+						}
+					}
+
+					// 50/50 to either throw a rock or do rockfall, but never do rockfall twice
+					// unless target is next to a barricade, then always try to throw
+					// unless nothing to throw, then always rockfall
+<span class="nc" id="L583">					int hpBracket = HT / 3;</span>
+
+<span class="nc" id="L585">					int curbracket = HP / hpBracket;</span>
+<span class="nc bnc" id="L586" title="All 2 branches missed.">					if (curbracket == 3) curbracket--; //full HP isn't its own bracket</span>
+
+<span class="nc" id="L588">					Ballistica aim = GnollGeomancer.prepRockThrowAttack(enemy, GnollGeomancer.this);</span>
+<span class="nc bnc" id="L589" title="All 8 branches missed.">					if (aim != null &amp;&amp; (targetNextToBarricade || lastAbilityWasRockfall || Random.Int(2) == 0)) {</span>
+
+<span class="nc" id="L591">						lastAbilityWasRockfall = false;</span>
+<span class="nc" id="L592">						throwingRocksFromPos = new int[]{-1, -1, -1};</span>
+<span class="nc" id="L593">						throwingRockToPos = aim.collisionPos;</span>
+
+						//do up to 3 thrown rock attacks at once, depending on HP
+<span class="nc bnc" id="L596" title="All 2 branches missed.">						for (int i = 0; i &lt; 3 - curbracket; i++){</span>
+<span class="nc bnc" id="L597" title="All 2 branches missed.">							if (aim == null) break;</span>
+
+<span class="nc" id="L599">							throwingRocksFromPos[i] = aim.sourcePos;</span>
+
+<span class="nc" id="L601">							Ballistica warnPath = new Ballistica(aim.sourcePos, aim.collisionPos, Ballistica.STOP_SOLID);</span>
+<span class="nc bnc" id="L602" title="All 2 branches missed.">							for (int j : warnPath.subPath(0, warnPath.dist)){</span>
+<span class="nc" id="L603">								sprite.parent.add(new TargetedCell(j, 0xFF0000));</span>
+<span class="nc" id="L604">							}</span>
+
+<span class="nc" id="L606">							aim = GnollGeomancer.prepRockThrowAttack(enemy, GnollGeomancer.this);</span>
+						}
+
+<span class="nc" id="L609">						Dungeon.hero.interrupt();</span>
+<span class="nc" id="L610">						abilityCooldown = Random.NormalIntRange(3, 5);</span>
+<span class="nc" id="L611">						spend(GameMath.gate(TICK, (int)Math.ceil(enemy.cooldown()), 3*TICK));</span>
+<span class="nc" id="L612">						return true;</span>
+<span class="nc bnc" id="L613" title="All 2 branches missed.">					} else if (GnollGeomancer.prepRockFallAttack(enemy, GnollGeomancer.this, 6-2*curbracket, true)) {</span>
+<span class="nc" id="L614">						lastAbilityWasRockfall = true;</span>
+<span class="nc" id="L615">						Dungeon.hero.interrupt();</span>
+<span class="nc" id="L616">						spend(GameMath.gate(TICK, (int)Math.ceil(enemy.cooldown()), 3*TICK));</span>
+<span class="nc" id="L617">						abilityCooldown = Random.NormalIntRange(3, 5);</span>
+<span class="nc" id="L618">						return true;</span>
+					}
+				}
+
+				//does not perform regular attacks
+<span class="nc" id="L623">				spend(TICK);</span>
+<span class="nc" id="L624">				return true;</span>
+			}
+		}
+
+	}
+
+	//*** These methods are public static as their logic is also accessed by gnoll sappers ***
+
+	public static Ballistica prepRockThrowAttack( Char target, Char source ){
+<span class="nc" id="L633">		ArrayList&lt;Integer&gt; candidateRocks = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L635" title="All 2 branches missed.">		for (int i = 0; i &lt; Dungeon.level.length(); i++){</span>
+<span class="nc bnc" id="L636" title="All 4 branches missed.">			if (source.fieldOfView[i] &amp;&amp; Dungeon.level.map[i] == Terrain.MINE_BOULDER){</span>
+<span class="nc bnc" id="L637" title="All 2 branches missed.">				if (new Ballistica(i, target.pos, Ballistica.PROJECTILE).collisionPos == target.pos){</span>
+<span class="nc" id="L638">					candidateRocks.add(i);</span>
+				}
+			}
+		}
+
+		//ignore rocks already being thrown
+<span class="nc bnc" id="L644" title="All 2 branches missed.">		for (Char ch : Actor.chars()){</span>
+<span class="nc bnc" id="L645" title="All 4 branches missed.">			if (ch instanceof GnollGeomancer &amp;&amp; ((GnollGeomancer) ch).throwingRocksFromPos != null){</span>
+<span class="nc bnc" id="L646" title="All 2 branches missed.">				for (int i : ((GnollGeomancer) ch).throwingRocksFromPos){</span>
+<span class="nc" id="L647">					candidateRocks.remove((Integer)i);</span>
+				}
+<span class="nc bnc" id="L649" title="All 2 branches missed.">			} else if (ch instanceof GnollSapper){</span>
+<span class="nc" id="L650">				candidateRocks.remove((Integer)((GnollSapper) ch).throwingRockFromPos);</span>
+			}
+<span class="nc" id="L652">		}</span>
+
+<span class="nc bnc" id="L654" title="All 2 branches missed.">		if (candidateRocks.isEmpty()){</span>
+<span class="nc" id="L655">			return null;</span>
+		} else {
+
+			//throw closest rock to enemy
+<span class="nc" id="L659">			int throwingFromPos = candidateRocks.get(0);</span>
+<span class="nc bnc" id="L660" title="All 2 branches missed.">			for (int i : candidateRocks){</span>
+<span class="nc bnc" id="L661" title="All 2 branches missed.">				if (Dungeon.level.trueDistance(i, target.pos) &lt; Dungeon.level.trueDistance(throwingFromPos, target.pos)){</span>
+<span class="nc" id="L662">					throwingFromPos = i;</span>
+				}
+<span class="nc" id="L664">			}</span>
+<span class="nc" id="L665">			int throwingToPos = target.pos;</span>
+
+<span class="nc" id="L667">			return new Ballistica(throwingFromPos, throwingToPos, Ballistica.PROJECTILE);</span>
+
+		}
+	}
+
+<span class="nc" id="L672">	private static int rocksInFlight = 0;</span>
+<span class="nc" id="L673">	private static ArrayList&lt;Char&gt; knockedChars = new ArrayList&lt;&gt;();</span>
+
+	public static void doRockThrowAttack( Char source, int from, int to ){
+
+<span class="nc" id="L677">		Level.set(from, Terrain.EMPTY);</span>
+<span class="nc" id="L678">		GameScene.updateMap(from);</span>
+<span class="nc" id="L679">		source.sprite.attack(from, new Callback() {</span>
+			@Override
+			public void call() {
+<span class="nc" id="L682">				source.sprite.idle();</span>
+				//do nothing
+<span class="nc" id="L684">			}</span>
+		});
+
+<span class="nc" id="L687">		Ballistica rockPath = new Ballistica(from, to, Ballistica.MAGIC_BOLT);</span>
+
+<span class="nc" id="L689">		Sample.INSTANCE.play(Assets.Sounds.MISS);</span>
+<span class="nc" id="L690">		((MissileSprite)source.sprite.parent.recycle( MissileSprite.class )).</span>
+<span class="nc" id="L691">				reset( from, rockPath.collisionPos, new GnollGeomancer.Boulder(), new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L694">						Splash.at(rockPath.collisionPos, 0x555555, 15);</span>
+<span class="nc" id="L695">						Sample.INSTANCE.play(Assets.Sounds.ROCKS);</span>
+
+<span class="nc" id="L697">						Char ch = Actor.findChar(rockPath.collisionPos);</span>
+<span class="nc bnc" id="L698" title="All 2 branches missed.">						if (ch == Dungeon.hero){</span>
+<span class="nc" id="L699">							PixelScene.shake( 3, 0.7f );</span>
+						} else {
+<span class="nc" id="L701">							PixelScene.shake(0.5f, 0.5f);</span>
+						}
+
+<span class="nc bnc" id="L704" title="All 4 branches missed.">						if (ch != null &amp;&amp; !(ch instanceof GnollGeomancer)){</span>
+<span class="nc" id="L705">							ch.damage(Random.NormalIntRange(6, 12), new GnollGeomancer.Boulder());</span>
+
+<span class="nc bnc" id="L707" title="All 2 branches missed.">							if (ch.isAlive()){</span>
+<span class="nc bnc" id="L708" title="All 2 branches missed.">								Buff.prolong( ch, Paralysis.class, ch instanceof GnollGuard ? 10 : 3 );</span>
+<span class="nc bnc" id="L709" title="All 4 branches missed.">							} else if (!ch.isAlive() &amp;&amp; ch == Dungeon.hero) {</span>
+<span class="nc" id="L710">								Badges.validateDeathFromEnemyMagic();</span>
+<span class="nc" id="L711">								Dungeon.fail( source.getClass() );</span>
+<span class="nc" id="L712">								GLog.n( Messages.get( GnollGeomancer.class, &quot;rock_kill&quot;) );</span>
+							}
+
+<span class="nc bnc" id="L715" title="All 4 branches missed.">							if (!knockedChars.contains(ch) &amp;&amp; rockPath.path.size() &gt; rockPath.dist+1) {</span>
+<span class="nc" id="L716">								Ballistica trajectory = new Ballistica(ch.pos, rockPath.path.get(rockPath.dist + 1), Ballistica.MAGIC_BOLT);</span>
+<span class="nc" id="L717">								WandOfBlastWave.throwChar(ch, trajectory, 1, false, false, source);</span>
+<span class="nc" id="L718">								knockedChars.add(ch);</span>
+<span class="nc" id="L719">							}</span>
+<span class="nc bnc" id="L720" title="All 2 branches missed.">						} else if (ch == null) {</span>
+<span class="nc" id="L721">							Dungeon.level.pressCell(rockPath.collisionPos);</span>
+						}
+
+<span class="nc" id="L724">						rocksInFlight--;</span>
+<span class="nc bnc" id="L725" title="All 2 branches missed.">						if (rocksInFlight &lt;= 0) {</span>
+<span class="nc" id="L726">							rocksInFlight = 0;</span>
+<span class="nc" id="L727">							source.next();</span>
+<span class="nc" id="L728">							knockedChars.clear();</span>
+						}
+<span class="nc" id="L730">					}</span>
+				} );
+<span class="nc" id="L732">		rocksInFlight++;</span>
+<span class="nc" id="L733">	}</span>
+
+<span class="nc" id="L735">	public static class Boulder extends Item {</span>
+		{
+<span class="nc" id="L737">			image = ItemSpriteSheet.GEO_BOULDER;</span>
+<span class="nc" id="L738">		}</span>
+	}
+
+	//similar overall logic as DM-300's rock fall attack, but with more parameters
+	public static boolean prepRockFallAttack( Char target, Char source, int range, boolean avoidBarricades ){
+<span class="nc" id="L743">		final int rockCenter = target.pos;</span>
+
+		int safeCell;
+		do {
+<span class="nc" id="L747">			safeCell = rockCenter + PathFinder.NEIGHBOURS8[Random.Int(8)];</span>
+<span class="nc bnc" id="L748" title="All 4 branches missed.">		} while (safeCell == source.pos</span>
+<span class="nc bnc" id="L749" title="All 2 branches missed.">				|| (Dungeon.level.solid[safeCell] &amp;&amp; Random.Int(5) != 0)</span>
+<span class="nc bnc" id="L750" title="All 4 branches missed.">				|| (Dungeon.level.traps.containsKey(safeCell) &amp;&amp; Random.Int(5) != 0));</span>
+
+<span class="nc" id="L752">		ArrayList&lt;Integer&gt; rockCells = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L754">		int start = rockCenter - Dungeon.level.width() * range - range;</span>
+		int pos;
+<span class="nc bnc" id="L756" title="All 2 branches missed.">		for (int y = 0; y &lt; 1+2*range; y++) {</span>
+<span class="nc" id="L757">			pos = start + Dungeon.level.width() * y;</span>
+<span class="nc bnc" id="L758" title="All 2 branches missed.">			for (int x = 0; x &lt; 1+2*range; x++) {</span>
+<span class="nc bnc" id="L759" title="All 2 branches missed.">				if (!Dungeon.level.insideMap(pos)) {</span>
+<span class="nc" id="L760">					pos++;</span>
+<span class="nc" id="L761">					continue;</span>
+				}
+<span class="nc bnc" id="L763" title="All 2 branches missed.">				if (avoidBarricades){</span>
+<span class="nc" id="L764">					boolean barricade = false;</span>
+<span class="nc bnc" id="L765" title="All 2 branches missed.">					for (int j : PathFinder.NEIGHBOURS9){</span>
+<span class="nc bnc" id="L766" title="All 4 branches missed.">						if (Dungeon.level.map[pos+j] == Terrain.BARRICADE</span>
+								|| Dungeon.level.map[pos+j] == Terrain.ENTRANCE){
+<span class="nc" id="L768">							barricade = true;</span>
+						}
+					}
+<span class="nc bnc" id="L771" title="All 2 branches missed.">					if (barricade){</span>
+<span class="nc" id="L772">						pos++;</span>
+<span class="nc" id="L773">						continue;</span>
+					}
+				}
+				//add rock cell to pos, if it is not solid, isn't the safecell, and isn't where geomancer is standing
+<span class="nc bnc" id="L777" title="All 4 branches missed.">				if (!Dungeon.level.solid[pos]</span>
+						&amp;&amp; pos != safeCell
+<span class="nc bnc" id="L779" title="All 4 branches missed.">						&amp;&amp; !(Actor.findChar(pos) instanceof GnollGeomancer)</span>
+<span class="nc bnc" id="L780" title="All 2 branches missed.">						&amp;&amp; !(source instanceof GnollGeomancer &amp;&amp; Actor.findChar(pos) instanceof GnollSapper)</span>
+<span class="nc bnc" id="L781" title="All 2 branches missed.">						&amp;&amp; Random.Int(1+Dungeon.level.distance(rockCenter, pos)/2) == 0) {</span>
+<span class="nc" id="L782">					rockCells.add(pos);</span>
+				}
+<span class="nc" id="L784">				pos++;</span>
+			}
+		}
+<span class="nc bnc" id="L787" title="All 2 branches missed.">		for (int i : rockCells){</span>
+<span class="nc" id="L788">			source.sprite.parent.add(new TargetedCell(i, 0xFF0000));</span>
+<span class="nc" id="L789">		}</span>
+		//don't want to overly punish players with slow move or attack speed
+<span class="nc" id="L791">		Buff.append(source, GnollRockFall.class, GameMath.gate(TICK, (int)Math.ceil(target.cooldown()), 3*TICK)).setRockPositions(rockCells);</span>
+
+<span class="nc" id="L793">		source.sprite.attack(target.pos, new Callback() {</span>
+			@Override
+			public void call() {
+				//do nothing
+<span class="nc" id="L797">				source.sprite.idle();</span>
+<span class="nc" id="L798">			}</span>
+		});
+
+<span class="nc" id="L801">		return true;</span>
+	}
+
+<span class="nc" id="L804">	public static class GnollRockFall extends DelayedRockFall{</span>
+
+		@Override
+		public void affectChar(Char ch) {
+<span class="nc" id="L808">			ch.damage(Random.NormalIntRange(6, 12), this);</span>
+<span class="nc bnc" id="L809" title="All 2 branches missed.">			if (ch.isAlive()) {</span>
+<span class="nc bnc" id="L810" title="All 2 branches missed.">				Buff.prolong(ch, Paralysis.class, ch instanceof GnollGuard ? 10 : 3);</span>
+<span class="nc bnc" id="L811" title="All 2 branches missed.">			} else if (ch == Dungeon.hero){</span>
+<span class="nc" id="L812">				Dungeon.fail( target );</span>
+<span class="nc" id="L813">				GLog.n( Messages.get( GnollGeomancer.class, &quot;rockfall_kill&quot;) );</span>
+			}
+<span class="nc" id="L815">		}</span>
+
+		@Override
+		public void affectCell(int cell) {
+<span class="nc bnc" id="L819" title="All 2 branches missed.">			if (Dungeon.level.map[cell] != Terrain.EMPTY_SP</span>
+<span class="nc bnc" id="L820" title="All 2 branches missed.">					&amp;&amp; !Dungeon.level.adjacent(cell, Dungeon.level.entrance())</span>
+<span class="nc bnc" id="L821" title="All 2 branches missed.">					&amp;&amp; Random.Int(3) == 0) {</span>
+<span class="nc" id="L822">				Level.set(cell, Terrain.MINE_BOULDER);</span>
+<span class="nc" id="L823">				GameScene.updateMap(cell);</span>
+			}
+<span class="nc" id="L825">		}</span>
+
+	}
+
+<span class="nc" id="L829">	public static class RockArmor extends ShieldBuff { }</span>
+
+	public static final String HITS = &quot;hits&quot;;
+
+	private static final String ABILITY_COOLDOWN = &quot;ability_cooldown&quot;;
+	private static final String LAST_ABILITY_WAS_ROCKFALL = &quot;last_ability_was_rockfall&quot;;
+
+	private static final String ROCK_FROM_POS = &quot;rock_from_pos&quot;;
+	private static final String ROCK_TO_POS = &quot;rock_to_pos&quot;;
+
+	private static final String SAPPER_ID = &quot;sapper_id&quot;;
+	private static final String SAPPER_SPAWNS = &quot;sapper_spawns&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L844">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L845">		bundle.put(HITS, hits);</span>
+
+<span class="nc" id="L847">		bundle.put(ABILITY_COOLDOWN, abilityCooldown);</span>
+<span class="nc" id="L848">		bundle.put(LAST_ABILITY_WAS_ROCKFALL, lastAbilityWasRockfall);</span>
+
+<span class="nc bnc" id="L850" title="All 2 branches missed.">		if (throwingRocksFromPos != null) {</span>
+<span class="nc" id="L851">			bundle.put(ROCK_FROM_POS, throwingRocksFromPos);</span>
+		}
+<span class="nc" id="L853">		bundle.put(ROCK_TO_POS, throwingRockToPos);</span>
+
+<span class="nc" id="L855">		bundle.put(SAPPER_ID, sapperID);</span>
+<span class="nc bnc" id="L856" title="All 2 branches missed.">		if (sapperSpawns != null){</span>
+<span class="nc" id="L857">			bundle.put(SAPPER_SPAWNS, sapperSpawns);</span>
+		}
+<span class="nc" id="L859">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L863">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L864">		hits = bundle.getInt(HITS);</span>
+<span class="nc" id="L865">		abilityCooldown = bundle.getInt(ABILITY_COOLDOWN);</span>
+<span class="nc" id="L866">		lastAbilityWasRockfall = bundle.getBoolean(LAST_ABILITY_WAS_ROCKFALL);</span>
+
+<span class="nc bnc" id="L868" title="All 2 branches missed.">		if (bundle.contains(ROCK_FROM_POS)) {</span>
+<span class="nc" id="L869">			throwingRocksFromPos = bundle.getIntArray(ROCK_FROM_POS);</span>
+		}
+<span class="nc" id="L871">		throwingRockToPos = bundle.getInt(ROCK_TO_POS);</span>
+
+<span class="nc" id="L873">		sapperID = bundle.getInt(SAPPER_ID);</span>
+<span class="nc bnc" id="L874" title="All 2 branches missed.">		if (bundle.contains(SAPPER_SPAWNS)) {</span>
+<span class="nc" id="L875">			sapperSpawns = bundle.getIntArray(SAPPER_SPAWNS);</span>
+		}
+
+<span class="nc bnc" id="L878" title="All 2 branches missed.">		if (hits &gt;= 3){</span>
+<span class="nc" id="L879">			BossHealthBar.assignBoss(this);</span>
+		}
+<span class="nc" id="L881">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

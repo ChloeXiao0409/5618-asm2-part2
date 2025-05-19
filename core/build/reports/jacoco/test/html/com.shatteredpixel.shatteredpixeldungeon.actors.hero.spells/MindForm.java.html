@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MindForm.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells</a> &gt; <span class="el_source">MindForm.java</span></div><h1>MindForm.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2025 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.Trinity;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.WondrousResin;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.CursedWand;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.Bundlable;
+import com.watabou.utils.Callback;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L47">public class MindForm extends ClericSpell {</span>
+
+<span class="nc" id="L49">	public static MindForm INSTANCE = new MindForm();</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L53">		return HeroIcon.MIND_FORM;</span>
+	}
+
+	@Override
+	public String desc() {
+<span class="nc" id="L58">		return Messages.get(this, &quot;desc&quot;, itemLevel()) + &quot;\n\n&quot; + Messages.get(this, &quot;charge_cost&quot;, (int)chargeUse(Dungeon.hero));</span>
+	}
+
+	@Override
+	public float chargeUse(Hero hero) {
+<span class="nc" id="L63">		return 3;</span>
+	}
+
+	@Override
+	public boolean canCast(Hero hero) {
+<span class="nc bnc" id="L68" title="All 4 branches missed.">		return super.canCast(hero) &amp;&amp; hero.hasTalent(Talent.MIND_FORM);</span>
+	}
+
+	public static int effectLevel(){
+<span class="nc" id="L72">		return 2 + Dungeon.hero.pointsInTalent(Talent.MIND_FORM);</span>
+	}
+
+	@Override
+	public void onCast(HolyTome tome, Hero hero) {
+
+<span class="nc" id="L78">		GameScene.show(new Trinity.WndItemtypeSelect(tome, this));</span>
+
+<span class="nc" id="L80">	}</span>
+
+	public static int itemLevel(){
+<span class="nc" id="L83">		return 2 + Dungeon.hero.pointsInTalent(Talent.MIND_FORM);</span>
+	}
+
+	//TODO selecting
+<span class="nc" id="L87">	public static class targetSelector extends CellSelector.Listener {</span>
+
+		private Bundlable effect;
+
+		public void setEffect(Bundlable effect){
+<span class="nc" id="L92">			this.effect = effect;</span>
+<span class="nc" id="L93">		}</span>
+
+		private Wand wand(){
+<span class="nc bnc" id="L96" title="All 2 branches missed.">			if (effect instanceof Wand){</span>
+<span class="nc" id="L97">				((Wand) effect).level(effectLevel());</span>
+<span class="nc" id="L98">				((Wand) effect).curCharges = ((Wand) effect).maxCharges;</span>
+<span class="nc" id="L99">				((Wand) effect).identify(false);</span>
+<span class="nc" id="L100">				return (Wand)effect;</span>
+			}
+<span class="nc" id="L102">			return null;</span>
+		}
+
+		private MissileWeapon thrown(){
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			if (effect instanceof MissileWeapon){</span>
+<span class="nc" id="L107">				((MissileWeapon) effect).level(effectLevel());</span>
+<span class="nc" id="L108">				((MissileWeapon) effect).repair(100);</span>
+<span class="nc" id="L109">				((MissileWeapon) effect).identify(false);</span>
+<span class="nc" id="L110">				((MissileWeapon) effect).spawnedForEffect = true;</span>
+<span class="nc" id="L111">				return (MissileWeapon) effect;</span>
+			}
+<span class="nc" id="L113">			return null;</span>
+		}
+
+		@Override
+		public void onSelect(Integer target) {
+<span class="nc bnc" id="L118" title="All 2 branches missed.">			if (target == null){</span>
+<span class="nc" id="L119">				return;</span>
+			}
+<span class="nc bnc" id="L121" title="All 2 branches missed.">			if (wand() != null){</span>
+<span class="nc" id="L122">				Wand wand = wand();</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">				if (wand.tryToZap(Dungeon.hero, target)) {</span>
+
+<span class="nc" id="L125">					final Ballistica shot = new Ballistica( Dungeon.hero.pos, target, wand.collisionProperties(target));</span>
+<span class="nc" id="L126">					int cell = shot.collisionPos;</span>
+
+<span class="nc bnc" id="L128" title="All 4 branches missed.">					if (target == Dungeon.hero.pos || cell == Dungeon.hero.pos) {</span>
+<span class="nc" id="L129">						GLog.i( Messages.get(Wand.class, &quot;self_target&quot;) );</span>
+<span class="nc" id="L130">						return;</span>
+					}
+
+<span class="nc" id="L133">					Dungeon.hero.sprite.zap(cell);</span>
+
+					//attempts to target the cell aimed at if something is there, otherwise targets the collision pos.
+<span class="nc bnc" id="L136" title="All 2 branches missed.">					if (Actor.findChar(target) != null)</span>
+<span class="nc" id="L137">						QuickSlotButton.target(Actor.findChar(target));</span>
+					else
+<span class="nc" id="L139">						QuickSlotButton.target(Actor.findChar(cell));</span>
+
+<span class="nc" id="L141">					wand.fx(shot, new Callback() {</span>
+						public void call() {
+<span class="nc" id="L143">							wand.onZap(shot);</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">							if (Random.Float() &lt; WondrousResin.extraCurseEffectChance()){</span>
+<span class="nc" id="L145">								WondrousResin.forcePositive = true;</span>
+<span class="nc" id="L146">								CursedWand.cursedZap(wand,</span>
+										Dungeon.hero,
+<span class="nc" id="L148">										new Ballistica(Dungeon.hero.pos, cell, Ballistica.MAGIC_BOLT), new Callback() {</span>
+											@Override
+											public void call() {
+<span class="nc" id="L151">												WondrousResin.forcePositive = false;</span>
+<span class="nc" id="L152">											}</span>
+										});
+							}
+<span class="nc" id="L155">							((ClassArmor)Dungeon.hero.belongings.armor()).charge -= Trinity.trinityChargeUsePerEffect(wand.getClass());</span>
+<span class="nc" id="L156">							wand.wandUsed();</span>
+<span class="nc" id="L157">						}</span>
+					});
+				}
+<span class="nc bnc" id="L160" title="All 2 branches missed.">			} else if (thrown() != null){</span>
+<span class="nc" id="L161">				MissileWeapon thrown = thrown();</span>
+<span class="nc" id="L162">				thrown.cast(Dungeon.hero, target);</span>
+<span class="nc" id="L163">				((ClassArmor)Dungeon.hero.belongings.armor()).charge -= Trinity.trinityChargeUsePerEffect(thrown.getClass());</span>
+			}
+<span class="nc" id="L165">		}</span>
+
+		@Override
+		public String prompt() {
+<span class="nc bnc" id="L169" title="All 2 branches missed.">			if (wand() != null){</span>
+<span class="nc" id="L170">				return Messages.get(Wand.class, &quot;prompt&quot;);</span>
+			} else {
+<span class="nc" id="L172">				return Messages.get(Item.class, &quot;prompt&quot;);</span>
+			}
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

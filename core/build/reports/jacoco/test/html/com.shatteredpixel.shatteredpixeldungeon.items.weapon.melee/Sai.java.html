@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Sai.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee</a> &gt; <span class="el_source">Sai.java</span></div><h1>Sai.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Combo;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.AttackIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+
+<span class="nc" id="L41">public class Sai extends MeleeWeapon {</span>
+
+	{
+<span class="nc" id="L44">		image = ItemSpriteSheet.SAI;</span>
+<span class="nc" id="L45">		hitSound = Assets.Sounds.HIT_STAB;</span>
+<span class="nc" id="L46">		hitSoundPitch = 1.3f;</span>
+
+<span class="nc" id="L48">		tier = 3;</span>
+<span class="nc" id="L49">		DLY = 0.5f; //2x speed</span>
+<span class="nc" id="L50">	}</span>
+
+	@Override
+	public int max(int lvl) {
+<span class="nc" id="L54">		return  Math.round(2.5f*(tier+1)) +     //10 base, down from 20</span>
+<span class="nc" id="L55">				lvl*Math.round(0.5f*(tier+1));  //+2 per level, down from +4</span>
+	}
+
+	@Override
+	public String targetingPrompt() {
+<span class="nc" id="L60">		return Messages.get(this, &quot;prompt&quot;);</span>
+	}
+
+	@Override
+	protected void duelistAbility(Hero hero, Integer target) {
+		//+(4+lvl) damage, roughly +60% base damage, +67% scaling
+<span class="nc" id="L66">		int dmgBoost = augment.damageFactor(4 + buffedLvl());</span>
+<span class="nc" id="L67">		Sai.comboStrikeAbility(hero, target, 0, dmgBoost, this);</span>
+<span class="nc" id="L68">	}</span>
+
+	@Override
+	public String abilityInfo() {
+<span class="nc bnc" id="L72" title="All 2 branches missed.">		int dmgBoost = levelKnown ? 4 + buffedLvl() : 4;</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">		if (levelKnown){</span>
+<span class="nc" id="L74">			return Messages.get(this, &quot;ability_desc&quot;, augment.damageFactor(dmgBoost));</span>
+		} else {
+<span class="nc" id="L76">			return Messages.get(this, &quot;typical_ability_desc&quot;, augment.damageFactor(dmgBoost));</span>
+		}
+	}
+
+	public String upgradeAbilityStat(int level){
+<span class="nc" id="L81">		return &quot;+&quot; + augment.damageFactor(4 + level);</span>
+	}
+
+	public static void comboStrikeAbility(Hero hero, Integer target, float multiPerHit, int boostPerHit, MeleeWeapon wep){
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if (target == null) {</span>
+<span class="nc" id="L86">			return;</span>
+		}
+
+<span class="nc" id="L89">		Char enemy = Actor.findChar(target);</span>
+<span class="nc bnc" id="L90" title="All 8 branches missed.">		if (enemy == null || enemy == hero || hero.isCharmedBy(enemy) || !Dungeon.level.heroFOV[target]) {</span>
+<span class="nc" id="L91">			GLog.w(Messages.get(wep, &quot;ability_no_target&quot;));</span>
+<span class="nc" id="L92">			return;</span>
+		}
+
+<span class="nc" id="L95">		hero.belongings.abilityWeapon = wep;</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">		if (!hero.canAttack(enemy)){</span>
+<span class="nc" id="L97">			GLog.w(Messages.get(wep, &quot;ability_target_range&quot;));</span>
+<span class="nc" id="L98">			hero.belongings.abilityWeapon = null;</span>
+<span class="nc" id="L99">			return;</span>
+		}
+<span class="nc" id="L101">		hero.belongings.abilityWeapon = null;</span>
+
+<span class="nc" id="L103">		hero.sprite.attack(enemy.pos, new Callback() {</span>
+			@Override
+			public void call() {
+<span class="nc" id="L106">				wep.beforeAbilityUsed(hero, enemy);</span>
+<span class="nc" id="L107">				AttackIndicator.target(enemy);</span>
+
+<span class="nc" id="L109">				int recentHits = 0;</span>
+<span class="nc" id="L110">				ComboStrikeTracker buff = hero.buff(ComboStrikeTracker.class);</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">				if (buff != null){</span>
+<span class="nc" id="L112">					recentHits = buff.hits;</span>
+<span class="nc" id="L113">					buff.detach();</span>
+				}
+
+<span class="nc" id="L116">				boolean hit = hero.attack(enemy, 1f + multiPerHit*recentHits, boostPerHit*recentHits, Char.INFINITE_ACCURACY);</span>
+<span class="nc bnc" id="L117" title="All 4 branches missed.">				if (hit &amp;&amp; !enemy.isAlive()){</span>
+<span class="nc" id="L118">					wep.onAbilityKill(hero, enemy);</span>
+				}
+
+<span class="nc" id="L121">				Invisibility.dispel();</span>
+<span class="nc" id="L122">				hero.spendAndNext(hero.attackDelay());</span>
+<span class="nc bnc" id="L123" title="All 4 branches missed.">				if (recentHits &gt;= 2 &amp;&amp; hit){</span>
+<span class="nc" id="L124">					Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);</span>
+				}
+
+<span class="nc" id="L127">				wep.afterAbilityUsed(hero);</span>
+<span class="nc" id="L128">			}</span>
+		});
+<span class="nc" id="L130">	}</span>
+
+<span class="nc" id="L132">	public static class ComboStrikeTracker extends Buff {</span>
+
+		{
+<span class="nc" id="L135">			type = buffType.POSITIVE;</span>
+		}
+
+<span class="nc" id="L138">		public static int DURATION = 5;</span>
+<span class="nc" id="L139">		private float comboTime = 0f;</span>
+<span class="nc" id="L140">		public int hits = 0;</span>
+
+		@Override
+		public int icon() {
+<span class="nc bnc" id="L144" title="All 2 branches missed.">			if (Dungeon.hero.belongings.weapon() instanceof Gloves</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">					|| Dungeon.hero.belongings.weapon() instanceof Sai</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">					|| Dungeon.hero.belongings.weapon() instanceof Gauntlet</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">					|| Dungeon.hero.belongings.secondWep() instanceof Gloves</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">					|| Dungeon.hero.belongings.secondWep() instanceof Sai</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">					|| Dungeon.hero.belongings.secondWep() instanceof Gauntlet) {</span>
+<span class="nc" id="L150">				return BuffIndicator.DUEL_COMBO;</span>
+			} else {
+<span class="nc" id="L152">				return BuffIndicator.NONE;</span>
+			}
+		}
+
+		@Override
+		public boolean act() {
+<span class="nc" id="L158">			comboTime-=TICK;</span>
+<span class="nc" id="L159">			spend(TICK);</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">			if (comboTime &lt;= 0) {</span>
+<span class="nc" id="L161">				detach();</span>
+			}
+<span class="nc" id="L163">			return true;</span>
+		}
+
+		public void addHit(){
+<span class="nc" id="L167">			hits++;</span>
+<span class="nc" id="L168">			comboTime = 5f;</span>
+
+<span class="nc bnc" id="L170" title="All 4 branches missed.">			if (hits &gt;= 2 &amp;&amp; icon() != BuffIndicator.NONE){</span>
+<span class="nc" id="L171">				GLog.p( Messages.get(Combo.class, &quot;combo&quot;, hits) );</span>
+			}
+<span class="nc" id="L173">		}</span>
+
+		@Override
+		public float iconFadePercent() {
+<span class="nc" id="L177">			return Math.max(0, (DURATION - comboTime)/ DURATION);</span>
+		}
+
+		@Override
+		public String iconTextDisplay() {
+<span class="nc" id="L182">			return Integer.toString((int)comboTime);</span>
+		}
+
+		@Override
+		public String desc() {
+<span class="nc" id="L187">			return Messages.get(this, &quot;desc&quot;, hits, dispTurns(comboTime));</span>
+		}
+
+		private static final String TIME  = &quot;combo_time&quot;;
+<span class="nc" id="L191">		public static String RECENT_HITS = &quot;recent_hits&quot;;</span>
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L195">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L196">			bundle.put(TIME, comboTime);</span>
+<span class="nc" id="L197">			bundle.put(RECENT_HITS, hits);</span>
+<span class="nc" id="L198">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L202">			super.restoreFromBundle(bundle);</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">			if (bundle.contains(TIME)){</span>
+<span class="nc" id="L204">				comboTime = bundle.getInt(TIME);</span>
+<span class="nc" id="L205">				hits = bundle.getInt(RECENT_HITS);</span>
+			} else {
+				//pre-2.4.0 saves
+<span class="nc" id="L208">				comboTime = 5f;</span>
+<span class="nc" id="L209">				hits = 0;</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">				if (bundle.contains(RECENT_HITS)) {</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">					for (int i : bundle.getIntArray(RECENT_HITS)) {</span>
+<span class="nc" id="L212">						hits += i;</span>
+					}
+				}
+			}
+<span class="nc" id="L216">		}</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RankingsScene.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.scenes</a> &gt; <span class="el_source">RankingsScene.java</span></div><h1>RankingsScene.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.scenes;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Rankings;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Archs;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Button;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ExitButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.IconButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.windows.IconTitle;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndDailies;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndRanking;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndVictoryCongrats;
+import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Music;
+import com.watabou.utils.GameMath;
+
+<span class="nc" id="L52">public class RankingsScene extends PixelScene {</span>
+	
+	private static final float ROW_HEIGHT_MAX	= 20;
+	private static final float ROW_HEIGHT_MIN	= 12;
+
+	private static final float MAX_ROW_WIDTH    = 160;
+
+	private static final float GAP	= 4;
+	
+	private Archs archs;
+
+	@Override
+	public void create() {
+		
+<span class="nc" id="L66">		super.create();</span>
+
+<span class="nc" id="L68">		Music.INSTANCE.playTracks(</span>
+				new String[]{Assets.Music.THEME_1, Assets.Music.THEME_2},
+				new float[]{1, 1},
+				false);
+
+<span class="nc" id="L73">		uiCamera.visible = false;</span>
+		
+<span class="nc" id="L75">		int w = Camera.main.width;</span>
+<span class="nc" id="L76">		int h = Camera.main.height;</span>
+		
+<span class="nc" id="L78">		archs = new Archs();</span>
+<span class="nc" id="L79">		archs.setSize( w, h );</span>
+<span class="nc" id="L80">		add( archs );</span>
+		
+<span class="nc" id="L82">		Rankings.INSTANCE.load();</span>
+
+<span class="nc" id="L84">		IconTitle title = new IconTitle( Icons.RANKINGS.get(), Messages.get(this, &quot;title&quot;));</span>
+<span class="nc" id="L85">		title.setSize(200, 0);</span>
+<span class="nc" id="L86">		title.setPos(</span>
+<span class="nc" id="L87">				(w - title.reqWidth()) / 2f,</span>
+<span class="nc" id="L88">				(20 - title.height()) / 2f</span>
+		);
+<span class="nc" id="L90">		align(title);</span>
+<span class="nc" id="L91">		add(title);</span>
+		
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		if (Rankings.INSTANCE.records.size() &gt; 0) {</span>
+
+			//attempts to give each record as much space as possible, ideally as much space as portrait mode
+<span class="nc" id="L96">			float rowHeight = GameMath.gate(ROW_HEIGHT_MIN, (uiCamera.height - 26)/Rankings.INSTANCE.records.size(), ROW_HEIGHT_MAX);</span>
+
+<span class="nc" id="L98">			float left = (w - Math.min( MAX_ROW_WIDTH, w )) / 2 + GAP;</span>
+<span class="nc" id="L99">			float top = (h - rowHeight  * Rankings.INSTANCE.records.size()) / 2;</span>
+			
+<span class="nc" id="L101">			int pos = 0;</span>
+			
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			for (Rankings.Record rec : Rankings.INSTANCE.records) {</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">				Record row = new Record( pos, pos == Rankings.INSTANCE.lastRecord, rec );</span>
+<span class="nc" id="L105">				float offset = 0;</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">				if (rowHeight &lt;= 14){</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">					offset = (pos % 2 == 1) ? 5 : -5;</span>
+				}
+<span class="nc" id="L109">				row.setRect( left+offset, top + pos * rowHeight, w - left * 2, rowHeight );</span>
+<span class="nc" id="L110">				add(row);</span>
+				
+<span class="nc" id="L112">				pos++;</span>
+<span class="nc" id="L113">			}</span>
+			
+<span class="nc bnc" id="L115" title="All 2 branches missed.">			if (Rankings.INSTANCE.totalNumber &gt;= Rankings.TABLE_SIZE) {</span>
+				
+<span class="nc" id="L117">				RenderedTextBlock label = PixelScene.renderTextBlock( 8 );</span>
+<span class="nc" id="L118">				label.hardlight( 0xCCCCCC );</span>
+<span class="nc" id="L119">				label.setHightlighting(true, Window.SHPX_COLOR);</span>
+<span class="nc" id="L120">				label.text( Messages.get(this, &quot;total&quot;) + &quot; _&quot; + Rankings.INSTANCE.wonNumber + &quot;_/&quot; + Rankings.INSTANCE.totalNumber );</span>
+<span class="nc" id="L121">				add( label );</span>
+				
+<span class="nc" id="L123">				label.setPos(</span>
+<span class="nc" id="L124">						(w - label.width()) / 2,</span>
+<span class="nc" id="L125">						h - label.height() - 2*GAP</span>
+				);
+<span class="nc" id="L127">				align(label);</span>
+
+			}
+			
+<span class="nc" id="L131">		} else {</span>
+
+<span class="nc" id="L133">			RenderedTextBlock noRec = PixelScene.renderTextBlock(Messages.get(this, &quot;no_games&quot;), 8);</span>
+<span class="nc" id="L134">			noRec.hardlight( 0xCCCCCC );</span>
+<span class="nc" id="L135">			noRec.setPos(</span>
+<span class="nc" id="L136">					(w - noRec.width()) / 2,</span>
+<span class="nc" id="L137">					(h - noRec.height()) / 2</span>
+			);
+<span class="nc" id="L139">			align(noRec);</span>
+<span class="nc" id="L140">			add(noRec);</span>
+			
+		}
+
+<span class="nc" id="L144">		ExitButton btnExit = new ExitButton();</span>
+<span class="nc" id="L145">		btnExit.setPos( Camera.main.width - btnExit.width(), 0 );</span>
+<span class="nc" id="L146">		add( btnExit );</span>
+
+<span class="nc" id="L148">		int left = 0;</span>
+
+<span class="nc bnc" id="L150" title="All 2 branches missed.">		if (Rankings.INSTANCE.latestDaily != null) {</span>
+<span class="nc" id="L151">			IconButton btnDailies = new IconButton(Icons.CALENDAR.get()) {</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L154">					ShatteredPixelDungeon.scene().addToFront(new WndDailies());</span>
+<span class="nc" id="L155">				}</span>
+
+				@Override
+				protected void onPointerUp() {
+<span class="nc" id="L159">					icon.hardlight(0.5f, 1f, 2f);</span>
+<span class="nc" id="L160">				}</span>
+			};
+<span class="nc" id="L162">			btnDailies.icon().hardlight(0.5f, 1f, 2f);</span>
+<span class="nc" id="L163">			btnDailies.setRect( left, 0, 16, 20 );</span>
+<span class="nc" id="L164">			left += 16;</span>
+<span class="nc" id="L165">			add(btnDailies);</span>
+		}
+
+<span class="nc bnc" id="L168" title="All 2 branches missed.">		if (Dungeon.daily){</span>
+<span class="nc" id="L169">			addToFront(new WndDailies());</span>
+<span class="nc bnc" id="L170" title="All 4 branches missed.">		} else if (Badges.isUnlocked(Badges.Badge.VICTORY) &amp;&amp; !SPDSettings.victoryNagged()) {</span>
+<span class="nc" id="L171">			SPDSettings.victoryNagged(true);</span>
+<span class="nc" id="L172">			add(new WndVictoryCongrats());</span>
+		}
+
+<span class="nc" id="L175">		fadeIn();</span>
+<span class="nc" id="L176">	}</span>
+
+	@Override
+	public void destroy() {
+<span class="nc" id="L180">		super.destroy();</span>
+		//so that opening daily records does not trigger WndDailies opening on future visits
+<span class="nc" id="L182">		Dungeon.daily = Dungeon.dailyReplay = false;</span>
+<span class="nc" id="L183">	}</span>
+
+	@Override
+	protected void onBackPressed() {
+<span class="nc" id="L187">		ShatteredPixelDungeon.switchNoFade(TitleScene.class);</span>
+<span class="nc" id="L188">	}</span>
+	
+	public static class Record extends Button {
+		
+		private static final float GAP	= 4;
+		
+<span class="nc" id="L194">		private static final int[] TEXT_WIN	= {0xFFFF88, 0xB2B25F};</span>
+<span class="nc" id="L195">		private static final int[] TEXT_LOSE= {0xDDDDDD, 0x888888};</span>
+		private static final int FLARE_WIN	= 0x888866;
+		private static final int FLARE_LOSE	= 0x666666;
+		
+		private Rankings.Record rec;
+		
+		protected Image shield;
+		private Flare flare;
+		private BitmapText position;
+		private RenderedTextBlock desc;
+		private Image steps;
+		private BitmapText depth;
+		private Image classIcon;
+		private BitmapText level;
+		
+		public Record( int pos, boolean latest, Rankings.Record rec ) {
+<span class="nc" id="L211">			super();</span>
+			
+<span class="nc" id="L213">			this.rec = rec;</span>
+			
+<span class="nc bnc" id="L215" title="All 2 branches missed.">			if (latest) {</span>
+<span class="nc" id="L216">				flare = new Flare( 6, 24 );</span>
+<span class="nc" id="L217">				flare.angularSpeed = 90;</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">				flare.color( rec.win ? FLARE_WIN : FLARE_LOSE );</span>
+<span class="nc" id="L219">				addToBack( flare );</span>
+			}
+
+<span class="nc bnc" id="L222" title="All 2 branches missed.">			if (pos != Rankings.TABLE_SIZE-1) {</span>
+<span class="nc" id="L223">				position.text(Integer.toString(pos + 1));</span>
+			} else
+<span class="nc" id="L225">				position.text(&quot; &quot;);</span>
+<span class="nc" id="L226">			position.measure();</span>
+			
+<span class="nc" id="L228">			desc.text( Messages.titleCase(rec.desc()) );</span>
+
+<span class="nc" id="L230">			int odd = pos % 2;</span>
+			
+<span class="nc bnc" id="L232" title="All 2 branches missed.">			if (rec.win) {</span>
+<span class="nc" id="L233">				shield.copy( new ItemSprite(ItemSpriteSheet.AMULET, null) );</span>
+<span class="nc" id="L234">				position.hardlight( TEXT_WIN[odd] );</span>
+<span class="nc" id="L235">				desc.hardlight( TEXT_WIN[odd] );</span>
+<span class="nc" id="L236">				depth.hardlight( TEXT_WIN[odd] );</span>
+<span class="nc" id="L237">				level.hardlight( TEXT_WIN[odd] );</span>
+			} else {
+<span class="nc" id="L239">				position.hardlight( TEXT_LOSE[odd] );</span>
+<span class="nc" id="L240">				desc.hardlight( TEXT_LOSE[odd] );</span>
+<span class="nc" id="L241">				depth.hardlight( TEXT_LOSE[odd] );</span>
+<span class="nc" id="L242">				level.hardlight( TEXT_LOSE[odd] );</span>
+
+<span class="nc bnc" id="L244" title="All 2 branches missed.">				if (rec.depth != 0){</span>
+<span class="nc" id="L245">					depth.text( Integer.toString(rec.depth) );</span>
+<span class="nc" id="L246">					depth.measure();</span>
+<span class="nc" id="L247">					steps.copy(Icons.STAIRS.get());</span>
+
+<span class="nc" id="L249">					add(steps);</span>
+<span class="nc" id="L250">					add(depth);</span>
+				}
+
+<span class="nc bnc" id="L253" title="All 2 branches missed.">				if (rec.ascending){</span>
+<span class="nc" id="L254">					shield.copy( new ItemSprite(ItemSpriteSheet.AMULET, null) );</span>
+<span class="nc" id="L255">					shield.hardlight(0.4f, 0.4f, 0.7f);</span>
+				}
+
+			}
+
+<span class="nc bnc" id="L260" title="All 2 branches missed.">			if (rec.daily){</span>
+<span class="nc" id="L261">				shield.copy( Icons.get(Icons.CALENDAR) );</span>
+<span class="nc" id="L262">				shield.hardlight(0.5f, 1f, 2f);</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">			} else if (!rec.customSeed.isEmpty()){</span>
+<span class="nc" id="L264">				shield.copy( Icons.get(Icons.SEED) );</span>
+<span class="nc" id="L265">				shield.hardlight(1f, 1.5f, 0.67f);</span>
+			}
+
+<span class="nc bnc" id="L268" title="All 2 branches missed.">			if (rec.herolevel != 0){</span>
+<span class="nc" id="L269">				level.text( Integer.toString(rec.herolevel) );</span>
+<span class="nc" id="L270">				level.measure();</span>
+<span class="nc" id="L271">				add(level);</span>
+			}
+			
+<span class="nc" id="L274">			classIcon.copy( Icons.get( rec.heroClass ) );</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">			if (rec.heroClass == HeroClass.ROGUE){</span>
+				//cloak of shadows needs to be brightened a bit
+<span class="nc" id="L277">				classIcon.brightness(2f);</span>
+			}
+<span class="nc" id="L279">		}</span>
+		
+		@Override
+		protected void createChildren() {
+			
+<span class="nc" id="L284">			super.createChildren();</span>
+			
+<span class="nc" id="L286">			shield = new Image(new ItemSprite( ItemSpriteSheet.TOMB, null ));</span>
+<span class="nc" id="L287">			add( shield );</span>
+			
+<span class="nc" id="L289">			position = new BitmapText( PixelScene.pixelFont);</span>
+<span class="nc" id="L290">			add( position );</span>
+			
+<span class="nc" id="L292">			desc = renderTextBlock( 7 );</span>
+<span class="nc" id="L293">			add( desc );</span>
+
+<span class="nc" id="L295">			depth = new BitmapText( PixelScene.pixelFont);</span>
+
+<span class="nc" id="L297">			steps = new Image();</span>
+			
+<span class="nc" id="L299">			classIcon = new Image();</span>
+<span class="nc" id="L300">			add( classIcon );</span>
+
+<span class="nc" id="L302">			level = new BitmapText( PixelScene.pixelFont);</span>
+<span class="nc" id="L303">		}</span>
+		
+		@Override
+		protected void layout() {
+			
+<span class="nc" id="L308">			super.layout();</span>
+			
+<span class="nc" id="L310">			shield.x = x + (16 - shield.width) / 2f;</span>
+<span class="nc" id="L311">			shield.y = y + (height - shield.height) / 2f;</span>
+<span class="nc" id="L312">			align(shield);</span>
+			
+<span class="nc" id="L314">			position.x = shield.x + (shield.width - position.width()) / 2f;</span>
+<span class="nc" id="L315">			position.y = shield.y + (shield.height - position.height()) / 2f + 1;</span>
+<span class="nc" id="L316">			align(position);</span>
+			
+<span class="nc bnc" id="L318" title="All 2 branches missed.">			if (flare != null) {</span>
+<span class="nc" id="L319">				flare.point( shield.center() );</span>
+			}
+
+<span class="nc" id="L322">			classIcon.x = x + width - 16 + (16 - classIcon.width())/2f;</span>
+<span class="nc" id="L323">			classIcon.y = shield.y + (16 - classIcon.height())/2f;</span>
+<span class="nc" id="L324">			align(classIcon);</span>
+
+<span class="nc" id="L326">			level.x = classIcon.x + (classIcon.width - level.width()) / 2f;</span>
+<span class="nc" id="L327">			level.y = classIcon.y + (classIcon.height - level.height()) / 2f + 1;</span>
+<span class="nc" id="L328">			align(level);</span>
+
+<span class="nc" id="L330">			steps.x = x + width - 32 + (16 - steps.width())/2f;</span>
+<span class="nc" id="L331">			steps.y = shield.y + (16 - steps.height())/2f;</span>
+<span class="nc" id="L332">			align(steps);</span>
+
+<span class="nc" id="L334">			depth.x = steps.x + (steps.width - depth.width()) / 2f;</span>
+<span class="nc" id="L335">			depth.y = steps.y + (steps.height - depth.height()) / 2f + 1;</span>
+<span class="nc" id="L336">			align(depth);</span>
+
+<span class="nc" id="L338">			desc.maxWidth((int)(steps.x - (x + 16 + GAP)));</span>
+<span class="nc" id="L339">			desc.setPos(x + 16 + GAP, shield.y + (shield.height - desc.height()) / 2f + 1);</span>
+<span class="nc" id="L340">			align(desc);</span>
+<span class="nc" id="L341">		}</span>
+		
+		@Override
+		protected void onClick() {
+<span class="nc" id="L345">			parent.add( new WndRanking( rec ) );</span>
+<span class="nc" id="L346">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

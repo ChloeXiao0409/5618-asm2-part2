@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Preparation.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.buffs</a> &gt; <span class="el_source">Preparation.java</span></div><h1>Preparation.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.buffs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroAction;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.NPC;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ActionIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.watabou.utils.BArray;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.Visual;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+<span class="nc" id="L54">public class Preparation extends Buff implements ActionIndicator.Action {</span>
+	
+	{
+		//always acts after other buffs, so invisibility effects can process first
+<span class="nc" id="L58">		actPriority = BUFF_PRIO - 1;</span>
+<span class="nc" id="L59">		type = buffType.POSITIVE;</span>
+	}
+	
+<span class="nc" id="L62">	public enum AttackLevel{</span>
+<span class="nc" id="L63">		LVL_1( 1, 0.10f, 1),</span>
+<span class="nc" id="L64">		LVL_2( 3, 0.20f, 1),</span>
+<span class="nc" id="L65">		LVL_3( 5, 0.35f, 2),</span>
+<span class="nc" id="L66">		LVL_4( 9, 0.50f, 3);</span>
+
+		final int turnsReq;
+		final float baseDmgBonus;
+		final int damageRolls;
+		
+<span class="nc" id="L72">		AttackLevel( int turns, float base, int rolls){</span>
+<span class="nc" id="L73">			turnsReq = turns;</span>
+<span class="nc" id="L74">			baseDmgBonus = base;</span>
+<span class="nc" id="L75">			damageRolls = rolls;</span>
+<span class="nc" id="L76">		}</span>
+
+		//1st index is prep level, 2nd is talent level
+<span class="nc" id="L79">		private static final float[][] KOThresholds = new float[][]{</span>
+				{.03f, .04f, .05f, .06f},
+				{.10f, .13f, .17f, .20f},
+				{.20f, .27f, .33f, .40f},
+				{.50f, .67f, .83f, 1.0f}
+		};
+
+		public float KOThreshold(){
+<span class="nc" id="L87">			return KOThresholds[ordinal()][Dungeon.hero.pointsInTalent(Talent.ENHANCED_LETHALITY)];</span>
+		}
+
+		//1st index is prep level, 2nd is talent level
+<span class="nc" id="L91">		private static final int[][] blinkRanges = new int[][]{</span>
+				{1, 1, 2, 2},
+				{2, 3, 4, 5},
+				{3, 4, 6, 7},
+				{4, 6, 8, 10}
+		};
+
+		public int blinkDistance(){
+<span class="nc" id="L99">			return blinkRanges[ordinal()][Dungeon.hero.pointsInTalent(Talent.ASSASSINS_REACH)];</span>
+		}
+		
+		public boolean canKO(Char defender){
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			if (defender.properties().contains(Char.Property.MINIBOSS)</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">					|| defender.properties().contains(Char.Property.BOSS)){</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">				return (defender.HP/(float)defender.HT) &lt; (KOThreshold()/5f);</span>
+			} else {
+<span class="nc bnc" id="L107" title="All 2 branches missed.">				return (defender.HP/(float)defender.HT) &lt; KOThreshold();</span>
+			}
+		}
+		
+		public int damageRoll( Char attacker ){
+<span class="nc" id="L112">			int dmg = attacker.damageRoll();</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">			for( int i = 1; i &lt; damageRolls; i++){</span>
+<span class="nc" id="L114">				int newDmg = attacker.damageRoll();</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">				if (newDmg &gt; dmg) dmg = newDmg;</span>
+			}
+<span class="nc" id="L117">			return Math.round(dmg * (1f + baseDmgBonus));</span>
+		}
+		
+		public static AttackLevel getLvl(int turnsInvis){
+<span class="nc" id="L121">			List&lt;AttackLevel&gt; values = Arrays.asList(values());</span>
+<span class="nc" id="L122">			Collections.reverse(values);</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">			for ( AttackLevel lvl : values ){</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">				if (turnsInvis &gt;= lvl.turnsReq){</span>
+<span class="nc" id="L125">					return lvl;</span>
+				}
+<span class="nc" id="L127">			}</span>
+<span class="nc" id="L128">			return LVL_1;</span>
+		}
+	}
+	
+<span class="nc" id="L132">	private int turnsInvis = 0;</span>
+	
+	@Override
+	public boolean act() {
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		if (target.invisible &gt; 0){</span>
+<span class="nc" id="L137">			turnsInvis++;</span>
+<span class="nc bnc" id="L138" title="All 4 branches missed.">			if (AttackLevel.getLvl(turnsInvis).blinkDistance() &gt; 0 &amp;&amp; target == Dungeon.hero){</span>
+<span class="nc" id="L139">				ActionIndicator.setAction(this);</span>
+			}
+<span class="nc" id="L141">			spend(TICK);</span>
+		} else {
+<span class="nc" id="L143">			detach();</span>
+		}
+<span class="nc" id="L145">		return true;</span>
+	}
+	
+	@Override
+	public void detach() {
+<span class="nc" id="L150">		super.detach();</span>
+<span class="nc" id="L151">		ActionIndicator.clearAction(this);</span>
+<span class="nc" id="L152">	}</span>
+
+	public int attackLevel(){
+<span class="nc" id="L155">		return AttackLevel.getLvl(turnsInvis).ordinal()+1;</span>
+	}
+	
+	public int damageRoll( Char attacker ){
+<span class="nc" id="L159">		return AttackLevel.getLvl(turnsInvis).damageRoll(attacker);</span>
+	}
+
+	public boolean canKO( Char defender ){
+<span class="nc bnc" id="L163" title="All 4 branches missed.">		return !defender.isInvulnerable(target.getClass()) &amp;&amp; AttackLevel.getLvl(turnsInvis).canKO(defender);</span>
+	}
+	
+	@Override
+	public int icon() {
+<span class="nc" id="L168">		return BuffIndicator.PREPARATION;</span>
+	}
+	
+	@Override
+	public void tintIcon(Image icon) {
+<span class="nc bnc" id="L173" title="All 5 branches missed.">		switch (AttackLevel.getLvl(turnsInvis)){</span>
+			case LVL_1:
+<span class="nc" id="L175">				icon.hardlight(0f, 1f, 0f);</span>
+<span class="nc" id="L176">				break;</span>
+			case LVL_2:
+<span class="nc" id="L178">				icon.hardlight(1f, 1f, 0f);</span>
+<span class="nc" id="L179">				break;</span>
+			case LVL_3:
+<span class="nc" id="L181">				icon.hardlight(1f, 0.6f, 0f);</span>
+<span class="nc" id="L182">				break;</span>
+			case LVL_4:
+<span class="nc" id="L184">				icon.hardlight(1f, 0f, 0f);</span>
+				break;
+		}
+<span class="nc" id="L187">	}</span>
+
+	@Override
+	public String desc() {
+<span class="nc" id="L191">		String desc = Messages.get(this, &quot;desc&quot;);</span>
+		
+<span class="nc" id="L193">		AttackLevel lvl = AttackLevel.getLvl(turnsInvis);</span>
+
+<span class="nc" id="L195">		desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_dmg&quot;,</span>
+<span class="nc" id="L196">				(int)(lvl.baseDmgBonus*100),</span>
+<span class="nc" id="L197">				(int)(lvl.KOThreshold()*100),</span>
+<span class="nc" id="L198">				(int)(lvl.KOThreshold()*20));</span>
+		
+<span class="nc bnc" id="L200" title="All 2 branches missed.">		if (lvl.damageRolls &gt; 1){</span>
+<span class="nc" id="L201">			desc += &quot; &quot; + Messages.get(this, &quot;desc_dmg_likely&quot;);</span>
+		}
+		
+<span class="nc bnc" id="L204" title="All 2 branches missed.">		if (lvl.blinkDistance() &gt; 0){</span>
+<span class="nc" id="L205">			desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_blink&quot;, lvl.blinkDistance());</span>
+		}
+		
+<span class="nc" id="L208">		desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_invis_time&quot;, turnsInvis);</span>
+		
+<span class="nc bnc" id="L210" title="All 2 branches missed.">		if (lvl.ordinal() != AttackLevel.values().length-1){</span>
+<span class="nc" id="L211">			AttackLevel next = AttackLevel.values()[lvl.ordinal()+1];</span>
+<span class="nc" id="L212">			desc += &quot;\n&quot; + Messages.get(this, &quot;desc_invis_next&quot;, next.turnsReq);</span>
+		}
+		
+<span class="nc" id="L215">		return desc;</span>
+	}
+	
+	private static final String TURNS = &quot;turnsInvis&quot;;
+	
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L222">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L223">		turnsInvis = bundle.getInt(TURNS);</span>
+<span class="nc" id="L224">		ActionIndicator.setAction(this);</span>
+<span class="nc" id="L225">	}</span>
+	
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L229">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L230">		bundle.put(TURNS, turnsInvis);</span>
+<span class="nc" id="L231">	}</span>
+
+	@Override
+	public String actionName() {
+<span class="nc" id="L235">		return Messages.get(this, &quot;action_name&quot;);</span>
+	}
+	
+	@Override
+	public int actionIcon() {
+<span class="nc" id="L240">		return HeroIcon.PREPARATION;</span>
+	}
+
+	@Override
+	public Visual primaryVisual() {
+<span class="nc" id="L245">		Image actionIco = new HeroIcon(this);</span>
+<span class="nc" id="L246">		tintIcon(actionIco);</span>
+<span class="nc" id="L247">		return actionIco;</span>
+	}
+
+	@Override
+	public Visual secondaryVisual() {
+<span class="nc" id="L252">		BitmapText txt = new BitmapText(PixelScene.pixelFont);</span>
+<span class="nc" id="L253">		txt.text(Integer.toString(Math.min(9, turnsInvis)));</span>
+<span class="nc" id="L254">		txt.hardlight(CharSprite.POSITIVE);</span>
+<span class="nc" id="L255">		txt.measure();</span>
+<span class="nc" id="L256">		return txt;</span>
+	}
+
+	@Override
+	public int indicatorColor() {
+<span class="nc" id="L261">		return 0x444444;</span>
+	}
+	
+	@Override
+	public void doAction() {
+<span class="nc" id="L266">		GameScene.selectCell(attack);</span>
+<span class="nc" id="L267">	}</span>
+	
+<span class="nc" id="L269">	private CellSelector.Listener attack = new CellSelector.Listener() {</span>
+		
+		@Override
+		public void onSelect(Integer cell) {
+<span class="nc bnc" id="L273" title="All 2 branches missed.">			if (cell == null) return;</span>
+<span class="nc" id="L274">			final Char enemy = Actor.findChar( cell );</span>
+<span class="nc bnc" id="L275" title="All 10 branches missed.">			if (enemy == null || Dungeon.hero.isCharmedBy(enemy) || enemy instanceof NPC || !Dungeon.level.heroFOV[cell] || enemy == Dungeon.hero){</span>
+<span class="nc" id="L276">				GLog.w(Messages.get(Preparation.class, &quot;no_target&quot;));</span>
+			} else {
+
+				//just attack them then!
+<span class="nc bnc" id="L280" title="All 2 branches missed.">				if (Dungeon.hero.canAttack(enemy)){</span>
+<span class="nc" id="L281">					Dungeon.hero.curAction = new HeroAction.Attack( enemy );</span>
+<span class="nc" id="L282">					Dungeon.hero.next();</span>
+<span class="nc" id="L283">					return;</span>
+				}
+				
+<span class="nc" id="L286">				AttackLevel lvl = AttackLevel.getLvl(turnsInvis);</span>
+
+<span class="nc" id="L288">				PathFinder.buildDistanceMap(Dungeon.hero.pos,BArray.or(Dungeon.level.passable, Dungeon.level.avoid, null), lvl.blinkDistance());</span>
+<span class="nc" id="L289">				int dest = -1;</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">				for (int i : PathFinder.NEIGHBOURS8){</span>
+					//cannot blink into a cell that's occupied or impassable, only over them
+<span class="nc bnc" id="L292" title="All 2 branches missed.">					if (Actor.findChar(cell+i) != null)     continue;</span>
+<span class="nc bnc" id="L293" title="All 6 branches missed.">					if (!Dungeon.level.passable[cell+i] &amp;&amp; !(target.flying &amp;&amp; Dungeon.level.avoid[cell+i])) {</span>
+<span class="nc" id="L294">						continue;</span>
+					}
+
+<span class="nc bnc" id="L297" title="All 4 branches missed.">					if (dest == -1 || PathFinder.distance[dest] &gt; PathFinder.distance[cell+i]){</span>
+<span class="nc" id="L298">						dest = cell+i;</span>
+					//if two cells have the same pathfinder distance, prioritize the one with the closest true distance to the hero
+<span class="nc bnc" id="L300" title="All 2 branches missed.">					} else if (PathFinder.distance[dest] == PathFinder.distance[cell+i]){</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">						if (Dungeon.level.trueDistance(Dungeon.hero.pos, dest) &gt; Dungeon.level.trueDistance(Dungeon.hero.pos, cell+i)){</span>
+<span class="nc" id="L302">							dest = cell+i;</span>
+						}
+					}
+
+				}
+
+<span class="nc bnc" id="L308" title="All 6 branches missed.">				if (dest == -1 || PathFinder.distance[dest] == Integer.MAX_VALUE || Dungeon.hero.rooted){</span>
+<span class="nc" id="L309">					GLog.w(Messages.get(Preparation.class, &quot;out_of_reach&quot;));</span>
+<span class="nc bnc" id="L310" title="All 2 branches missed.">					if (Dungeon.hero.rooted) PixelScene.shake( 1, 1f );</span>
+<span class="nc" id="L311">					return;</span>
+				}
+				
+<span class="nc" id="L314">				Dungeon.hero.pos = dest;</span>
+<span class="nc" id="L315">				Dungeon.level.occupyCell(Dungeon.hero);</span>
+				//prevents the hero from being interrupted by seeing new enemies
+<span class="nc" id="L317">				Dungeon.observe();</span>
+<span class="nc" id="L318">				GameScene.updateFog();</span>
+<span class="nc" id="L319">				Dungeon.hero.checkVisibleMobs();</span>
+				
+<span class="nc" id="L321">				Dungeon.hero.sprite.place( Dungeon.hero.pos );</span>
+<span class="nc" id="L322">				Dungeon.hero.sprite.turnTo( Dungeon.hero.pos, cell);</span>
+<span class="nc" id="L323">				CellEmitter.get( Dungeon.hero.pos ).burst( Speck.factory( Speck.WOOL ), 6 );</span>
+<span class="nc" id="L324">				Sample.INSTANCE.play( Assets.Sounds.PUFF );</span>
+
+<span class="nc" id="L326">				Dungeon.hero.curAction = new HeroAction.Attack( enemy );</span>
+<span class="nc" id="L327">				Dungeon.hero.next();</span>
+			}
+<span class="nc" id="L329">		}</span>
+		
+		@Override
+		public String prompt() {
+<span class="nc" id="L333">			return Messages.get(Preparation.class, &quot;prompt&quot;, AttackLevel.getLvl(turnsInvis).blinkDistance());</span>
+		}
+	};
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

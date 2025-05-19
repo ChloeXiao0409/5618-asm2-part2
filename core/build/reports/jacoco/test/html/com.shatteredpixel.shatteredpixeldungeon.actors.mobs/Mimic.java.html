@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Mimic.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">Mimic.java</span></div><h1>Mimic.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Gold;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.TimekeepersHourglass;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.MimicTooth;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Swiftthistle;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.MimicSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+
+<span class="nc" id="L51">public class Mimic extends Mob {</span>
+	
+	private int level;
+	
+	{
+<span class="nc" id="L56">		spriteClass = MimicSprite.class;</span>
+
+<span class="nc" id="L58">		properties.add(Property.DEMONIC);</span>
+
+<span class="nc" id="L60">		EXP = 0;</span>
+		
+		//mimics are neutral when hidden
+<span class="nc" id="L63">		alignment = Alignment.NEUTRAL;</span>
+<span class="nc" id="L64">		state = PASSIVE;</span>
+	}
+	
+	public ArrayList&lt;Item&gt; items;
+
+<span class="nc" id="L69">	private boolean stealthy = false;</span>
+	
+	private static final String LEVEL	= &quot;level&quot;;
+	private static final String ITEMS	= &quot;items&quot;;
+	private static final String STEALTHY= &quot;stealthy&quot;;
+	
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L77">		super.storeInBundle( bundle );</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">		if (items != null) bundle.put( ITEMS, items );</span>
+<span class="nc" id="L79">		bundle.put( LEVEL, level );</span>
+<span class="nc" id="L80">		bundle.put( STEALTHY, stealthy );</span>
+<span class="nc" id="L81">	}</span>
+	
+	@SuppressWarnings(&quot;unchecked&quot;)
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		if (bundle.contains( ITEMS )) {</span>
+<span class="nc" id="L87">			items = new ArrayList&lt;&gt;((Collection&lt;Item&gt;) ((Collection&lt;?&gt;) bundle.getCollection(ITEMS)));</span>
+		}
+<span class="nc" id="L89">		level = bundle.getInt( LEVEL );</span>
+<span class="nc" id="L90">		adjustStats(level);</span>
+<span class="nc" id="L91">		stealthy = bundle.getBoolean(STEALTHY);</span>
+<span class="nc" id="L92">		super.restoreFromBundle(bundle);</span>
+<span class="nc bnc" id="L93" title="All 4 branches missed.">		if (state != PASSIVE &amp;&amp; alignment == Alignment.NEUTRAL){</span>
+<span class="nc" id="L94">			alignment = Alignment.ENEMY;</span>
+		}
+<span class="nc" id="L96">	}</span>
+
+	@Override
+	public boolean add(Buff buff) {
+<span class="nc bnc" id="L100" title="All 2 branches missed.">		if (super.add(buff)) {</span>
+<span class="nc bnc" id="L101" title="All 4 branches missed.">			if (buff.type == Buff.buffType.NEGATIVE &amp;&amp; alignment == Alignment.NEUTRAL) {</span>
+<span class="nc" id="L102">				alignment = Alignment.ENEMY;</span>
+<span class="nc" id="L103">				stopHiding();</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">				if (sprite != null) sprite.idle();</span>
+			}
+<span class="nc" id="L106">			return true;</span>
+		}
+<span class="nc" id="L108">		return false;</span>
+	}
+
+	@Override
+	public String name() {
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		if (alignment == Alignment.NEUTRAL){</span>
+<span class="nc" id="L114">			return Messages.get(Heap.class, &quot;chest&quot;);</span>
+		} else {
+<span class="nc" id="L116">			return super.name();</span>
+		}
+	}
+
+	@Override
+	public String description() {
+<span class="nc bnc" id="L122" title="All 2 branches missed.">		if (alignment == Alignment.NEUTRAL){</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">			if (MimicTooth.stealthyMimics()){</span>
+<span class="nc" id="L124">				return Messages.get(Heap.class, &quot;chest_desc&quot;);</span>
+			} else {
+<span class="nc" id="L126">				return Messages.get(Heap.class, &quot;chest_desc&quot;) + &quot;\n\n&quot; + Messages.get(this, &quot;hidden_hint&quot;);</span>
+			}
+		} else {
+<span class="nc" id="L129">			return super.description();</span>
+		}
+	}
+
+	@Override
+	protected boolean act() {
+<span class="nc bnc" id="L135" title="All 4 branches missed.">		if (alignment == Alignment.NEUTRAL &amp;&amp; state != PASSIVE){</span>
+<span class="nc" id="L136">			alignment = Alignment.ENEMY;</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">			if (sprite != null) sprite.idle();</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">			if (Dungeon.level.heroFOV[pos]) {</span>
+<span class="nc" id="L139">				GLog.w(Messages.get(this, &quot;reveal&quot;) );</span>
+<span class="nc" id="L140">				CellEmitter.get(pos).burst(Speck.factory(Speck.STAR), 10);</span>
+<span class="nc" id="L141">				Sample.INSTANCE.play(Assets.Sounds.MIMIC);</span>
+			}
+		}
+<span class="nc" id="L144">		return super.act();</span>
+	}
+
+	@Override
+	public CharSprite sprite() {
+<span class="nc" id="L149">		MimicSprite sprite = (MimicSprite) super.sprite();</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">		if (alignment == Alignment.NEUTRAL) sprite.hideMimic(this);</span>
+<span class="nc" id="L151">		return sprite;</span>
+	}
+
+	@Override
+	public boolean interact(Char c) {
+<span class="nc bnc" id="L156" title="All 4 branches missed.">		if (alignment != Alignment.NEUTRAL || c != Dungeon.hero){</span>
+<span class="nc" id="L157">			return super.interact(c);</span>
+		}
+<span class="nc" id="L159">		stopHiding();</span>
+
+<span class="nc" id="L161">		Dungeon.hero.busy();</span>
+<span class="nc" id="L162">		Dungeon.hero.sprite.operate(pos);</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		if (Dungeon.hero.invisible &lt;= 0</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">				&amp;&amp; Dungeon.hero.buff(Swiftthistle.TimeBubble.class) == null</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">				&amp;&amp; Dungeon.hero.buff(TimekeepersHourglass.timeFreeze.class) == null){</span>
+<span class="nc" id="L166">			return doAttack(Dungeon.hero);</span>
+		} else {
+<span class="nc" id="L168">			sprite.idle();</span>
+<span class="nc" id="L169">			alignment = Alignment.ENEMY;</span>
+<span class="nc" id="L170">			Dungeon.hero.spendAndNext(1f);</span>
+<span class="nc" id="L171">			return true;</span>
+		}
+	}
+
+	@Override
+	public void onAttackComplete() {
+<span class="nc" id="L177">		super.onAttackComplete();</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">		if (alignment == Alignment.NEUTRAL){</span>
+<span class="nc" id="L179">			alignment = Alignment.ENEMY;</span>
+<span class="nc" id="L180">			Dungeon.hero.spendAndNext(1f);</span>
+		}
+<span class="nc" id="L182">	}</span>
+
+	@Override
+	public int defenseProc(Char enemy, int damage) {
+<span class="nc bnc" id="L186" title="All 2 branches missed.">		if (state == PASSIVE){</span>
+<span class="nc" id="L187">			alignment = Alignment.ENEMY;</span>
+<span class="nc" id="L188">			stopHiding();</span>
+		}
+<span class="nc" id="L190">		return super.defenseProc(enemy, damage);</span>
+	}
+
+	@Override
+	public void damage(int dmg, Object src) {
+<span class="nc bnc" id="L195" title="All 2 branches missed.">		if (state == PASSIVE){</span>
+<span class="nc" id="L196">			alignment = Alignment.ENEMY;</span>
+<span class="nc" id="L197">			stopHiding();</span>
+		}
+<span class="nc" id="L199">		super.damage(dmg, src);</span>
+<span class="nc" id="L200">	}</span>
+
+	@Override
+	public void die(Object cause) {
+<span class="nc bnc" id="L204" title="All 2 branches missed.">		if (state == PASSIVE){</span>
+<span class="nc" id="L205">			alignment = Alignment.ENEMY;</span>
+<span class="nc" id="L206">			stopHiding();</span>
+		}
+<span class="nc" id="L208">		super.die(cause);</span>
+<span class="nc" id="L209">	}</span>
+
+	public void stopHiding(){
+<span class="nc" id="L212">		state = HUNTING;</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">		if (sprite != null) sprite.idle();</span>
+<span class="nc bnc" id="L214" title="All 4 branches missed.">		if (Actor.chars().contains(this) &amp;&amp; Dungeon.level.heroFOV[pos]) {</span>
+<span class="nc" id="L215">			enemy = Dungeon.hero;</span>
+<span class="nc" id="L216">			target = Dungeon.hero.pos;</span>
+<span class="nc" id="L217">			GLog.w(Messages.get(this, &quot;reveal&quot;) );</span>
+<span class="nc" id="L218">			CellEmitter.get(pos).burst(Speck.factory(Speck.STAR), 10);</span>
+<span class="nc" id="L219">			Sample.INSTANCE.play(Assets.Sounds.MIMIC);</span>
+		}
+<span class="nc" id="L221">	}</span>
+
+	//stealthy mimics have changes to visual behaviour that make them much harder to detect
+	public boolean stealthy(){
+<span class="nc" id="L225">		return stealthy;</span>
+	}
+
+	@Override
+	public int damageRoll() {
+<span class="nc bnc" id="L230" title="All 2 branches missed.">		if (alignment == Alignment.NEUTRAL){</span>
+<span class="nc" id="L231">			return Random.NormalIntRange( 2 + 2*level, 2 + 2*level);</span>
+		} else {
+<span class="nc" id="L233">			return Random.NormalIntRange( 1 + level, 2 + 2*level);</span>
+		}
+	}
+
+	@Override
+	public int drRoll() {
+<span class="nc" id="L239">		return super.drRoll() + Random.NormalIntRange(0, 1 + level/2);</span>
+	}
+
+	@Override
+	public void beckon( int cell ) {
+		// Do nothing
+<span class="nc" id="L245">	}</span>
+
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc bnc" id="L249" title="All 6 branches missed.">		if (target != null &amp;&amp; alignment == Alignment.NEUTRAL &amp;&amp; target.invisible &lt;= 0){</span>
+<span class="nc" id="L250">			return INFINITE_ACCURACY;</span>
+		} else {
+<span class="nc" id="L252">			return 6 + level;</span>
+		}
+	}
+
+	public void setLevel( int level ){
+<span class="nc" id="L257">		this.level = level;</span>
+<span class="nc" id="L258">		adjustStats(level);</span>
+<span class="nc" id="L259">	}</span>
+	
+	public void adjustStats( int level ) {
+<span class="nc" id="L262">		HP = HT = (1 + level) * 6;</span>
+<span class="nc" id="L263">		defenseSkill = 2 + level/2;</span>
+		
+<span class="nc" id="L265">		enemySeen = true;</span>
+<span class="nc" id="L266">	}</span>
+	
+	@Override
+	public void rollToDropLoot(){
+		
+<span class="nc bnc" id="L271" title="All 2 branches missed.">		if (items != null) {</span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">			for (Item item : items) {</span>
+<span class="nc" id="L273">				Dungeon.level.drop( item, pos ).sprite.drop();</span>
+<span class="nc" id="L274">			}</span>
+<span class="nc" id="L275">			items = null;</span>
+		}
+<span class="nc" id="L277">		super.rollToDropLoot();</span>
+<span class="nc" id="L278">	}</span>
+
+	@Override
+	public float spawningWeight() {
+<span class="nc" id="L282">		return 0f;</span>
+	}
+
+	@Override
+	public boolean reset() {
+<span class="nc bnc" id="L287" title="All 2 branches missed.">		if (state != PASSIVE) state = WANDERING;</span>
+<span class="nc" id="L288">		return true;</span>
+	}
+
+	public static Mimic spawnAt( int pos, Item... items){
+<span class="nc" id="L292">		return spawnAt(pos, Mimic.class, items);</span>
+	}
+
+	public static Mimic spawnAt( int pos, Class mimicType, Item... items){
+<span class="nc" id="L296">		return spawnAt(pos, mimicType, true, items);</span>
+	}
+
+	public static Mimic spawnAt( int pos, boolean useDecks, Item... items){
+<span class="nc" id="L300">		return spawnAt(pos, Mimic.class, useDecks, items);</span>
+	}
+
+	public static Mimic spawnAt( int pos, Class mimicType, boolean useDecks, Item... items){
+		Mimic m;
+<span class="nc bnc" id="L305" title="All 2 branches missed.">		if (mimicType == GoldenMimic.class){</span>
+<span class="nc" id="L306">			m = new GoldenMimic();</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">		} else if (mimicType == CrystalMimic.class) {</span>
+<span class="nc" id="L308">			m = new CrystalMimic();</span>
+<span class="nc bnc" id="L309" title="All 2 branches missed.">		} else if (mimicType == EbonyMimic.class) {</span>
+<span class="nc" id="L310">			m = new EbonyMimic();</span>
+		} else {
+<span class="nc" id="L312">			m = new Mimic();</span>
+		}
+
+<span class="nc" id="L315">		m.items = new ArrayList&lt;&gt;( Arrays.asList(items) );</span>
+<span class="nc" id="L316">		m.setLevel( Dungeon.scalingDepth() );</span>
+<span class="nc" id="L317">		m.pos = pos;</span>
+
+		//generate an extra reward for killing the mimic
+<span class="nc" id="L320">		m.generatePrize(useDecks);</span>
+
+<span class="nc bnc" id="L322" title="All 2 branches missed.">		if (MimicTooth.stealthyMimics()){</span>
+<span class="nc" id="L323">			m.stealthy = true;</span>
+		}
+
+<span class="nc" id="L326">		return m;</span>
+	}
+
+	protected void generatePrize( boolean useDecks ){
+<span class="nc" id="L330">		Item reward = null;</span>
+		do {
+<span class="nc bnc" id="L332" title="All 6 branches missed.">			switch (Random.Int(5)) {</span>
+				case 0:
+<span class="nc" id="L334">					reward = new Gold().random();</span>
+<span class="nc" id="L335">					break;</span>
+				case 1:
+<span class="nc bnc" id="L337" title="All 2 branches missed.">					reward = Generator.randomMissile(!useDecks);</span>
+<span class="nc" id="L338">					break;</span>
+				case 2:
+<span class="nc" id="L340">					reward = Generator.randomArmor();</span>
+<span class="nc" id="L341">					break;</span>
+				case 3:
+<span class="nc bnc" id="L343" title="All 2 branches missed.">					reward = Generator.randomWeapon(!useDecks);</span>
+<span class="nc" id="L344">					break;</span>
+				case 4:
+<span class="nc bnc" id="L346" title="All 2 branches missed.">					reward = useDecks ? Generator.random(Generator.Category.RING) : Generator.randomUsingDefaults(Generator.Category.RING);</span>
+					break;
+			}
+<span class="nc bnc" id="L349" title="All 4 branches missed.">		} while (reward == null || Challenges.isItemBlocked(reward));</span>
+<span class="nc" id="L350">		items.add(reward);</span>
+
+<span class="nc bnc" id="L352" title="All 2 branches missed.">		if (MimicTooth.stealthyMimics()){</span>
+			//add an extra random item if player has a mimic tooth
+<span class="nc" id="L354">			items.add(Generator.randomUsingDefaults());</span>
+		}
+<span class="nc" id="L356">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

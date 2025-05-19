@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TrapMechanism.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.trinkets</a> &gt; <span class="el_source">TrapMechanism.java</span></div><h1>TrapMechanism.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.trinkets;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L33">public class TrapMechanism extends Trinket {</span>
+
+	{
+<span class="nc" id="L36">		image = ItemSpriteSheet.TRAP_MECHANISM;</span>
+	}
+
+	@Override
+	protected int upgradeEnergyCost() {
+		//6 -&gt; 8(14) -&gt; 10(24) -&gt; 12(36)
+<span class="nc" id="L42">		return 6+2*level();</span>
+	}
+
+	@Override
+	public String statsDesc() {
+<span class="nc bnc" id="L47" title="All 2 branches missed.">		if (isIdentified()){</span>
+<span class="nc" id="L48">			return Messages.get(this, &quot;stats_desc&quot;, (int)(100*overrideNormalLevelChance(buffedLvl())), (int)(100*revealHiddenTrapChance(buffedLvl())));</span>
+		} else {
+<span class="nc" id="L50">			return Messages.get(this, &quot;typical_stats_desc&quot;, (int)(100*overrideNormalLevelChance(0)), (int)(100*revealHiddenTrapChance(0)));</span>
+		}
+	}
+
+	public static float overrideNormalLevelChance(){
+<span class="nc" id="L55">		return overrideNormalLevelChance(trinketLevel(TrapMechanism.class));</span>
+	}
+
+	public static float overrideNormalLevelChance( int level ){
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		if (level == -1){</span>
+<span class="nc" id="L60">			return 0f;</span>
+		} else {
+<span class="nc" id="L62">			return 0.25f + 0.25f*level;</span>
+		}
+	}
+
+	public static float revealHiddenTrapChance(){
+<span class="nc" id="L67">		return revealHiddenTrapChance(trinketLevel(TrapMechanism.class));</span>
+	}
+
+	public static float revealHiddenTrapChance( int level ){
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		if (level == -1){</span>
+<span class="nc" id="L72">			return 0f;</span>
+		} else {
+<span class="nc" id="L74">			return 0.1f + 0.1f*level;</span>
+		}
+	}
+
+	//true for traps, false for chasm
+	//ensures a little consistency of RNG
+<span class="nc" id="L80">	private ArrayList&lt;Boolean&gt; levelFeels = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L81">	private int shuffles = 0;</span>
+
+	public static Level.Feeling getNextFeeling(){
+<span class="nc" id="L84">		TrapMechanism mech = Dungeon.hero.belongings.getItem(TrapMechanism.class);</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if (mech == null) {</span>
+<span class="nc" id="L86">			return Level.Feeling.NONE;</span>
+		}
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		if (mech.levelFeels.isEmpty()){</span>
+<span class="nc" id="L89">			Random.pushGenerator(Dungeon.seed+1);</span>
+<span class="nc" id="L90">				mech.levelFeels.add(true);</span>
+<span class="nc" id="L91">				mech.levelFeels.add(true);</span>
+<span class="nc" id="L92">				mech.levelFeels.add(true);</span>
+<span class="nc" id="L93">				mech.levelFeels.add(false);</span>
+<span class="nc" id="L94">				mech.levelFeels.add(false);</span>
+<span class="nc" id="L95">				mech.levelFeels.add(false);</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">				for (int i = 0; i &lt;= mech.shuffles; i++) {</span>
+<span class="nc" id="L97">					Random.shuffle(mech.levelFeels);</span>
+				}
+<span class="nc" id="L99">				mech.shuffles++;</span>
+<span class="nc" id="L100">			Random.popGenerator();</span>
+		}
+
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		return mech.levelFeels.remove(0) ? Level.Feeling.TRAPS : Level.Feeling.CHASM;</span>
+	}
+
+	private static final String FEELS = &quot;feels&quot;;
+	private static final String SHUFFLES = &quot;shuffles&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L111">		super.storeInBundle(bundle);</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">		if (!levelFeels.isEmpty()){</span>
+<span class="nc" id="L113">			boolean[] storeFeels = new boolean[levelFeels.size()];</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">			for (int i = 0; i &lt; storeFeels.length; i++){</span>
+<span class="nc" id="L115">				storeFeels[i] = levelFeels.get(i);</span>
+			}
+<span class="nc" id="L117">			bundle.put(FEELS, storeFeels);</span>
+		}
+<span class="nc" id="L119">		bundle.put( SHUFFLES, shuffles );</span>
+<span class="nc" id="L120">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L124">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L125">		levelFeels.clear();</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">		if (bundle.contains(FEELS)){</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">			for (boolean b : bundle.getBooleanArray(FEELS)){</span>
+<span class="nc" id="L128">				levelFeels.add(b);</span>
+			}
+		}
+<span class="nc" id="L131">		shuffles = bundle.getInt( SHUFFLES );</span>
+<span class="nc" id="L132">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

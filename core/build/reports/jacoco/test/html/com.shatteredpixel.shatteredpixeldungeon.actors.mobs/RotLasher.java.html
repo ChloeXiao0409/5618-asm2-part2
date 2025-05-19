@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RotLasher.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">RotLasher.java</span></div><h1>RotLasher.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ToxicGas;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Cripple;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.RotLasherSprite;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L36">public class RotLasher extends Mob {</span>
+
+	{
+<span class="nc" id="L39">		spriteClass = RotLasherSprite.class;</span>
+
+<span class="nc" id="L41">		HP = HT = 80;</span>
+<span class="nc" id="L42">		defenseSkill = 0;</span>
+
+<span class="nc" id="L44">		EXP = 1;</span>
+
+<span class="nc" id="L46">		loot = Generator.Category.SEED;</span>
+<span class="nc" id="L47">		lootChance = 0.75f;</span>
+
+<span class="nc" id="L49">		state = WANDERING = new Waiting();</span>
+<span class="nc" id="L50">		viewDistance = 1;</span>
+
+<span class="nc" id="L52">		properties.add(Property.IMMOVABLE);</span>
+<span class="nc" id="L53">		properties.add(Property.MINIBOSS);</span>
+	}
+
+	@Override
+	protected boolean act() {
+<span class="nc bnc" id="L58" title="All 6 branches missed.">		if (HP &lt; HT &amp;&amp; (enemy == null || !Dungeon.level.adjacent(pos, enemy.pos))) {</span>
+<span class="nc" id="L59">			sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(Math.min(5, HT - HP)), FloatingText.HEALING);</span>
+<span class="nc" id="L60">			HP = Math.min(HT, HP + 5);</span>
+		}
+<span class="nc" id="L62">		return super.act();</span>
+	}
+
+	@Override
+	public void damage(int dmg, Object src) {
+<span class="nc bnc" id="L67" title="All 2 branches missed.">		if (src instanceof Burning) {</span>
+<span class="nc" id="L68">			destroy();</span>
+<span class="nc" id="L69">			sprite.die();</span>
+		} else {
+<span class="nc" id="L71">			super.damage(dmg, src);</span>
+		}
+<span class="nc" id="L73">	}</span>
+
+	@Override
+	public int attackProc(Char enemy, int damage) {
+<span class="nc" id="L77">		damage = super.attackProc( enemy, damage );</span>
+<span class="nc" id="L78">		Buff.affect( enemy, Cripple.class, 2f );</span>
+<span class="nc" id="L79">		return super.attackProc(enemy, damage);</span>
+	}
+
+	@Override
+	public boolean reset() {
+<span class="nc" id="L84">		return true;</span>
+	}
+
+	@Override
+	protected boolean getCloser(int target) {
+<span class="nc" id="L89">		return false;</span>
+	}
+
+	@Override
+	protected boolean getFurther(int target) {
+<span class="nc" id="L94">		return false;</span>
+	}
+
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L99">		return Random.NormalIntRange(10, 20);</span>
+	}
+
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L104">		return 25;</span>
+	}
+
+	@Override
+	public int drRoll() {
+<span class="nc" id="L109">		return super.drRoll() + Random.NormalIntRange(0, 8);</span>
+	}
+	
+	{
+<span class="nc" id="L113">		immunities.add( ToxicGas.class );</span>
+<span class="nc" id="L114">	}</span>
+
+<span class="nc" id="L116">	private class Waiting extends Mob.Wandering{</span>
+
+		@Override
+		protected boolean noticeEnemy() {
+<span class="nc" id="L120">			spend(TICK);</span>
+<span class="nc" id="L121">			return super.noticeEnemy();</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

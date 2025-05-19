@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Dart.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts</a> &gt; <span class="el_source">Dart.java</span></div><h1>Dart.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.VelvetPouch;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Crossbow;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L48">public class Dart extends MissileWeapon {</span>
+
+	{
+<span class="nc" id="L51">		image = ItemSpriteSheet.DART;</span>
+<span class="nc" id="L52">		hitSound = Assets.Sounds.HIT_ARROW;</span>
+<span class="nc" id="L53">		hitSoundPitch = 1.3f;</span>
+		
+<span class="nc" id="L55">		tier = 1;</span>
+		
+		//infinite, even with penalties
+<span class="nc" id="L58">		baseUses = 1000;</span>
+	}
+	
+	protected static final String AC_TIP = &quot;TIP&quot;;
+	
+	@Override
+	public ArrayList&lt;String&gt; actions(Hero hero) {
+<span class="nc" id="L65">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc" id="L66">		actions.add( AC_TIP );</span>
+<span class="nc" id="L67">		return actions;</span>
+	}
+	
+	@Override
+	public void execute(Hero hero, String action) {
+<span class="nc" id="L72">		super.execute(hero, action);</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">		if (action.equals(AC_TIP)){</span>
+<span class="nc" id="L74">			GameScene.selectItem(itemSelector);</span>
+		}
+<span class="nc" id="L76">	}</span>
+	
+	@Override
+	public int min(int lvl) {
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		if (bow != null){</span>
+<span class="nc bnc" id="L81" title="All 4 branches missed.">			if (!(this instanceof TippedDart) &amp;&amp; Dungeon.hero.buff(Crossbow.ChargedShot.class) != null){</span>
+				//ability increases base dmg by 50%, scaling by 50%
+<span class="nc" id="L83">				return  8 +                     //8 base</span>
+<span class="nc" id="L84">						2*bow.buffedLvl() + lvl;//+2 per bow level, +1 per level</span>
+			} else {
+<span class="nc" id="L86">				return  4 +                     //4 base</span>
+<span class="nc" id="L87">						bow.buffedLvl() + lvl;  //+1 per level or bow level</span>
+			}
+		} else {
+<span class="nc" id="L90">			return  1 +     //1 base, down from 2</span>
+					lvl;    //scaling unchanged
+		}
+	}
+
+	@Override
+	public int max(int lvl) {
+<span class="nc bnc" id="L97" title="All 2 branches missed.">		if (bow != null){</span>
+<span class="nc bnc" id="L98" title="All 4 branches missed.">			if (!(this instanceof TippedDart) &amp;&amp; Dungeon.hero.buff(Crossbow.ChargedShot.class) != null){</span>
+				//ability increases base dmg by 50%, scaling by 50%
+<span class="nc" id="L100">				return  16 +                       //16 base</span>
+<span class="nc" id="L101">						4*bow.buffedLvl() + 2*lvl; //+4 per bow level, +2 per level</span>
+			} else {
+<span class="nc" id="L103">				return  12 +                       //12 base</span>
+<span class="nc" id="L104">						3*bow.buffedLvl() + 2*lvl; //+3 per bow level, +2 per level</span>
+			}
+		} else {
+<span class="nc" id="L107">			return  2 +     //2 base, down from 5</span>
+					2*lvl;  //scaling unchanged
+		}
+	}
+	
+	protected static Crossbow bow;
+	
+	private void updateCrossbow(){
+<span class="nc bnc" id="L115" title="All 2 branches missed.">		if (Dungeon.hero == null) {</span>
+<span class="nc" id="L116">			bow = null;</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		} else if (Dungeon.hero.belongings.weapon() instanceof Crossbow){</span>
+<span class="nc" id="L118">			bow = (Crossbow) Dungeon.hero.belongings.weapon();</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">		} else if (Dungeon.hero.belongings.secondWep() instanceof Crossbow) {</span>
+			//player can instant swap anyway, so this is just QoL
+<span class="nc" id="L121">			bow = (Crossbow) Dungeon.hero.belongings.secondWep();</span>
+		} else {
+<span class="nc" id="L123">			bow = null;</span>
+		}
+<span class="nc" id="L125">	}</span>
+
+	public boolean crossbowHasEnchant( Char owner ){
+<span class="nc bnc" id="L128" title="All 6 branches missed.">		return bow != null &amp;&amp; bow.enchantment != null &amp;&amp; owner.buff(MagicImmune.class) == null;</span>
+	}
+	
+	@Override
+	public boolean hasEnchant(Class&lt;? extends Enchantment&gt; type, Char owner) {
+<span class="nc bnc" id="L133" title="All 4 branches missed.">		if (bow != null &amp;&amp; bow.hasEnchant(type, owner)){</span>
+<span class="nc" id="L134">			return true;</span>
+		} else {
+<span class="nc" id="L136">			return super.hasEnchant(type, owner);</span>
+		}
+	}
+
+	@Override
+	public float accuracyFactor(Char owner, Char target) {
+		//don't update xbow here, as dart is the active weapon atm
+<span class="nc bnc" id="L143" title="All 4 branches missed.">		if (bow != null &amp;&amp; owner.buff(Crossbow.ChargedShot.class) != null){</span>
+<span class="nc" id="L144">			return Char.INFINITE_ACCURACY;</span>
+		} else {
+<span class="nc" id="L146">			return super.accuracyFactor(owner, target);</span>
+		}
+	}
+
+	@Override
+	public int proc(Char attacker, Char defender, int damage) {
+<span class="nc bnc" id="L152" title="All 4 branches missed.">		if (bow != null &amp;&amp; !processingChargedShot){</span>
+<span class="nc" id="L153">			damage = bow.proc(attacker, defender, damage);</span>
+		}
+
+<span class="nc" id="L156">		int dmg = super.proc(attacker, defender, damage);</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		if (!processingChargedShot) {</span>
+<span class="nc" id="L158">			processChargedShot(defender, damage);</span>
+		}
+<span class="nc" id="L160">		return dmg;</span>
+	}
+
+	@Override
+	public int throwPos(Hero user, int dst) {
+<span class="nc" id="L165">		updateCrossbow();</span>
+<span class="nc" id="L166">		return super.throwPos(user, dst);</span>
+	}
+
+	@Override
+	protected void onThrow(int cell) {
+<span class="nc" id="L171">		updateCrossbow();</span>
+		//we have to set this here, as on-hit effects can move the target we aim at
+<span class="nc" id="L173">		chargedShotPos = cell;</span>
+<span class="nc" id="L174">		super.onThrow(cell);</span>
+<span class="nc" id="L175">	}</span>
+
+<span class="nc" id="L177">	protected boolean processingChargedShot = false;</span>
+	private int chargedShotPos;
+	protected void processChargedShot( Char target, int dmg ){
+		//don't update xbow here, as dart may be the active weapon atm
+<span class="nc" id="L181">		processingChargedShot = true;</span>
+<span class="nc bnc" id="L182" title="All 6 branches missed.">		if (chargedShotPos != -1 &amp;&amp; bow != null &amp;&amp; Dungeon.hero.buff(Crossbow.ChargedShot.class) != null) {</span>
+<span class="nc" id="L183">			PathFinder.buildDistanceMap(chargedShotPos, Dungeon.level.passable, 3);</span>
+			//necessary to clone as some on-hit effects use Pathfinder
+<span class="nc" id="L185">			int[] distance = PathFinder.distance.clone();</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">			for (Char ch : Actor.chars()){</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">				if (ch == target){</span>
+<span class="nc" id="L188">					Actor.add(new Actor() {</span>
+<span class="nc" id="L189">						{ actPriority = VFX_PRIO; }</span>
+						@Override
+						protected boolean act() {
+<span class="nc bnc" id="L192" title="All 2 branches missed.">							if (!ch.isAlive()){</span>
+<span class="nc" id="L193">								bow.onAbilityKill(Dungeon.hero, ch);</span>
+							}
+<span class="nc" id="L195">							Actor.remove(this);</span>
+<span class="nc" id="L196">							return true;</span>
+						}
+					});
+<span class="nc bnc" id="L199" title="All 2 branches missed.">				} else if (distance[ch.pos] != Integer.MAX_VALUE){</span>
+<span class="nc" id="L200">					proc(Dungeon.hero, ch, dmg);</span>
+				}
+<span class="nc" id="L202">			}</span>
+		}
+<span class="nc" id="L204">		chargedShotPos = -1;</span>
+<span class="nc" id="L205">		processingChargedShot = false;</span>
+<span class="nc" id="L206">	}</span>
+
+	@Override
+	protected void decrementDurability() {
+<span class="nc" id="L210">		super.decrementDurability();</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">		if (Dungeon.hero.buff(Crossbow.ChargedShot.class) != null) {</span>
+<span class="nc" id="L212">			Dungeon.hero.buff(Crossbow.ChargedShot.class).detach();</span>
+		}
+<span class="nc" id="L214">	}</span>
+
+	@Override
+	public void throwSound() {
+<span class="nc" id="L218">		updateCrossbow();</span>
+<span class="nc bnc" id="L219" title="All 2 branches missed.">		if (bow != null) {</span>
+<span class="nc" id="L220">			Sample.INSTANCE.play(Assets.Sounds.ATK_CROSSBOW, 1, Random.Float(0.87f, 1.15f));</span>
+		} else {
+<span class="nc" id="L222">			super.throwSound();</span>
+		}
+<span class="nc" id="L224">	}</span>
+	
+	@Override
+	public String info() {
+<span class="nc" id="L228">		updateCrossbow();</span>
+<span class="nc bnc" id="L229" title="All 4 branches missed.">		if (bow != null &amp;&amp; !bow.isIdentified()){</span>
+<span class="nc" id="L230">			Crossbow realBow = bow;</span>
+			//create a temporary bow for IDing purposes
+<span class="nc" id="L232">			bow = new Crossbow();</span>
+<span class="nc" id="L233">			String info = super.info();</span>
+<span class="nc" id="L234">			bow = realBow;</span>
+<span class="nc" id="L235">			return info;</span>
+		} else {
+<span class="nc" id="L237">			return super.info();</span>
+		}
+	}
+	
+	@Override
+	public boolean isUpgradable() {
+<span class="nc" id="L243">		return false;</span>
+	}
+	
+	@Override
+	public int value() {
+<span class="nc" id="L248">		return super.value()/2; //half normal value</span>
+	}
+	
+<span class="nc" id="L251">	private final WndBag.ItemSelector itemSelector = new WndBag.ItemSelector() {</span>
+
+		@Override
+		public String textPrompt() {
+<span class="nc" id="L255">			return Messages.get(Dart.class, &quot;prompt&quot;);</span>
+		}
+
+		@Override
+		public Class&lt;?extends Bag&gt; preferredBag(){
+<span class="nc" id="L260">			return VelvetPouch.class;</span>
+		}
+
+		@Override
+		public boolean itemSelectable(Item item) {
+<span class="nc" id="L265">			return item instanceof Plant.Seed;</span>
+		}
+
+		@Override
+		public void onSelect(final Item item) {
+			
+<span class="nc bnc" id="L271" title="All 2 branches missed.">			if (item == null) return;</span>
+			
+<span class="nc" id="L273">			final int maxToTip = Math.min(curItem.quantity(), item.quantity()*2);</span>
+<span class="nc" id="L274">			final int maxSeedsToUse = (maxToTip+1)/2;</span>
+			
+			final int singleSeedDarts;
+			
+			final String[] options;
+			
+<span class="nc bnc" id="L280" title="All 2 branches missed.">			if (curItem.quantity() == 1){</span>
+<span class="nc" id="L281">				singleSeedDarts = 1;</span>
+<span class="nc" id="L282">				options = new String[]{</span>
+<span class="nc" id="L283">						Messages.get(Dart.class, &quot;tip_one&quot;),</span>
+<span class="nc" id="L284">						Messages.get(Dart.class, &quot;tip_cancel&quot;)};</span>
+			} else {
+<span class="nc" id="L286">				singleSeedDarts = 2;</span>
+<span class="nc bnc" id="L287" title="All 2 branches missed.">				if (maxToTip &lt;= 2){</span>
+<span class="nc" id="L288">					options = new String[]{</span>
+<span class="nc" id="L289">							Messages.get(Dart.class, &quot;tip_two&quot;),</span>
+<span class="nc" id="L290">							Messages.get(Dart.class, &quot;tip_cancel&quot;)};</span>
+				} else {
+<span class="nc" id="L292">					options = new String[]{</span>
+<span class="nc" id="L293">							Messages.get(Dart.class, &quot;tip_all&quot;, maxToTip, maxSeedsToUse),</span>
+<span class="nc" id="L294">							Messages.get(Dart.class, &quot;tip_two&quot;),</span>
+<span class="nc" id="L295">							Messages.get(Dart.class, &quot;tip_cancel&quot;)};</span>
+				}
+			}
+			
+<span class="nc" id="L299">			TippedDart tipResult = TippedDart.getTipped((Plant.Seed) item, 1);</span>
+			
+<span class="nc" id="L301">			GameScene.show(new WndOptions( new ItemSprite(item),</span>
+<span class="nc" id="L302">					Messages.titleCase(item.name()),</span>
+<span class="nc" id="L303">					Messages.get(Dart.class, &quot;tip_desc&quot;, tipResult.name()) + &quot;\n\n&quot; + tipResult.desc(),</span>
+<span class="nc" id="L304">					options){</span>
+				
+				@Override
+				protected void onSelect(int index) {
+<span class="nc" id="L308">					super.onSelect(index);</span>
+					
+<span class="nc bnc" id="L310" title="All 4 branches missed.">					if (index == 0 &amp;&amp; options.length == 3){</span>
+<span class="nc bnc" id="L311" title="All 2 branches missed.">						if (item.quantity() &lt;= maxSeedsToUse){</span>
+<span class="nc" id="L312">							item.detachAll( curUser.belongings.backpack );</span>
+						} else {
+<span class="nc" id="L314">							item.quantity(item.quantity() - maxSeedsToUse);</span>
+						}
+						
+<span class="nc bnc" id="L317" title="All 2 branches missed.">						if (maxToTip &lt; curItem.quantity()){</span>
+<span class="nc" id="L318">							curItem.quantity(curItem.quantity() - maxToTip);</span>
+						} else {
+<span class="nc" id="L320">							curItem.detachAll(curUser.belongings.backpack);</span>
+						}
+						
+<span class="nc" id="L323">						TippedDart newDart = TippedDart.getTipped((Plant.Seed) item, maxToTip);</span>
+<span class="nc bnc" id="L324" title="All 2 branches missed.">						if (!newDart.collect()) Dungeon.level.drop(newDart, curUser.pos).sprite.drop();</span>
+						
+<span class="nc" id="L326">						curUser.spend( 1f );</span>
+<span class="nc" id="L327">						curUser.busy();</span>
+<span class="nc" id="L328">						curUser.sprite.operate(curUser.pos);</span>
+						
+<span class="nc bnc" id="L330" title="All 8 branches missed.">					} else if ((index == 1 &amp;&amp; options.length == 3) || (index == 0 &amp;&amp; options.length == 2)){</span>
+<span class="nc" id="L331">						item.detach( curUser.belongings.backpack );</span>
+						
+<span class="nc bnc" id="L333" title="All 2 branches missed.">						if (curItem.quantity() &lt;= singleSeedDarts){</span>
+<span class="nc" id="L334">							curItem.detachAll( curUser.belongings.backpack );</span>
+						} else {
+<span class="nc" id="L336">							curItem.quantity(curItem.quantity() - singleSeedDarts);</span>
+						}
+						
+<span class="nc" id="L339">						TippedDart newDart = TippedDart.getTipped((Plant.Seed) item, singleSeedDarts);</span>
+<span class="nc bnc" id="L340" title="All 2 branches missed.">						if (!newDart.collect()) Dungeon.level.drop(newDart, curUser.pos).sprite.drop();</span>
+						
+<span class="nc" id="L342">						curUser.spend( 1f );</span>
+<span class="nc" id="L343">						curUser.busy();</span>
+<span class="nc" id="L344">						curUser.sprite.operate(curUser.pos);</span>
+					}
+<span class="nc" id="L346">				}</span>
+			});
+			
+<span class="nc" id="L349">		}</span>
+		
+	};
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SpiritForm.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells</a> &gt; <span class="el_source">SpiritForm.java</span></div><h1>SpiritForm.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2025 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Corruption;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.Trinity;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Wraith;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.AlchemistsToolkit;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.EtherealChains;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HornOfPlenty;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.MasterThievesArmband;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.SandalsOfNature;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.TalismanOfForesight;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.TimekeepersHourglass;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.UnstableSpellbook;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfMight;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Blindweed;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Fadeleaf;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Icecap;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Sorrowmoss;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Stormvine;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Swiftthistle;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.AlchemyScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.utils.Bundlable;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L69">public class SpiritForm extends ClericSpell {</span>
+
+<span class="nc" id="L71">	public static SpiritForm INSTANCE = new SpiritForm();</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L75">		return HeroIcon.SPIRIT_FORM;</span>
+	}
+
+	@Override
+	public String desc() {
+<span class="nc" id="L80">		return Messages.get(this, &quot;desc&quot;, ringLevel(), artifactLevel()) + &quot;\n\n&quot; + Messages.get(this, &quot;charge_cost&quot;, (int)chargeUse(Dungeon.hero));</span>
+	}
+
+	@Override
+	public float chargeUse(Hero hero) {
+<span class="nc" id="L85">		return 4;</span>
+	}
+
+	@Override
+	public boolean canCast(Hero hero) {
+<span class="nc bnc" id="L90" title="All 4 branches missed.">		return super.canCast(hero) &amp;&amp; hero.hasTalent(Talent.SPIRIT_FORM);</span>
+	}
+
+	@Override
+	public void onCast(HolyTome tome, Hero hero) {
+
+<span class="nc" id="L96">		GameScene.show(new Trinity.WndItemtypeSelect(tome, this));</span>
+
+<span class="nc" id="L98">	}</span>
+
+	public static int ringLevel(){
+<span class="nc" id="L101">		return Dungeon.hero.pointsInTalent(Talent.SPIRIT_FORM);</span>
+	}
+
+	public static int artifactLevel(){
+<span class="nc" id="L105">		return 2 + 2*Dungeon.hero.pointsInTalent(Talent.SPIRIT_FORM);</span>
+	}
+
+<span class="nc" id="L108">	public static class SpiritFormBuff extends FlavourBuff{</span>
+
+		{
+<span class="nc" id="L111">			type = buffType.POSITIVE;</span>
+<span class="nc" id="L112">		}</span>
+
+		public static final float DURATION = 20f;
+
+		private Bundlable effect;
+
+		@Override
+		public int icon() {
+<span class="nc" id="L120">			return BuffIndicator.TRINITY_FORM;</span>
+		}
+
+		@Override
+		public void tintIcon(Image icon) {
+<span class="nc" id="L125">			icon.hardlight(0, 1, 0);</span>
+<span class="nc" id="L126">		}</span>
+
+		@Override
+		public float iconFadePercent() {
+<span class="nc" id="L130">			return Math.max(0, (DURATION - visualcooldown()) / DURATION);</span>
+		}
+
+		public void setEffect(Bundlable effect){
+<span class="nc" id="L134">			this.effect = effect;</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">			if (effect instanceof RingOfMight){</span>
+<span class="nc" id="L136">				((Ring) effect).level(ringLevel());</span>
+<span class="nc" id="L137">				Dungeon.hero.updateHT( false );</span>
+			}
+<span class="nc" id="L139">		}</span>
+
+		@Override
+		public void detach() {
+<span class="nc" id="L143">			super.detach();</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">			if (effect instanceof RingOfMight){</span>
+<span class="nc" id="L145">				Dungeon.hero.updateHT( false );</span>
+			}
+<span class="nc" id="L147">		}</span>
+
+		public Ring ring(){
+<span class="nc bnc" id="L150" title="All 2 branches missed.">			if (effect instanceof Ring){</span>
+<span class="nc" id="L151">				((Ring) effect).level(ringLevel());</span>
+<span class="nc" id="L152">				return (Ring) effect;</span>
+			}
+<span class="nc" id="L154">			return null;</span>
+		}
+
+		public Artifact artifact(){
+<span class="nc bnc" id="L158" title="All 2 branches missed.">			if (effect instanceof Artifact){</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">				if (((Artifact) effect).visiblyUpgraded() &lt; artifactLevel()){</span>
+<span class="nc" id="L160">					((Artifact) effect).transferUpgrade(artifactLevel() - ((Artifact) effect).visiblyUpgraded());</span>
+				}
+<span class="nc" id="L162">				return (Artifact) effect;</span>
+			}
+<span class="nc" id="L164">			return null;</span>
+		}
+
+		@Override
+		public String desc() {
+<span class="nc bnc" id="L169" title="All 2 branches missed.">			if (ring() != null){</span>
+<span class="nc" id="L170">				return Messages.get(this, &quot;desc&quot;, Messages.titleCase(ring().name()), dispTurns());</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">			} else if (artifact() != null){</span>
+<span class="nc" id="L172">				return Messages.get(this, &quot;desc&quot;, Messages.titleCase(artifact().name()), dispTurns());</span>
+			}
+<span class="nc" id="L174">			return super.desc();</span>
+		}
+
+		private static final String EFFECT = &quot;effect&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L181">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L182">			bundle.put(EFFECT, effect);</span>
+<span class="nc" id="L183">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L187">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L188">			effect = bundle.get(EFFECT);</span>
+<span class="nc" id="L189">		}</span>
+
+	}
+
+	public static void applyActiveArtifactEffect(ClassArmor armor, Artifact effect){
+<span class="nc bnc" id="L194" title="All 2 branches missed.">		if (effect instanceof AlchemistsToolkit){</span>
+<span class="nc" id="L195">			Talent.onArtifactUsed(Dungeon.hero);</span>
+<span class="nc" id="L196">			AlchemyScene.assignToolkit((AlchemistsToolkit) effect);</span>
+<span class="nc" id="L197">			Game.switchScene(AlchemyScene.class);</span>
+
+<span class="nc bnc" id="L199" title="All 2 branches missed.">		} else if (effect instanceof DriedRose){</span>
+<span class="nc" id="L200">			ArrayList&lt;Integer&gt; spawnPoints = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">			for (int i = 0; i &lt; PathFinder.NEIGHBOURS8.length; i++) {</span>
+<span class="nc" id="L202">				int p = Dungeon.hero.pos + PathFinder.NEIGHBOURS8[i];</span>
+<span class="nc bnc" id="L203" title="All 4 branches missed.">				if (Actor.findChar(p) == null &amp;&amp; !Dungeon.level.solid[p]) {</span>
+<span class="nc" id="L204">					spawnPoints.add(p);</span>
+				}
+			}
+<span class="nc bnc" id="L207" title="All 2 branches missed.">			if (!spawnPoints.isEmpty()) {</span>
+<span class="nc" id="L208">				Wraith w = Wraith.spawnAt(Random.element(spawnPoints), Wraith.class);</span>
+
+<span class="nc" id="L210">				w.HP = w.HT = 20 + 8*artifactLevel();</span>
+<span class="nc" id="L211">				Buff.affect(w, Corruption.class);</span>
+			}
+<span class="nc" id="L213">			Talent.onArtifactUsed(Dungeon.hero);</span>
+<span class="nc" id="L214">			Dungeon.hero.spendAndNext(1f);</span>
+
+<span class="nc bnc" id="L216" title="All 2 branches missed.">		} else if (effect instanceof EtherealChains){</span>
+<span class="nc" id="L217">			GameScene.selectCell(((EtherealChains) effect).caster);</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">			if (Dungeon.quickslot.contains(armor)) {</span>
+<span class="nc" id="L219">				QuickSlotButton.useTargeting(Dungeon.quickslot.getSlot(armor));</span>
+			}
+
+<span class="nc bnc" id="L222" title="All 2 branches missed.">		} else if (effect instanceof HornOfPlenty){</span>
+<span class="nc" id="L223">			((HornOfPlenty) effect).doEatEffect(Dungeon.hero, 1);</span>
+
+<span class="nc bnc" id="L225" title="All 2 branches missed.">		} else if (effect instanceof MasterThievesArmband){</span>
+<span class="nc" id="L226">			GameScene.selectCell(((MasterThievesArmband) effect).targeter);</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">			if (Dungeon.quickslot.contains(armor)) {</span>
+<span class="nc" id="L228">				QuickSlotButton.useTargeting(Dungeon.quickslot.getSlot(armor));</span>
+			}
+
+<span class="nc bnc" id="L231" title="All 2 branches missed.">		} else if (effect instanceof SandalsOfNature){</span>
+<span class="nc" id="L232">			((SandalsOfNature) effect).curSeedEffect = Random.oneOf(</span>
+					Blindweed.Seed.class, Fadeleaf.Seed.class, Firebloom.Seed.class,
+					Icecap.Seed.class, Sorrowmoss.Seed.class, Stormvine.Seed.class
+			);
+
+<span class="nc" id="L237">			GameScene.selectCell(((SandalsOfNature) effect).cellSelector);</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">			if (Dungeon.quickslot.contains(armor)) {</span>
+<span class="nc" id="L239">				QuickSlotButton.useTargeting(Dungeon.quickslot.getSlot(armor));</span>
+			}
+
+<span class="nc bnc" id="L242" title="All 2 branches missed.">		} else if (effect instanceof TalismanOfForesight){</span>
+<span class="nc" id="L243">			GameScene.selectCell(((TalismanOfForesight) effect).scry);</span>
+
+<span class="nc bnc" id="L245" title="All 2 branches missed.">		} else if (effect instanceof TimekeepersHourglass){</span>
+<span class="nc" id="L246">			Buff.affect(Dungeon.hero, Swiftthistle.TimeBubble.class).reset(artifactLevel());</span>
+<span class="nc" id="L247">			Dungeon.hero.spendAndNext(1f);</span>
+
+<span class="nc bnc" id="L249" title="All 2 branches missed.">		} else if (effect instanceof UnstableSpellbook){</span>
+<span class="nc" id="L250">			((UnstableSpellbook) effect).doReadEffect(Dungeon.hero);</span>
+		}
+<span class="nc" id="L252">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

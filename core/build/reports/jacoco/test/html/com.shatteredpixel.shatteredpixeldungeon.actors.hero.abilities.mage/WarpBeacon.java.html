@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WarpBeacon.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.mage</a> &gt; <span class="el_source">WarpBeacon.java</span></div><h1>WarpBeacon.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.mage;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
+import com.shatteredpixel.shatteredpixeldungeon.ui.AttackIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.utils.BArray;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L57">public class WarpBeacon extends ArmorAbility {</span>
+
+	{
+<span class="nc" id="L60">		baseChargeUse = 35f;</span>
+<span class="nc" id="L61">	}</span>
+
+	@Override
+	public String targetingPrompt() {
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		if (Dungeon.hero.buff(WarpBeaconTracker.class) == null</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">				&amp;&amp; Dungeon.hero.hasTalent(Talent.REMOTE_BEACON)){</span>
+<span class="nc" id="L67">			return Messages.get(this, &quot;prompt&quot;);</span>
+		}
+<span class="nc" id="L69">		return super.targetingPrompt();</span>
+	}
+
+	@Override
+	public int targetedPos(Char user, int dst) {
+<span class="nc" id="L74">		return dst;</span>
+	}
+
+	@Override
+	protected void activate(ClassArmor armor, Hero hero, Integer target) {
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if (target == null){</span>
+<span class="nc" id="L80">			return;</span>
+		}
+
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if (hero.buff(WarpBeaconTracker.class) != null){</span>
+<span class="nc" id="L84">			final WarpBeaconTracker tracker = hero.buff(WarpBeaconTracker.class);</span>
+
+<span class="nc" id="L86">			GameScene.show( new WndOptions(</span>
+					new Image(hero.sprite),
+<span class="nc" id="L88">					Messages.titleCase(name()),</span>
+<span class="nc" id="L89">					Messages.get(WarpBeacon.class, &quot;window_desc&quot;, tracker.depth),</span>
+<span class="nc" id="L90">					Messages.get(WarpBeacon.class, &quot;window_tele&quot;),</span>
+<span class="nc" id="L91">					Messages.get(WarpBeacon.class, &quot;window_clear&quot;),</span>
+<span class="nc" id="L92">					Messages.get(WarpBeacon.class, &quot;window_cancel&quot;)){</span>
+
+				@Override
+				protected void onSelect(int index) {
+<span class="nc bnc" id="L96" title="All 2 branches missed.">					if (index == 0){</span>
+
+<span class="nc bnc" id="L98" title="All 4 branches missed.">						if (tracker.depth != Dungeon.depth &amp;&amp; !hero.hasTalent(Talent.LONGRANGE_WARP)){</span>
+<span class="nc" id="L99">							GLog.w( Messages.get(WarpBeacon.class, &quot;depths&quot;) );</span>
+<span class="nc" id="L100">							return;</span>
+						}
+
+<span class="nc" id="L103">						float chargeNeeded = chargeUse(hero);</span>
+
+<span class="nc bnc" id="L105" title="All 2 branches missed.">						if (tracker.depth != Dungeon.depth){</span>
+<span class="nc" id="L106">							chargeNeeded *= 1.833f - 0.333f*Dungeon.hero.pointsInTalent(Talent.LONGRANGE_WARP);</span>
+						}
+
+<span class="nc bnc" id="L109" title="All 2 branches missed.">						if (armor.charge &lt; chargeNeeded){</span>
+<span class="nc" id="L110">							GLog.w( Messages.get(ClassArmor.class, &quot;low_charge&quot;) );</span>
+<span class="nc" id="L111">							return;</span>
+						}
+
+<span class="nc" id="L114">						armor.charge -= chargeNeeded;</span>
+<span class="nc" id="L115">						armor.updateQuickslot();</span>
+
+<span class="nc bnc" id="L117" title="All 4 branches missed.">						if (tracker.depth == Dungeon.depth &amp;&amp; tracker.branch == Dungeon.branch){</span>
+<span class="nc" id="L118">							Char existing = Actor.findChar(tracker.pos);</span>
+
+<span class="nc bnc" id="L120" title="All 4 branches missed.">							if (existing != null &amp;&amp; existing != hero){</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">								if (hero.hasTalent(Talent.TELEFRAG)){</span>
+<span class="nc" id="L122">									int heroHP = hero.HP + hero.shielding();</span>
+<span class="nc" id="L123">									int heroDmg = 5 * hero.pointsInTalent(Talent.TELEFRAG);</span>
+<span class="nc" id="L124">									hero.damage(Math.min(heroDmg, heroHP-1), WarpBeacon.this);</span>
+
+<span class="nc" id="L126">									int damage = Hero.heroDamageIntRange(10*hero.pointsInTalent(Talent.TELEFRAG), 15*hero.pointsInTalent(Talent.TELEFRAG));</span>
+<span class="nc" id="L127">									existing.sprite.flash();</span>
+<span class="nc" id="L128">									existing.sprite.bloodBurstA(existing.sprite.center(), damage);</span>
+<span class="nc" id="L129">									existing.damage(damage, WarpBeacon.this);</span>
+
+<span class="nc" id="L131">									Sample.INSTANCE.play(Assets.Sounds.HIT_CRUSH);</span>
+<span class="nc" id="L132">									Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);</span>
+								}
+
+<span class="nc bnc" id="L135" title="All 2 branches missed.">								if (existing.isAlive()){</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">									Char toPush = Char.hasProp(existing, Char.Property.IMMOVABLE) ? hero : existing;</span>
+
+<span class="nc" id="L138">									ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">									for (int n : PathFinder.NEIGHBOURS8) {</span>
+<span class="nc" id="L140">										int cell = tracker.pos + n;</span>
+<span class="nc bnc" id="L141" title="All 4 branches missed.">										if (!Dungeon.level.solid[cell] &amp;&amp; Actor.findChar( cell ) == null</span>
+<span class="nc bnc" id="L142" title="All 4 branches missed.">												&amp;&amp; (!Char.hasProp(toPush, Char.Property.LARGE) || Dungeon.level.openSpace[cell])) {</span>
+<span class="nc" id="L143">											candidates.add( cell );</span>
+										}
+									}
+<span class="nc" id="L146">									Random.shuffle(candidates);</span>
+
+<span class="nc bnc" id="L148" title="All 2 branches missed.">									if (!candidates.isEmpty()){</span>
+<span class="nc" id="L149">										ScrollOfTeleportation.appear(hero, tracker.pos);</span>
+<span class="nc" id="L150">										Actor.add( new Pushing( toPush, toPush.pos, candidates.get(0) ));</span>
+
+<span class="nc" id="L152">										toPush.pos = candidates.get(0);</span>
+<span class="nc" id="L153">										Dungeon.level.occupyCell(toPush);</span>
+<span class="nc" id="L154">										hero.next();</span>
+									} else {
+<span class="nc" id="L156">										GLog.w( Messages.get(ScrollOfTeleportation.class, &quot;no_tele&quot;) );</span>
+									}
+<span class="nc" id="L158">								} else {</span>
+<span class="nc" id="L159">									ScrollOfTeleportation.appear(hero, tracker.pos);</span>
+								}
+							} else {
+<span class="nc" id="L162">								ScrollOfTeleportation.appear(hero, tracker.pos);</span>
+							}
+
+<span class="nc" id="L165">							Invisibility.dispel();</span>
+<span class="nc" id="L166">							Dungeon.observe();</span>
+<span class="nc" id="L167">							GameScene.updateFog();</span>
+<span class="nc" id="L168">							hero.checkVisibleMobs();</span>
+<span class="nc" id="L169">							AttackIndicator.updateState();</span>
+
+<span class="nc" id="L171">						} else {</span>
+
+<span class="nc bnc" id="L173" title="All 2 branches missed.">							if (!Dungeon.interfloorTeleportAllowed()){</span>
+<span class="nc" id="L174">								GLog.w( Messages.get(ScrollOfTeleportation.class, &quot;no_tele&quot;) );</span>
+<span class="nc" id="L175">								return;</span>
+							}
+
+							//transition before dispel, to cancel out trap effects
+<span class="nc" id="L179">							Level.beforeTransition();</span>
+<span class="nc" id="L180">							Invisibility.dispel();</span>
+<span class="nc" id="L181">							InterlevelScene.mode = InterlevelScene.Mode.RETURN;</span>
+<span class="nc" id="L182">							InterlevelScene.returnDepth = tracker.depth;</span>
+<span class="nc" id="L183">							InterlevelScene.returnBranch = tracker.branch;</span>
+<span class="nc" id="L184">							InterlevelScene.returnPos = tracker.pos;</span>
+<span class="nc" id="L185">							Game.switchScene( InterlevelScene.class );</span>
+						}
+
+<span class="nc bnc" id="L188" title="All 2 branches missed.">					} else if (index == 1){</span>
+<span class="nc" id="L189">						hero.buff(WarpBeaconTracker.class).detach();</span>
+					}
+<span class="nc" id="L191">				}</span>
+			} );
+
+<span class="nc" id="L194">		} else {</span>
+<span class="nc bnc" id="L195" title="All 4 branches missed.">			if (!Dungeon.level.mapped[target] &amp;&amp; !Dungeon.level.visited[target]){</span>
+<span class="nc" id="L196">				return;</span>
+			}
+
+<span class="nc bnc" id="L199" title="All 2 branches missed.">			if (Dungeon.level.distance(hero.pos, target) &gt; 4*hero.pointsInTalent(Talent.REMOTE_BEACON)){</span>
+<span class="nc" id="L200">				GLog.w( Messages.get(WarpBeacon.class, &quot;too_far&quot;) );</span>
+<span class="nc" id="L201">				return;</span>
+			}
+
+<span class="nc" id="L204">			PathFinder.buildDistanceMap(target, BArray.or(Dungeon.level.passable, Dungeon.level.avoid, null));</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">			if (Dungeon.level.pit[target] ||</span>
+<span class="nc bnc" id="L206" title="All 4 branches missed.">					(Dungeon.level.solid[target] &amp;&amp; !Dungeon.level.passable[target]) ||</span>
+<span class="nc bnc" id="L207" title="All 6 branches missed.">					!(Dungeon.level.passable[target] || Dungeon.level.avoid[target]) ||</span>
+					PathFinder.distance[hero.pos] == Integer.MAX_VALUE){
+<span class="nc" id="L209">				GLog.w( Messages.get(WarpBeacon.class, &quot;invalid_beacon&quot;) );</span>
+<span class="nc" id="L210">				return;</span>
+			}
+
+<span class="nc" id="L213">			WarpBeaconTracker tracker = new WarpBeaconTracker();</span>
+<span class="nc" id="L214">			tracker.pos = target;</span>
+<span class="nc" id="L215">			tracker.depth = Dungeon.depth;</span>
+<span class="nc" id="L216">			tracker.branch = Dungeon.branch;</span>
+<span class="nc" id="L217">			tracker.attachTo(hero);</span>
+
+<span class="nc" id="L219">			hero.sprite.operate(target);</span>
+<span class="nc" id="L220">			Sample.INSTANCE.play(Assets.Sounds.TELEPORT);</span>
+<span class="nc" id="L221">			Invisibility.dispel();</span>
+<span class="nc" id="L222">			hero.spendAndNext(Actor.TICK);</span>
+		}
+<span class="nc" id="L224">	}</span>
+
+<span class="nc" id="L226">	public static class WarpBeaconTracker extends Buff {</span>
+
+		{
+<span class="nc" id="L229">			revivePersists = true;</span>
+<span class="nc" id="L230">		}</span>
+
+		int pos;
+		int depth;
+		int branch;
+
+		Emitter e;
+
+		@Override
+		public void fx(boolean on) {
+<span class="nc bnc" id="L240" title="All 4 branches missed.">			if (on &amp;&amp; depth == Dungeon.depth) {</span>
+<span class="nc" id="L241">				e = CellEmitter.center(pos);</span>
+<span class="nc" id="L242">				e.pour(MagicMissile.WardParticle.UP, 0.05f);</span>
+			}
+<span class="nc bnc" id="L244" title="All 2 branches missed.">			else if (e != null) e.on = false;</span>
+<span class="nc" id="L245">		}</span>
+
+		public static final String POS = &quot;pos&quot;;
+		public static final String DEPTH = &quot;depth&quot;;
+		public static final String BRANCH = &quot;branch&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L253">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L254">			bundle.put(POS, pos);</span>
+<span class="nc" id="L255">			bundle.put(DEPTH, depth);</span>
+<span class="nc" id="L256">			bundle.put(BRANCH, branch);</span>
+<span class="nc" id="L257">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L261">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L262">			pos = bundle.getInt(POS);</span>
+<span class="nc" id="L263">			depth = bundle.getInt(DEPTH);</span>
+<span class="nc" id="L264">			branch = bundle.getInt(BRANCH);</span>
+<span class="nc" id="L265">		}</span>
+	}
+
+	@Override
+	public int icon() {
+<span class="nc" id="L270">		return HeroIcon.WARP_BEACON;</span>
+	}
+
+	@Override
+	public Talent[] talents() {
+<span class="nc" id="L275">		return new Talent[]{Talent.TELEFRAG, Talent.REMOTE_BEACON, Talent.LONGRANGE_WARP, Talent.HEROIC_ENERGY};</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

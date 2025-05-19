@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DirectableAlly.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs</a> &gt; <span class="el_source">DirectableAlly.java</span></div><h1>DirectableAlly.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.watabou.utils.Bundle;
+
+<span class="nc" id="L30">public class DirectableAlly extends NPC {</span>
+
+	{
+<span class="nc" id="L33">		alignment = Char.Alignment.ALLY;</span>
+<span class="nc" id="L34">		intelligentAlly = true;</span>
+<span class="nc" id="L35">		WANDERING = new Wandering();</span>
+<span class="nc" id="L36">		HUNTING = new Hunting();</span>
+<span class="nc" id="L37">		state = WANDERING;</span>
+
+		//before other mobs
+<span class="nc" id="L40">		actPriority = MOB_PRIO + 1;</span>
+
+	}
+
+<span class="nc" id="L44">	protected boolean attacksAutomatically = true;</span>
+
+<span class="nc" id="L46">	protected int defendingPos = -1;</span>
+<span class="nc" id="L47">	protected boolean movingToDefendPos = false;</span>
+
+	public void defendPos( int cell ){
+<span class="nc" id="L50">		defendingPos = cell;</span>
+<span class="nc" id="L51">		movingToDefendPos = true;</span>
+<span class="nc" id="L52">		aggro(null);</span>
+<span class="nc" id="L53">		state = WANDERING;</span>
+<span class="nc" id="L54">	}</span>
+
+	public void clearDefensingPos(){
+<span class="nc" id="L57">		defendingPos = -1;</span>
+<span class="nc" id="L58">		movingToDefendPos = false;</span>
+<span class="nc" id="L59">	}</span>
+
+	public void followHero(){
+<span class="nc" id="L62">		defendingPos = -1;</span>
+<span class="nc" id="L63">		movingToDefendPos = false;</span>
+<span class="nc" id="L64">		aggro(null);</span>
+<span class="nc" id="L65">		state = WANDERING;</span>
+<span class="nc" id="L66">	}</span>
+
+	public void targetChar( Char ch ){
+<span class="nc" id="L69">		defendingPos = -1;</span>
+<span class="nc" id="L70">		movingToDefendPos = false;</span>
+<span class="nc" id="L71">		aggro(ch);</span>
+<span class="nc" id="L72">		target = ch.pos;</span>
+<span class="nc" id="L73">	}</span>
+
+	@Override
+	public void aggro(Char ch) {
+<span class="nc" id="L77">		enemy = ch;</span>
+<span class="nc bnc" id="L78" title="All 4 branches missed.">		if (!movingToDefendPos &amp;&amp; state != PASSIVE){</span>
+<span class="nc" id="L79">			state = HUNTING;</span>
+		}
+<span class="nc" id="L81">	}</span>
+
+	public void directTocell( int cell ){
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		if (!Dungeon.level.heroFOV[cell]</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">				|| Actor.findChar(cell) == null</span>
+<span class="nc bnc" id="L86" title="All 4 branches missed.">				|| (Actor.findChar(cell) != Dungeon.hero &amp;&amp; Actor.findChar(cell).alignment != Char.Alignment.ENEMY)){</span>
+<span class="nc" id="L87">			defendPos( cell );</span>
+<span class="nc" id="L88">			return;</span>
+		}
+
+<span class="nc bnc" id="L91" title="All 2 branches missed.">		if (Actor.findChar(cell) == Dungeon.hero){</span>
+<span class="nc" id="L92">			followHero();</span>
+
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		} else if (Actor.findChar(cell).alignment == Char.Alignment.ENEMY){</span>
+<span class="nc" id="L95">			targetChar(Actor.findChar(cell));</span>
+
+		}
+<span class="nc" id="L98">	}</span>
+
+	private static final String DEFEND_POS = &quot;defend_pos&quot;;
+	private static final String MOVING_TO_DEFEND = &quot;moving_to_defend&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L105">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L106">		bundle.put(DEFEND_POS, defendingPos);</span>
+<span class="nc" id="L107">		bundle.put(MOVING_TO_DEFEND, movingToDefendPos);</span>
+<span class="nc" id="L108">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L112">		super.restoreFromBundle(bundle);</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		if (bundle.contains(DEFEND_POS)) defendingPos = bundle.getInt(DEFEND_POS);</span>
+<span class="nc" id="L114">		movingToDefendPos = bundle.getBoolean(MOVING_TO_DEFEND);</span>
+<span class="nc" id="L115">	}</span>
+
+<span class="nc" id="L117">	private class Wandering extends Mob.Wandering {</span>
+
+		@Override
+		public boolean act( boolean enemyInFOV, boolean justAlerted ) {
+<span class="nc bnc" id="L121" title="All 10 branches missed.">			if ( enemyInFOV</span>
+					&amp;&amp; attacksAutomatically
+					&amp;&amp; !movingToDefendPos
+<span class="nc bnc" id="L124" title="All 2 branches missed.">					&amp;&amp; (defendingPos == -1 || !Dungeon.level.heroFOV[defendingPos] || canAttack(enemy))) {</span>
+
+<span class="nc" id="L126">				enemySeen = true;</span>
+
+<span class="nc" id="L128">				notice();</span>
+<span class="nc" id="L129">				alerted = true;</span>
+<span class="nc" id="L130">				state = HUNTING;</span>
+<span class="nc" id="L131">				target = enemy.pos;</span>
+
+			} else {
+
+<span class="nc" id="L135">				enemySeen = false;</span>
+
+<span class="nc" id="L137">				int oldPos = pos;</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">				target = defendingPos != -1 ? defendingPos : Dungeon.hero.pos;</span>
+				//always move towards the hero when wandering
+<span class="nc bnc" id="L140" title="All 2 branches missed.">				if (getCloser( target )) {</span>
+<span class="nc" id="L141">					spend( 1 / speed() );</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">					if (pos == defendingPos) movingToDefendPos = false;</span>
+<span class="nc" id="L143">					return moveSprite( oldPos, pos );</span>
+				} else {
+					//if it can't move closer to defending pos, then give up and defend current position
+<span class="nc bnc" id="L146" title="All 2 branches missed.">					if (movingToDefendPos){</span>
+<span class="nc" id="L147">						defendingPos = pos;</span>
+<span class="nc" id="L148">						movingToDefendPos = false;</span>
+					}
+<span class="nc" id="L150">					spend( TICK );</span>
+				}
+
+			}
+<span class="nc" id="L154">			return true;</span>
+		}
+
+	}
+
+<span class="nc" id="L159">	private class Hunting extends Mob.Hunting {</span>
+
+		@Override
+		public boolean act(boolean enemyInFOV, boolean justAlerted) {
+<span class="nc bnc" id="L163" title="All 8 branches missed.">			if (enemyInFOV &amp;&amp; defendingPos != -1 &amp;&amp; Dungeon.level.heroFOV[defendingPos] &amp;&amp; !canAttack(enemy)){</span>
+<span class="nc" id="L164">				target = defendingPos;</span>
+<span class="nc" id="L165">				state = WANDERING;</span>
+<span class="nc" id="L166">				return true;</span>
+			}
+<span class="nc" id="L168">			return super.act(enemyInFOV, justAlerted);</span>
+		}
+
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

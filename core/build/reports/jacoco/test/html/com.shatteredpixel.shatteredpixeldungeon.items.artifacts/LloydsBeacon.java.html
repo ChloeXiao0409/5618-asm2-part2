@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LloydsBeacon.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.artifacts</a> &gt; <span class="el_source">LloydsBeacon.java</span></div><h1>LloydsBeacon.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite.Glowing;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.PathFinder;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L53">public class LloydsBeacon extends Artifact {</span>
+
+	public static final float TIME_TO_USE = 1;
+
+	public static final String AC_ZAP       = &quot;ZAP&quot;;
+	public static final String AC_SET		= &quot;SET&quot;;
+	public static final String AC_RETURN	= &quot;RETURN&quot;;
+	
+<span class="nc" id="L61">	public int returnDepth	= -1;</span>
+	public int returnPos;
+	
+	{
+<span class="nc" id="L65">		image = ItemSpriteSheet.ARTIFACT_BEACON;</span>
+
+<span class="nc" id="L67">		levelCap = 3;</span>
+
+<span class="nc" id="L69">		charge = 0;</span>
+<span class="nc" id="L70">		chargeCap = 3+level();</span>
+
+<span class="nc" id="L72">		defaultAction = AC_ZAP;</span>
+<span class="nc" id="L73">		usesTargeting = true;</span>
+	}
+	
+	private static final String DEPTH	= &quot;depth&quot;;
+	private static final String POS		= &quot;pos&quot;;
+	
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L81">		super.storeInBundle( bundle );</span>
+<span class="nc" id="L82">		bundle.put( DEPTH, returnDepth );</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if (returnDepth != -1) {</span>
+<span class="nc" id="L84">			bundle.put( POS, returnPos );</span>
+		}
+<span class="nc" id="L86">	}</span>
+	
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L90">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L91">		returnDepth	= bundle.getInt( DEPTH );</span>
+<span class="nc" id="L92">		returnPos	= bundle.getInt( POS );</span>
+<span class="nc" id="L93">	}</span>
+	
+	@Override
+	public ArrayList&lt;String&gt; actions( Hero hero ) {
+<span class="nc" id="L97">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc" id="L98">		actions.add( AC_ZAP );</span>
+<span class="nc" id="L99">		actions.add( AC_SET );</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">		if (returnDepth != -1) {</span>
+<span class="nc" id="L101">			actions.add( AC_RETURN );</span>
+		}
+<span class="nc" id="L103">		return actions;</span>
+	}
+	
+	@Override
+	public void execute( Hero hero, String action ) {
+
+<span class="nc" id="L109">		super.execute( hero, action );</span>
+
+<span class="nc bnc" id="L111" title="All 4 branches missed.">		if (action == AC_SET || action == AC_RETURN) {</span>
+			
+<span class="nc bnc" id="L113" title="All 4 branches missed.">			if (Dungeon.bossLevel() || !Dungeon.interfloorTeleportAllowed()) {</span>
+<span class="nc" id="L114">				hero.spend( LloydsBeacon.TIME_TO_USE );</span>
+<span class="nc" id="L115">				GLog.w( Messages.get(this, &quot;preventing&quot;) );</span>
+<span class="nc" id="L116">				return;</span>
+			}
+			
+<span class="nc bnc" id="L119" title="All 2 branches missed.">			for (int i = 0; i &lt; PathFinder.NEIGHBOURS8.length; i++) {</span>
+<span class="nc" id="L120">				Char ch = Actor.findChar(hero.pos + PathFinder.NEIGHBOURS8[i]);</span>
+<span class="nc bnc" id="L121" title="All 4 branches missed.">				if (ch != null &amp;&amp; ch.alignment == Char.Alignment.ENEMY) {</span>
+<span class="nc" id="L122">					GLog.w( Messages.get(this, &quot;creatures&quot;) );</span>
+<span class="nc" id="L123">					return;</span>
+				}
+			}
+		}
+
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		if (action == AC_ZAP ){</span>
+
+<span class="nc" id="L130">			curUser = hero;</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">			int chargesToUse = Dungeon.depth &gt; 20 ? 2 : 1;</span>
+
+<span class="nc bnc" id="L133" title="All 2 branches missed.">			if (!isEquipped( hero )) {</span>
+<span class="nc" id="L134">				GLog.i( Messages.get(Artifact.class, &quot;need_to_equip&quot;) );</span>
+<span class="nc" id="L135">				QuickSlotButton.cancel();</span>
+
+<span class="nc bnc" id="L137" title="All 2 branches missed.">			} else if (charge &lt; chargesToUse) {</span>
+<span class="nc" id="L138">				GLog.i( Messages.get(this, &quot;no_charge&quot;) );</span>
+<span class="nc" id="L139">				QuickSlotButton.cancel();</span>
+
+			} else {
+<span class="nc" id="L142">				GameScene.selectCell(zapper);</span>
+			}
+
+<span class="nc bnc" id="L145" title="All 2 branches missed.">		} else if (action == AC_SET) {</span>
+			
+<span class="nc" id="L147">			returnDepth = Dungeon.depth;</span>
+<span class="nc" id="L148">			returnPos = hero.pos;</span>
+			
+<span class="nc" id="L150">			hero.spend( LloydsBeacon.TIME_TO_USE );</span>
+<span class="nc" id="L151">			hero.busy();</span>
+			
+<span class="nc" id="L153">			hero.sprite.operate( hero.pos );</span>
+<span class="nc" id="L154">			Sample.INSTANCE.play( Assets.Sounds.BEACON );</span>
+			
+<span class="nc" id="L156">			GLog.i( Messages.get(this, &quot;return&quot;) );</span>
+			
+<span class="nc bnc" id="L158" title="All 2 branches missed.">		} else if (action == AC_RETURN) {</span>
+			
+<span class="nc bnc" id="L160" title="All 2 branches missed.">			if (returnDepth == Dungeon.depth) {</span>
+<span class="nc" id="L161">				ScrollOfTeleportation.appear( hero, returnPos );</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">				for(Mob m : Dungeon.level.mobs){</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">					if (m.pos == hero.pos){</span>
+						//displace mob
+<span class="nc bnc" id="L165" title="All 2 branches missed.">						for(int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L166" title="All 4 branches missed.">							if (Actor.findChar(m.pos+i) == null &amp;&amp; Dungeon.level.passable[m.pos + i]){</span>
+<span class="nc" id="L167">								m.pos += i;</span>
+<span class="nc" id="L168">								m.sprite.point(m.sprite.worldToCamera(m.pos));</span>
+<span class="nc" id="L169">								break;</span>
+							}
+						}
+					}
+<span class="nc" id="L173">				}</span>
+<span class="nc" id="L174">				Dungeon.level.occupyCell(hero );</span>
+<span class="nc" id="L175">				Dungeon.observe();</span>
+<span class="nc" id="L176">				GameScene.updateFog();</span>
+			} else {
+
+<span class="nc" id="L179">				Level.beforeTransition();</span>
+<span class="nc" id="L180">				InterlevelScene.mode = InterlevelScene.Mode.RETURN;</span>
+<span class="nc" id="L181">				InterlevelScene.returnDepth = returnDepth;</span>
+<span class="nc" id="L182">				InterlevelScene.returnPos = returnPos;</span>
+<span class="nc" id="L183">				Game.switchScene( InterlevelScene.class );</span>
+			}
+			
+			
+		}
+<span class="nc" id="L188">	}</span>
+
+<span class="nc" id="L190">	protected CellSelector.Listener zapper = new  CellSelector.Listener() {</span>
+
+		@Override
+		public void onSelect(Integer target) {
+
+<span class="nc bnc" id="L195" title="All 2 branches missed.">			if (target == null) return;</span>
+
+<span class="nc" id="L197">			Invisibility.dispel();</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">			charge -= Dungeon.scalingDepth() &gt; 20 ? 2 : 1;</span>
+<span class="nc" id="L199">			updateQuickslot();</span>
+
+<span class="nc bnc" id="L201" title="All 2 branches missed.">			if (Actor.findChar(target) == curUser){</span>
+<span class="nc" id="L202">				ScrollOfTeleportation.teleportChar(curUser);</span>
+<span class="nc" id="L203">				curUser.spendAndNext(1f);</span>
+			} else {
+<span class="nc" id="L205">				final Ballistica bolt = new Ballistica( curUser.pos, target, Ballistica.MAGIC_BOLT );</span>
+<span class="nc" id="L206">				final Char ch = Actor.findChar(bolt.collisionPos);</span>
+
+<span class="nc bnc" id="L208" title="All 2 branches missed.">				if (ch == curUser){</span>
+<span class="nc" id="L209">					ScrollOfTeleportation.teleportChar(curUser);</span>
+<span class="nc" id="L210">					curUser.spendAndNext( 1f );</span>
+				} else {
+<span class="nc" id="L212">					Sample.INSTANCE.play( Assets.Sounds.ZAP );</span>
+<span class="nc" id="L213">					curUser.sprite.zap(bolt.collisionPos);</span>
+<span class="nc" id="L214">					curUser.busy();</span>
+
+<span class="nc" id="L216">					MagicMissile.boltFromChar(curUser.sprite.parent,</span>
+							MagicMissile.BEACON,
+<span class="nc" id="L218">							curUser.sprite,</span>
+<span class="nc" id="L219">							bolt.collisionPos,</span>
+<span class="nc" id="L220">							new Callback() {</span>
+								@Override
+								public void call() {
+<span class="nc bnc" id="L223" title="All 2 branches missed.">									if (ch != null) {</span>
+
+<span class="nc" id="L225">										int count = 10;</span>
+										int pos;
+										do {
+<span class="nc" id="L228">											pos = Dungeon.level.randomRespawnCell( ch );</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">											if (count-- &lt;= 0) {</span>
+<span class="nc" id="L230">												break;</span>
+											}
+<span class="nc bnc" id="L232" title="All 2 branches missed.">										} while (pos == -1);</span>
+
+<span class="nc bnc" id="L234" title="All 4 branches missed.">										if (pos == -1 || Dungeon.bossLevel()) {</span>
+
+<span class="nc" id="L236">											GLog.w( Messages.get(ScrollOfTeleportation.class, &quot;no_tele&quot;) );</span>
+
+<span class="nc bnc" id="L238" title="All 2 branches missed.">										} else if (ch.properties().contains(Char.Property.IMMOVABLE)) {</span>
+
+<span class="nc" id="L240">											GLog.w( Messages.get(LloydsBeacon.class, &quot;tele_fail&quot;) );</span>
+
+										} else  {
+
+<span class="nc" id="L244">											ch.pos = pos;</span>
+<span class="nc bnc" id="L245" title="All 4 branches missed.">											if (ch instanceof Mob &amp;&amp; ((Mob) ch).state == ((Mob) ch).HUNTING){</span>
+<span class="nc" id="L246">												((Mob) ch).state = ((Mob) ch).WANDERING;</span>
+											}
+<span class="nc" id="L248">											ch.sprite.place(ch.pos);</span>
+<span class="nc" id="L249">											ch.sprite.visible = Dungeon.level.heroFOV[pos];</span>
+
+										}
+									}
+<span class="nc" id="L253">									curUser.spendAndNext(1f);</span>
+<span class="nc" id="L254">								}</span>
+							});
+
+				}
+
+
+			}
+
+<span class="nc" id="L262">		}</span>
+
+		@Override
+		public String prompt() {
+<span class="nc" id="L266">			return Messages.get(LloydsBeacon.class, &quot;prompt&quot;);</span>
+		}
+	};
+
+	@Override
+	protected ArtifactBuff passiveBuff() {
+<span class="nc" id="L272">		return new beaconRecharge();</span>
+	}
+	
+	@Override
+	public void charge(Hero target, float amount) {
+<span class="nc bnc" id="L277" title="All 2 branches missed.">		if (charge &lt; chargeCap){</span>
+<span class="nc" id="L278">			partialCharge += 0.25f*amount;</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">			while (partialCharge &gt;= 1){</span>
+<span class="nc" id="L280">				partialCharge--;</span>
+<span class="nc" id="L281">				charge++;</span>
+
+			}
+<span class="nc bnc" id="L284" title="All 2 branches missed.">			if (charge &gt;= chargeCap){</span>
+<span class="nc" id="L285">				partialCharge = 0;</span>
+<span class="nc" id="L286">				charge = chargeCap;</span>
+			}
+<span class="nc" id="L288">			updateQuickslot();</span>
+		}
+<span class="nc" id="L290">	}</span>
+
+	@Override
+	public Item upgrade() {
+<span class="nc bnc" id="L294" title="All 2 branches missed.">		if (level() == levelCap) return this;</span>
+<span class="nc" id="L295">		chargeCap ++;</span>
+<span class="nc" id="L296">		GLog.p( Messages.get(this, &quot;levelup&quot;) );</span>
+<span class="nc" id="L297">		return super.upgrade();</span>
+	}
+
+	@Override
+	public String desc() {
+<span class="nc" id="L302">		String desc = super.desc();</span>
+<span class="nc bnc" id="L303" title="All 2 branches missed.">		if (returnDepth != -1){</span>
+<span class="nc" id="L304">			desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_set&quot;, returnDepth);</span>
+		}
+<span class="nc" id="L306">		return desc;</span>
+	}
+	
+<span class="nc" id="L309">	private static final Glowing WHITE = new Glowing( 0xFFFFFF );</span>
+	
+	@Override
+	public Glowing glowing() {
+<span class="nc bnc" id="L313" title="All 2 branches missed.">		return returnDepth != -1 ? WHITE : null;</span>
+	}
+
+<span class="nc" id="L316">	public class beaconRecharge extends ArtifactBuff{</span>
+		@Override
+		public boolean act() {
+<span class="nc bnc" id="L319" title="All 6 branches missed.">			if (charge &lt; chargeCap &amp;&amp; !cursed &amp;&amp; Regeneration.regenOn()) {</span>
+<span class="nc" id="L320">				partialCharge += 1 / (100f - (chargeCap - charge)*10f);</span>
+
+<span class="nc bnc" id="L322" title="All 2 branches missed.">				while (partialCharge &gt;= 1) {</span>
+<span class="nc" id="L323">					partialCharge --;</span>
+<span class="nc" id="L324">					charge ++;</span>
+
+<span class="nc bnc" id="L326" title="All 2 branches missed.">					if (charge == chargeCap){</span>
+<span class="nc" id="L327">						partialCharge = 0;</span>
+					}
+				}
+			}
+
+<span class="nc" id="L332">			updateQuickslot();</span>
+<span class="nc" id="L333">			spend( TICK );</span>
+<span class="nc" id="L334">			return true;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

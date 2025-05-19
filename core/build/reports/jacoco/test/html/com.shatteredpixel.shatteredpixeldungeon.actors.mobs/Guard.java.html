@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Guard.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">Guard.java</span></div><h1>Guard.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Cripple;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Chains;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Effects;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.GuardSprite;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L43">public class Guard extends Mob {</span>
+
+	//they can only use their chains once
+<span class="nc" id="L46">	private boolean chainsUsed = false;</span>
+
+	{
+<span class="nc" id="L49">		spriteClass = GuardSprite.class;</span>
+
+<span class="nc" id="L51">		HP = HT = 40;</span>
+<span class="nc" id="L52">		defenseSkill = 10;</span>
+
+<span class="nc" id="L54">		EXP = 7;</span>
+<span class="nc" id="L55">		maxLvl = 14;</span>
+
+<span class="nc" id="L57">		loot = Generator.Category.ARMOR;</span>
+<span class="nc" id="L58">		lootChance = 0.2f; //by default, see lootChance()</span>
+
+<span class="nc" id="L60">		properties.add(Property.UNDEAD);</span>
+		
+<span class="nc" id="L62">		HUNTING = new Hunting();</span>
+	}
+
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L67">		return Random.NormalIntRange(4, 12);</span>
+	}
+
+	private boolean chain(int target){
+<span class="nc bnc" id="L71" title="All 4 branches missed.">		if (chainsUsed || enemy.properties().contains(Property.IMMOVABLE))</span>
+<span class="nc" id="L72">			return false;</span>
+
+<span class="nc" id="L74">		Ballistica chain = new Ballistica(pos, target, Ballistica.PROJECTILE);</span>
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		if (chain.collisionPos != enemy.pos</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">				|| chain.path.size() &lt; 2</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">				|| Dungeon.level.pit[chain.path.get(1)])</span>
+<span class="nc" id="L79">			return false;</span>
+		else {
+<span class="nc" id="L81">			int newPos = -1;</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">			for (int i : chain.subPath(1, chain.dist)){</span>
+<span class="nc bnc" id="L83" title="All 4 branches missed.">				if (!Dungeon.level.solid[i] &amp;&amp; Actor.findChar(i) == null){</span>
+<span class="nc" id="L84">					newPos = i;</span>
+<span class="nc" id="L85">					break;</span>
+				}
+<span class="nc" id="L87">			}</span>
+
+<span class="nc bnc" id="L89" title="All 2 branches missed.">			if (newPos == -1){</span>
+<span class="nc" id="L90">				return false;</span>
+			} else {
+<span class="nc" id="L92">				final int newPosFinal = newPos;</span>
+<span class="nc" id="L93">				this.target = newPos;</span>
+
+<span class="nc bnc" id="L95" title="All 4 branches missed.">				if (sprite.visible || enemy.sprite.visible) {</span>
+<span class="nc" id="L96">					yell(Messages.get(this, &quot;scorpion&quot;));</span>
+<span class="nc" id="L97">					new Item().throwSound();</span>
+<span class="nc" id="L98">					Sample.INSTANCE.play(Assets.Sounds.CHAINS);</span>
+<span class="nc" id="L99">					sprite.parent.add(new Chains(sprite.center(),</span>
+<span class="nc" id="L100">							enemy.sprite.destinationCenter(),</span>
+							Effects.Type.CHAIN,
+<span class="nc" id="L102">							new Callback() {</span>
+						public void call() {
+<span class="nc" id="L104">							Actor.add(new Pushing(enemy, enemy.pos, newPosFinal, new Callback() {</span>
+								public void call() {
+<span class="nc" id="L106">									pullEnemy(enemy, newPosFinal);</span>
+<span class="nc" id="L107">								}</span>
+							}));
+<span class="nc" id="L109">							next();</span>
+<span class="nc" id="L110">						}</span>
+					}));
+				} else {
+<span class="nc" id="L113">					pullEnemy(enemy, newPos);</span>
+				}
+			}
+		}
+<span class="nc" id="L117">		chainsUsed = true;</span>
+<span class="nc" id="L118">		return true;</span>
+	}
+
+	private void pullEnemy( Char enemy, int pullPos ){
+<span class="nc" id="L122">		enemy.pos = pullPos;</span>
+<span class="nc" id="L123">		enemy.sprite.place(pullPos);</span>
+<span class="nc" id="L124">		Dungeon.level.occupyCell(enemy);</span>
+<span class="nc" id="L125">		Cripple.prolong(enemy, Cripple.class, 4f);</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">		if (enemy == Dungeon.hero) {</span>
+<span class="nc" id="L127">			Dungeon.hero.interrupt();</span>
+<span class="nc" id="L128">			Dungeon.observe();</span>
+<span class="nc" id="L129">			GameScene.updateFog();</span>
+		}
+<span class="nc" id="L131">	}</span>
+
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L135">		return 12;</span>
+	}
+
+	@Override
+	public int drRoll() {
+<span class="nc" id="L140">		return super.drRoll() + Random.NormalIntRange(0, 7);</span>
+	}
+
+	@Override
+	public float lootChance() {
+		//each drop makes future drops 1/3 as likely
+		// so loot chance looks like: 1/5, 1/15, 1/45, 1/135, etc.
+<span class="nc" id="L147">		return super.lootChance() * (float)Math.pow(1/3f, Dungeon.LimitedDrops.GUARD_ARM.count);</span>
+	}
+
+	@Override
+	public Item createLoot() {
+<span class="nc" id="L152">		Dungeon.LimitedDrops.GUARD_ARM.count++;</span>
+<span class="nc" id="L153">		return super.createLoot();</span>
+	}
+
+<span class="nc" id="L156">	private final String CHAINSUSED = &quot;chainsused&quot;;</span>
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L160">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L161">		bundle.put(CHAINSUSED, chainsUsed);</span>
+<span class="nc" id="L162">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L166">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L167">		chainsUsed = bundle.getBoolean(CHAINSUSED);</span>
+<span class="nc" id="L168">	}</span>
+	
+<span class="nc" id="L170">	private class Hunting extends Mob.Hunting{</span>
+		@Override
+		public boolean act( boolean enemyInFOV, boolean justAlerted ) {
+<span class="nc" id="L173">			enemySeen = enemyInFOV;</span>
+			
+<span class="nc bnc" id="L175" title="All 4 branches missed.">			if (!chainsUsed</span>
+					&amp;&amp; enemyInFOV
+<span class="nc bnc" id="L177" title="All 2 branches missed.">					&amp;&amp; !isCharmedBy( enemy )</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">					&amp;&amp; !canAttack( enemy )</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">					&amp;&amp; Dungeon.level.distance( pos, enemy.pos ) &lt; 5</span>
+
+					
+<span class="nc bnc" id="L182" title="All 2 branches missed.">					&amp;&amp; chain(enemy.pos)){</span>
+<span class="nc bnc" id="L183" title="All 4 branches missed.">				return !(sprite.visible || enemy.sprite.visible);</span>
+			} else {
+<span class="nc" id="L185">				return super.act( enemyInFOV, justAlerted );</span>
+			}
+			
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

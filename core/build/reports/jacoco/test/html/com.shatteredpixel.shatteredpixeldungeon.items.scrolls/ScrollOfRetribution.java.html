@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScrollOfRetribution.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.scrolls</a> &gt; <span class="el_source">ScrollOfRetribution.java</span></div><h1>ScrollOfRetribution.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.scrolls;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Blindness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Weakness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L38">public class ScrollOfRetribution extends Scroll {</span>
+
+	{
+<span class="nc" id="L41">		icon = ItemSpriteSheet.Icons.SCROLL_RETRIB;</span>
+<span class="nc" id="L42">	}</span>
+	
+	@Override
+	public void doRead() {
+
+<span class="nc" id="L47">		detach(curUser.belongings.backpack);</span>
+<span class="nc" id="L48">		GameScene.flash( 0x80FFFFFF );</span>
+		
+		//scales from 0x to 1x power, maxing at ~10% HP
+<span class="nc" id="L51">		float hpPercent = (curUser.HT - curUser.HP)/(float)(curUser.HT);</span>
+<span class="nc" id="L52">		float power = Math.min( 4f, 4.45f*hpPercent);</span>
+		
+<span class="nc" id="L54">		Sample.INSTANCE.play( Assets.Sounds.BLAST );</span>
+<span class="nc" id="L55">		GLog.i(Messages.get(this, &quot;blast&quot;));</span>
+
+<span class="nc" id="L57">		ArrayList&lt;Mob&gt; targets = new ArrayList&lt;&gt;();</span>
+
+		//calculate targets first, in case damaging/blinding a target affects hero vision
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">			if (Dungeon.level.heroFOV[mob.pos]) {</span>
+<span class="nc" id="L62">				targets.add(mob);</span>
+			}
+		}
+
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		for (Mob mob : targets){</span>
+			//deals 10%HT, plus 0-90%HP based on scaling
+<span class="nc" id="L68">			mob.damage(Math.round(mob.HT/10f + (mob.HP * power * 0.225f)), this);</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">			if (mob.isAlive()) {</span>
+<span class="nc" id="L70">				Buff.prolong(mob, Blindness.class, Blindness.DURATION);</span>
+			}
+<span class="nc" id="L72">		}</span>
+		
+<span class="nc" id="L74">		Buff.prolong(curUser, Weakness.class, Weakness.DURATION);</span>
+<span class="nc" id="L75">		Buff.prolong(curUser, Blindness.class, Blindness.DURATION);</span>
+<span class="nc" id="L76">		Dungeon.observe();</span>
+
+<span class="nc" id="L78">		identify();</span>
+		
+<span class="nc" id="L80">		readAnimation();</span>
+		
+<span class="nc" id="L82">	}</span>
+	
+	@Override
+	public int value() {
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		return isKnown() ? 40 * quantity : super.value();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

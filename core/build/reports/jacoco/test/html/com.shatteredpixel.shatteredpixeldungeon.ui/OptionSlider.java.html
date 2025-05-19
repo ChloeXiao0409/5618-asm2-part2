@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OptionSlider.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">OptionSlider.java</span></div><h1>OptionSlider.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.watabou.input.PointerEvent;
+import com.watabou.noosa.ColorBlock;
+import com.watabou.noosa.NinePatch;
+import com.watabou.noosa.PointerArea;
+import com.watabou.noosa.ui.Component;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.PointF;
+
+public abstract class OptionSlider extends Component {
+
+	private PointerArea pointerArea;
+
+	private RenderedTextBlock title;
+	private RenderedTextBlock minTxt;
+	private RenderedTextBlock maxTxt;
+
+	//values are expressed internally as ints, but they can easily be interpreted as something else externally.
+	private int minVal;
+	private int maxVal;
+	private int selectedVal;
+
+	private NinePatch sliderNode;
+	private NinePatch BG;
+	private ColorBlock sliderBG;
+	private ColorBlock[] sliderTicks;
+	private float tickDist;
+
+
+	public OptionSlider(String title, String minTxt, String maxTxt, int minVal, int maxVal){
+<span class="nc" id="L55">		super();</span>
+
+		//shouldn't function if this happens.
+<span class="nc bnc" id="L58" title="All 2 branches missed.">		if (minVal &gt; maxVal){</span>
+<span class="nc" id="L59">			minVal = maxVal;</span>
+<span class="nc" id="L60">			active = false;</span>
+		}
+
+<span class="nc" id="L63">		this.title.text(title);</span>
+<span class="nc" id="L64">		this.minTxt.text(minTxt);</span>
+<span class="nc" id="L65">		this.maxTxt.text(maxTxt);</span>
+
+<span class="nc" id="L67">		this.minVal = minVal;</span>
+<span class="nc" id="L68">		this.maxVal = maxVal;</span>
+
+<span class="nc" id="L70">		sliderTicks = new ColorBlock[(maxVal - minVal) + 1];</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		for (int i = 0; i &lt; sliderTicks.length; i++){</span>
+<span class="nc" id="L72">			add(sliderTicks[i] = new ColorBlock(1, 9, 0xFF222222));</span>
+		}
+<span class="nc" id="L74">		add(sliderNode);</span>
+<span class="nc" id="L75">	}</span>
+
+	protected abstract void onChange();
+
+	public int getSelectedValue(){
+<span class="nc" id="L80">		return selectedVal;</span>
+	}
+
+	public void setSelectedValue(int val) {
+<span class="nc" id="L84">		this.selectedVal = val;</span>
+<span class="nc" id="L85">		sliderNode.x = (int)(x + tickDist*(selectedVal-minVal)) + 0.5f;</span>
+<span class="nc" id="L86">		sliderNode.y = sliderBG.y-4;</span>
+<span class="nc" id="L87">		PixelScene.align(sliderNode);</span>
+<span class="nc" id="L88">	}</span>
+
+	@Override
+	protected void createChildren() {
+<span class="nc" id="L92">		super.createChildren();</span>
+
+<span class="nc" id="L94">		add( BG = Chrome.get(Chrome.Type.RED_BUTTON));</span>
+<span class="nc" id="L95">		BG.alpha(0.5f);</span>
+
+<span class="nc" id="L97">		add(title = PixelScene.renderTextBlock(9));</span>
+<span class="nc" id="L98">		add(this.minTxt = PixelScene.renderTextBlock(6));</span>
+<span class="nc" id="L99">		add(this.maxTxt = PixelScene.renderTextBlock(6));</span>
+
+<span class="nc" id="L101">		add(sliderBG = new ColorBlock(1, 1, 0xFF222222));</span>
+<span class="nc" id="L102">		sliderNode = Chrome.get(Chrome.Type.RED_BUTTON);</span>
+<span class="nc" id="L103">		sliderNode.size(4, 7);</span>
+
+<span class="nc" id="L105">		pointerArea = new PointerArea(0, 0, 0, 0){</span>
+<span class="nc" id="L106">			boolean pressed = false;</span>
+
+			@Override
+			protected void onPointerDown( PointerEvent event ) {
+<span class="nc" id="L110">				pressed = true;</span>
+<span class="nc" id="L111">				PointF p = camera().screenToCamera((int) event.current.x, (int) event.current.y);</span>
+<span class="nc" id="L112">				sliderNode.x = GameMath.gate(sliderBG.x-2, p.x - sliderNode.width()/2, sliderBG.x+sliderBG.width()-2);</span>
+<span class="nc" id="L113">				sliderNode.brightness(1.5f);</span>
+<span class="nc" id="L114">			}</span>
+
+			@Override
+			protected void onPointerUp( PointerEvent event ) {
+<span class="nc bnc" id="L118" title="All 2 branches missed.">				if (pressed) {</span>
+<span class="nc" id="L119">					PointF p = camera().screenToCamera((int) event.current.x, (int) event.current.y);</span>
+<span class="nc" id="L120">					sliderNode.x = GameMath.gate(sliderBG.x - 2, p.x - sliderNode.width()/2, sliderBG.x + sliderBG.width() - 2);</span>
+<span class="nc" id="L121">					sliderNode.resetColor();</span>
+					
+					//sets the selected value
+<span class="nc" id="L124">					selectedVal = minVal + Math.round((sliderNode.x - x) / tickDist);</span>
+<span class="nc" id="L125">					sliderNode.x = x + tickDist * (selectedVal - minVal) + 0.5f;</span>
+<span class="nc" id="L126">					PixelScene.align(sliderNode);</span>
+<span class="nc" id="L127">					onChange();</span>
+<span class="nc" id="L128">					pressed = false;</span>
+				}
+<span class="nc" id="L130">			}</span>
+
+			@Override
+			protected void onDrag( PointerEvent event ) {
+<span class="nc bnc" id="L134" title="All 2 branches missed.">				if (pressed) {</span>
+<span class="nc" id="L135">					PointF p = camera().screenToCamera((int) event.current.x, (int) event.current.y);</span>
+<span class="nc" id="L136">					sliderNode.x = GameMath.gate(sliderBG.x - 2, p.x - sliderNode.width()/2, sliderBG.x + sliderBG.width() - 2);</span>
+				}
+<span class="nc" id="L138">			}</span>
+		};
+<span class="nc" id="L140">		add(pointerArea);</span>
+
+<span class="nc" id="L142">	}</span>
+
+	@Override
+	protected void layout() {
+
+<span class="nc bnc" id="L147" title="All 2 branches missed.">		if (title.width() &gt; 0.7f*width){</span>
+<span class="nc" id="L148">			String titleText = title.text;</span>
+<span class="nc" id="L149">			remove(title);</span>
+<span class="nc" id="L150">			title = PixelScene.renderTextBlock(6);</span>
+<span class="nc" id="L151">			add(title);</span>
+<span class="nc" id="L152">			title.text(titleText);</span>
+		}
+
+<span class="nc" id="L155">		title.setPos(</span>
+<span class="nc" id="L156">				x + (width-title.width())/2,</span>
+				y+2
+		);
+<span class="nc" id="L159">		PixelScene.align(title);</span>
+<span class="nc" id="L160">		sliderBG.y = y + height() - 7;</span>
+<span class="nc" id="L161">		sliderBG.x = x+2;</span>
+<span class="nc" id="L162">		sliderBG.size(width-5, 1);</span>
+<span class="nc" id="L163">		tickDist = sliderBG.width()/(maxVal - minVal);</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">		for (int i = 0; i &lt; sliderTicks.length; i++){</span>
+<span class="nc" id="L165">			sliderTicks[i].y = sliderBG.y-4;</span>
+<span class="nc" id="L166">			sliderTicks[i].x = x + 2 + (tickDist*i);</span>
+<span class="nc" id="L167">			PixelScene.align(sliderTicks[i]);</span>
+		}
+
+<span class="nc" id="L170">		minTxt.setPos(</span>
+				x+1,
+<span class="nc" id="L172">				sliderBG.y-5-minTxt.height()</span>
+		);
+<span class="nc" id="L174">		maxTxt.setPos(</span>
+<span class="nc" id="L175">				x+width()-maxTxt.width()-1,</span>
+<span class="nc" id="L176">				sliderBG.y-5-minTxt.height()</span>
+		);
+
+<span class="nc" id="L179">		sliderNode.x = x + tickDist*(selectedVal-minVal) + 0.5f;</span>
+<span class="nc" id="L180">		sliderNode.y = sliderBG.y-3;</span>
+<span class="nc" id="L181">		PixelScene.align(sliderNode);</span>
+
+<span class="nc" id="L183">		pointerArea.x = x;</span>
+<span class="nc" id="L184">		pointerArea.y = y;</span>
+<span class="nc" id="L185">		pointerArea.width = width();</span>
+<span class="nc" id="L186">		pointerArea.height = height();</span>
+
+<span class="nc" id="L188">		BG.size(width(), height());</span>
+<span class="nc" id="L189">		BG.x = x;</span>
+<span class="nc" id="L190">		BG.y = y;</span>
+
+<span class="nc" id="L192">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

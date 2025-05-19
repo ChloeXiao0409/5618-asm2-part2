@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HeroClass.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero</a> &gt; <span class="el_source">HeroClass.java</span></div><h1>HeroClass.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.QuickSlot;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.AscendedForm;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.PowerOfMany;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.Trinity;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.duelist.Challenge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.duelist.ElementalStrike;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.duelist.Feint;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.huntress.NaturesPower;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.huntress.SpectralBlades;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.huntress.SpiritHawk;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.mage.ElementalBlast;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.mage.WarpBeacon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.mage.WildMagic;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.rogue.DeathMark;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.rogue.ShadowClone;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.rogue.SmokeBomb;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.Endure;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.HeroicLeap;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.Shockwave;
+import com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.Waterskin;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CloakOfShadows;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.VelvetPouch;
+import com.shatteredpixel.shatteredpixeldungeon.items.food.Food;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLiquidFlame;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfMindVision;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfPurity;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfIdentify;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfLullaby;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfMagicMapping;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfMirrorImage;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRage;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRemoveCurse;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Cudgel;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Dagger;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Gloves;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Rapier;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortsword;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingKnife;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingSpike;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingStone;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.watabou.utils.DeviceCompat;
+
+<span class="nc" id="L85">public enum HeroClass {</span>
+
+<span class="nc" id="L87">	WARRIOR( HeroSubClass.BERSERKER, HeroSubClass.GLADIATOR ),</span>
+<span class="nc" id="L88">	MAGE( HeroSubClass.BATTLEMAGE, HeroSubClass.WARLOCK ),</span>
+<span class="nc" id="L89">	ROGUE( HeroSubClass.ASSASSIN, HeroSubClass.FREERUNNER ),</span>
+<span class="nc" id="L90">	HUNTRESS( HeroSubClass.SNIPER, HeroSubClass.WARDEN ),</span>
+<span class="nc" id="L91">	DUELIST( HeroSubClass.CHAMPION, HeroSubClass.MONK ),</span>
+<span class="nc" id="L92">	CLERIC( HeroSubClass.PRIEST, HeroSubClass.PALADIN );</span>
+
+	private HeroSubClass[] subClasses;
+
+<span class="nc" id="L96">	HeroClass( HeroSubClass...subClasses ) {</span>
+<span class="nc" id="L97">		this.subClasses = subClasses;</span>
+<span class="nc" id="L98">	}</span>
+
+	public void initHero( Hero hero ) {
+
+<span class="nc" id="L102">		hero.heroClass = this;</span>
+<span class="nc" id="L103">		Talent.initClassTalents(hero);</span>
+
+<span class="nc" id="L105">		Item i = new ClothArmor().identify();</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">		if (!Challenges.isItemBlocked(i)) hero.belongings.armor = (ClothArmor)i;</span>
+
+<span class="nc" id="L108">		i = new Food();</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		if (!Challenges.isItemBlocked(i)) i.collect();</span>
+
+<span class="nc" id="L111">		new VelvetPouch().collect();</span>
+<span class="nc" id="L112">		Dungeon.LimitedDrops.VELVET_POUCH.drop();</span>
+
+<span class="nc" id="L114">		Waterskin waterskin = new Waterskin();</span>
+<span class="nc" id="L115">		waterskin.collect();</span>
+
+<span class="nc" id="L117">		new ScrollOfIdentify().identify();</span>
+
+<span class="nc bnc" id="L119" title="All 7 branches missed.">		switch (this) {</span>
+			case WARRIOR:
+<span class="nc" id="L121">				initWarrior( hero );</span>
+<span class="nc" id="L122">				break;</span>
+
+			case MAGE:
+<span class="nc" id="L125">				initMage( hero );</span>
+<span class="nc" id="L126">				break;</span>
+
+			case ROGUE:
+<span class="nc" id="L129">				initRogue( hero );</span>
+<span class="nc" id="L130">				break;</span>
+
+			case HUNTRESS:
+<span class="nc" id="L133">				initHuntress( hero );</span>
+<span class="nc" id="L134">				break;</span>
+
+			case DUELIST:
+<span class="nc" id="L137">				initDuelist( hero );</span>
+<span class="nc" id="L138">				break;</span>
+
+			case CLERIC:
+<span class="nc" id="L141">				initCleric( hero );</span>
+				break;
+		}
+
+<span class="nc bnc" id="L145" title="All 2 branches missed.">		if (SPDSettings.quickslotWaterskin()) {</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">			for (int s = 0; s &lt; QuickSlot.SIZE; s++) {</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">				if (Dungeon.quickslot.getItem(s) == null) {</span>
+<span class="nc" id="L148">					Dungeon.quickslot.setSlot(s, waterskin);</span>
+<span class="nc" id="L149">					break;</span>
+				}
+			}
+		}
+
+<span class="nc" id="L154">	}</span>
+
+	public Badges.Badge masteryBadge() {
+<span class="nc bnc" id="L157" title="All 7 branches missed.">		switch (this) {</span>
+			case WARRIOR:
+<span class="nc" id="L159">				return Badges.Badge.MASTERY_WARRIOR;</span>
+			case MAGE:
+<span class="nc" id="L161">				return Badges.Badge.MASTERY_MAGE;</span>
+			case ROGUE:
+<span class="nc" id="L163">				return Badges.Badge.MASTERY_ROGUE;</span>
+			case HUNTRESS:
+<span class="nc" id="L165">				return Badges.Badge.MASTERY_HUNTRESS;</span>
+			case DUELIST:
+<span class="nc" id="L167">				return Badges.Badge.MASTERY_DUELIST;</span>
+			case CLERIC:
+<span class="nc" id="L169">				return Badges.Badge.MASTERY_CLERIC;</span>
+		}
+<span class="nc" id="L171">		return null;</span>
+	}
+
+	private static void initWarrior( Hero hero ) {
+<span class="nc" id="L175">		(hero.belongings.weapon = new WornShortsword()).identify();</span>
+<span class="nc" id="L176">		ThrowingStone stones = new ThrowingStone();</span>
+<span class="nc" id="L177">		stones.quantity(3).collect();</span>
+<span class="nc" id="L178">		Dungeon.quickslot.setSlot(0, stones);</span>
+
+<span class="nc bnc" id="L180" title="All 2 branches missed.">		if (hero.belongings.armor != null){</span>
+<span class="nc" id="L181">			hero.belongings.armor.affixSeal(new BrokenSeal());</span>
+<span class="nc" id="L182">			Catalog.setSeen(BrokenSeal.class); //as it's not added to the inventory</span>
+		}
+
+<span class="nc" id="L185">		new PotionOfHealing().identify();</span>
+<span class="nc" id="L186">		new ScrollOfRage().identify();</span>
+<span class="nc" id="L187">	}</span>
+
+	private static void initMage( Hero hero ) {
+		MagesStaff staff;
+
+<span class="nc" id="L192">		staff = new MagesStaff(new WandOfMagicMissile());</span>
+
+<span class="nc" id="L194">		(hero.belongings.weapon = staff).identify();</span>
+<span class="nc" id="L195">		hero.belongings.weapon.activate(hero);</span>
+
+<span class="nc" id="L197">		Dungeon.quickslot.setSlot(0, staff);</span>
+
+<span class="nc" id="L199">		new ScrollOfUpgrade().identify();</span>
+<span class="nc" id="L200">		new PotionOfLiquidFlame().identify();</span>
+<span class="nc" id="L201">	}</span>
+
+	private static void initRogue( Hero hero ) {
+<span class="nc" id="L204">		(hero.belongings.weapon = new Dagger()).identify();</span>
+
+<span class="nc" id="L206">		CloakOfShadows cloak = new CloakOfShadows();</span>
+<span class="nc" id="L207">		(hero.belongings.artifact = cloak).identify();</span>
+<span class="nc" id="L208">		hero.belongings.artifact.activate( hero );</span>
+
+<span class="nc" id="L210">		ThrowingKnife knives = new ThrowingKnife();</span>
+<span class="nc" id="L211">		knives.quantity(3).collect();</span>
+
+<span class="nc" id="L213">		Dungeon.quickslot.setSlot(0, cloak);</span>
+<span class="nc" id="L214">		Dungeon.quickslot.setSlot(1, knives);</span>
+
+<span class="nc" id="L216">		new ScrollOfMagicMapping().identify();</span>
+<span class="nc" id="L217">		new PotionOfInvisibility().identify();</span>
+<span class="nc" id="L218">	}</span>
+
+	private static void initHuntress( Hero hero ) {
+
+<span class="nc" id="L222">		(hero.belongings.weapon = new Gloves()).identify();</span>
+<span class="nc" id="L223">		SpiritBow bow = new SpiritBow();</span>
+<span class="nc" id="L224">		bow.identify().collect();</span>
+
+<span class="nc" id="L226">		Dungeon.quickslot.setSlot(0, bow);</span>
+
+<span class="nc" id="L228">		new PotionOfMindVision().identify();</span>
+<span class="nc" id="L229">		new ScrollOfLullaby().identify();</span>
+<span class="nc" id="L230">	}</span>
+
+	private static void initDuelist( Hero hero ) {
+
+<span class="nc" id="L234">		(hero.belongings.weapon = new Rapier()).identify();</span>
+<span class="nc" id="L235">		hero.belongings.weapon.activate(hero);</span>
+
+<span class="nc" id="L237">		ThrowingSpike spikes = new ThrowingSpike();</span>
+<span class="nc" id="L238">		spikes.quantity(2).collect();</span>
+
+<span class="nc" id="L240">		Dungeon.quickslot.setSlot(0, hero.belongings.weapon);</span>
+<span class="nc" id="L241">		Dungeon.quickslot.setSlot(1, spikes);</span>
+
+<span class="nc" id="L243">		new PotionOfStrength().identify();</span>
+<span class="nc" id="L244">		new ScrollOfMirrorImage().identify();</span>
+<span class="nc" id="L245">	}</span>
+
+	private static void initCleric( Hero hero ) {
+
+<span class="nc" id="L249">		(hero.belongings.weapon = new Cudgel()).identify();</span>
+<span class="nc" id="L250">		hero.belongings.weapon.activate(hero);</span>
+
+<span class="nc" id="L252">		HolyTome tome = new HolyTome();</span>
+<span class="nc" id="L253">		(hero.belongings.artifact = tome).identify();</span>
+<span class="nc" id="L254">		hero.belongings.artifact.activate( hero );</span>
+
+<span class="nc" id="L256">		Dungeon.quickslot.setSlot(0, tome);</span>
+
+<span class="nc" id="L258">		new PotionOfPurity().identify();</span>
+<span class="nc" id="L259">		new ScrollOfRemoveCurse().identify();</span>
+<span class="nc" id="L260">	}</span>
+
+	public String title() {
+<span class="nc" id="L263">		return Messages.get(HeroClass.class, name());</span>
+	}
+
+	public String desc(){
+<span class="nc" id="L267">		return Messages.get(HeroClass.class, name()+&quot;_desc&quot;);</span>
+	}
+
+	public String shortDesc(){
+<span class="nc" id="L271">		return Messages.get(HeroClass.class, name()+&quot;_desc_short&quot;);</span>
+	}
+
+	public HeroSubClass[] subClasses() {
+<span class="nc" id="L275">		return subClasses;</span>
+	}
+
+	public ArmorAbility[] armorAbilities(){
+<span class="nc bnc" id="L279" title="All 6 branches missed.">		switch (this) {</span>
+			case WARRIOR: default:
+<span class="nc" id="L281">				return new ArmorAbility[]{new HeroicLeap(), new Shockwave(), new Endure()};</span>
+			case MAGE:
+<span class="nc" id="L283">				return new ArmorAbility[]{new ElementalBlast(), new WildMagic(), new WarpBeacon()};</span>
+			case ROGUE:
+<span class="nc" id="L285">				return new ArmorAbility[]{new SmokeBomb(), new DeathMark(), new ShadowClone()};</span>
+			case HUNTRESS:
+<span class="nc" id="L287">				return new ArmorAbility[]{new SpectralBlades(), new NaturesPower(), new SpiritHawk()};</span>
+			case DUELIST:
+<span class="nc" id="L289">				return new ArmorAbility[]{new Challenge(), new ElementalStrike(), new Feint()};</span>
+			case CLERIC:
+<span class="nc" id="L291">				return new ArmorAbility[]{new AscendedForm(), new Trinity(), new PowerOfMany()};</span>
+		}
+	}
+
+	public String spritesheet() {
+<span class="nc bnc" id="L296" title="All 6 branches missed.">		switch (this) {</span>
+			case WARRIOR: default:
+<span class="nc" id="L298">				return Assets.Sprites.WARRIOR;</span>
+			case MAGE:
+<span class="nc" id="L300">				return Assets.Sprites.MAGE;</span>
+			case ROGUE:
+<span class="nc" id="L302">				return Assets.Sprites.ROGUE;</span>
+			case HUNTRESS:
+<span class="nc" id="L304">				return Assets.Sprites.HUNTRESS;</span>
+			case DUELIST:
+<span class="nc" id="L306">				return Assets.Sprites.DUELIST;</span>
+			case CLERIC:
+<span class="nc" id="L308">				return Assets.Sprites.CLERIC;</span>
+		}
+	}
+
+	public String splashArt(){
+<span class="nc bnc" id="L313" title="All 6 branches missed.">		switch (this) {</span>
+			case WARRIOR: default:
+<span class="nc" id="L315">				return Assets.Splashes.WARRIOR;</span>
+			case MAGE:
+<span class="nc" id="L317">				return Assets.Splashes.MAGE;</span>
+			case ROGUE:
+<span class="nc" id="L319">				return Assets.Splashes.ROGUE;</span>
+			case HUNTRESS:
+<span class="nc" id="L321">				return Assets.Splashes.HUNTRESS;</span>
+			case DUELIST:
+<span class="nc" id="L323">				return Assets.Splashes.DUELIST;</span>
+			case CLERIC:
+<span class="nc" id="L325">				return Assets.Splashes.CLERIC;</span>
+		}
+	}
+	
+	public boolean isUnlocked(){
+		//always unlock on debug builds
+<span class="nc bnc" id="L331" title="All 2 branches missed.">		if (DeviceCompat.isDebug()) return true;</span>
+
+<span class="nc bnc" id="L333" title="All 6 branches missed.">		switch (this){</span>
+			case WARRIOR: default:
+<span class="nc" id="L335">				return true;</span>
+			case MAGE:
+<span class="nc" id="L337">				return Badges.isUnlocked(Badges.Badge.UNLOCK_MAGE);</span>
+			case ROGUE:
+<span class="nc" id="L339">				return Badges.isUnlocked(Badges.Badge.UNLOCK_ROGUE);</span>
+			case HUNTRESS:
+<span class="nc" id="L341">				return Badges.isUnlocked(Badges.Badge.UNLOCK_HUNTRESS);</span>
+			case DUELIST:
+<span class="nc" id="L343">				return Badges.isUnlocked(Badges.Badge.UNLOCK_DUELIST);</span>
+			case CLERIC:
+<span class="nc" id="L345">				return Badges.isUnlocked(Badges.Badge.UNLOCK_CLERIC);</span>
+		}
+	}
+	
+	public String unlockMsg() {
+<span class="nc" id="L350">		return shortDesc() + &quot;\n\n&quot; + Messages.get(HeroClass.class, name()+&quot;_unlock&quot;);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

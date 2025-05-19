@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TalentsPane.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">TalentsPane.java</span></div><h1>TalentsPane.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.Ratmogrify;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.watabou.noosa.ColorBlock;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.ui.Component;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+
+public class TalentsPane extends ScrollPane {
+
+<span class="nc" id="L41">	ArrayList&lt;TalentTierPane&gt; panes = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L42">	ArrayList&lt;ColorBlock&gt; separators = new ArrayList&lt;&gt;();</span>
+
+	ColorBlock sep;
+	ColorBlock blocker;
+	RenderedTextBlock blockText;
+
+	public TalentsPane( TalentButton.Mode mode ) {
+<span class="nc" id="L49">		this( mode, Dungeon.hero.talents );</span>
+<span class="nc" id="L50">	}</span>
+
+	public TalentsPane( TalentButton.Mode mode, ArrayList&lt;LinkedHashMap&lt;Talent, Integer&gt;&gt; talents ) {
+<span class="nc" id="L53">		super(new Component());</span>
+
+<span class="nc bnc" id="L55" title="All 4 branches missed.">		Ratmogrify.useRatroicEnergy = Dungeon.hero != null &amp;&amp; Dungeon.hero.armorAbility instanceof Ratmogrify;</span>
+
+<span class="nc" id="L57">		int tiersAvailable = 1;</span>
+
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		if (mode == TalentButton.Mode.INFO){</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">			if (!Badges.isUnlocked(Badges.Badge.LEVEL_REACHED_1)){</span>
+<span class="nc" id="L61">				tiersAvailable = 1;</span>
+<span class="nc bnc" id="L62" title="All 4 branches missed.">			} else if (!Badges.isUnlocked(Badges.Badge.LEVEL_REACHED_2) || !Badges.isUnlocked(Badges.Badge.BOSS_SLAIN_2)){</span>
+<span class="nc" id="L63">				tiersAvailable = 2;</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">			} else if (!Badges.isUnlocked(Badges.Badge.BOSS_SLAIN_4)){</span>
+<span class="nc" id="L65">				tiersAvailable = 3;</span>
+			} else {
+<span class="nc" id="L67">				tiersAvailable = Talent.MAX_TALENT_TIERS;</span>
+			}
+		} else {
+<span class="nc bnc" id="L70" title="All 4 branches missed.">			while (tiersAvailable &lt; Talent.MAX_TALENT_TIERS</span>
+					&amp;&amp; Dungeon.hero.lvl+1 &gt;= Talent.tierLevelThresholds[tiersAvailable+1]){
+<span class="nc" id="L72">				tiersAvailable++;</span>
+			}
+<span class="nc bnc" id="L74" title="All 4 branches missed.">			if (tiersAvailable &gt; 2 &amp;&amp; Dungeon.hero.subClass == HeroSubClass.NONE){</span>
+<span class="nc" id="L75">				tiersAvailable = 2;</span>
+<span class="nc bnc" id="L76" title="All 4 branches missed.">			} else if (tiersAvailable &gt; 3 &amp;&amp; Dungeon.hero.armorAbility == null){</span>
+<span class="nc" id="L77">				tiersAvailable = 3;</span>
+			}
+		}
+
+<span class="nc" id="L81">		tiersAvailable = Math.min(tiersAvailable, talents.size());</span>
+
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		for (int i = 0; i &lt; Math.min(tiersAvailable, talents.size()); i++){</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">			if (talents.get(i).isEmpty()) continue;</span>
+
+<span class="nc" id="L86">			TalentTierPane pane = new TalentTierPane(talents.get(i), i+1, mode);</span>
+<span class="nc" id="L87">			panes.add(pane);</span>
+<span class="nc" id="L88">			content.add(pane);</span>
+
+<span class="nc" id="L90">			ColorBlock sep = new ColorBlock(0, 1, 0xFF000000);</span>
+<span class="nc" id="L91">			separators.add(sep);</span>
+<span class="nc" id="L92">			content.add(sep);</span>
+		}
+
+<span class="nc" id="L95">		sep = new ColorBlock(0, 1, 0xFF000000);</span>
+<span class="nc" id="L96">		content.add(sep);</span>
+
+<span class="nc" id="L98">		blocker = new ColorBlock(0, 0, 0xFF222222);</span>
+<span class="nc" id="L99">		content.add(blocker);</span>
+
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (tiersAvailable == 1) {</span>
+<span class="nc" id="L102">			blockText = PixelScene.renderTextBlock(Messages.get(this, &quot;unlock_tier2&quot;), 6);</span>
+<span class="nc" id="L103">			content.add(blockText);</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">		} else if (tiersAvailable == 2) {</span>
+<span class="nc" id="L105">			blockText = PixelScene.renderTextBlock(Messages.get(this, &quot;unlock_tier3&quot;), 6);</span>
+<span class="nc" id="L106">			content.add(blockText);</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		} else if (tiersAvailable == 3) {</span>
+<span class="nc" id="L108">			blockText = PixelScene.renderTextBlock(Messages.get(this, &quot;unlock_tier4&quot;), 6);</span>
+<span class="nc" id="L109">			content.add(blockText);</span>
+		} else {
+<span class="nc" id="L111">			blockText = null;</span>
+		}
+
+<span class="nc bnc" id="L114" title="All 2 branches missed.">		for (int i = panes.size()-1; i &gt;= 0; i--){</span>
+<span class="nc" id="L115">			content.bringToFront(panes.get(i));</span>
+		}
+<span class="nc" id="L117">	}</span>
+
+	@Override
+	protected void layout() {
+<span class="nc" id="L121">		super.layout();</span>
+
+<span class="nc" id="L123">		float top = 0;</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">		for (int i = 0; i &lt; panes.size(); i++){</span>
+<span class="nc" id="L125">			top += 2;</span>
+<span class="nc" id="L126">			panes.get(i).setRect(x, top, width, 0);</span>
+<span class="nc" id="L127">			top = panes.get(i).bottom();</span>
+
+<span class="nc" id="L129">			separators.get(i).x = 0;</span>
+<span class="nc" id="L130">			separators.get(i).y = top + 2;</span>
+<span class="nc" id="L131">			separators.get(i).size(width, 1);</span>
+
+<span class="nc" id="L133">			top += 3;</span>
+
+		}
+
+		float bottom;
+<span class="nc bnc" id="L138" title="All 2 branches missed.">		if (blockText != null) {</span>
+<span class="nc" id="L139">			bottom = Math.max(height, top + 20);</span>
+
+<span class="nc" id="L141">			blocker.x = 0;</span>
+<span class="nc" id="L142">			blocker.y = top;</span>
+<span class="nc" id="L143">			blocker.size(width, bottom - top);</span>
+
+<span class="nc" id="L145">			blockText.maxWidth((int) width);</span>
+<span class="nc" id="L146">			blockText.align(RenderedTextBlock.CENTER_ALIGN);</span>
+<span class="nc" id="L147">			blockText.setPos((width - blockText.width()) / 2f, blocker.y + (bottom - blocker.y - blockText.height()) / 2);</span>
+		} else {
+<span class="nc" id="L149">			bottom = Math.max(height, top);</span>
+
+<span class="nc" id="L151">			blocker.visible = false;</span>
+		}
+
+<span class="nc" id="L154">		content.setSize(width, bottom);</span>
+<span class="nc" id="L155">	}</span>
+
+	public static class TalentTierPane extends Component {
+
+		private int tier;
+
+		public RenderedTextBlock title;
+		ArrayList&lt;TalentButton&gt; buttons;
+
+<span class="nc" id="L164">		ArrayList&lt;Image&gt; stars = new ArrayList&lt;&gt;();</span>
+
+		public TalentTierPane(LinkedHashMap&lt;Talent, Integer&gt; talents, int tier, TalentButton.Mode mode){
+<span class="nc" id="L167">			super();</span>
+
+<span class="nc" id="L169">			this.tier = tier;</span>
+
+<span class="nc" id="L171">			title = PixelScene.renderTextBlock(Messages.titleCase(Messages.get(TalentsPane.class, &quot;tier&quot;, tier)), 9);</span>
+<span class="nc" id="L172">			title.hardlight(Window.TITLE_COLOR);</span>
+<span class="nc" id="L173">			add(title);</span>
+
+<span class="nc bnc" id="L175" title="All 2 branches missed.">			if (mode == TalentButton.Mode.UPGRADE) setupStars();</span>
+
+<span class="nc" id="L177">			buttons = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">			for (Talent talent : talents.keySet()){</span>
+<span class="nc" id="L179">				TalentButton btn = new TalentButton(tier, talent, talents.get(talent), mode){</span>
+					@Override
+					public void upgradeTalent() {
+<span class="nc" id="L182">						super.upgradeTalent();</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">						if (parent != null) {</span>
+<span class="nc" id="L184">							setupStars();</span>
+<span class="nc" id="L185">							TalentTierPane.this.layout();</span>
+						}
+<span class="nc" id="L187">					}</span>
+				};
+<span class="nc" id="L189">				buttons.add(btn);</span>
+<span class="nc" id="L190">				add(btn);</span>
+<span class="nc" id="L191">			}</span>
+
+<span class="nc" id="L193">		}</span>
+
+		private void setupStars(){
+<span class="nc bnc" id="L196" title="All 2 branches missed.">			if (!stars.isEmpty()){</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">				for (Image im : stars){</span>
+<span class="nc" id="L198">					im.killAndErase();</span>
+<span class="nc" id="L199">				}</span>
+<span class="nc" id="L200">				stars.clear();</span>
+			}
+
+<span class="nc" id="L203">			int totStars = Talent.tierLevelThresholds[tier+1] - Talent.tierLevelThresholds[tier] + Dungeon.hero.bonusTalentPoints(tier);</span>
+<span class="nc" id="L204">			int openStars = Dungeon.hero.talentPointsAvailable(tier);</span>
+<span class="nc" id="L205">			int usedStars = Dungeon.hero.talentPointsSpent(tier);</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">			for (int i = 0; i &lt; totStars; i++){</span>
+<span class="nc" id="L207">				Image im = new Speck().image(Speck.STAR);</span>
+<span class="nc" id="L208">				stars.add(im);</span>
+<span class="nc" id="L209">				add(im);</span>
+<span class="nc bnc" id="L210" title="All 4 branches missed.">				if (i &gt;= openStars &amp;&amp; i &lt; (openStars + usedStars)){</span>
+<span class="nc" id="L211">					im.tint(0.75f, 0.75f, 0.75f, 0.9f);</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">				} else if (i &gt;= (openStars + usedStars)){</span>
+<span class="nc" id="L213">					im.tint(0f, 0f, 0f, 0.9f);</span>
+				}
+			}
+<span class="nc" id="L216">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L220">			super.layout();</span>
+
+<span class="nc" id="L222">			int regStars = Talent.tierLevelThresholds[tier+1] - Talent.tierLevelThresholds[tier];</span>
+
+<span class="nc" id="L224">			float titleWidth = title.width();</span>
+<span class="nc" id="L225">			titleWidth += 2 + Math.min(stars.size(), regStars)*6;</span>
+<span class="nc" id="L226">			title.setPos(x + (width - titleWidth)/2f, y);</span>
+
+<span class="nc" id="L228">			float left = title.right() + 2;</span>
+
+<span class="nc" id="L230">			float starTop = title.top();</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">			if (regStars &lt; stars.size()) starTop -= 2;</span>
+
+<span class="nc bnc" id="L233" title="All 2 branches missed.">			for (Image star : stars){</span>
+<span class="nc" id="L234">				star.x = left;</span>
+<span class="nc" id="L235">				star.y = starTop;</span>
+<span class="nc" id="L236">				PixelScene.align(star);</span>
+<span class="nc" id="L237">				left += 6;</span>
+<span class="nc" id="L238">				regStars--;</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">				if (regStars == 0){</span>
+<span class="nc" id="L240">					starTop += 6;</span>
+<span class="nc" id="L241">					left = title.right() + 2;</span>
+				}
+<span class="nc" id="L243">			}</span>
+
+<span class="nc" id="L245">			float gap = (width - buttons.size()*TalentButton.WIDTH)/(buttons.size()+1);</span>
+<span class="nc" id="L246">			left = x + gap;</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">			for (TalentButton btn : buttons){</span>
+<span class="nc" id="L248">				btn.setPos(left, title.bottom() + 4);</span>
+<span class="nc" id="L249">				PixelScene.align(btn);</span>
+<span class="nc" id="L250">				left += btn.width() + gap;</span>
+<span class="nc" id="L251">			}</span>
+
+<span class="nc" id="L253">			height = buttons.get(0).bottom() - y;</span>
+
+<span class="nc" id="L255">		}</span>
+
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

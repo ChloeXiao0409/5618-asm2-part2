@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>News.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.services.news</a> &gt; <span class="el_source">News.java</span></div><h1>News.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.services.news;
+
+import com.badlogic.gdx.Application;
+import com.badlogic.gdx.Gdx;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.watabou.noosa.Image;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+
+<span class="nc" id="L37">public class News {</span>
+
+	public static NewsService service;
+
+	public static boolean supportsNews(){
+<span class="nc bnc" id="L42" title="All 2 branches missed.">		return service != null;</span>
+	}
+
+<span class="nc" id="L45">	private static Date lastCheck = null;</span>
+	private static final long CHECK_DELAY = 1000*60*60; //1 hour
+
+	public static void checkForNews(){
+<span class="nc bnc" id="L49" title="All 2 branches missed.">		if (!supportsNews()) return;</span>
+<span class="nc bnc" id="L50" title="All 4 branches missed.">		if (lastCheck != null &amp;&amp; (new Date().getTime() - lastCheck.getTime()) &lt; CHECK_DELAY) return;</span>
+
+<span class="nc" id="L52">		boolean useHTTPS = true;</span>
+<span class="nc bnc" id="L53" title="All 4 branches missed.">		if (Gdx.app.getType() == Application.ApplicationType.Android &amp;&amp; Gdx.app.getVersion() &lt; 20){</span>
+<span class="nc" id="L54">			useHTTPS = false; //android versions below 5.0 don't support TLSv1.2 by default</span>
+		}
+<span class="nc bnc" id="L56" title="All 2 branches missed.">		service.checkForArticles(!SPDSettings.WiFi(), useHTTPS, new NewsService.NewsResultCallback() {</span>
+			@Override
+			public void onArticlesFound(ArrayList&lt;NewsArticle&gt; articles) {
+<span class="nc" id="L59">				lastCheck = new Date();</span>
+<span class="nc" id="L60">				News.articles = articles;</span>
+<span class="nc" id="L61">			}</span>
+
+			@Override
+			public void onConnectionFailed() {
+<span class="nc" id="L65">				lastCheck = null;</span>
+<span class="nc" id="L66">				News.articles = null;</span>
+<span class="nc" id="L67">			}</span>
+		});
+
+<span class="nc" id="L70">	}</span>
+
+	private static ArrayList&lt;NewsArticle&gt; articles;
+
+	public static synchronized boolean articlesAvailable(){
+<span class="nc bnc" id="L75" title="All 4 branches missed.">		return articles != null &amp;&amp; !articles.isEmpty();</span>
+	}
+
+	public static synchronized ArrayList&lt;NewsArticle&gt; articles(){
+<span class="nc" id="L79">		return new ArrayList&lt;&gt;(articles);</span>
+	}
+
+	public static synchronized int unreadArticles(Date lastRead) {
+<span class="nc" id="L83">		int unread = 0;</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		if (articles != null) {</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">			for (NewsArticle article : articles) {</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">				if (article.date.after(lastRead)) unread++;</span>
+<span class="nc" id="L87">			}</span>
+		}
+<span class="nc" id="L89">		return unread;</span>
+	}
+
+	public static synchronized void clearArticles(){
+<span class="nc" id="L93">		articles = null;</span>
+<span class="nc" id="L94">		lastCheck = null;</span>
+<span class="nc" id="L95">	}</span>
+
+	public static Image parseArticleIcon(NewsArticle article){
+
+		try {
+
+			//recognized formats are:
+			//&quot;ICON: &lt;name of enum constant in Icons.java&gt;&quot;
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			if (article.icon.startsWith(&quot;ICON: &quot;)){</span>
+<span class="nc" id="L104">				return Icons.get(Icons.valueOf(article.icon.replace(&quot;ICON: &quot;, &quot;&quot;)));</span>
+			//&quot;ITEM: &lt;integer constant corresponding to values in ItemSpriteSheet.java&gt;&quot;
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			} else if (article.icon.startsWith(&quot;ITEM: &quot;)){</span>
+<span class="nc" id="L107">				return new ItemSprite(Integer.parseInt(article.icon.replace(&quot;ITEM: &quot;, &quot;&quot;)));</span>
+			//&quot;&lt;asset filename&gt;, &lt;tx left&gt;, &lt;tx top&gt;, &lt;width&gt;, &lt;height&gt;&quot;
+			} else {
+<span class="nc" id="L110">				String[] split = article.icon.split(&quot;, &quot;);</span>
+<span class="nc" id="L111">				return new Image( split[0],</span>
+<span class="nc" id="L112">						Integer.parseInt(split[1]),</span>
+<span class="nc" id="L113">						Integer.parseInt(split[2]),</span>
+<span class="nc" id="L114">						Integer.parseInt(split[3]),</span>
+<span class="nc" id="L115">						Integer.parseInt(split[4]));</span>
+			}
+
+		//if we run into any formatting errors (or icon is null), default to the news icon
+<span class="nc" id="L119">		} catch (Exception e){</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			if (article.icon != null) ShatteredPixelDungeon.reportException(e);</span>
+<span class="nc" id="L121">			return Icons.get(Icons.NEWS);</span>
+		}
+	}
+
+	public static String parseArticleDate(NewsArticle article){
+<span class="nc" id="L126">		Calendar cal = GregorianCalendar.getInstance();</span>
+<span class="nc" id="L127">		cal.setTime(article.date);</span>
+<span class="nc" id="L128">		return cal.get(Calendar.YEAR)</span>
+<span class="nc" id="L129">				+ &quot;-&quot; + String.format(&quot;%02d&quot;, cal.get(Calendar.MONTH)+1)</span>
+<span class="nc" id="L130">				+ &quot;-&quot; + String.format(&quot;%02d&quot;, cal.get(Calendar.DAY_OF_MONTH));</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

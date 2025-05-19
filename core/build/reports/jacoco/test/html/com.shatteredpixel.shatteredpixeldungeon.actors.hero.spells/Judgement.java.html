@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Judgement.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells</a> &gt; <span class="el_source">Judgement.java</span></div><h1>Judgement.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.AscendedForm;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Callback;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L39">public class Judgement extends ClericSpell {</span>
+
+<span class="nc" id="L41">	public static Judgement INSTANCE = new Judgement();</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L45">		return HeroIcon.JUDGEMENT;</span>
+	}
+
+	@Override
+	public float chargeUse(Hero hero) {
+<span class="nc" id="L50">		return 3;</span>
+	}
+
+	@Override
+	public boolean canCast(Hero hero) {
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		return super.canCast(hero)</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">				&amp;&amp; hero.hasTalent(Talent.JUDGEMENT)</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">				&amp;&amp; hero.buff(AscendedForm.AscendBuff.class) != null;</span>
+	}
+
+	@Override
+	public void onCast(HolyTome tome, Hero hero) {
+
+<span class="nc" id="L63">		hero.sprite.attack(hero.pos, new Callback() {</span>
+			@Override
+			public void call() {
+<span class="nc" id="L66">				GameScene.flash( 0x80FFFFFF );</span>
+<span class="nc" id="L67">				Sample.INSTANCE.play(Assets.Sounds.BLAST);</span>
+
+<span class="nc" id="L69">				int damageBase = 5 + 5*hero.pointsInTalent(Talent.JUDGEMENT);</span>
+<span class="nc" id="L70">				damageBase += 5*hero.buff(AscendedForm.AscendBuff.class).spellCasts;</span>
+
+<span class="nc bnc" id="L72" title="All 2 branches missed.">				for (Char ch : Actor.chars()){</span>
+<span class="nc bnc" id="L73" title="All 4 branches missed.">					if (ch.alignment != hero.alignment &amp;&amp; Dungeon.level.heroFOV[ch.pos]){</span>
+<span class="nc" id="L74">						ch.damage( Random.NormalIntRange(damageBase, 2*damageBase), Judgement.this);</span>
+					}
+<span class="nc" id="L76">				}</span>
+
+<span class="nc" id="L78">				hero.spendAndNext( 1f );</span>
+<span class="nc" id="L79">				onSpellCast(tome, hero);</span>
+
+<span class="nc" id="L81">				hero.buff(AscendedForm.AscendBuff.class).spellCasts = 0;</span>
+
+<span class="nc" id="L83">			}</span>
+		});
+<span class="nc" id="L85">		hero.busy();</span>
+
+<span class="nc" id="L87">	}</span>
+
+	@Override
+	public String desc() {
+<span class="nc" id="L91">		int baseDmg = 5 + 5*Dungeon.hero.pointsInTalent(Talent.JUDGEMENT);</span>
+<span class="nc" id="L92">		int totalBaseDmg = baseDmg;</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		if (Dungeon.hero.buff(AscendedForm.AscendBuff.class) != null) {</span>
+<span class="nc" id="L94">			totalBaseDmg += 5 * Dungeon.hero.buff(AscendedForm.AscendBuff.class).spellCasts;</span>
+		}
+
+<span class="nc" id="L97">		return Messages.get(this, &quot;desc&quot;, baseDmg, 2*baseDmg, totalBaseDmg, 2*totalBaseDmg) + &quot;\n\n&quot; + Messages.get(this, &quot;charge_cost&quot;, (int)chargeUse(Dungeon.hero));</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Builder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.builders</a> &gt; <span class="el_source">Builder.java</span></div><h1>Builder.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.builders;
+
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.Point;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+import com.watabou.utils.Rect;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+
+<span class="nc" id="L34">public abstract class Builder {</span>
+	
+	//If builders require additional parameters, they should
+	// request them in their constructor or other methods
+	
+	//builders take a list of rooms and returns them as a connected map
+	//returns null on failure
+	public abstract ArrayList&lt;Room&gt; build(ArrayList&lt;Room&gt; rooms);
+	
+	protected static void findNeighbours(ArrayList&lt;Room&gt; rooms){
+<span class="nc" id="L44">		Room[] ra = rooms.toArray( new Room[0] );</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">		for (int i=0; i &lt; ra.length-1; i++) {</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">			for (int j=i+1; j &lt; ra.length; j++) {</span>
+<span class="nc" id="L47">				ra[i].addNeigbour( ra[j] );</span>
+			}
+		}
+<span class="nc" id="L50">	}</span>
+
+	//returns a rectangle representing the maximum amount of free space from a specific start point
+	protected static Rect findFreeSpace(Point start, ArrayList&lt;Room&gt; collision, int maxSize){
+<span class="nc" id="L54">		Rect space = new Rect(start.x-maxSize, start.y-maxSize, start.x+maxSize, start.y+maxSize);</span>
+
+		//shallow copy
+<span class="nc" id="L57">		ArrayList&lt;Room&gt; colliding = new ArrayList&lt;&gt;(collision);</span>
+		do{
+			
+			//remove empty rooms and any rooms we aren't currently overlapping
+<span class="nc" id="L61">			Iterator&lt;Room&gt; it = colliding.iterator();</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">			while (it.hasNext()){</span>
+<span class="nc" id="L63">				Room room = it.next();</span>
+				//if not colliding
+<span class="nc bnc" id="L65" title="All 2 branches missed.">				if ( room.isEmpty()</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">						|| Math.max(space.left, room.left) &gt;= Math.min(space.right, room.right)</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">						|| Math.max(space.top, room.top) &gt;= Math.min(space.bottom, room.bottom) ){</span>
+<span class="nc" id="L68">					it.remove();</span>
+				}
+<span class="nc" id="L70">			}</span>
+			
+			//iterate through all rooms we are overlapping, and find the closest one
+<span class="nc" id="L73">			Room closestRoom = null;</span>
+<span class="nc" id="L74">			int closestDiff = Integer.MAX_VALUE;</span>
+<span class="nc" id="L75">			boolean inside = true;</span>
+<span class="nc" id="L76">			int curDiff = 0;</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">			for (Room curRoom : colliding){</span>
+				
+<span class="nc bnc" id="L79" title="All 2 branches missed.">				if (start.x &lt;= curRoom.left){</span>
+<span class="nc" id="L80">					inside = false;</span>
+<span class="nc" id="L81">					curDiff += curRoom.left - start.x;</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">				} else if (start.x &gt;= curRoom.right){</span>
+<span class="nc" id="L83">					inside = false;</span>
+<span class="nc" id="L84">					curDiff += start.x - curRoom.right;</span>
+				}
+			
+<span class="nc bnc" id="L87" title="All 2 branches missed.">				if (start.y &lt;= curRoom.top){</span>
+<span class="nc" id="L88">					inside = false;</span>
+<span class="nc" id="L89">					curDiff += curRoom.top - start.y;</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">				} else if (start.y &gt;= curRoom.bottom){</span>
+<span class="nc" id="L91">					inside = false;</span>
+<span class="nc" id="L92">					curDiff += start.y - curRoom.bottom;</span>
+				}
+				
+<span class="nc bnc" id="L95" title="All 2 branches missed.">				if (inside){</span>
+<span class="nc" id="L96">					space.set(start.x, start.y, start.x, start.y);</span>
+<span class="nc" id="L97">					return space;</span>
+				}
+				
+<span class="nc bnc" id="L100" title="All 2 branches missed.">				if (curDiff &lt; closestDiff){</span>
+<span class="nc" id="L101">					closestDiff = curDiff;</span>
+<span class="nc" id="L102">					closestRoom = curRoom;</span>
+				}
+			
+<span class="nc" id="L105">			}</span>
+			
+			int wDiff, hDiff;
+<span class="nc bnc" id="L108" title="All 2 branches missed.">			if (closestRoom != null){</span>
+				
+<span class="nc" id="L110">				wDiff = Integer.MAX_VALUE;</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">				if (closestRoom.left &gt;= start.x){</span>
+<span class="nc" id="L112">					wDiff = (space.right - closestRoom.left) * (space.height() + 1);</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">				} else if (closestRoom.right &lt;= start.x){</span>
+<span class="nc" id="L114">					wDiff = (closestRoom.right - space.left) * (space.height() + 1);</span>
+				}
+				
+<span class="nc" id="L117">				hDiff = Integer.MAX_VALUE;</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">				if (closestRoom.top &gt;= start.y){</span>
+<span class="nc" id="L119">					hDiff = (space.bottom - closestRoom.top) * (space.width() + 1);</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">				} else if (closestRoom.bottom &lt;= start.y){</span>
+<span class="nc" id="L121">					hDiff = (closestRoom.bottom - space.top) * (space.width() + 1);</span>
+				}
+				
+				//reduce by as little as possible to resolve the collision
+<span class="nc bnc" id="L125" title="All 6 branches missed.">				if (wDiff &lt; hDiff || wDiff == hDiff &amp;&amp; Random.Int(2) == 0){</span>
+<span class="nc bnc" id="L126" title="All 4 branches missed.">					if (closestRoom.left &gt;= start.x &amp;&amp; closestRoom.left &lt; space.right) space.right = closestRoom.left;</span>
+<span class="nc bnc" id="L127" title="All 4 branches missed.">					if (closestRoom.right &lt;= start.x &amp;&amp; closestRoom.right &gt; space.left) space.left = closestRoom.right;</span>
+				} else {
+<span class="nc bnc" id="L129" title="All 4 branches missed.">					if (closestRoom.top &gt;= start.y &amp;&amp; closestRoom.top &lt; space.bottom) space.bottom = closestRoom.top;</span>
+<span class="nc bnc" id="L130" title="All 4 branches missed.">					if (closestRoom.bottom &lt;= start.y &amp;&amp; closestRoom.bottom &gt; space.top) space.top = closestRoom.bottom;</span>
+				}
+<span class="nc" id="L132">				colliding.remove(closestRoom);</span>
+			} else {
+<span class="nc" id="L134">				colliding.clear();</span>
+			}
+			
+			//loop until we are no longer colliding with any rooms
+<span class="nc bnc" id="L138" title="All 2 branches missed.">		} while (!colliding.isEmpty());</span>
+		
+<span class="nc" id="L140">		return space;</span>
+	}
+
+	private static final double A = 180 / Math.PI;
+	
+	//returns the angle in degrees made by the centerpoints of 2 rooms, with 0 being straight up.
+	protected static float angleBetweenRooms( Room from, Room to){
+<span class="nc" id="L147">		PointF fromCenter = new PointF((from.left + from.right)/2f, (from.top + from.bottom)/2f);</span>
+<span class="nc" id="L148">		PointF toCenter = new PointF((to.left + to.right)/2f, (to.top + to.bottom)/2f);</span>
+<span class="nc" id="L149">		return angleBetweenPoints(fromCenter, toCenter);</span>
+	}
+	
+	protected static float angleBetweenPoints( PointF from, PointF to ){
+<span class="nc" id="L153">		double m = (to.y - from.y)/(to.x - from.x);</span>
+		
+<span class="nc" id="L155">		float angle = (float)(A*(Math.atan(m) + Math.PI/2.0));</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		if (from.x &gt; to.x) angle -= 180f;</span>
+<span class="nc" id="L157">		return angle;</span>
+	}
+
+	//Attempts to place a room such that the angle between the center of the previous room
+	// and it matches the given angle ([0-360), where 0 is straight up) as closely as possible.
+	//Note that getting an exactly correct angle is harder the closer that angle is to diagonal.
+	//Returns the exact angle between the centerpoints of the two rooms, or -1 if placement fails.
+	protected static float placeRoom( ArrayList&lt;Room&gt; collision, Room prev, Room next, float angle){
+
+		//wrap angle around to always be [0-360)
+<span class="nc" id="L167">		angle %= 360f;</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">		if (angle &lt; 0){</span>
+<span class="nc" id="L169">			angle += 360f;</span>
+		}
+
+<span class="nc" id="L172">		PointF prevCenter = new PointF((prev.left + prev.right)/2f, (prev.top + prev.bottom)/2f);</span>
+
+		// calculating using y = mx+b, straight line formula
+<span class="nc" id="L175">		double m = Math.tan(angle/A + Math.PI/2.0);</span>
+<span class="nc" id="L176">		double b = prevCenter.y -m*prevCenter.x;</span>
+
+		//using the line equation, we find the point along the prev room where the line exists
+		Point start;
+		int direction;
+<span class="nc bnc" id="L181" title="All 2 branches missed.">		if (Math.abs(m) &gt;= 1){</span>
+<span class="nc bnc" id="L182" title="All 4 branches missed.">			if (angle &lt; 90 || angle &gt; 270){</span>
+<span class="nc" id="L183">				direction = Room.TOP;</span>
+<span class="nc" id="L184">				start = new Point( (int)Math.round((prev.top - b)/m), prev.top);</span>
+			} else {
+<span class="nc" id="L186">				direction = Room.BOTTOM;</span>
+<span class="nc" id="L187">				start = new Point( (int)Math.round((prev.bottom - b)/m), prev.bottom);</span>
+			}
+		} else {
+<span class="nc bnc" id="L190" title="All 2 branches missed.">			if (angle &lt; 180){</span>
+<span class="nc" id="L191">				direction = Room.RIGHT;</span>
+<span class="nc" id="L192">				start = new Point(prev.right, (int) Math.round(m * prev.right + b));</span>
+			} else {
+<span class="nc" id="L194">				direction = Room.LEFT;</span>
+<span class="nc" id="L195">				start = new Point(prev.left, (int) Math.round(m * prev.left + b));</span>
+			}
+		}
+
+		//cap it to a valid connection point for most rooms
+<span class="nc bnc" id="L200" title="All 4 branches missed.">		if (direction == Room.TOP || direction == Room.BOTTOM) {</span>
+<span class="nc" id="L201">			start.x = (int) GameMath.gate(prev.left + 1, start.x, prev.right - 1);</span>
+		} else {
+<span class="nc" id="L203">			start.y = (int) GameMath.gate(prev.top + 1, start.y, prev.bottom - 1);</span>
+		}
+
+		//space checking
+<span class="nc" id="L207">		Rect space = findFreeSpace(start, collision, Math.max(next.maxWidth(), next.maxHeight()));</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">		if (!next.setSizeWithLimit(space.width()+1, space.height()+1)){</span>
+<span class="nc" id="L209">			return -1;</span>
+		}
+
+		//find the ideal center for this new room using the line equation and known dimensions
+<span class="nc" id="L213">		PointF targetCenter = new PointF();</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">		if (direction == Room.TOP) {</span>
+<span class="nc" id="L215">			targetCenter.y = prev.top - (next.height() - 1) / 2f;</span>
+<span class="nc" id="L216">			targetCenter.x = (float) ((targetCenter.y - b) / m);</span>
+<span class="nc" id="L217">			next.setPos(Math.round(targetCenter.x - (next.width() - 1) / 2f), prev.top - (next.height() - 1));</span>
+
+<span class="nc bnc" id="L219" title="All 2 branches missed.">		} else if (direction == Room.BOTTOM) {</span>
+<span class="nc" id="L220">			targetCenter.y = prev.bottom + (next.height() - 1) / 2f;</span>
+<span class="nc" id="L221">			targetCenter.x = (float) ((targetCenter.y - b) / m);</span>
+<span class="nc" id="L222">			next.setPos(Math.round(targetCenter.x - (next.width() - 1) / 2f), prev.bottom);</span>
+
+<span class="nc bnc" id="L224" title="All 2 branches missed.">		} else if (direction == Room.RIGHT) {</span>
+<span class="nc" id="L225">			targetCenter.x = prev.right + (next.width()-1)/2f;</span>
+<span class="nc" id="L226">			targetCenter.y = (float)(m*targetCenter.x + b);</span>
+<span class="nc" id="L227">			next.setPos( prev.right, Math.round(targetCenter.y - (next.height()-1)/2f));</span>
+
+<span class="nc bnc" id="L229" title="All 2 branches missed.">		} else if (direction == Room.LEFT) {</span>
+<span class="nc" id="L230">			targetCenter.x = prev.left - (next.width()-1)/2f;</span>
+<span class="nc" id="L231">			targetCenter.y = (float)(m*targetCenter.x + b);</span>
+<span class="nc" id="L232">			next.setPos( prev.left - (next.width() - 1), Math.round(targetCenter.y - (next.height()-1)/2f));</span>
+
+		}
+
+		//perform connection bounds and target checking, move the room if necessary
+<span class="nc bnc" id="L237" title="All 4 branches missed.">		if (direction == Room.TOP || direction == Room.BOTTOM){</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">			if (next.right &lt; prev.left+2)	    next.shift(prev.left+2-next.right, 0);</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">			else if (next.left &gt; prev.right-2)  next.shift(prev.right-2-next.left, 0);</span>
+
+<span class="nc bnc" id="L241" title="All 2 branches missed.">			if (next.right &gt; space.right)       next.shift( space.right - next.right, 0);</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">			else if (next.left &lt; space.left)    next.shift( space.left - next.left, 0);</span>
+		} else {
+<span class="nc bnc" id="L244" title="All 2 branches missed.">			if (next.bottom &lt; prev.top+2)	    next.shift(0, prev.top+2-next.bottom);</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">			else if (next.top &gt; prev.bottom-2)  next.shift(0, prev.bottom-2-next.top);</span>
+
+<span class="nc bnc" id="L247" title="All 2 branches missed.">			if (next.bottom &gt; space.bottom)     next.shift( 0, space.bottom - next.bottom);</span>
+<span class="nc bnc" id="L248" title="All 2 branches missed.">			else if (next.top &lt; space.top)      next.shift( 0, space.top - next.top);</span>
+		}
+
+		//attempt to connect, return the result angle if successful.
+<span class="nc bnc" id="L252" title="All 2 branches missed.">		if (next.connect(prev)){</span>
+<span class="nc" id="L253">			return angleBetweenRooms(prev, next);</span>
+		} else {
+<span class="nc" id="L255">			return -1;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

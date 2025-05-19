@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HeavyBoomerang.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles</a> &gt; <span class="el_source">HeavyBoomerang.java</span></div><h1>HeavyBoomerang.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite;
+import com.watabou.noosa.tweeners.AlphaTweener;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+
+<span class="nc" id="L36">public class HeavyBoomerang extends MissileWeapon {</span>
+	
+	{
+<span class="nc" id="L39">		image = ItemSpriteSheet.BOOMERANG;</span>
+<span class="nc" id="L40">		hitSound = Assets.Sounds.HIT_CRUSH;</span>
+<span class="nc" id="L41">		hitSoundPitch = 1f;</span>
+		
+<span class="nc" id="L43">		tier = 4;</span>
+<span class="nc" id="L44">		sticky = false;</span>
+	}
+	
+	@Override
+	public int max(int lvl) {
+<span class="nc" id="L49">		return  4 * tier +                  //16 base, down from 20</span>
+				(tier) * lvl;               //scaling unchanged
+	}
+
+<span class="nc" id="L53">	boolean circleBackhit = false;</span>
+
+	@Override
+	protected float adjacentAccFactor(Char owner, Char target) {
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		if (circleBackhit){</span>
+<span class="nc" id="L58">			circleBackhit = false;</span>
+<span class="nc" id="L59">			return 1.5f;</span>
+		}
+<span class="nc" id="L61">		return super.adjacentAccFactor(owner, target);</span>
+	}
+
+	@Override
+	protected void rangedHit(Char enemy, int cell) {
+<span class="nc" id="L66">		decrementDurability();</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">		if (durability &gt; 0){</span>
+<span class="nc" id="L68">			Buff.append(Dungeon.hero, CircleBack.class).setup(this, cell, Dungeon.hero.pos, Dungeon.depth, Dungeon.branch);</span>
+		}
+<span class="nc" id="L70">	}</span>
+	
+	@Override
+	protected void rangedMiss(int cell) {
+<span class="nc" id="L74">		parent = null;</span>
+<span class="nc" id="L75">		Buff.append(Dungeon.hero, CircleBack.class).setup(this, cell, Dungeon.hero.pos, Dungeon.depth, Dungeon.branch);</span>
+<span class="nc" id="L76">	}</span>
+	
+<span class="nc" id="L78">	public static class CircleBack extends Buff {</span>
+
+		{
+<span class="nc" id="L81">			revivePersists = true;</span>
+<span class="nc" id="L82">		}</span>
+		
+		private HeavyBoomerang boomerang;
+		private int thrownPos;
+		private int returnPos;
+		private int returnDepth;
+		private int returnBranch;
+		
+		private int left;
+		
+		public void setup( HeavyBoomerang boomerang, int thrownPos, int returnPos, int returnDepth, int returnBranch){
+<span class="nc" id="L93">			this.boomerang = boomerang;</span>
+<span class="nc" id="L94">			this.thrownPos = thrownPos;</span>
+<span class="nc" id="L95">			this.returnPos = returnPos;</span>
+<span class="nc" id="L96">			this.returnDepth = returnDepth;</span>
+<span class="nc" id="L97">			this.returnBranch = returnBranch;</span>
+<span class="nc" id="L98">			left = 3;</span>
+<span class="nc" id="L99">		}</span>
+		
+		public int returnPos(){
+<span class="nc" id="L102">			return returnPos;</span>
+		}
+		
+		public MissileWeapon cancel(){
+<span class="nc" id="L106">			detach();</span>
+<span class="nc" id="L107">			return boomerang;</span>
+		}
+
+		public int activeDepth(){
+<span class="nc" id="L111">			return returnDepth;</span>
+		}
+		
+		@Override
+		public boolean act() {
+<span class="nc bnc" id="L116" title="All 4 branches missed.">			if (returnDepth == Dungeon.depth &amp;&amp; returnBranch == Dungeon.branch){</span>
+<span class="nc" id="L117">				left--;</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">				if (left &lt;= 0){</span>
+<span class="nc" id="L119">					final Char returnTarget = Actor.findChar(returnPos);</span>
+<span class="nc" id="L120">					final Char target = this.target;</span>
+<span class="nc" id="L121">					MissileSprite visual = ((MissileSprite) Dungeon.hero.sprite.parent.recycle(MissileSprite.class));</span>
+<span class="nc" id="L122">					visual.reset( thrownPos,</span>
+									returnPos,
+									boomerang,
+<span class="nc" id="L125">									new Callback() {</span>
+										@Override
+										public void call() {
+<span class="nc bnc" id="L128" title="All 2 branches missed.">											if (returnTarget == target){</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">												if (!boomerang.spawnedForEffect) {</span>
+<span class="nc bnc" id="L130" title="All 4 branches missed.">													if (target instanceof Hero &amp;&amp; boomerang.doPickUp((Hero) target)) {</span>
+														//grabbing the boomerang takes no time
+<span class="nc" id="L132">														((Hero) target).spend(-TIME_TO_PICK_UP);</span>
+													} else {
+<span class="nc" id="L134">														Dungeon.level.drop(boomerang, returnPos).sprite.drop();</span>
+													}
+												}
+												
+<span class="nc bnc" id="L138" title="All 2 branches missed.">											} else if (returnTarget != null){</span>
+<span class="nc" id="L139">												boomerang.circleBackhit = true;</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">												if (((Hero)target).shoot( returnTarget, boomerang )) {</span>
+<span class="nc" id="L141">													boomerang.decrementDurability();</span>
+												}
+<span class="nc bnc" id="L143" title="All 4 branches missed.">												if (!boomerang.spawnedForEffect &amp;&amp; boomerang.durability &gt; 0) {</span>
+<span class="nc" id="L144">													Dungeon.level.drop(boomerang, returnPos).sprite.drop();</span>
+												}
+												
+<span class="nc bnc" id="L147" title="All 2 branches missed.">											} else if (!boomerang.spawnedForEffect) {</span>
+<span class="nc" id="L148">												Dungeon.level.drop(boomerang, returnPos).sprite.drop();</span>
+											}
+<span class="nc" id="L150">											CircleBack.this.next();</span>
+<span class="nc" id="L151">										}</span>
+									});
+<span class="nc" id="L153">					visual.alpha(0f);</span>
+<span class="nc" id="L154">					float duration = Dungeon.level.trueDistance(thrownPos, returnPos) / 20f;</span>
+<span class="nc" id="L155">					target.sprite.parent.add(new AlphaTweener(visual, 1f, duration));</span>
+<span class="nc" id="L156">					detach();</span>
+<span class="nc" id="L157">					return false;</span>
+				}
+			}
+<span class="nc" id="L160">			spend( TICK );</span>
+<span class="nc" id="L161">			return true;</span>
+		}
+		
+		private static final String BOOMERANG = &quot;boomerang&quot;;
+		private static final String THROWN_POS = &quot;thrown_pos&quot;;
+		private static final String RETURN_POS = &quot;return_pos&quot;;
+		private static final String RETURN_DEPTH = &quot;return_depth&quot;;
+		private static final String RETURN_BRANCH = &quot;return_branch&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L172">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L173">			bundle.put(BOOMERANG, boomerang);</span>
+<span class="nc" id="L174">			bundle.put(THROWN_POS, thrownPos);</span>
+<span class="nc" id="L175">			bundle.put(RETURN_POS, returnPos);</span>
+<span class="nc" id="L176">			bundle.put(RETURN_DEPTH, returnDepth);</span>
+<span class="nc" id="L177">			bundle.put(RETURN_BRANCH, returnBranch);</span>
+<span class="nc" id="L178">		}</span>
+		
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L182">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L183">			boomerang = (HeavyBoomerang) bundle.get(BOOMERANG);</span>
+<span class="nc" id="L184">			thrownPos = bundle.getInt(THROWN_POS);</span>
+<span class="nc" id="L185">			returnPos = bundle.getInt(RETURN_POS);</span>
+<span class="nc" id="L186">			returnDepth = bundle.getInt(RETURN_DEPTH);</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">			returnBranch = bundle.contains(RETURN_BRANCH) ? bundle.getInt(RETURN_BRANCH) : 0;</span>
+<span class="nc" id="L188">		}</span>
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

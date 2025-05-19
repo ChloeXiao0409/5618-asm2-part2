@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Swap.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.effects</a> &gt; <span class="el_source">Swap.java</span></div><h1>Swap.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.effects;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Visual;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.PointF;
+
+public class Swap extends Actor {
+
+	private Char ch1;
+	private Char ch2;
+
+	private Effect eff1;
+	private Effect eff2;
+
+	private float delay;
+
+<span class="nc" id="L45">	public Swap( Char ch1, Char ch2 ) {</span>
+
+<span class="nc" id="L47">		this.ch1 = ch1;</span>
+<span class="nc" id="L48">		this.ch2 = ch2;</span>
+
+<span class="nc" id="L50">		delay = Dungeon.level.distance( ch1.pos,  ch2.pos ) * 0.1f;</span>
+
+<span class="nc" id="L52">		eff1 = new Effect( ch1.sprite, ch1.pos, ch2.pos );</span>
+<span class="nc" id="L53">		eff2 = new Effect( ch2.sprite, ch2.pos, ch1.pos );</span>
+<span class="nc" id="L54">		Sample.INSTANCE.play( Assets.Sounds.TELEPORT );</span>
+<span class="nc" id="L55">	}</span>
+
+	@Override
+	protected boolean act() {
+<span class="nc" id="L59">		return false;</span>
+	}
+
+	private void finish( Effect eff ) {
+<span class="nc bnc" id="L63" title="All 2 branches missed.">		if (eff == eff1) {</span>
+<span class="nc" id="L64">			eff1 = null;</span>
+		}
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (eff == eff2) {</span>
+<span class="nc" id="L67">			eff2 = null;</span>
+		}
+
+<span class="nc bnc" id="L70" title="All 4 branches missed.">		if (eff1 == null &amp;&amp; eff2 == null) {</span>
+<span class="nc" id="L71">			Actor.remove( this );</span>
+<span class="nc" id="L72">			next();</span>
+
+<span class="nc" id="L74">			int pos = ch1.pos;</span>
+<span class="nc" id="L75">			ch1.pos = ch2.pos;</span>
+<span class="nc" id="L76">			ch2.pos = pos;</span>
+
+<span class="nc" id="L78">			Dungeon.level.occupyCell(ch1 );</span>
+<span class="nc" id="L79">			Dungeon.level.occupyCell(ch2 );</span>
+
+<span class="nc bnc" id="L81" title="All 4 branches missed.">			if (ch1 == Dungeon.hero || ch2 == Dungeon.hero) {</span>
+<span class="nc" id="L82">				Dungeon.observe();</span>
+<span class="nc" id="L83">				GameScene.updateFog();</span>
+			}
+		}
+<span class="nc" id="L86">	}</span>
+
+	private class Effect extends Visual {
+
+		private CharSprite sprite;
+		private PointF end;
+		private float passed;
+
+<span class="nc" id="L94">		public Effect( CharSprite sprite, int from, int to ) {</span>
+<span class="nc" id="L95">			super( 0, 0, 0, 0 );</span>
+
+<span class="nc" id="L97">			this.sprite = sprite;</span>
+
+<span class="nc" id="L99">			point( sprite.worldToCamera( from ) );</span>
+<span class="nc" id="L100">			end = sprite.worldToCamera( to );</span>
+
+<span class="nc" id="L102">			speed.set( 2 * (end.x - x) / delay, 2 * (end.y - y) / delay );</span>
+<span class="nc" id="L103">			acc.set( -speed.x / delay, -speed.y / delay );</span>
+
+<span class="nc" id="L105">			passed = 0;</span>
+
+<span class="nc" id="L107">			sprite.parent.add( this );</span>
+<span class="nc" id="L108">		}</span>
+
+		@Override
+		public void update() {
+<span class="nc" id="L112">			super.update();</span>
+
+<span class="nc bnc" id="L114" title="All 2 branches missed.">			if ((passed += Game.elapsed) &lt; delay) {</span>
+<span class="nc" id="L115">				sprite.x = x;</span>
+<span class="nc" id="L116">				sprite.y = y;</span>
+
+			} else {
+
+<span class="nc" id="L120">				sprite.point( end );</span>
+
+<span class="nc" id="L122">				killAndErase();</span>
+<span class="nc" id="L123">				finish( this );</span>
+
+			}
+<span class="nc" id="L126">		}</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

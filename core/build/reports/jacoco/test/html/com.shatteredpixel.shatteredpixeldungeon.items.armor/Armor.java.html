@@ -1,0 +1,883 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Armor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.armor</a> &gt; <span class="el_source">Armor.java</span></div><h1>Armor.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.armor;
+
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Momentum;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.AuraOfProtection;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.BodyForm;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.HolyWard;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.LifeLinkSpell;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal;
+import com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.curses.AntiEntropy;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.curses.Bulk;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.curses.Corrosion;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.curses.Displacement;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.curses.Metabolism;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.curses.Multiplicity;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.curses.Overgrowth;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.curses.Stench;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Affection;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.AntiMagic;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Brimstone;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Camouflage;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Entanglement;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Flow;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Obfuscation;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Potential;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Repulsion;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Stone;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Swiftness;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Thorns;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Viscosity;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfArcana;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.ParchmentScrap;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.ShardOfOblivion;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.utils.Bundlable;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import com.shatteredpixel.shatteredpixeldungeon.equipment.IEquipment;
+
+public class Armor extends EquipableItem implements IEquipment {
+
+	protected static final String AC_DETACH       = &quot;DETACH&quot;;
+	
+<span class="fc" id="L89">	public enum Augment {</span>
+<span class="fc" id="L90">		EVASION (2f , -1f),</span>
+<span class="fc" id="L91">		DEFENSE (-2f, 1f),</span>
+<span class="fc" id="L92">		NONE	(0f   ,  0f);</span>
+		
+		private float evasionFactor;
+		private float defenceFactor;
+		
+<span class="fc" id="L97">		Augment(float eva, float df){</span>
+<span class="fc" id="L98">			evasionFactor = eva;</span>
+<span class="fc" id="L99">			defenceFactor = df;</span>
+<span class="fc" id="L100">		}</span>
+		
+		public int evasionFactor(int level){
+<span class="nc" id="L103">			return Math.round((2 + level) * evasionFactor);</span>
+		}
+		
+		public int defenseFactor(int level){
+<span class="nc" id="L107">			return Math.round((2 + level) * defenceFactor);</span>
+		}
+	}
+	
+<span class="fc" id="L111">	public Augment augment = Augment.NONE;</span>
+	
+	public Glyph glyph;
+<span class="fc" id="L114">	public boolean glyphHardened = false;</span>
+<span class="fc" id="L115">	public boolean curseInfusionBonus = false;</span>
+<span class="fc" id="L116">	public boolean masteryPotionBonus = false;</span>
+	
+	protected BrokenSeal seal;
+	
+	public int tier;
+	
+	private static final int USES_TO_ID = 10;
+<span class="fc" id="L123">	private float usesLeftToID = USES_TO_ID;</span>
+<span class="fc" id="L124">	private float availableUsesToID = USES_TO_ID/2f;</span>
+	
+<span class="fc" id="L126">	public Armor( int tier ) {</span>
+<span class="fc" id="L127">		this.tier = tier;</span>
+<span class="fc" id="L128">	}</span>
+	
+	private static final String USES_LEFT_TO_ID = &quot;uses_left_to_id&quot;;
+	private static final String AVAILABLE_USES  = &quot;available_uses&quot;;
+	private static final String GLYPH			= &quot;glyph&quot;;
+	private static final String GLYPH_HARDENED	= &quot;glyph_hardened&quot;;
+	private static final String CURSE_INFUSION_BONUS = &quot;curse_infusion_bonus&quot;;
+	private static final String MASTERY_POTION_BONUS = &quot;mastery_potion_bonus&quot;;
+	private static final String SEAL            = &quot;seal&quot;;
+	private static final String AUGMENT			= &quot;augment&quot;;
+
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L141">		super.storeInBundle( bundle );</span>
+<span class="nc" id="L142">		bundle.put( USES_LEFT_TO_ID, usesLeftToID );</span>
+<span class="nc" id="L143">		bundle.put( AVAILABLE_USES, availableUsesToID );</span>
+<span class="nc" id="L144">		bundle.put( GLYPH, glyph );</span>
+<span class="nc" id="L145">		bundle.put( GLYPH_HARDENED, glyphHardened );</span>
+<span class="nc" id="L146">		bundle.put( CURSE_INFUSION_BONUS, curseInfusionBonus );</span>
+<span class="nc" id="L147">		bundle.put( MASTERY_POTION_BONUS, masteryPotionBonus );</span>
+<span class="nc" id="L148">		bundle.put( SEAL, seal);</span>
+<span class="nc" id="L149">		bundle.put( AUGMENT, augment);</span>
+<span class="nc" id="L150">	}</span>
+
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L154">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L155">		usesLeftToID = bundle.getInt( USES_LEFT_TO_ID );</span>
+<span class="nc" id="L156">		availableUsesToID = bundle.getInt( AVAILABLE_USES );</span>
+<span class="nc" id="L157">		inscribe((Glyph) bundle.get(GLYPH));</span>
+<span class="nc" id="L158">		glyphHardened = bundle.getBoolean(GLYPH_HARDENED);</span>
+<span class="nc" id="L159">		curseInfusionBonus = bundle.getBoolean( CURSE_INFUSION_BONUS );</span>
+<span class="nc" id="L160">		masteryPotionBonus = bundle.getBoolean( MASTERY_POTION_BONUS );</span>
+<span class="nc" id="L161">		seal = (BrokenSeal)bundle.get(SEAL);</span>
+		
+<span class="nc" id="L163">		augment = bundle.getEnum(AUGMENT, Augment.class);</span>
+<span class="nc" id="L164">	}</span>
+
+	@Override
+	public void reset() {
+<span class="nc" id="L168">		super.reset();</span>
+<span class="nc" id="L169">		usesLeftToID = USES_TO_ID;</span>
+<span class="nc" id="L170">		availableUsesToID = USES_TO_ID/2f;</span>
+		//armor can be kept in bones between runs, the seal cannot.
+<span class="nc" id="L172">		seal = null;</span>
+<span class="nc" id="L173">	}</span>
+
+	@Override
+	public ArrayList&lt;String&gt; actions(Hero hero) {
+<span class="nc" id="L177">		ArrayList&lt;String&gt; actions = super.actions(hero);</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">		if (seal != null) actions.add(AC_DETACH);</span>
+<span class="nc" id="L179">		return actions;</span>
+	}
+
+	@Override
+	public void execute(Hero hero, String action) {
+
+<span class="nc" id="L185">		super.execute(hero, action);</span>
+
+<span class="nc bnc" id="L187" title="All 4 branches missed.">		if (action.equals(AC_DETACH) &amp;&amp; seal != null){</span>
+<span class="nc" id="L188">			BrokenSeal.WarriorShield sealBuff = hero.buff(BrokenSeal.WarriorShield.class);</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">			if (sealBuff != null) sealBuff.setArmor(null);</span>
+
+<span class="nc" id="L191">			BrokenSeal detaching = seal;</span>
+<span class="nc" id="L192">			seal = null;</span>
+
+<span class="nc bnc" id="L194" title="All 2 branches missed.">			if (detaching.level() &gt; 0){</span>
+<span class="nc" id="L195">				degrade();</span>
+			}
+<span class="nc bnc" id="L197" title="All 2 branches missed.">			if (detaching.canTransferGlyph()){</span>
+<span class="nc" id="L198">				inscribe(null);</span>
+			} else {
+<span class="nc" id="L200">				detaching.setGlyph(null);</span>
+			}
+<span class="nc" id="L202">			GLog.i( Messages.get(Armor.class, &quot;detach_seal&quot;) );</span>
+<span class="nc" id="L203">			hero.sprite.operate(hero.pos);</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">			if (!detaching.collect()){</span>
+<span class="nc" id="L205">				Dungeon.level.drop(detaching, hero.pos);</span>
+			}
+<span class="nc" id="L207">			updateQuickslot();</span>
+		}
+<span class="nc" id="L209">	}</span>
+
+	@Override
+	public boolean collect(Bag container) {
+<span class="nc bnc" id="L213" title="All 2 branches missed.">		if(super.collect(container)){</span>
+<span class="nc bnc" id="L214" title="All 8 branches missed.">			if (Dungeon.hero != null &amp;&amp; Dungeon.hero.isAlive() &amp;&amp; isIdentified() &amp;&amp; glyph != null){</span>
+<span class="nc" id="L215">				Catalog.setSeen(glyph.getClass());</span>
+<span class="nc" id="L216">				Statistics.itemTypesDiscovered.add(glyph.getClass());</span>
+			}
+<span class="nc" id="L218">			return true;</span>
+		} else {
+<span class="nc" id="L220">			return false;</span>
+		}
+	}
+
+	@Override
+	public Item identify(boolean byHero) {
+<span class="nc bnc" id="L226" title="All 8 branches missed.">		if (glyph != null &amp;&amp; byHero &amp;&amp; Dungeon.hero != null &amp;&amp; Dungeon.hero.isAlive()){</span>
+<span class="nc" id="L227">			Catalog.setSeen(glyph.getClass());</span>
+<span class="nc" id="L228">			Statistics.itemTypesDiscovered.add(glyph.getClass());</span>
+		}
+<span class="nc" id="L230">		return super.identify(byHero);</span>
+	}
+
+	public void setIDReady(){
+<span class="nc" id="L234">		usesLeftToID = -1;</span>
+<span class="nc" id="L235">	}</span>
+
+	public boolean readyToIdentify(){
+<span class="nc bnc" id="L238" title="All 4 branches missed.">		return !isIdentified() &amp;&amp; usesLeftToID &lt;= 0;</span>
+	}
+
+	@Override
+	public boolean doEquip( Hero hero ) {
+		
+<span class="nc" id="L244">		detach(hero.belongings.backpack);</span>
+
+		// 15/25% chance
+<span class="nc bnc" id="L247" title="All 8 branches missed.">		if (hero.heroClass != HeroClass.CLERIC &amp;&amp; hero.hasTalent(Talent.HOLY_INTUITION)</span>
+				&amp;&amp; cursed &amp;&amp; !cursedKnown
+<span class="nc bnc" id="L249" title="All 2 branches missed.">				&amp;&amp; Random.Int(20) &lt; 1 + 2*hero.pointsInTalent(Talent.HOLY_INTUITION)){</span>
+<span class="nc" id="L250">			cursedKnown = true;</span>
+<span class="nc" id="L251">			GLog.p(Messages.get(this, &quot;curse_detected&quot;));</span>
+<span class="nc" id="L252">			return false;</span>
+		}
+
+<span class="nc bnc" id="L255" title="All 4 branches missed.">		if (hero.belongings.armor == null || hero.belongings.armor.doUnequip( hero, true, false )) {</span>
+			
+<span class="nc" id="L257">			hero.belongings.armor = this;</span>
+			
+<span class="nc" id="L259">			cursedKnown = true;</span>
+<span class="nc bnc" id="L260" title="All 2 branches missed.">			if (cursed) {</span>
+<span class="nc" id="L261">				equipCursed( hero );</span>
+<span class="nc" id="L262">				GLog.n( Messages.get(Armor.class, &quot;equip_cursed&quot;) );</span>
+			}
+			
+<span class="nc" id="L265">			((HeroSprite)hero.sprite).updateArmor();</span>
+<span class="nc" id="L266">			activate(hero);</span>
+<span class="nc" id="L267">			Talent.onItemEquipped(hero, this);</span>
+<span class="nc" id="L268">			hero.spendAndNext( timeToEquip( hero ) );</span>
+<span class="nc" id="L269">			return true;</span>
+			
+		} else {
+			
+<span class="nc" id="L273">			collect( hero.belongings.backpack );</span>
+<span class="nc" id="L274">			return false;</span>
+			
+		}
+	}
+
+	@Override
+	public void activate(Char ch) {
+<span class="nc bnc" id="L281" title="All 2 branches missed.">		if (seal != null) Buff.affect(ch, BrokenSeal.WarriorShield.class).setArmor(this);</span>
+<span class="nc" id="L282">	}</span>
+
+	public void affixSeal(BrokenSeal seal){
+<span class="nc" id="L285">		this.seal = seal;</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">		if (seal.level() &gt; 0){</span>
+			//doesn't trigger upgrading logic such as affecting curses/glyphs
+<span class="nc" id="L288">			int newLevel = trueLevel()+1;</span>
+<span class="nc" id="L289">			level(newLevel);</span>
+<span class="nc" id="L290">			Badges.validateItemLevelAquired(this);</span>
+		}
+<span class="nc bnc" id="L292" title="All 2 branches missed.">		if (seal.getGlyph() != null){</span>
+<span class="nc" id="L293">			inscribe(seal.getGlyph());</span>
+		}
+<span class="nc bnc" id="L295" title="All 2 branches missed.">		if (isEquipped(Dungeon.hero)){</span>
+<span class="nc" id="L296">			Buff.affect(Dungeon.hero, BrokenSeal.WarriorShield.class).setArmor(this);</span>
+		}
+<span class="nc" id="L298">	}</span>
+
+	public BrokenSeal checkSeal(){
+<span class="nc" id="L301">		return seal;</span>
+	}
+
+	@Override
+	public boolean doUnequip( Hero hero, boolean collect, boolean single ) {
+<span class="nc bnc" id="L306" title="All 2 branches missed.">		if (super.doUnequip( hero, collect, single )) {</span>
+
+<span class="nc" id="L308">			hero.belongings.armor = null;</span>
+<span class="nc" id="L309">			((HeroSprite)hero.sprite).updateArmor();</span>
+
+<span class="nc" id="L311">			BrokenSeal.WarriorShield sealBuff = hero.buff(BrokenSeal.WarriorShield.class);</span>
+<span class="nc bnc" id="L312" title="All 2 branches missed.">			if (sealBuff != null) sealBuff.setArmor(null);</span>
+
+<span class="nc" id="L314">			return true;</span>
+
+		} else {
+
+<span class="nc" id="L318">			return false;</span>
+
+		}
+	}
+	
+	@Override
+	public boolean isEquipped( Hero hero ) {
+<span class="nc bnc" id="L325" title="All 4 branches missed.">		return hero != null &amp;&amp; hero.belongings.armor() == this;</span>
+	}
+
+	public final int DRMax(){
+<span class="nc" id="L329">		return DRMax(buffedLvl());</span>
+	}
+
+	public int DRMax(int lvl){
+<span class="nc bnc" id="L333" title="All 2 branches missed.">		if (Dungeon.isChallenged(Challenges.NO_ARMOR)){</span>
+<span class="nc" id="L334">			return 1 + tier + lvl + augment.defenseFactor(lvl);</span>
+		}
+
+<span class="nc" id="L337">		int max = tier * (2 + lvl) + augment.defenseFactor(lvl);</span>
+<span class="nc bnc" id="L338" title="All 2 branches missed.">		if (lvl &gt; max){</span>
+<span class="nc" id="L339">			return ((lvl - max)+1)/2;</span>
+		} else {
+<span class="nc" id="L341">			return max;</span>
+		}
+	}
+
+	public final int DRMin(){
+<span class="nc" id="L346">		return DRMin(buffedLvl());</span>
+	}
+
+	public int DRMin(int lvl){
+<span class="nc bnc" id="L350" title="All 2 branches missed.">		if (Dungeon.isChallenged(Challenges.NO_ARMOR)){</span>
+<span class="nc" id="L351">			return 0;</span>
+		}
+
+<span class="nc" id="L354">		int max = DRMax(lvl);</span>
+<span class="nc bnc" id="L355" title="All 2 branches missed.">		if (lvl &gt;= max){</span>
+<span class="nc" id="L356">			return (lvl - max);</span>
+		} else {
+<span class="nc" id="L358">			return lvl;</span>
+		}
+	}
+	
+	public float evasionFactor( Char owner, float evasion ){
+		
+<span class="nc bnc" id="L364" title="All 4 branches missed.">		if (hasGlyph(Stone.class, owner) &amp;&amp; !Stone.testingEvasion()){</span>
+<span class="nc" id="L365">			return 0;</span>
+		}
+		
+<span class="nc bnc" id="L368" title="All 2 branches missed.">		if (owner instanceof Hero){</span>
+<span class="nc" id="L369">			int aEnc = STRReq() - ((Hero) owner).STR();</span>
+<span class="nc bnc" id="L370" title="All 2 branches missed.">			if (aEnc &gt; 0) evasion /= Math.pow(1.5, aEnc);</span>
+			
+<span class="nc" id="L372">			Momentum momentum = owner.buff(Momentum.class);</span>
+<span class="nc bnc" id="L373" title="All 2 branches missed.">			if (momentum != null){</span>
+<span class="nc" id="L374">				evasion += momentum.evasionBonus(((Hero) owner).lvl, Math.max(0, -aEnc));</span>
+			}
+		}
+		
+<span class="nc" id="L378">		return evasion + augment.evasionFactor(buffedLvl());</span>
+	}
+	
+	public float speedFactor( Char owner, float speed ){
+		
+<span class="nc bnc" id="L383" title="All 2 branches missed.">		if (owner instanceof Hero) {</span>
+<span class="nc" id="L384">			int aEnc = STRReq() - ((Hero) owner).STR();</span>
+<span class="nc bnc" id="L385" title="All 2 branches missed.">			if (aEnc &gt; 0) speed /= Math.pow(1.2, aEnc);</span>
+		}
+		
+<span class="nc" id="L388">		return speed;</span>
+		
+	}
+	
+	@Override
+	public int level() {
+<span class="nc" id="L394">		int level = super.level();</span>
+		//TODO warrior's seal upgrade should probably be considered here too
+		// instead of being part of true level
+<span class="nc bnc" id="L397" title="All 2 branches missed.">		if (curseInfusionBonus) level += 1 + level/6;</span>
+<span class="nc" id="L398">		return level;</span>
+	}
+	
+	@Override
+	public Item upgrade() {
+<span class="nc" id="L403">		return upgrade( false );</span>
+	}
+	
+	public Item upgrade( boolean inscribe ) {
+
+<span class="nc bnc" id="L408" title="All 2 branches missed.">		if (inscribe){</span>
+<span class="nc bnc" id="L409" title="All 2 branches missed.">			if (glyph == null){</span>
+<span class="nc" id="L410">				inscribe( Glyph.random() );</span>
+			}
+<span class="nc bnc" id="L412" title="All 2 branches missed.">		} else if (glyph != null) {</span>
+			//chance to lose harden buff is 10/20/40/80/100% when upgrading from +6/7/8/9/10
+<span class="nc bnc" id="L414" title="All 2 branches missed.">			if (glyphHardened) {</span>
+<span class="nc bnc" id="L415" title="All 4 branches missed.">				if (level() &gt;= 6 &amp;&amp; Random.Float(10) &lt; Math.pow(2, level()-6)){</span>
+<span class="nc" id="L416">					glyphHardened = false;</span>
+				}
+
+			//chance to remove curse is a static 33%
+<span class="nc bnc" id="L420" title="All 2 branches missed.">			} else if (hasCurseGlyph()){</span>
+<span class="nc bnc" id="L421" title="All 2 branches missed.">				if (Random.Int(3) == 0) inscribe(null);</span>
+
+			//otherwise chance to lose glyph is 10/20/40/80/100% when upgrading from +4/5/6/7/8
+			} else {
+
+				//the chance from +4/5, and then +6 can be set to 0% with metamorphed runic transference
+<span class="nc" id="L427">				int lossChanceStart = 4;</span>
+<span class="nc bnc" id="L428" title="All 6 branches missed.">				if (Dungeon.hero != null &amp;&amp; Dungeon.hero.heroClass != HeroClass.WARRIOR &amp;&amp; Dungeon.hero.hasTalent(Talent.RUNIC_TRANSFERENCE)){</span>
+<span class="nc" id="L429">					lossChanceStart += 1+Dungeon.hero.pointsInTalent(Talent.RUNIC_TRANSFERENCE);</span>
+				}
+
+<span class="nc bnc" id="L432" title="All 4 branches missed.">				if (level() &gt;= lossChanceStart &amp;&amp; Random.Float(10) &lt; Math.pow(2, level()-4)) {</span>
+<span class="nc" id="L433">					inscribe(null);</span>
+				}
+			}
+		}
+		
+<span class="nc" id="L438">		cursed = false;</span>
+
+<span class="nc bnc" id="L440" title="All 4 branches missed.">		if (seal != null &amp;&amp; seal.level() == 0)</span>
+<span class="nc" id="L441">			seal.upgrade();</span>
+
+<span class="nc" id="L443">		return super.upgrade();</span>
+	}
+	
+	public int proc( Char attacker, Char defender, int damage ) {
+
+<span class="nc bnc" id="L448" title="All 2 branches missed.">		if (defender.buff(MagicImmune.class) == null) {</span>
+<span class="nc" id="L449">			Glyph trinityGlyph = null;</span>
+<span class="nc bnc" id="L450" title="All 2 branches missed.">			if (Dungeon.hero.buff(BodyForm.BodyFormBuff.class) != null){</span>
+<span class="nc" id="L451">				trinityGlyph = Dungeon.hero.buff(BodyForm.BodyFormBuff.class).glyph();</span>
+<span class="nc bnc" id="L452" title="All 6 branches missed.">				if (glyph != null &amp;&amp; trinityGlyph != null &amp;&amp; trinityGlyph.getClass() == glyph.getClass()){</span>
+<span class="nc" id="L453">					trinityGlyph = null;</span>
+				}
+			}
+
+<span class="nc bnc" id="L457" title="All 4 branches missed.">			if (defender instanceof Hero &amp;&amp; isEquipped((Hero) defender)</span>
+<span class="nc bnc" id="L458" title="All 2 branches missed.">					&amp;&amp; defender.buff(HolyWard.HolyArmBuff.class) != null){</span>
+<span class="nc bnc" id="L459" title="All 4 branches missed.">				if (glyph != null &amp;&amp;</span>
+<span class="nc bnc" id="L460" title="All 2 branches missed.">						(((Hero) defender).subClass == HeroSubClass.PALADIN || hasCurseGlyph())){</span>
+<span class="nc" id="L461">					damage = glyph.proc( this, attacker, defender, damage );</span>
+				}
+<span class="nc bnc" id="L463" title="All 2 branches missed.">				if (trinityGlyph != null){</span>
+<span class="nc" id="L464">					damage = trinityGlyph.proc( this, attacker, defender, damage );</span>
+				}
+<span class="nc bnc" id="L466" title="All 2 branches missed.">				int blocking = ((Hero) defender).subClass == HeroSubClass.PALADIN ? 3 : 1;</span>
+<span class="nc" id="L467">				damage -= Math.round(blocking * Glyph.genericProcChanceMultiplier(defender));</span>
+
+<span class="nc" id="L469">			} else {</span>
+<span class="nc bnc" id="L470" title="All 2 branches missed.">				if (glyph != null) {</span>
+<span class="nc" id="L471">					damage = glyph.proc(this, attacker, defender, damage);</span>
+				}
+<span class="nc bnc" id="L473" title="All 2 branches missed.">				if (trinityGlyph != null){</span>
+<span class="nc" id="L474">					damage = trinityGlyph.proc( this, attacker, defender, damage );</span>
+				}
+				//so that this effect procs for allies using this armor via aura of protection
+<span class="nc bnc" id="L477" title="All 2 branches missed.">				if (defender.alignment == Dungeon.hero.alignment</span>
+<span class="nc bnc" id="L478" title="All 2 branches missed.">						&amp;&amp; Dungeon.hero.buff(AuraOfProtection.AuraBuff.class) != null</span>
+<span class="nc bnc" id="L479" title="All 4 branches missed.">						&amp;&amp; (Dungeon.level.distance(defender.pos, Dungeon.hero.pos) &lt;= 2 || defender.buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null)</span>
+<span class="nc bnc" id="L480" title="All 2 branches missed.">						&amp;&amp; Dungeon.hero.buff(HolyWard.HolyArmBuff.class) != null) {</span>
+<span class="nc bnc" id="L481" title="All 2 branches missed.">					int blocking = Dungeon.hero.subClass == HeroSubClass.PALADIN ? 3 : 1;</span>
+<span class="nc" id="L482">					damage -= Math.round(blocking * Glyph.genericProcChanceMultiplier(defender));</span>
+				}
+			}
+<span class="nc" id="L485">			damage = Math.max(damage, 0);</span>
+		}
+		
+<span class="nc bnc" id="L488" title="All 4 branches missed.">		if (!levelKnown &amp;&amp; defender == Dungeon.hero) {</span>
+<span class="nc" id="L489">			float uses = Math.min( availableUsesToID, Talent.itemIDSpeedFactor(Dungeon.hero, this) );</span>
+<span class="nc" id="L490">			availableUsesToID -= uses;</span>
+<span class="nc" id="L491">			usesLeftToID -= uses;</span>
+<span class="nc bnc" id="L492" title="All 2 branches missed.">			if (usesLeftToID &lt;= 0) {</span>
+<span class="nc bnc" id="L493" title="All 2 branches missed.">				if (ShardOfOblivion.passiveIDDisabled()){</span>
+<span class="nc bnc" id="L494" title="All 2 branches missed.">					if (usesLeftToID &gt; -1){</span>
+<span class="nc" id="L495">						GLog.p(Messages.get(ShardOfOblivion.class, &quot;identify_ready&quot;), name());</span>
+					}
+<span class="nc" id="L497">					setIDReady();</span>
+				} else {
+<span class="nc" id="L499">					identify();</span>
+<span class="nc" id="L500">					GLog.p(Messages.get(Armor.class, &quot;identify&quot;));</span>
+<span class="nc" id="L501">					Badges.validateItemLevelAquired(this);</span>
+				}
+			}
+		}
+		
+<span class="nc" id="L506">		return damage;</span>
+	}
+	
+	@Override
+	public void onHeroGainExp(float levelPercent, Hero hero) {
+<span class="nc" id="L511">		levelPercent *= Talent.itemIDSpeedFactor(hero, this);</span>
+<span class="nc bnc" id="L512" title="All 6 branches missed.">		if (!levelKnown &amp;&amp; isEquipped(hero) &amp;&amp; availableUsesToID &lt;= USES_TO_ID/2f) {</span>
+			//gains enough uses to ID over 0.5 levels
+<span class="nc" id="L514">			availableUsesToID = Math.min(USES_TO_ID/2f, availableUsesToID + levelPercent * USES_TO_ID);</span>
+		}
+<span class="nc" id="L516">	}</span>
+	
+	@Override
+	public String name() {
+<span class="nc bnc" id="L520" title="All 10 branches missed.">		if (isEquipped(Dungeon.hero) &amp;&amp; !hasCurseGlyph() &amp;&amp; Dungeon.hero.buff(HolyWard.HolyArmBuff.class) != null</span>
+			&amp;&amp; (Dungeon.hero.subClass != HeroSubClass.PALADIN || glyph == null)){
+<span class="nc" id="L522">				return Messages.get(HolyWard.class, &quot;glyph_name&quot;, super.name());</span>
+			} else {
+<span class="nc bnc" id="L524" title="All 6 branches missed.">				return glyph != null &amp;&amp; (cursedKnown || !glyph.curse()) ? glyph.name( super.name() ) : super.name();</span>
+
+		}
+	}
+	
+	@Override
+	public String info() {
+<span class="nc" id="L531">		String info = super.info();</span>
+		
+<span class="nc bnc" id="L533" title="All 2 branches missed.">		if (levelKnown) {</span>
+
+<span class="nc" id="L535">			info += &quot;\n\n&quot; + Messages.get(Armor.class, &quot;curr_absorb&quot;, tier, DRMin(), DRMax(), STRReq());</span>
+			
+<span class="nc bnc" id="L537" title="All 4 branches missed.">			if (Dungeon.hero != null &amp;&amp; STRReq() &gt; Dungeon.hero.STR()) {</span>
+<span class="nc" id="L538">				info += &quot; &quot; + Messages.get(Armor.class, &quot;too_heavy&quot;);</span>
+			}
+		} else {
+<span class="nc" id="L541">			info += &quot;\n\n&quot; + Messages.get(Armor.class, &quot;avg_absorb&quot;, tier, DRMin(0), DRMax(0), STRReq(0));</span>
+
+<span class="nc bnc" id="L543" title="All 4 branches missed.">			if (Dungeon.hero != null &amp;&amp; STRReq(0) &gt; Dungeon.hero.STR()) {</span>
+<span class="nc" id="L544">				info += &quot; &quot; + Messages.get(Armor.class, &quot;probably_too_heavy&quot;);</span>
+			}
+		}
+
+<span class="nc bnc" id="L548" title="All 3 branches missed.">		switch (augment) {</span>
+			case EVASION:
+<span class="nc" id="L550">				info += &quot; &quot; + Messages.get(Armor.class, &quot;evasion&quot;);</span>
+<span class="nc" id="L551">				break;</span>
+			case DEFENSE:
+<span class="nc" id="L553">				info += &quot; &quot; + Messages.get(Armor.class, &quot;defense&quot;);</span>
+<span class="nc" id="L554">				break;</span>
+			case NONE:
+		}
+
+<span class="nc bnc" id="L558" title="All 10 branches missed.">		if (isEquipped(Dungeon.hero) &amp;&amp; !hasCurseGlyph() &amp;&amp; Dungeon.hero.buff(HolyWard.HolyArmBuff.class) != null</span>
+				&amp;&amp; (Dungeon.hero.subClass != HeroSubClass.PALADIN || glyph == null)){
+<span class="nc" id="L560">			info += &quot;\n\n&quot; + Messages.capitalize(Messages.get(Armor.class, &quot;inscribed&quot;, Messages.get(HolyWard.class, &quot;glyph_name&quot;, Messages.get(Glyph.class, &quot;glyph&quot;))));</span>
+<span class="nc" id="L561">			info += &quot; &quot; + Messages.get(HolyWard.class, &quot;glyph_desc&quot;);</span>
+<span class="nc bnc" id="L562" title="All 6 branches missed.">		} else if (glyph != null  &amp;&amp; (cursedKnown || !glyph.curse())) {</span>
+<span class="nc" id="L563">			info += &quot;\n\n&quot; +  Messages.capitalize(Messages.get(Armor.class, &quot;inscribed&quot;, glyph.name()));</span>
+<span class="nc bnc" id="L564" title="All 2 branches missed.">			if (glyphHardened) info += &quot; &quot; + Messages.get(Armor.class, &quot;glyph_hardened&quot;);</span>
+<span class="nc" id="L565">			info += &quot; &quot; + glyph.desc();</span>
+<span class="nc bnc" id="L566" title="All 2 branches missed.">		} else if (glyphHardened){</span>
+<span class="nc" id="L567">			info += &quot;\n\n&quot; + Messages.get(Armor.class, &quot;hardened_no_glyph&quot;);</span>
+		}
+		
+<span class="nc bnc" id="L570" title="All 4 branches missed.">		if (cursed &amp;&amp; isEquipped( Dungeon.hero )) {</span>
+<span class="nc" id="L571">			info += &quot;\n\n&quot; + Messages.get(Armor.class, &quot;cursed_worn&quot;);</span>
+<span class="nc bnc" id="L572" title="All 4 branches missed.">		} else if (cursedKnown &amp;&amp; cursed) {</span>
+<span class="nc" id="L573">			info += &quot;\n\n&quot; + Messages.get(Armor.class, &quot;cursed&quot;);</span>
+<span class="nc bnc" id="L574" title="All 4 branches missed.">		} else if (!isIdentified() &amp;&amp; cursedKnown){</span>
+<span class="nc bnc" id="L575" title="All 4 branches missed.">			if (glyph != null &amp;&amp; glyph.curse()) {</span>
+<span class="nc" id="L576">				info += &quot;\n\n&quot; + Messages.get(Armor.class, &quot;weak_cursed&quot;);</span>
+			} else {
+<span class="nc" id="L578">				info += &quot;\n\n&quot; + Messages.get(Armor.class, &quot;not_cursed&quot;);</span>
+			}
+		}
+
+<span class="nc bnc" id="L582" title="All 2 branches missed.">		if (seal != null) {</span>
+<span class="nc" id="L583">			info += &quot;\n\n&quot; + Messages.get(Armor.class, &quot;seal_attached&quot;, seal.maxShield(tier, level()));</span>
+		}
+		
+<span class="nc" id="L586">		return info;</span>
+	}
+
+	@Override
+	public Emitter emitter() {
+<span class="nc bnc" id="L591" title="All 2 branches missed.">		if (seal == null) return super.emitter();</span>
+<span class="nc" id="L592">		Emitter emitter = new Emitter();</span>
+<span class="nc" id="L593">		emitter.pos(ItemSpriteSheet.film.width(image)/2f + 2f, ItemSpriteSheet.film.height(image)/3f);</span>
+<span class="nc" id="L594">		emitter.fillTarget = false;</span>
+<span class="nc" id="L595">		emitter.pour(Speck.factory( Speck.RED_LIGHT ), 0.6f);</span>
+<span class="nc" id="L596">		return emitter;</span>
+	}
+
+	@Override
+	public Item random() {
+		//+0: 75% (3/4)
+		//+1: 20% (4/20)
+		//+2: 5%  (1/20)
+<span class="nc" id="L604">		int n = 0;</span>
+<span class="nc bnc" id="L605" title="All 2 branches missed.">		if (Random.Int(4) == 0) {</span>
+<span class="nc" id="L606">			n++;</span>
+<span class="nc bnc" id="L607" title="All 2 branches missed.">			if (Random.Int(5) == 0) {</span>
+<span class="nc" id="L608">				n++;</span>
+			}
+		}
+<span class="nc" id="L611">		level(n);</span>
+
+		//we use a separate RNG here so that variance due to things like parchment scrap
+		//does not affect levelgen
+<span class="nc" id="L615">		Random.pushGenerator(Random.Long());</span>
+
+			//30% chance to be cursed
+			//15% chance to be inscribed
+<span class="nc" id="L619">			float effectRoll = Random.Float();</span>
+<span class="nc bnc" id="L620" title="All 2 branches missed.">			if (effectRoll &lt; 0.3f * ParchmentScrap.curseChanceMultiplier()) {</span>
+<span class="nc" id="L621">				inscribe(Glyph.randomCurse());</span>
+<span class="nc" id="L622">				cursed = true;</span>
+<span class="nc bnc" id="L623" title="All 2 branches missed.">			} else if (effectRoll &gt;= 1f - (0.15f * ParchmentScrap.enchantChanceMultiplier())){</span>
+<span class="nc" id="L624">				inscribe();</span>
+			}
+
+<span class="nc" id="L627">		Random.popGenerator();</span>
+
+<span class="nc" id="L629">		return this;</span>
+	}
+
+	public int STRReq(){
+<span class="nc" id="L633">		return STRReq(level());</span>
+	}
+
+	public int STRReq(int lvl){
+<span class="nc" id="L637">		int req = STRReq(tier, lvl);</span>
+<span class="nc bnc" id="L638" title="All 2 branches missed.">		if (masteryPotionBonus){</span>
+<span class="nc" id="L639">			req -= 2;</span>
+		}
+<span class="nc" id="L641">		return req;</span>
+	}
+
+	protected static int STRReq(int tier, int lvl){
+<span class="nc" id="L645">		lvl = Math.max(0, lvl);</span>
+
+		//strength req decreases at +1,+3,+6,+10,etc.
+<span class="nc" id="L648">		return (8 + Math.round(tier * 2)) - (int)(Math.sqrt(8 * lvl + 1) - 1)/2;</span>
+	}
+	
+	@Override
+	public int value() {
+<span class="nc bnc" id="L653" title="All 2 branches missed.">		if (seal != null) return 0;</span>
+
+<span class="nc" id="L655">		int price = 20 * tier;</span>
+<span class="nc bnc" id="L656" title="All 2 branches missed.">		if (hasGoodGlyph()) {</span>
+<span class="nc" id="L657">			price *= 1.5;</span>
+		}
+<span class="nc bnc" id="L659" title="All 6 branches missed.">		if (cursedKnown &amp;&amp; (cursed || hasCurseGlyph())) {</span>
+<span class="nc" id="L660">			price /= 2;</span>
+		}
+<span class="nc bnc" id="L662" title="All 4 branches missed.">		if (levelKnown &amp;&amp; level() &gt; 0) {</span>
+<span class="nc" id="L663">			price *= (level() + 1);</span>
+		}
+<span class="nc bnc" id="L665" title="All 2 branches missed.">		if (price &lt; 1) {</span>
+<span class="nc" id="L666">			price = 1;</span>
+		}
+<span class="nc" id="L668">		return price;</span>
+	}
+
+	public Armor inscribe( Glyph glyph ) {
+<span class="nc bnc" id="L672" title="All 4 branches missed.">		if (glyph == null || !glyph.curse()) curseInfusionBonus = false;</span>
+<span class="nc" id="L673">		this.glyph = glyph;</span>
+<span class="nc" id="L674">		updateQuickslot();</span>
+		//the hero needs runic transference to actually transfer, but we still attach the glyph here
+		// in case they take that talent in the future
+<span class="nc bnc" id="L677" title="All 2 branches missed.">		if (seal != null){</span>
+<span class="nc" id="L678">			seal.setGlyph(glyph);</span>
+		}
+<span class="nc bnc" id="L680" title="All 6 branches missed.">		if (glyph != null &amp;&amp; isIdentified() &amp;&amp; Dungeon.hero != null</span>
+<span class="nc bnc" id="L681" title="All 4 branches missed.">				&amp;&amp; Dungeon.hero.isAlive() &amp;&amp; Dungeon.hero.belongings.contains(this)){</span>
+<span class="nc" id="L682">			Catalog.setSeen(glyph.getClass());</span>
+<span class="nc" id="L683">			Statistics.itemTypesDiscovered.add(glyph.getClass());</span>
+		}
+<span class="nc" id="L685">		return this;</span>
+	}
+
+	public Armor inscribe() {
+
+<span class="nc bnc" id="L690" title="All 2 branches missed.">		Class&lt;? extends Glyph&gt; oldGlyphClass = glyph != null ? glyph.getClass() : null;</span>
+<span class="nc" id="L691">		Glyph gl = Glyph.random( oldGlyphClass );</span>
+
+<span class="nc" id="L693">		return inscribe( gl );</span>
+	}
+
+	public boolean hasGlyph(Class&lt;?extends Glyph&gt; type, Char owner) {
+<span class="nc bnc" id="L697" title="All 2 branches missed.">		if (glyph == null){</span>
+<span class="nc" id="L698">			return false;</span>
+<span class="nc bnc" id="L699" title="All 2 branches missed.">		} else if (owner.buff(MagicImmune.class) != null) {</span>
+<span class="nc" id="L700">			return false;</span>
+<span class="nc bnc" id="L701" title="All 4 branches missed.">		} else if (!glyph.curse()</span>
+				&amp;&amp; owner instanceof Hero
+<span class="nc bnc" id="L703" title="All 2 branches missed.">				&amp;&amp; isEquipped((Hero) owner)</span>
+<span class="nc bnc" id="L704" title="All 4 branches missed.">				&amp;&amp; owner.buff(HolyWard.HolyArmBuff.class) != null</span>
+				&amp;&amp; ((Hero) owner).subClass != HeroSubClass.PALADIN){
+<span class="nc" id="L706">			return false;</span>
+<span class="nc bnc" id="L707" title="All 2 branches missed.">		} else if (owner.buff(BodyForm.BodyFormBuff.class) != null</span>
+<span class="nc bnc" id="L708" title="All 2 branches missed.">				&amp;&amp; owner.buff(BodyForm.BodyFormBuff.class).glyph() != null</span>
+<span class="nc bnc" id="L709" title="All 2 branches missed.">				&amp;&amp; owner.buff(BodyForm.BodyFormBuff.class).glyph().getClass().equals(type)){</span>
+<span class="nc" id="L710">			return true;</span>
+		} else {
+<span class="nc bnc" id="L712" title="All 2 branches missed.">			return glyph.getClass() == type;</span>
+		}
+	}
+
+	//these are not used to process specific glyph effects, so magic immune doesn't affect them
+	public boolean hasGoodGlyph(){
+<span class="nc bnc" id="L718" title="All 4 branches missed.">		return glyph != null &amp;&amp; !glyph.curse();</span>
+	}
+
+	public boolean hasCurseGlyph(){
+<span class="nc bnc" id="L722" title="All 4 branches missed.">		return glyph != null &amp;&amp; glyph.curse();</span>
+	}
+
+<span class="fc" id="L725">	private static ItemSprite.Glowing HOLY = new ItemSprite.Glowing( 0xFFFF00 );</span>
+
+	@Override
+	public ItemSprite.Glowing glowing() {
+<span class="nc bnc" id="L729" title="All 10 branches missed.">		if (isEquipped(Dungeon.hero) &amp;&amp; !hasCurseGlyph() &amp;&amp; Dungeon.hero.buff(HolyWard.HolyArmBuff.class) != null</span>
+				&amp;&amp; (Dungeon.hero.subClass != HeroSubClass.PALADIN || glyph == null)){
+<span class="nc" id="L731">			return HOLY;</span>
+		} else {
+<span class="nc bnc" id="L733" title="All 6 branches missed.">			return glyph != null &amp;&amp; (cursedKnown || !glyph.curse()) ? glyph.glowing() : null;</span>
+		}
+	}
+	
+<span class="nc" id="L737">	public static abstract class Glyph implements Bundlable {</span>
+		
+<span class="nc" id="L739">		public static final Class&lt;?&gt;[] common = new Class&lt;?&gt;[]{</span>
+				Obfuscation.class, Swiftness.class, Viscosity.class, Potential.class };
+
+<span class="nc" id="L742">		public static final Class&lt;?&gt;[] uncommon = new Class&lt;?&gt;[]{</span>
+				Brimstone.class, Stone.class, Entanglement.class,
+				Repulsion.class, Camouflage.class, Flow.class };
+
+<span class="nc" id="L746">		public static final Class&lt;?&gt;[] rare = new Class&lt;?&gt;[]{</span>
+				Affection.class, AntiMagic.class, Thorns.class };
+
+<span class="nc" id="L749">		public static final float[] typeChances = new float[]{</span>
+				50, //12.5% each
+				40, //6.67% each
+				10  //3.33% each
+		};
+
+<span class="nc" id="L755">		public static final Class&lt;?&gt;[] curses = new Class&lt;?&gt;[]{</span>
+				AntiEntropy.class, Corrosion.class, Displacement.class, Metabolism.class,
+				Multiplicity.class, Stench.class, Overgrowth.class, Bulk.class
+		};
+		
+		public abstract int proc( Armor armor, Char attacker, Char defender, int damage );
+
+		protected float procChanceMultiplier( Char defender ){
+<span class="nc" id="L763">			return genericProcChanceMultiplier( defender );</span>
+		}
+
+		public static float genericProcChanceMultiplier( Char defender ){
+<span class="nc" id="L767">			float multi = RingOfArcana.enchantPowerMultiplier(defender);</span>
+
+<span class="nc bnc" id="L769" title="All 2 branches missed.">			if (Dungeon.hero.alignment == defender.alignment</span>
+<span class="nc bnc" id="L770" title="All 2 branches missed.">					&amp;&amp; Dungeon.hero.buff(AuraOfProtection.AuraBuff.class) != null</span>
+<span class="nc bnc" id="L771" title="All 4 branches missed.">					&amp;&amp; (Dungeon.level.distance(defender.pos, Dungeon.hero.pos) &lt;= 2 || defender.buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null)){</span>
+<span class="nc" id="L772">				multi += 0.25f + 0.25f*Dungeon.hero.pointsInTalent(Talent.AURA_OF_PROTECTION);</span>
+			}
+
+<span class="nc" id="L775">			return multi;</span>
+		}
+		
+		public String name() {
+<span class="nc bnc" id="L779" title="All 2 branches missed.">			if (!curse())</span>
+<span class="nc" id="L780">				return name( Messages.get(this, &quot;glyph&quot;) );</span>
+			else
+<span class="nc" id="L782">				return name( Messages.get(Item.class, &quot;curse&quot;));</span>
+		}
+		
+		public String name( String armorName ) {
+<span class="nc" id="L786">			return Messages.get(this, &quot;name&quot;, armorName);</span>
+		}
+
+		public String desc() {
+<span class="nc" id="L790">			return Messages.get(this, &quot;desc&quot;);</span>
+		}
+
+		public boolean curse() {
+<span class="nc" id="L794">			return false;</span>
+		}
+		
+		@Override
+		public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L799">		}</span>
+
+		@Override
+		public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L803">		}</span>
+		
+		public abstract ItemSprite.Glowing glowing();
+
+		@SuppressWarnings(&quot;unchecked&quot;)
+		public static Glyph random( Class&lt;? extends Glyph&gt; ... toIgnore ) {
+<span class="nc bnc" id="L809" title="All 3 branches missed.">			switch(Random.chances(typeChances)){</span>
+				case 0: default:
+<span class="nc" id="L811">					return randomCommon( toIgnore );</span>
+				case 1:
+<span class="nc" id="L813">					return randomUncommon( toIgnore );</span>
+				case 2:
+<span class="nc" id="L815">					return randomRare( toIgnore );</span>
+			}
+		}
+		
+		@SuppressWarnings(&quot;unchecked&quot;)
+		public static Glyph randomCommon( Class&lt;? extends Glyph&gt; ... toIgnore ){
+<span class="nc" id="L821">			ArrayList&lt;Class&lt;?&gt;&gt; glyphs = new ArrayList&lt;&gt;(Arrays.asList(common));</span>
+<span class="nc" id="L822">			glyphs.removeAll(Arrays.asList(toIgnore));</span>
+<span class="nc bnc" id="L823" title="All 2 branches missed.">			if (glyphs.isEmpty()) {</span>
+<span class="nc" id="L824">				return random();</span>
+			} else {
+<span class="nc" id="L826">				return (Glyph) Reflection.newInstance(Random.element(glyphs));</span>
+			}
+		}
+		
+		@SuppressWarnings(&quot;unchecked&quot;)
+		public static Glyph randomUncommon( Class&lt;? extends Glyph&gt; ... toIgnore ){
+<span class="nc" id="L832">			ArrayList&lt;Class&lt;?&gt;&gt; glyphs = new ArrayList&lt;&gt;(Arrays.asList(uncommon));</span>
+<span class="nc" id="L833">			glyphs.removeAll(Arrays.asList(toIgnore));</span>
+<span class="nc bnc" id="L834" title="All 2 branches missed.">			if (glyphs.isEmpty()) {</span>
+<span class="nc" id="L835">				return random();</span>
+			} else {
+<span class="nc" id="L837">				return (Glyph) Reflection.newInstance(Random.element(glyphs));</span>
+			}
+		}
+		
+		@SuppressWarnings(&quot;unchecked&quot;)
+		public static Glyph randomRare( Class&lt;? extends Glyph&gt; ... toIgnore ){
+<span class="nc" id="L843">			ArrayList&lt;Class&lt;?&gt;&gt; glyphs = new ArrayList&lt;&gt;(Arrays.asList(rare));</span>
+<span class="nc" id="L844">			glyphs.removeAll(Arrays.asList(toIgnore));</span>
+<span class="nc bnc" id="L845" title="All 2 branches missed.">			if (glyphs.isEmpty()) {</span>
+<span class="nc" id="L846">				return random();</span>
+			} else {
+<span class="nc" id="L848">				return (Glyph) Reflection.newInstance(Random.element(glyphs));</span>
+			}
+		}
+		
+		@SuppressWarnings(&quot;unchecked&quot;)
+		public static Glyph randomCurse( Class&lt;? extends Glyph&gt; ... toIgnore ){
+<span class="nc" id="L854">			ArrayList&lt;Class&lt;?&gt;&gt; glyphs = new ArrayList&lt;&gt;(Arrays.asList(curses));</span>
+<span class="nc" id="L855">			glyphs.removeAll(Arrays.asList(toIgnore));</span>
+<span class="nc bnc" id="L856" title="All 2 branches missed.">			if (glyphs.isEmpty()) {</span>
+<span class="nc" id="L857">				return random();</span>
+			} else {
+<span class="nc" id="L859">				return (Glyph) Reflection.newInstance(Random.element(glyphs));</span>
+			}
+		}
+
+		
+	}
+	
+	@Override
+	public void applyEffect(Hero hero) {
+		// 示例：添加防御效果，你可以根据游戏逻辑填写实际实现
+<span class="nc" id="L869">		hero.increaseDefense(5); </span>
+<span class="nc" id="L870">	}</span>
+
+	@Override
+	public void removeEffect(Hero hero) {
+<span class="nc" id="L874">		hero.increaseDefense(-5); </span>
+<span class="nc" id="L875">	}</span>
+
+	@Override
+	public String getName() {
+<span class="nc" id="L879">		return this.name();  // 复用现有名称方法</span>
+	}
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

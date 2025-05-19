@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DungeonTilemap.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.tiles</a> &gt; <span class="el_source">DungeonTilemap.java</span></div><h1>DungeonTilemap.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.tiles;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.TextureFilm;
+import com.watabou.noosa.Tilemap;
+import com.watabou.noosa.tweeners.AlphaTweener;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.PointF;
+
+public abstract class DungeonTilemap extends Tilemap {
+
+	public static final int SIZE = 16;
+
+	protected int[] map;
+
+	public DungeonTilemap(String tex) {
+<span class="nc" id="L40">		super(tex, new TextureFilm( tex, SIZE, SIZE ) );</span>
+<span class="nc" id="L41">	}</span>
+
+	@Override
+	//we need to retain two arrays, map is the dungeon tilemap which we can reference.
+	// Data is our own internal image representation of the tiles, which may differ.
+	public void map(int[] data, int cols) {
+<span class="nc" id="L47">		map = data;</span>
+<span class="nc" id="L48">		super.map(new int[data.length], cols);</span>
+<span class="nc" id="L49">	}</span>
+
+	@Override
+	public synchronized void updateMap() {
+<span class="nc bnc" id="L53" title="All 2 branches missed.">		for (int i = 0; i &lt; data.length; i++)</span>
+<span class="nc" id="L54">			data[i] = getTileVisual(i ,map[i], false);</span>
+<span class="nc" id="L55">		super.updateMap();</span>
+<span class="nc" id="L56">	}</span>
+
+	@Override
+	public synchronized void updateMapCell(int cell) {
+		//update in a 3x3 grid to account for neighbours which might also be affected
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if (Dungeon.level.insideMap(cell)) {</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS9) {</span>
+<span class="nc" id="L63">				data[cell + i] = getTileVisual(cell + i, map[cell + i], false);</span>
+			}
+<span class="nc" id="L65">			super.updateMapCell(cell - mapWidth - 1);</span>
+<span class="nc" id="L66">			super.updateMapCell(cell + mapWidth + 1);</span>
+
+		//unless we're at the level's edge, then just do the one tile.
+		} else {
+<span class="nc" id="L70">			data[cell] = getTileVisual(cell, map[cell], false);</span>
+<span class="nc" id="L71">			super.updateMapCell(cell);</span>
+		}
+<span class="nc" id="L73">	}</span>
+
+	protected abstract int getTileVisual(int pos, int tile, boolean flat);
+
+	public int screenToTile(int x, int y ){
+<span class="nc" id="L78">		return screenToTile(x, y, false);</span>
+	}
+
+	//wall assist is used to make raised perspective tapping a bit easier.
+	// If the pressed tile is a wall tile, the tap can be 'bumped' down into a none-wall tile.
+	// currently this happens if the bottom 1/4 of the wall tile is pressed.
+	public int screenToTile(int x, int y, boolean wallAssist ) {
+<span class="nc" id="L85">		PointF p = camera().screenToCamera( x, y ).</span>
+<span class="nc" id="L86">			offset( this.point().negate() ).</span>
+<span class="nc" id="L87">			invScale( SIZE );</span>
+		
+		//snap to the edges of the tilemap
+<span class="nc" id="L90">		p.x = GameMath.gate(0, p.x, Dungeon.level.width()-0.001f);</span>
+<span class="nc" id="L91">		p.y = GameMath.gate(0, p.y, Dungeon.level.height()-0.001f);</span>
+
+<span class="nc" id="L93">		int cell = (int)p.x + (int)p.y * Dungeon.level.width();</span>
+
+<span class="nc bnc" id="L95" title="All 4 branches missed.">		if (wallAssist</span>
+				&amp;&amp; map != null
+<span class="nc bnc" id="L97" title="All 2 branches missed.">				&amp;&amp; DungeonTileSheet.wallStitcheable(map[cell])){</span>
+
+<span class="nc bnc" id="L99" title="All 4 branches missed.">			if (cell + mapWidth &lt; size</span>
+					&amp;&amp; p.y % 1 &gt;= 0.75f
+<span class="nc bnc" id="L101" title="All 2 branches missed.">					&amp;&amp; !DungeonTileSheet.wallStitcheable(map[cell + mapWidth])){</span>
+<span class="nc" id="L102">				cell += mapWidth;</span>
+			}
+
+		}
+
+<span class="nc" id="L107">		return cell;</span>
+	}
+	
+	@Override
+	public boolean overlapsPoint( float x, float y ) {
+<span class="nc" id="L112">		return true;</span>
+	}
+	
+	public void discover( int pos, int oldValue ) {
+		
+<span class="nc" id="L117">		int visual = getTileVisual( pos, oldValue, false);</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		if (visual &lt; 0) return;</span>
+		
+<span class="nc" id="L120">		final Image tile = new Image( texture );</span>
+<span class="nc" id="L121">		tile.frame( tileset.get( getTileVisual( pos, oldValue, false)));</span>
+<span class="nc" id="L122">		tile.point( tileToWorld( pos ) );</span>
+
+<span class="nc" id="L124">		parent.add( tile );</span>
+		
+<span class="nc" id="L126">		parent.add( new AlphaTweener( tile, 0, 0.6f ) {</span>
+			protected void onComplete() {
+<span class="nc" id="L128">				tile.killAndErase();</span>
+<span class="nc" id="L129">				killAndErase();</span>
+<span class="nc" id="L130">			}</span>
+		} );
+<span class="nc" id="L132">	}</span>
+	
+	public static PointF tileToWorld( int pos ) {
+<span class="nc" id="L135">		return new PointF( pos % Dungeon.level.width(), pos / Dungeon.level.width()  ).scale( SIZE );</span>
+	}
+	
+	public static PointF tileCenterToWorld( int pos ) {
+<span class="nc" id="L139">		return new PointF(</span>
+<span class="nc" id="L140">			(pos % Dungeon.level.width() + 0.5f) * SIZE,</span>
+<span class="nc" id="L141">			(pos / Dungeon.level.width() + 0.5f) * SIZE );</span>
+	}
+
+	public static PointF raisedTileCenterToWorld( int pos ) {
+<span class="nc" id="L145">		return new PointF(</span>
+<span class="nc" id="L146">				(pos % Dungeon.level.width() + 0.5f) * SIZE,</span>
+<span class="nc" id="L147">				(pos / Dungeon.level.width() + 0.1f) * SIZE );</span>
+	}
+	
+	@Override
+	public boolean overlapsScreenPoint( int x, int y ) {
+<span class="nc" id="L152">		return true;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

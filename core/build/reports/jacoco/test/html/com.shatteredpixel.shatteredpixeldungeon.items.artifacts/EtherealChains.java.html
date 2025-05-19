@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EtherealChains.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.artifacts</a> &gt; <span class="el_source">EtherealChains.java</span></div><h1>EtherealChains.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Cripple;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Chains;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Effects;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.levels.MiningLevel;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.watabou.utils.BArray;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Callback;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L57">public class EtherealChains extends Artifact {</span>
+
+	public static final String AC_CAST       = &quot;CAST&quot;;
+
+	{
+<span class="nc" id="L62">		image = ItemSpriteSheet.ARTIFACT_CHAINS;</span>
+
+<span class="nc" id="L64">		levelCap = 5;</span>
+<span class="nc" id="L65">		exp = 0;</span>
+
+<span class="nc" id="L67">		charge = 5;</span>
+
+<span class="nc" id="L69">		defaultAction = AC_CAST;</span>
+<span class="nc" id="L70">		usesTargeting = true;</span>
+	}
+
+	@Override
+	public ArrayList&lt;String&gt; actions(Hero hero) {
+<span class="nc" id="L75">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc bnc" id="L76" title="All 8 branches missed.">		if (isEquipped(hero) &amp;&amp; charge &gt; 0 &amp;&amp; !cursed &amp;&amp; hero.buff(MagicImmune.class) == null) {</span>
+<span class="nc" id="L77">			actions.add(AC_CAST);</span>
+		}
+<span class="nc" id="L79">		return actions;</span>
+	}
+
+	public int targetingPos( Hero user, int dst ){
+<span class="nc" id="L83">		return dst;</span>
+	}
+
+	@Override
+	public void execute(Hero hero, String action) {
+
+<span class="nc" id="L89">		super.execute(hero, action);</span>
+
+<span class="nc bnc" id="L91" title="All 2 branches missed.">		if (hero.buff(MagicImmune.class) != null) return;</span>
+
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		if (action.equals(AC_CAST)){</span>
+
+<span class="nc" id="L95">			curUser = hero;</span>
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">			if (!isEquipped( hero )) {</span>
+<span class="nc" id="L98">				GLog.i( Messages.get(Artifact.class, &quot;need_to_equip&quot;) );</span>
+<span class="nc" id="L99">				usesTargeting = false;</span>
+
+<span class="nc bnc" id="L101" title="All 2 branches missed.">			} else if (charge &lt; 1) {</span>
+<span class="nc" id="L102">				GLog.i( Messages.get(this, &quot;no_charge&quot;) );</span>
+<span class="nc" id="L103">				usesTargeting = false;</span>
+
+<span class="nc bnc" id="L105" title="All 2 branches missed.">			} else if (cursed) {</span>
+<span class="nc" id="L106">				GLog.w( Messages.get(this, &quot;cursed&quot;) );</span>
+<span class="nc" id="L107">				usesTargeting = false;</span>
+
+			} else {
+<span class="nc" id="L110">				usesTargeting = true;</span>
+<span class="nc" id="L111">				GameScene.selectCell(caster);</span>
+			}
+
+		}
+<span class="nc" id="L115">	}</span>
+
+	@Override
+	public void resetForTrinity(int visibleLevel) {
+<span class="nc" id="L119">		super.resetForTrinity(visibleLevel);</span>
+<span class="nc" id="L120">		charge = 5+(level()*2); //sets charge to soft cap</span>
+<span class="nc" id="L121">	}</span>
+
+<span class="nc" id="L123">	public CellSelector.Listener caster = new CellSelector.Listener(){</span>
+
+		@Override
+		public void onSelect(Integer target) {
+<span class="nc bnc" id="L127" title="All 6 branches missed.">			if (target != null &amp;&amp; (Dungeon.level.visited[target] || Dungeon.level.mapped[target])){</span>
+
+				//chains cannot be used to go where it is impossible to walk to
+<span class="nc" id="L130">				PathFinder.buildDistanceMap(target, BArray.or(Dungeon.level.passable, Dungeon.level.avoid, null));</span>
+<span class="nc bnc" id="L131" title="All 4 branches missed.">				if (!(Dungeon.level instanceof MiningLevel) &amp;&amp; PathFinder.distance[curUser.pos] == Integer.MAX_VALUE){</span>
+<span class="nc" id="L132">					GLog.w( Messages.get(EtherealChains.class, &quot;cant_reach&quot;) );</span>
+<span class="nc" id="L133">					return;</span>
+				}
+				
+<span class="nc" id="L136">				final Ballistica chain = new Ballistica(curUser.pos, target, Ballistica.STOP_TARGET);</span>
+				
+<span class="nc bnc" id="L138" title="All 2 branches missed.">				if (Actor.findChar( chain.collisionPos ) != null){</span>
+<span class="nc" id="L139">					chainEnemy( chain, curUser, Actor.findChar( chain.collisionPos ));</span>
+				} else {
+<span class="nc" id="L141">					chainLocation( chain, curUser );</span>
+				}
+
+			}
+
+<span class="nc" id="L146">		}</span>
+
+		@Override
+		public String prompt() {
+<span class="nc" id="L150">			return Messages.get(EtherealChains.class, &quot;prompt&quot;);</span>
+		}
+	};
+	
+	//pulls an enemy to a position along the chain's path, as close to the hero as possible
+	private void chainEnemy( Ballistica chain, final Hero hero, final Char enemy ){
+		
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		if (enemy.properties().contains(Char.Property.IMMOVABLE)) {</span>
+<span class="nc" id="L158">			GLog.w( Messages.get(this, &quot;cant_pull&quot;) );</span>
+<span class="nc" id="L159">			return;</span>
+		}
+		
+<span class="nc" id="L162">		int bestPos = -1;</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		for (int i : chain.subPath(1, chain.dist)){</span>
+			//prefer to the earliest point on the path
+<span class="nc bnc" id="L165" title="All 2 branches missed.">			if (!Dungeon.level.solid[i]</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">					&amp;&amp; Actor.findChar(i) == null</span>
+<span class="nc bnc" id="L167" title="All 4 branches missed.">					&amp;&amp; (!Char.hasProp(enemy, Char.Property.LARGE) || Dungeon.level.openSpace[i])){</span>
+<span class="nc" id="L168">				bestPos = i;</span>
+<span class="nc" id="L169">				break;</span>
+			}
+<span class="nc" id="L171">		}</span>
+		
+<span class="nc bnc" id="L173" title="All 2 branches missed.">		if (bestPos == -1) {</span>
+<span class="nc" id="L174">			GLog.i(Messages.get(this, &quot;does_nothing&quot;));</span>
+<span class="nc" id="L175">			return;</span>
+		}
+		
+<span class="nc" id="L178">		final int pulledPos = bestPos;</span>
+		
+<span class="nc" id="L180">		int chargeUse = Dungeon.level.distance(enemy.pos, pulledPos);</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">		if (chargeUse &gt; charge) {</span>
+<span class="nc" id="L182">			GLog.w( Messages.get(this, &quot;no_charge&quot;) );</span>
+<span class="nc" id="L183">			return;</span>
+		}
+		
+<span class="nc" id="L186">		hero.busy();</span>
+<span class="nc" id="L187">		throwSound();</span>
+<span class="nc" id="L188">		Sample.INSTANCE.play( Assets.Sounds.CHAINS );</span>
+<span class="nc" id="L189">		hero.sprite.parent.add(new Chains(hero.sprite.center(),</span>
+<span class="nc" id="L190">				enemy.sprite.center(),</span>
+				Effects.Type.ETHEREAL_CHAIN,
+<span class="nc" id="L192">				new Callback() {</span>
+			public void call() {
+<span class="nc" id="L194">				Actor.add(new Pushing(enemy, enemy.pos, pulledPos, new Callback() {</span>
+					public void call() {
+<span class="nc" id="L196">						enemy.pos = pulledPos;</span>
+
+<span class="nc" id="L198">						charge -= chargeUse;</span>
+<span class="nc" id="L199">						Invisibility.dispel(hero);</span>
+<span class="nc" id="L200">						Talent.onArtifactUsed(hero);</span>
+<span class="nc" id="L201">						updateQuickslot();</span>
+
+<span class="nc" id="L203">						Dungeon.level.occupyCell(enemy);</span>
+<span class="nc" id="L204">						Dungeon.observe();</span>
+<span class="nc" id="L205">						GameScene.updateFog();</span>
+<span class="nc" id="L206">						hero.spendAndNext(1f);</span>
+
+<span class="nc" id="L208">						artifactProc(enemy, visiblyUpgraded(), chargeUse);</span>
+<span class="nc" id="L209">					}</span>
+				}));
+<span class="nc" id="L211">				hero.next();</span>
+<span class="nc" id="L212">			}</span>
+		}));
+<span class="nc" id="L214">	}</span>
+	
+	//pulls the hero along the chain to the collisionPos, if possible.
+	private void chainLocation( Ballistica chain, final Hero hero ){
+
+		//don't pull if rooted
+<span class="nc bnc" id="L220" title="All 2 branches missed.">		if (hero.rooted){</span>
+<span class="nc" id="L221">			PixelScene.shake( 1, 1f );</span>
+<span class="nc" id="L222">			GLog.w( Messages.get(EtherealChains.class, &quot;rooted&quot;) );</span>
+<span class="nc" id="L223">			return;</span>
+		}
+
+		//don't pull if the collision spot is in a wall
+<span class="nc bnc" id="L227" title="All 2 branches missed.">		if (Dungeon.level.solid[chain.collisionPos]</span>
+<span class="nc bnc" id="L228" title="All 4 branches missed.">			|| !(Dungeon.level.passable[chain.collisionPos] || Dungeon.level.avoid[chain.collisionPos])){</span>
+<span class="nc" id="L229">			GLog.i( Messages.get(this, &quot;inside_wall&quot;));</span>
+<span class="nc" id="L230">			return;</span>
+		}
+		
+		//don't pull if there are no solid objects next to the pull location
+<span class="nc" id="L234">		boolean solidFound = false;</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">		for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">			if (Dungeon.level.solid[chain.collisionPos + i]){</span>
+<span class="nc" id="L237">				solidFound = true;</span>
+<span class="nc" id="L238">				break;</span>
+			}
+		}
+<span class="nc bnc" id="L241" title="All 2 branches missed.">		if (!solidFound){</span>
+<span class="nc" id="L242">			GLog.i( Messages.get(EtherealChains.class, &quot;nothing_to_grab&quot;) );</span>
+<span class="nc" id="L243">			return;</span>
+		}
+		
+<span class="nc" id="L246">		final int newHeroPos = chain.collisionPos;</span>
+		
+<span class="nc" id="L248">		int chargeUse = Dungeon.level.distance(hero.pos, newHeroPos);</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">		if (chargeUse &gt; charge){</span>
+<span class="nc" id="L250">			GLog.w( Messages.get(EtherealChains.class, &quot;no_charge&quot;) );</span>
+<span class="nc" id="L251">			return;</span>
+		}
+		
+<span class="nc" id="L254">		hero.busy();</span>
+<span class="nc" id="L255">		throwSound();</span>
+<span class="nc" id="L256">		Sample.INSTANCE.play( Assets.Sounds.CHAINS );</span>
+<span class="nc" id="L257">		hero.sprite.parent.add(new Chains(hero.sprite.center(),</span>
+<span class="nc" id="L258">				DungeonTilemap.raisedTileCenterToWorld(newHeroPos),</span>
+				Effects.Type.ETHEREAL_CHAIN,
+<span class="nc" id="L260">				new Callback() {</span>
+			public void call() {
+<span class="nc" id="L262">				Actor.add(new Pushing(hero, hero.pos, newHeroPos, new Callback() {</span>
+					public void call() {
+<span class="nc" id="L264">						hero.pos = newHeroPos;</span>
+
+<span class="nc" id="L266">						charge -= chargeUse;</span>
+<span class="nc" id="L267">						Invisibility.dispel(hero);</span>
+<span class="nc" id="L268">						Talent.onArtifactUsed(hero);</span>
+<span class="nc" id="L269">						updateQuickslot();</span>
+
+<span class="nc" id="L271">						Dungeon.level.occupyCell(hero);</span>
+<span class="nc" id="L272">						hero.spendAndNext(1f);</span>
+<span class="nc" id="L273">						Dungeon.observe();</span>
+<span class="nc" id="L274">						GameScene.updateFog();</span>
+<span class="nc" id="L275">					}</span>
+				}));
+<span class="nc" id="L277">				hero.next();</span>
+<span class="nc" id="L278">			}</span>
+		}));
+<span class="nc" id="L280">	}</span>
+
+	@Override
+	protected ArtifactBuff passiveBuff() {
+<span class="nc" id="L284">		return new chainsRecharge();</span>
+	}
+	
+	@Override
+	public void charge(Hero target, float amount) {
+<span class="nc bnc" id="L289" title="All 4 branches missed.">		if (cursed || target.buff(MagicImmune.class) != null) return;</span>
+<span class="nc" id="L290">		int chargeTarget = 5+(level()*2);</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">		if (charge &lt; chargeTarget*2){</span>
+<span class="nc" id="L292">			partialCharge += 0.5f*amount;</span>
+<span class="nc bnc" id="L293" title="All 2 branches missed.">			while (partialCharge &gt;= 1){</span>
+<span class="nc" id="L294">				partialCharge--;</span>
+<span class="nc" id="L295">				charge++;</span>
+<span class="nc" id="L296">				updateQuickslot();</span>
+			}
+		}
+<span class="nc" id="L299">	}</span>
+	
+	@Override
+	public String desc() {
+<span class="nc" id="L303">		String desc = super.desc();</span>
+
+<span class="nc bnc" id="L305" title="All 2 branches missed.">		if (isEquipped( Dungeon.hero )){</span>
+<span class="nc" id="L306">			desc += &quot;\n\n&quot;;</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">			if (cursed)</span>
+<span class="nc" id="L308">				desc += Messages.get(this, &quot;desc_cursed&quot;);</span>
+			else
+<span class="nc" id="L310">				desc += Messages.get(this, &quot;desc_equipped&quot;);</span>
+		}
+<span class="nc" id="L312">		return desc;</span>
+	}
+
+<span class="nc" id="L315">	public class chainsRecharge extends ArtifactBuff{</span>
+
+		@Override
+		public boolean act() {
+<span class="nc" id="L319">			int chargeTarget = 5+(level()*2);</span>
+<span class="nc bnc" id="L320" title="All 4 branches missed.">			if (charge &lt; chargeTarget</span>
+					&amp;&amp; !cursed
+<span class="nc bnc" id="L322" title="All 2 branches missed.">					&amp;&amp; target.buff(MagicImmune.class) == null</span>
+<span class="nc bnc" id="L323" title="All 2 branches missed.">					&amp;&amp; Regeneration.regenOn()) {</span>
+				//gains a charge in 40 - 2*missingCharge turns
+<span class="nc" id="L325">				float chargeGain = (1 / (40f - (chargeTarget - charge)*2f));</span>
+<span class="nc" id="L326">				chargeGain *= RingOfEnergy.artifactChargeMultiplier(target);</span>
+<span class="nc" id="L327">				partialCharge += chargeGain;</span>
+<span class="nc bnc" id="L328" title="All 4 branches missed.">			} else if (cursed &amp;&amp; Random.Int(100) == 0){</span>
+<span class="nc" id="L329">				Buff.prolong( target, Cripple.class, 10f);</span>
+			}
+
+<span class="nc bnc" id="L332" title="All 2 branches missed.">			while (partialCharge &gt;= 1) {</span>
+<span class="nc" id="L333">				partialCharge --;</span>
+<span class="nc" id="L334">				charge ++;</span>
+			}
+
+<span class="nc" id="L337">			updateQuickslot();</span>
+
+<span class="nc" id="L339">			spend( TICK );</span>
+
+<span class="nc" id="L341">			return true;</span>
+		}
+
+		public void gainExp( float levelPortion ) {
+<span class="nc bnc" id="L345" title="All 6 branches missed.">			if (cursed || target.buff(MagicImmune.class) != null || levelPortion == 0) return;</span>
+
+<span class="nc" id="L347">			exp += Math.round(levelPortion*100);</span>
+
+			//past the soft charge cap, gaining  charge from leveling is slowed.
+<span class="nc bnc" id="L350" title="All 2 branches missed.">			if (charge &gt; 5+(level()*2)){</span>
+<span class="nc" id="L351">				levelPortion *= (5+((float)level()*2))/charge;</span>
+			}
+<span class="nc" id="L353">			partialCharge += levelPortion*6f;</span>
+
+<span class="nc bnc" id="L355" title="All 4 branches missed.">			if (exp &gt; 100+level()*100 &amp;&amp; level() &lt; levelCap){</span>
+<span class="nc" id="L356">				exp -= 100+level()*100;</span>
+<span class="nc" id="L357">				GLog.p( Messages.get(this, &quot;levelup&quot;) );</span>
+<span class="nc" id="L358">				Catalog.countUses(EtherealChains.class, 2);</span>
+<span class="nc" id="L359">				upgrade();</span>
+			}
+
+<span class="nc" id="L362">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

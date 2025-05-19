@@ -1,0 +1,1028 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DriedRose.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.artifacts</a> &gt; <span class="el_source">DriedRose.java</span></div><h1>DriedRose.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.CorrosiveGas;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AllyBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AscensionChallenge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.Stasis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Wraith;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.DirectableAlly;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Ghost;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShaftParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRetribution;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfPsionicBlast;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.AlchemyScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.GhostSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ItemButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.IconTitle;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoItem;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndQuest;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndUseItem;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L85">public class DriedRose extends Artifact {</span>
+
+	{
+<span class="nc" id="L88">		image = ItemSpriteSheet.ARTIFACT_ROSE1;</span>
+
+<span class="nc" id="L90">		levelCap = 10;</span>
+
+<span class="nc" id="L92">		charge = 100;</span>
+<span class="nc" id="L93">		chargeCap = 100;</span>
+
+<span class="nc" id="L95">		defaultAction = AC_SUMMON;</span>
+	}
+
+<span class="nc" id="L98">	private boolean talkedTo = false;</span>
+<span class="nc" id="L99">	private boolean firstSummon = false;</span>
+	
+<span class="nc" id="L101">	private GhostHero ghost = null;</span>
+<span class="nc" id="L102">	private int ghostID = 0;</span>
+	
+<span class="nc" id="L104">	private MeleeWeapon weapon = null;</span>
+<span class="nc" id="L105">	private Armor armor = null;</span>
+
+<span class="nc" id="L107">	public int droppedPetals = 0;</span>
+
+	public static final String AC_SUMMON = &quot;SUMMON&quot;;
+	public static final String AC_DIRECT = &quot;DIRECT&quot;;
+	public static final String AC_OUTFIT = &quot;OUTFIT&quot;;
+
+	@Override
+	public ArrayList&lt;String&gt; actions( Hero hero ) {
+<span class="nc" id="L115">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		if (!Ghost.Quest.completed()){</span>
+<span class="nc" id="L117">			return actions;</span>
+		}
+<span class="nc bnc" id="L119" title="All 6 branches missed.">		if (isEquipped( hero )</span>
+				&amp;&amp; charge == chargeCap
+				&amp;&amp; !cursed
+<span class="nc bnc" id="L122" title="All 4 branches missed.">				&amp;&amp; hero.buff(MagicImmune.class) == null</span>
+				&amp;&amp; ghostID == 0) {
+<span class="nc" id="L124">			actions.add(AC_SUMMON);</span>
+		}
+<span class="nc bnc" id="L126" title="All 2 branches missed.">		if (ghostID != 0){</span>
+<span class="nc" id="L127">			actions.add(AC_DIRECT);</span>
+		}
+<span class="nc bnc" id="L129" title="All 4 branches missed.">		if (isIdentified() &amp;&amp; !cursed){</span>
+<span class="nc" id="L130">			actions.add(AC_OUTFIT);</span>
+		}
+		
+<span class="nc" id="L133">		return actions;</span>
+	}
+
+	@Override
+	public String defaultAction() {
+<span class="nc bnc" id="L138" title="All 2 branches missed.">		if (ghost != null){</span>
+<span class="nc" id="L139">			return AC_DIRECT;</span>
+		} else {
+<span class="nc" id="L141">			return AC_SUMMON;</span>
+		}
+	}
+
+	@Override
+	public void execute( Hero hero, String action ) {
+
+<span class="nc" id="L148">		super.execute(hero, action);</span>
+
+<span class="nc bnc" id="L150" title="All 2 branches missed.">		if (action.equals(AC_SUMMON)) {</span>
+
+<span class="nc bnc" id="L152" title="All 2 branches missed.">			if (hero.buff(MagicImmune.class) != null) return;</span>
+
+<span class="nc bnc" id="L154" title="All 2 branches missed.">			if (!Ghost.Quest.completed())   GameScene.show(new WndUseItem(null, this));</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">			else if (ghost != null)         GLog.i( Messages.get(this, &quot;spawned&quot;) );</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">			else if (!isEquipped( hero ))   GLog.i( Messages.get(Artifact.class, &quot;need_to_equip&quot;) );</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">			else if (charge != chargeCap)   GLog.i( Messages.get(this, &quot;no_charge&quot;) );</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">			else if (cursed)                GLog.i( Messages.get(this, &quot;cursed&quot;) );</span>
+			else {
+<span class="nc" id="L160">				ArrayList&lt;Integer&gt; spawnPoints = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">				for (int i = 0; i &lt; PathFinder.NEIGHBOURS8.length; i++) {</span>
+<span class="nc" id="L162">					int p = hero.pos + PathFinder.NEIGHBOURS8[i];</span>
+<span class="nc bnc" id="L163" title="All 6 branches missed.">					if (Actor.findChar(p) == null &amp;&amp; (Dungeon.level.passable[p] || Dungeon.level.avoid[p])) {</span>
+<span class="nc" id="L164">						spawnPoints.add(p);</span>
+					}
+				}
+
+<span class="nc bnc" id="L168" title="All 2 branches missed.">				if (spawnPoints.size() &gt; 0) {</span>
+<span class="nc" id="L169">					ghost = new GhostHero( this );</span>
+<span class="nc" id="L170">					ghostID = ghost.id();</span>
+<span class="nc" id="L171">					ghost.pos = Random.element(spawnPoints);</span>
+
+<span class="nc" id="L173">					GameScene.add(ghost, 1f);</span>
+<span class="nc" id="L174">					Dungeon.level.occupyCell(ghost);</span>
+					
+<span class="nc" id="L176">					CellEmitter.get(ghost.pos).start( ShaftParticle.FACTORY, 0.3f, 4 );</span>
+<span class="nc" id="L177">					CellEmitter.get(ghost.pos).start( Speck.factory(Speck.LIGHT), 0.2f, 3 );</span>
+
+<span class="nc" id="L179">					hero.spend(1f);</span>
+<span class="nc" id="L180">					hero.busy();</span>
+<span class="nc" id="L181">					hero.sprite.operate(hero.pos);</span>
+
+<span class="nc bnc" id="L183" title="All 2 branches missed.">					if (!firstSummon) {</span>
+<span class="nc" id="L184">						ghost.yell( Messages.get(GhostHero.class, &quot;hello&quot;, Messages.titleCase(Dungeon.hero.name())) );</span>
+<span class="nc" id="L185">						Sample.INSTANCE.play( Assets.Sounds.GHOST );</span>
+<span class="nc" id="L186">						firstSummon = true;</span>
+						
+					} else {
+<span class="nc bnc" id="L189" title="All 2 branches missed.">						if (BossHealthBar.isAssigned()) {</span>
+<span class="nc" id="L190">							ghost.sayBoss();</span>
+						} else {
+<span class="nc" id="L192">							ghost.sayAppeared();</span>
+						}
+					}
+
+<span class="nc" id="L196">					Invisibility.dispel(hero);</span>
+<span class="nc" id="L197">					Talent.onArtifactUsed(hero);</span>
+<span class="nc" id="L198">					charge = 0;</span>
+<span class="nc" id="L199">					partialCharge = 0;</span>
+<span class="nc" id="L200">					updateQuickslot();</span>
+
+				} else
+<span class="nc" id="L203">					GLog.i( Messages.get(this, &quot;no_space&quot;) );</span>
+<span class="nc" id="L204">			}</span>
+
+<span class="nc bnc" id="L206" title="All 2 branches missed.">		} else if (action.equals(AC_DIRECT)){</span>
+<span class="nc bnc" id="L207" title="All 4 branches missed.">			if (ghost == null &amp;&amp; ghostID != 0){</span>
+<span class="nc" id="L208">				findGhost();</span>
+			}
+<span class="nc bnc" id="L210" title="All 4 branches missed.">			if (ghost != null &amp;&amp; ghost != Stasis.getStasisAlly()){</span>
+<span class="nc" id="L211">				GameScene.selectCell(ghostDirector);</span>
+			}
+			
+<span class="nc bnc" id="L214" title="All 2 branches missed.">		} else if (action.equals(AC_OUTFIT)){</span>
+<span class="nc" id="L215">			GameScene.show( new WndGhostHero(this) );</span>
+		}
+<span class="nc" id="L217">	}</span>
+
+	private void findGhost(){
+<span class="nc" id="L220">		Actor a = Actor.findById(ghostID);</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">		if (a != null){</span>
+<span class="nc" id="L222">			ghost = (GhostHero)a;</span>
+		} else {
+<span class="nc bnc" id="L224" title="All 2 branches missed.">			if (Stasis.getStasisAlly() instanceof GhostHero){</span>
+<span class="nc" id="L225">				ghost = (GhostHero) Stasis.getStasisAlly();</span>
+<span class="nc" id="L226">				ghostID = ghost.id();</span>
+			} else {
+<span class="nc" id="L228">				ghostID = 0;</span>
+			}
+		}
+<span class="nc" id="L231">	}</span>
+	
+	public int ghostStrength(){
+<span class="nc" id="L234">		return 13 + level()/2;</span>
+	}
+
+	@Override
+	public String desc() {
+<span class="nc bnc" id="L239" title="All 2 branches missed.">		if (!Ghost.Quest.completed()</span>
+<span class="nc bnc" id="L240" title="All 4 branches missed.">				&amp;&amp; (ShatteredPixelDungeon.scene() instanceof GameScene || ShatteredPixelDungeon.scene() instanceof AlchemyScene)){</span>
+<span class="nc" id="L241">			return Messages.get(this, &quot;desc_no_quest&quot;);</span>
+		}
+		
+<span class="nc" id="L244">		String desc = super.desc();</span>
+
+<span class="nc bnc" id="L246" title="All 2 branches missed.">		if (isEquipped( Dungeon.hero )){</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">			if (!cursed){</span>
+
+<span class="nc bnc" id="L249" title="All 2 branches missed.">				if (level() &lt; levelCap)</span>
+<span class="nc" id="L250">					desc+= &quot;\n\n&quot; + Messages.get(this, &quot;desc_hint&quot;);</span>
+
+			} else {
+<span class="nc" id="L253">				desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_cursed&quot;);</span>
+			}
+		}
+
+<span class="nc bnc" id="L257" title="All 4 branches missed.">		if (weapon != null || armor != null) {</span>
+<span class="nc" id="L258">			desc += &quot;\n&quot;;</span>
+
+<span class="nc bnc" id="L260" title="All 2 branches missed.">			if (weapon != null) {</span>
+<span class="nc" id="L261">				desc += &quot;\n&quot; + Messages.get(this, &quot;desc_weapon&quot;, Messages.titleCase(weapon.title()));</span>
+			}
+
+<span class="nc bnc" id="L264" title="All 2 branches missed.">			if (armor != null) {</span>
+<span class="nc" id="L265">				desc += &quot;\n&quot; + Messages.get(this, &quot;desc_armor&quot;, Messages.titleCase(armor.title()));</span>
+			}
+
+<span class="nc" id="L268">			desc += &quot;\n&quot; + Messages.get(this, &quot;desc_strength&quot;, ghostStrength());</span>
+
+		}
+		
+<span class="nc" id="L272">		return desc;</span>
+	}
+	
+	@Override
+	public int value() {
+<span class="nc bnc" id="L277" title="All 2 branches missed.">		if (weapon != null){</span>
+<span class="nc" id="L278">			return -1;</span>
+		}
+<span class="nc bnc" id="L280" title="All 2 branches missed.">		if (armor != null){</span>
+<span class="nc" id="L281">			return -1;</span>
+		}
+<span class="nc" id="L283">		return super.value();</span>
+	}
+
+	@Override
+	public String status() {
+<span class="nc bnc" id="L288" title="All 4 branches missed.">		if (ghost == null &amp;&amp; ghostID != 0){</span>
+			try {
+<span class="nc" id="L290">				findGhost();</span>
+<span class="nc" id="L291">			} catch ( ClassCastException e ){</span>
+<span class="nc" id="L292">				ShatteredPixelDungeon.reportException(e);</span>
+<span class="nc" id="L293">				ghostID = 0;</span>
+<span class="nc" id="L294">			}</span>
+		}
+<span class="nc bnc" id="L296" title="All 2 branches missed.">		if (ghost == null){</span>
+<span class="nc" id="L297">			return super.status();</span>
+		} else {
+<span class="nc" id="L299">			return ((ghost.HP*100) / ghost.HT) + &quot;%&quot;;</span>
+		}
+	}
+	
+	@Override
+	protected ArtifactBuff passiveBuff() {
+<span class="nc" id="L305">		return new roseRecharge();</span>
+	}
+	
+	@Override
+	public void charge(Hero target, float amount) {
+<span class="nc bnc" id="L310" title="All 4 branches missed.">		if (cursed || target.buff(MagicImmune.class) != null) return;</span>
+
+<span class="nc bnc" id="L312" title="All 2 branches missed.">		if (ghost == null){</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">			if (charge &lt; chargeCap) {</span>
+<span class="nc" id="L314">				partialCharge += 4*amount;</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">				while (partialCharge &gt;= 1f){</span>
+<span class="nc" id="L316">					charge++;</span>
+<span class="nc" id="L317">					partialCharge--;</span>
+				}
+<span class="nc bnc" id="L319" title="All 2 branches missed.">				if (charge &gt;= chargeCap) {</span>
+<span class="nc" id="L320">					charge = chargeCap;</span>
+<span class="nc" id="L321">					partialCharge = 0;</span>
+<span class="nc" id="L322">					GLog.p(Messages.get(DriedRose.class, &quot;charged&quot;));</span>
+				}
+<span class="nc" id="L324">				updateQuickslot();</span>
+			}
+<span class="nc bnc" id="L326" title="All 2 branches missed.">		} else if (ghost.HP &lt; ghost.HT) {</span>
+<span class="nc" id="L327">			int heal = Math.round((1 + level()/3f)*amount);</span>
+<span class="nc" id="L328">			ghost.HP = Math.min( ghost.HT, ghost.HP + heal);</span>
+<span class="nc bnc" id="L329" title="All 2 branches missed.">			if (ghost.sprite != null) {</span>
+<span class="nc" id="L330">				ghost.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(heal), FloatingText.HEALING);</span>
+			}
+<span class="nc" id="L332">			updateQuickslot();</span>
+		}
+<span class="nc" id="L334">	}</span>
+	
+	@Override
+	public Item upgrade() {
+<span class="nc bnc" id="L338" title="All 2 branches missed.">		if (level() &gt;= 9)</span>
+<span class="nc" id="L339">			image = ItemSpriteSheet.ARTIFACT_ROSE3;</span>
+<span class="nc bnc" id="L340" title="All 2 branches missed.">		else if (level() &gt;= 4)</span>
+<span class="nc" id="L341">			image = ItemSpriteSheet.ARTIFACT_ROSE2;</span>
+
+		//For upgrade transferring via well of transmutation
+<span class="nc" id="L344">		droppedPetals = Math.max( level(), droppedPetals );</span>
+		
+<span class="nc bnc" id="L346" title="All 2 branches missed.">		if (ghost != null){</span>
+<span class="nc" id="L347">			ghost.updateRose();</span>
+		}
+
+<span class="nc" id="L350">		return super.upgrade();</span>
+	}
+	
+	public Weapon ghostWeapon(){
+<span class="nc" id="L354">		return weapon;</span>
+	}
+	
+	public Armor ghostArmor(){
+<span class="nc" id="L358">		return armor;</span>
+	}
+
+	private static final String TALKEDTO =      &quot;talkedto&quot;;
+	private static final String FIRSTSUMMON =   &quot;firstsummon&quot;;
+	private static final String GHOSTID =       &quot;ghostID&quot;;
+	private static final String PETALS =        &quot;petals&quot;;
+	
+	private static final String WEAPON =        &quot;weapon&quot;;
+	private static final String ARMOR =         &quot;armor&quot;;
+
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L371">		super.storeInBundle(bundle);</span>
+
+<span class="nc" id="L373">		bundle.put( TALKEDTO, talkedTo );</span>
+<span class="nc" id="L374">		bundle.put( FIRSTSUMMON, firstSummon );</span>
+<span class="nc" id="L375">		bundle.put( GHOSTID, ghostID );</span>
+<span class="nc" id="L376">		bundle.put( PETALS, droppedPetals );</span>
+		
+<span class="nc bnc" id="L378" title="All 2 branches missed.">		if (weapon != null) bundle.put( WEAPON, weapon );</span>
+<span class="nc bnc" id="L379" title="All 2 branches missed.">		if (armor != null)  bundle.put( ARMOR, armor );</span>
+<span class="nc" id="L380">	}</span>
+
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L384">		super.restoreFromBundle(bundle);</span>
+
+<span class="nc" id="L386">		talkedTo = bundle.getBoolean( TALKEDTO );</span>
+<span class="nc" id="L387">		firstSummon = bundle.getBoolean( FIRSTSUMMON );</span>
+<span class="nc" id="L388">		ghostID = bundle.getInt( GHOSTID );</span>
+<span class="nc" id="L389">		droppedPetals = bundle.getInt( PETALS );</span>
+		
+<span class="nc bnc" id="L391" title="All 2 branches missed.">		if (bundle.contains(WEAPON)) weapon = (MeleeWeapon)bundle.get( WEAPON );</span>
+<span class="nc bnc" id="L392" title="All 2 branches missed.">		if (bundle.contains(ARMOR))  armor = (Armor)bundle.get( ARMOR );</span>
+<span class="nc" id="L393">	}</span>
+
+<span class="nc" id="L395">	public class roseRecharge extends ArtifactBuff {</span>
+
+		@Override
+		public boolean act() {
+			
+<span class="nc" id="L400">			spend( TICK );</span>
+			
+<span class="nc bnc" id="L402" title="All 4 branches missed.">			if (ghost == null &amp;&amp; ghostID != 0){</span>
+<span class="nc" id="L403">				findGhost();</span>
+			}
+
+<span class="nc bnc" id="L406" title="All 4 branches missed.">			if (ghost != null &amp;&amp; !ghost.isAlive()){</span>
+<span class="nc" id="L407">				ghost = null;</span>
+			}
+			
+			//rose does not charge while ghost hero is alive
+<span class="nc bnc" id="L411" title="All 6 branches missed.">			if (ghost != null &amp;&amp; !cursed &amp;&amp; target.buff(MagicImmune.class) == null){</span>
+				
+				//heals to full over 500 turns
+<span class="nc bnc" id="L414" title="All 4 branches missed.">				if (ghost.HP &lt; ghost.HT &amp;&amp; Regeneration.regenOn()) {</span>
+<span class="nc" id="L415">					partialCharge += (ghost.HT / 500f) * RingOfEnergy.artifactChargeMultiplier(target);</span>
+<span class="nc" id="L416">					updateQuickslot();</span>
+					
+<span class="nc bnc" id="L418" title="All 2 branches missed.">					while (partialCharge &gt; 1) {</span>
+<span class="nc" id="L419">						ghost.HP++;</span>
+<span class="nc" id="L420">						partialCharge--;</span>
+					}
+				} else {
+<span class="nc" id="L423">					partialCharge = 0;</span>
+				}
+				
+<span class="nc" id="L426">				return true;</span>
+			}
+			
+<span class="nc bnc" id="L429" title="All 4 branches missed.">			if (charge &lt; chargeCap</span>
+					&amp;&amp; !cursed
+<span class="nc bnc" id="L431" title="All 2 branches missed.">					&amp;&amp; target.buff(MagicImmune.class) == null</span>
+<span class="nc bnc" id="L432" title="All 2 branches missed.">					&amp;&amp; Regeneration.regenOn()) {</span>
+				//500 turns to a full charge
+<span class="nc" id="L434">				partialCharge += (1/5f * RingOfEnergy.artifactChargeMultiplier(target));</span>
+<span class="nc bnc" id="L435" title="All 2 branches missed.">				while (partialCharge &gt; 1){</span>
+<span class="nc" id="L436">					charge++;</span>
+<span class="nc" id="L437">					partialCharge--;</span>
+<span class="nc bnc" id="L438" title="All 2 branches missed.">					if (charge == chargeCap){</span>
+<span class="nc" id="L439">						partialCharge = 0f;</span>
+<span class="nc" id="L440">						GLog.p( Messages.get(DriedRose.class, &quot;charged&quot;) );</span>
+					}
+				}
+<span class="nc bnc" id="L443" title="All 4 branches missed.">			} else if (cursed &amp;&amp; Random.Int(100) == 0) {</span>
+
+<span class="nc" id="L445">				ArrayList&lt;Integer&gt; spawnPoints = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L447" title="All 2 branches missed.">				for (int i = 0; i &lt; PathFinder.NEIGHBOURS8.length; i++) {</span>
+<span class="nc" id="L448">					int p = target.pos + PathFinder.NEIGHBOURS8[i];</span>
+<span class="nc bnc" id="L449" title="All 6 branches missed.">					if (Actor.findChar(p) == null &amp;&amp; (Dungeon.level.passable[p] || Dungeon.level.avoid[p])) {</span>
+<span class="nc" id="L450">						spawnPoints.add(p);</span>
+					}
+				}
+
+<span class="nc bnc" id="L454" title="All 2 branches missed.">				if (spawnPoints.size() &gt; 0) {</span>
+<span class="nc" id="L455">					Wraith.spawnAt(Random.element(spawnPoints), Wraith.class);</span>
+<span class="nc" id="L456">					Sample.INSTANCE.play(Assets.Sounds.CURSED);</span>
+				}
+
+			}
+
+<span class="nc" id="L461">			updateQuickslot();</span>
+
+<span class="nc" id="L463">			return true;</span>
+		}
+	}
+	
+<span class="nc" id="L467">	public CellSelector.Listener ghostDirector = new CellSelector.Listener(){</span>
+		
+		@Override
+		public void onSelect(Integer cell) {
+<span class="nc bnc" id="L471" title="All 2 branches missed.">			if (cell == null) return;</span>
+			
+<span class="nc" id="L473">			Sample.INSTANCE.play( Assets.Sounds.GHOST );</span>
+
+<span class="nc" id="L475">			ghost.directTocell(cell);</span>
+
+<span class="nc" id="L477">		}</span>
+		
+		@Override
+		public String prompt() {
+<span class="nc" id="L481">			return  &quot;\&quot;&quot; + Messages.get(GhostHero.class, &quot;direct_prompt&quot;) + &quot;\&quot;&quot;;</span>
+		}
+	};
+
+<span class="nc" id="L485">	public static class Petal extends Item {</span>
+
+		{
+<span class="nc" id="L488">			stackable = true;</span>
+<span class="nc" id="L489">			dropsDownHeap = true;</span>
+			
+<span class="nc" id="L491">			image = ItemSpriteSheet.PETAL;</span>
+<span class="nc" id="L492">		}</span>
+
+		@Override
+		public boolean doPickUp(Hero hero, int pos) {
+<span class="nc" id="L496">			Catalog.setSeen(getClass());</span>
+<span class="nc" id="L497">			Statistics.itemTypesDiscovered.add(getClass());</span>
+<span class="nc" id="L498">			DriedRose rose = hero.belongings.getItem( DriedRose.class );</span>
+
+<span class="nc bnc" id="L500" title="All 2 branches missed.">			if (rose == null){</span>
+<span class="nc" id="L501">				GLog.w( Messages.get(this, &quot;no_rose&quot;) );</span>
+<span class="nc" id="L502">				return false;</span>
+<span class="nc bnc" id="L503" title="All 2 branches missed.">			} if ( rose.level() &gt;= rose.levelCap ){</span>
+<span class="nc" id="L504">				GLog.i( Messages.get(this, &quot;no_room&quot;) );</span>
+<span class="nc" id="L505">				hero.spendAndNext(TIME_TO_PICK_UP);</span>
+<span class="nc" id="L506">				return true;</span>
+			} else {
+
+<span class="nc" id="L509">				rose.upgrade();</span>
+<span class="nc" id="L510">				Catalog.countUse(rose.getClass());</span>
+<span class="nc bnc" id="L511" title="All 2 branches missed.">				if (rose.level() == rose.levelCap) {</span>
+<span class="nc" id="L512">					GLog.p( Messages.get(this, &quot;maxlevel&quot;) );</span>
+				} else
+<span class="nc" id="L514">					GLog.i( Messages.get(this, &quot;levelup&quot;) );</span>
+
+<span class="nc" id="L516">				Sample.INSTANCE.play( Assets.Sounds.DEWDROP );</span>
+<span class="nc" id="L517">				GameScene.pickUp(this, pos);</span>
+<span class="nc" id="L518">				hero.spendAndNext(TIME_TO_PICK_UP);</span>
+<span class="nc" id="L519">				return true;</span>
+
+			}
+		}
+
+		@Override
+		public boolean isUpgradable() {
+<span class="nc" id="L526">			return false;</span>
+		}
+
+		@Override
+		public boolean isIdentified() {
+<span class="nc" id="L531">			return true;</span>
+		}
+
+	}
+
+	public static class GhostHero extends DirectableAlly {
+
+		{
+<span class="nc" id="L539">			spriteClass = GhostSprite.class;</span>
+
+<span class="nc" id="L541">			flying = true;</span>
+			
+<span class="nc" id="L543">			state = HUNTING;</span>
+			
+<span class="nc" id="L545">			properties.add(Property.UNDEAD);</span>
+<span class="nc" id="L546">			properties.add(Property.INORGANIC);</span>
+		}
+		
+<span class="nc" id="L549">		private DriedRose rose = null;</span>
+		
+		public GhostHero(){
+<span class="nc" id="L552">			super();</span>
+<span class="nc" id="L553">		}</span>
+
+		public GhostHero(DriedRose rose){
+<span class="nc" id="L556">			super();</span>
+<span class="nc" id="L557">			this.rose = rose;</span>
+<span class="nc" id="L558">			updateRose();</span>
+<span class="nc" id="L559">			HP = HT;</span>
+<span class="nc" id="L560">		}</span>
+
+		@Override
+		public void defendPos(int cell) {
+<span class="nc" id="L564">			yell(Messages.get(this, &quot;directed_position_&quot; + Random.IntRange(1, 5)));</span>
+<span class="nc" id="L565">			super.defendPos(cell);</span>
+<span class="nc" id="L566">		}</span>
+
+		@Override
+		public void followHero() {
+<span class="nc" id="L570">			yell(Messages.get(this, &quot;directed_follow_&quot; + Random.IntRange(1, 5)));</span>
+<span class="nc" id="L571">			super.followHero();</span>
+<span class="nc" id="L572">		}</span>
+
+		@Override
+		public void targetChar(Char ch) {
+<span class="nc" id="L576">			yell(Messages.get(this, &quot;directed_attack_&quot; + Random.IntRange(1, 5)));</span>
+<span class="nc" id="L577">			super.targetChar(ch);</span>
+<span class="nc" id="L578">		}</span>
+
+		private void updateRose(){
+<span class="nc bnc" id="L581" title="All 2 branches missed.">			if (rose == null) {</span>
+<span class="nc" id="L582">				rose = Dungeon.hero.belongings.getItem(DriedRose.class);</span>
+			}
+			
+			//same dodge as the hero
+<span class="nc" id="L586">			defenseSkill = (Dungeon.hero.lvl+4);</span>
+<span class="nc bnc" id="L587" title="All 2 branches missed.">			if (rose == null) return;</span>
+<span class="nc" id="L588">			HT = 20 + 8*rose.level();</span>
+<span class="nc" id="L589">		}</span>
+
+		@Override
+		protected boolean act() {
+<span class="nc" id="L593">			updateRose();</span>
+<span class="nc bnc" id="L594" title="All 2 branches missed.">			if (rose == null</span>
+<span class="nc bnc" id="L595" title="All 2 branches missed.">					|| !rose.isEquipped(Dungeon.hero)</span>
+<span class="nc bnc" id="L596" title="All 2 branches missed.">					|| Dungeon.hero.buff(MagicImmune.class) != null){</span>
+<span class="nc" id="L597">				damage(1, new NoRoseDamage());</span>
+			}
+			
+<span class="nc bnc" id="L600" title="All 2 branches missed.">			if (!isAlive()) {</span>
+<span class="nc" id="L601">				return true;</span>
+			}
+<span class="nc" id="L603">			return super.act();</span>
+		}
+
+<span class="nc" id="L606">		public static class NoRoseDamage{}</span>
+
+		@Override
+		public int attackSkill(Char target) {
+			
+			//same accuracy as the hero.
+<span class="nc" id="L612">			int acc = Dungeon.hero.lvl + 9;</span>
+			
+<span class="nc bnc" id="L614" title="All 4 branches missed.">			if (rose != null &amp;&amp; rose.weapon != null){</span>
+<span class="nc" id="L615">				acc *= rose.weapon.accuracyFactor( this, target );</span>
+			}
+			
+<span class="nc" id="L618">			return acc;</span>
+		}
+		
+		@Override
+		public float attackDelay() {
+<span class="nc" id="L623">			float delay = super.attackDelay();</span>
+<span class="nc bnc" id="L624" title="All 4 branches missed.">			if (rose != null &amp;&amp; rose.weapon != null){</span>
+<span class="nc" id="L625">				delay *= rose.weapon.delayFactor(this);</span>
+			}
+<span class="nc" id="L627">			return delay;</span>
+		}
+		
+		@Override
+		protected boolean canAttack(Char enemy) {
+<span class="nc bnc" id="L632" title="All 8 branches missed.">			return super.canAttack(enemy) || (rose != null &amp;&amp; rose.weapon != null &amp;&amp; rose.weapon.canReach(this, enemy.pos));</span>
+		}
+		
+		@Override
+		public int damageRoll() {
+<span class="nc" id="L637">			int dmg = 0;</span>
+<span class="nc bnc" id="L638" title="All 4 branches missed.">			if (rose != null &amp;&amp; rose.weapon != null){</span>
+<span class="nc" id="L639">				dmg += rose.weapon.damageRoll(this);</span>
+			} else {
+<span class="nc" id="L641">				dmg += Random.NormalIntRange(0, 5);</span>
+			}
+			
+<span class="nc" id="L644">			return dmg;</span>
+		}
+		
+		@Override
+		public int attackProc(Char enemy, int damage) {
+<span class="nc" id="L649">			damage = super.attackProc(enemy, damage);</span>
+<span class="nc bnc" id="L650" title="All 2 branches missed.">			if (rose != null) {</span>
+<span class="nc bnc" id="L651" title="All 2 branches missed.">				if (rose.weapon != null) {</span>
+<span class="nc" id="L652">					damage = rose.weapon.proc(this, enemy, damage);</span>
+<span class="nc bnc" id="L653" title="All 4 branches missed.">					if (!enemy.isAlive() &amp;&amp; enemy == Dungeon.hero) {</span>
+<span class="nc" id="L654">						Dungeon.fail(this);</span>
+<span class="nc" id="L655">						GLog.n(Messages.capitalize(Messages.get(Char.class, &quot;kill&quot;, name())));</span>
+					}
+				}
+			}
+
+<span class="nc" id="L660">			return damage;</span>
+		}
+		
+		@Override
+		public int defenseProc(Char enemy, int damage) {
+<span class="nc bnc" id="L665" title="All 4 branches missed.">			if (rose != null &amp;&amp; rose.armor != null) {</span>
+<span class="nc" id="L666">				damage = rose.armor.proc( enemy, this, damage );</span>
+			}
+<span class="nc" id="L668">			return super.defenseProc(enemy, damage);</span>
+		}
+		
+		@Override
+		public void damage(int dmg, Object src) {
+<span class="nc" id="L673">			super.damage( dmg, src );</span>
+			
+			//for the rose status indicator
+<span class="nc" id="L676">			Item.updateQuickslot();</span>
+<span class="nc" id="L677">		}</span>
+		
+		@Override
+		public float speed() {
+<span class="nc" id="L681">			float speed = super.speed();</span>
+
+			//moves 2 tiles at a time when returning to the hero
+<span class="nc bnc" id="L684" title="All 4 branches missed.">			if (state == WANDERING</span>
+					&amp;&amp; defendingPos == -1
+<span class="nc bnc" id="L686" title="All 2 branches missed.">					&amp;&amp; Dungeon.level.distance(pos, Dungeon.hero.pos) &gt; 1){</span>
+<span class="nc" id="L687">				speed *= 2;</span>
+			}
+			
+<span class="nc" id="L690">			return speed;</span>
+		}
+		
+		@Override
+		public int defenseSkill(Char enemy) {
+<span class="nc" id="L695">			int defense = super.defenseSkill(enemy);</span>
+
+<span class="nc bnc" id="L697" title="All 6 branches missed.">			if (defense != 0 &amp;&amp; rose != null &amp;&amp; rose.armor != null ){</span>
+<span class="nc" id="L698">				defense = Math.round(rose.armor.evasionFactor( this, defense ));</span>
+			}
+			
+<span class="nc" id="L701">			return defense;</span>
+		}
+		
+		@Override
+		public int drRoll() {
+<span class="nc" id="L706">			int dr = super.drRoll();</span>
+<span class="nc bnc" id="L707" title="All 4 branches missed.">			if (rose != null &amp;&amp; rose.armor != null){</span>
+<span class="nc" id="L708">				dr += Random.NormalIntRange( rose.armor.DRMin(), rose.armor.DRMax());</span>
+			}
+<span class="nc bnc" id="L710" title="All 4 branches missed.">			if (rose != null &amp;&amp; rose.weapon != null){</span>
+<span class="nc" id="L711">				dr += Random.NormalIntRange( 0, rose.weapon.defenseFactor( this ));</span>
+			}
+<span class="nc" id="L713">			return dr;</span>
+		}
+
+		@Override
+		public int glyphLevel(Class&lt;? extends Armor.Glyph&gt; cls) {
+<span class="nc bnc" id="L718" title="All 6 branches missed.">			if (rose != null &amp;&amp; rose.armor != null &amp;&amp; rose.armor.hasGlyph(cls, this)){</span>
+<span class="nc" id="L719">				return Math.max(super.glyphLevel(cls), rose.armor.buffedLvl());</span>
+			} else {
+<span class="nc" id="L721">				return super.glyphLevel(cls);</span>
+			}
+		}
+
+		@Override
+		public boolean interact(Char c) {
+<span class="nc" id="L727">			updateRose();</span>
+<span class="nc bnc" id="L728" title="All 6 branches missed.">			if (c == Dungeon.hero &amp;&amp; rose != null &amp;&amp; !rose.talkedTo){</span>
+<span class="nc" id="L729">				rose.talkedTo = true;</span>
+<span class="nc" id="L730">				Game.runOnRenderThread(new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L733">						GameScene.show(new WndQuest(GhostHero.this, Messages.get(GhostHero.this, &quot;introduce&quot;) ));</span>
+<span class="nc" id="L734">					}</span>
+				});
+<span class="nc" id="L736">				return true;</span>
+			} else {
+<span class="nc" id="L738">				return super.interact(c);</span>
+			}
+		}
+
+		@Override
+		public void die(Object cause) {
+<span class="nc" id="L744">			sayDefeated();</span>
+<span class="nc" id="L745">			super.die(cause);</span>
+<span class="nc" id="L746">		}</span>
+
+		@Override
+		public void destroy() {
+<span class="nc" id="L750">			updateRose();</span>
+			//TODO stasis?
+<span class="nc bnc" id="L752" title="All 2 branches missed.">			if (rose != null) {</span>
+<span class="nc" id="L753">				rose.ghost = null;</span>
+<span class="nc" id="L754">				rose.charge = 0;</span>
+<span class="nc" id="L755">				rose.partialCharge = 0;</span>
+<span class="nc" id="L756">				rose.ghostID = -1;</span>
+			}
+<span class="nc" id="L758">			super.destroy();</span>
+<span class="nc" id="L759">		}</span>
+		
+		public void sayAppeared(){
+<span class="nc bnc" id="L762" title="All 2 branches missed.">			if (Dungeon.hero.buff(AscensionChallenge.class) != null){</span>
+<span class="nc" id="L763">				yell( Messages.get( this, &quot;dialogue_ascension_&quot; + Random.IntRange(1, 6) ));</span>
+
+			} else {
+
+<span class="nc" id="L767">				int depth = (Dungeon.depth - 1) / 5;</span>
+
+				//only some lines are said on the first floor of a depth
+<span class="nc bnc" id="L770" title="All 2 branches missed.">				int variant = Dungeon.depth % 5 == 1 ? Random.IntRange(1, 3) : Random.IntRange(1, 6);</span>
+
+<span class="nc bnc" id="L772" title="All 5 branches missed.">				switch (depth) {</span>
+					case 0:
+<span class="nc" id="L774">						yell(Messages.get(this, &quot;dialogue_sewers_&quot; + variant));</span>
+<span class="nc" id="L775">						break;</span>
+					case 1:
+<span class="nc" id="L777">						yell(Messages.get(this, &quot;dialogue_prison_&quot; + variant));</span>
+<span class="nc" id="L778">						break;</span>
+					case 2:
+<span class="nc" id="L780">						yell(Messages.get(this, &quot;dialogue_caves_&quot; + variant));</span>
+<span class="nc" id="L781">						break;</span>
+					case 3:
+<span class="nc" id="L783">						yell(Messages.get(this, &quot;dialogue_city_&quot; + variant));</span>
+<span class="nc" id="L784">						break;</span>
+					case 4:
+					default:
+<span class="nc" id="L787">						yell(Messages.get(this, &quot;dialogue_halls_&quot; + variant));</span>
+						break;
+				}
+			}
+<span class="nc bnc" id="L791" title="All 2 branches missed.">			if (ShatteredPixelDungeon.scene() instanceof GameScene) {</span>
+<span class="nc" id="L792">				Sample.INSTANCE.play( Assets.Sounds.GHOST );</span>
+			}
+<span class="nc" id="L794">		}</span>
+		
+		public void sayBoss(){
+<span class="nc" id="L797">			int depth = (Dungeon.depth - 1) / 5;</span>
+			
+<span class="nc bnc" id="L799" title="All 5 branches missed.">			switch(depth){</span>
+				case 0:
+<span class="nc" id="L801">					yell( Messages.get( this, &quot;seen_goo_&quot; + Random.IntRange(1, 3) ));</span>
+<span class="nc" id="L802">					break;</span>
+				case 1:
+<span class="nc" id="L804">					yell( Messages.get( this, &quot;seen_tengu_&quot; + Random.IntRange(1, 3) ));</span>
+<span class="nc" id="L805">					break;</span>
+				case 2:
+<span class="nc" id="L807">					yell( Messages.get( this, &quot;seen_dm300_&quot; + Random.IntRange(1, 3) ));</span>
+<span class="nc" id="L808">					break;</span>
+				case 3:
+<span class="nc" id="L810">					yell( Messages.get( this, &quot;seen_king_&quot; + Random.IntRange(1, 3) ));</span>
+<span class="nc" id="L811">					break;</span>
+				case 4: default:
+<span class="nc" id="L813">					yell( Messages.get( this, &quot;seen_yog_&quot; + Random.IntRange(1, 3) ));</span>
+					break;
+			}
+<span class="nc" id="L816">			Sample.INSTANCE.play( Assets.Sounds.GHOST );</span>
+<span class="nc" id="L817">		}</span>
+		
+		public void sayDefeated(){
+<span class="nc bnc" id="L820" title="All 2 branches missed.">			if (BossHealthBar.isAssigned()){</span>
+<span class="nc" id="L821">				yell( Messages.get( this, &quot;defeated_by_boss_&quot; + Random.IntRange(1, 3) ));</span>
+			} else {
+<span class="nc" id="L823">				yell( Messages.get( this, &quot;defeated_by_enemy_&quot; + Random.IntRange(1, 3) ));</span>
+			}
+<span class="nc" id="L825">			Sample.INSTANCE.play( Assets.Sounds.GHOST );</span>
+<span class="nc" id="L826">		}</span>
+		
+		public void sayHeroKilled(){
+<span class="nc" id="L829">			yell( Messages.get( this, &quot;player_killed_&quot; + Random.IntRange(1, 3) ));</span>
+<span class="nc" id="L830">			GLog.newLine();</span>
+<span class="nc" id="L831">			Sample.INSTANCE.play( Assets.Sounds.GHOST );</span>
+<span class="nc" id="L832">		}</span>
+		
+		public void sayAnhk(){
+<span class="nc" id="L835">			yell( Messages.get( this, &quot;blessed_ankh_&quot; + Random.IntRange(1, 3) ));</span>
+<span class="nc" id="L836">			Sample.INSTANCE.play( Assets.Sounds.GHOST );</span>
+<span class="nc" id="L837">		}</span>
+		
+		{
+<span class="nc" id="L840">			immunities.add( CorrosiveGas.class );</span>
+<span class="nc" id="L841">			immunities.add( Burning.class );</span>
+<span class="nc" id="L842">			immunities.add( ScrollOfRetribution.class );</span>
+<span class="nc" id="L843">			immunities.add( ScrollOfPsionicBlast.class );</span>
+<span class="nc" id="L844">			immunities.add( AllyBuff.class );</span>
+		}
+
+	}
+	
+	private static class WndGhostHero extends Window{
+		
+		private static final int BTN_SIZE	= 32;
+		private static final float GAP		= 2;
+		private static final float BTN_GAP	= 12;
+		private static final int WIDTH		= 116;
+		
+		private ItemButton btnWeapon;
+		private ItemButton btnArmor;
+		
+<span class="nc" id="L859">		WndGhostHero(final DriedRose rose){</span>
+			
+<span class="nc" id="L861">			IconTitle titlebar = new IconTitle();</span>
+<span class="nc" id="L862">			titlebar.icon( new ItemSprite(rose) );</span>
+<span class="nc" id="L863">			titlebar.label( Messages.get(this, &quot;title&quot;) );</span>
+<span class="nc" id="L864">			titlebar.setRect( 0, 0, WIDTH, 0 );</span>
+<span class="nc" id="L865">			add( titlebar );</span>
+			
+<span class="nc" id="L867">			RenderedTextBlock message =</span>
+<span class="nc" id="L868">					PixelScene.renderTextBlock(Messages.get(this, &quot;desc&quot;, rose.ghostStrength()), 6);</span>
+<span class="nc" id="L869">			message.maxWidth( WIDTH );</span>
+<span class="nc" id="L870">			message.setPos(0, titlebar.bottom() + GAP);</span>
+<span class="nc" id="L871">			add( message );</span>
+			
+<span class="nc" id="L873">			btnWeapon = new ItemButton(){</span>
+				@Override
+				protected void onClick() {
+<span class="nc bnc" id="L876" title="All 2 branches missed.">					if (rose.weapon != null){</span>
+<span class="nc" id="L877">						item(new WndBag.Placeholder(ItemSpriteSheet.WEAPON_HOLDER));</span>
+<span class="nc bnc" id="L878" title="All 2 branches missed.">						if (!rose.weapon.doPickUp(Dungeon.hero)){</span>
+<span class="nc" id="L879">							Dungeon.level.drop( rose.weapon, Dungeon.hero.pos);</span>
+						}
+<span class="nc" id="L881">						rose.weapon = null;</span>
+					} else {
+<span class="nc" id="L883">						GameScene.selectItem(new WndBag.ItemSelector() {</span>
+
+							@Override
+							public String textPrompt() {
+<span class="nc" id="L887">								return Messages.get(WndGhostHero.class, &quot;weapon_prompt&quot;);</span>
+							}
+
+							@Override
+							public Class&lt;?extends Bag&gt; preferredBag(){
+<span class="nc" id="L892">								return Belongings.Backpack.class;</span>
+							}
+
+							@Override
+							public boolean itemSelectable(Item item) {
+<span class="nc" id="L897">								return item instanceof MeleeWeapon;</span>
+							}
+
+							@Override
+							public void onSelect(Item item) {
+<span class="nc bnc" id="L902" title="All 2 branches missed.">								if (!(item instanceof MeleeWeapon)) {</span>
+									//do nothing, should only happen when window is cancelled
+<span class="nc bnc" id="L904" title="All 2 branches missed.">								} else if (item.unique) {</span>
+<span class="nc" id="L905">									GLog.w( Messages.get(WndGhostHero.class, &quot;cant_unique&quot;));</span>
+<span class="nc" id="L906">									hide();</span>
+<span class="nc bnc" id="L907" title="All 2 branches missed.">								} else if (!item.isIdentified()) {</span>
+<span class="nc" id="L908">									GLog.w( Messages.get(WndGhostHero.class, &quot;cant_unidentified&quot;));</span>
+<span class="nc" id="L909">									hide();</span>
+<span class="nc bnc" id="L910" title="All 2 branches missed.">								} else if (item.cursed) {</span>
+<span class="nc" id="L911">									GLog.w( Messages.get(WndGhostHero.class, &quot;cant_cursed&quot;));</span>
+<span class="nc" id="L912">									hide();</span>
+<span class="nc bnc" id="L913" title="All 2 branches missed.">								} else if (((MeleeWeapon)item).STRReq() &gt; rose.ghostStrength()) {</span>
+<span class="nc" id="L914">									GLog.w( Messages.get(WndGhostHero.class, &quot;cant_strength&quot;));</span>
+<span class="nc" id="L915">									hide();</span>
+								} else {
+<span class="nc bnc" id="L917" title="All 2 branches missed.">									if (item.isEquipped(Dungeon.hero)){</span>
+<span class="nc" id="L918">										((MeleeWeapon) item).doUnequip(Dungeon.hero, false, false);</span>
+									} else {
+<span class="nc" id="L920">										item.detach(Dungeon.hero.belongings.backpack);</span>
+									}
+<span class="nc" id="L922">									rose.weapon = (MeleeWeapon) item;</span>
+<span class="nc" id="L923">									item(rose.weapon);</span>
+								}
+								
+<span class="nc" id="L926">							}</span>
+						});
+					}
+<span class="nc" id="L929">				}</span>
+
+				@Override
+				protected boolean onLongClick() {
+<span class="nc bnc" id="L933" title="All 4 branches missed.">					if (item() != null &amp;&amp; item().name() != null){</span>
+<span class="nc" id="L934">						GameScene.show(new WndInfoItem(item()));</span>
+<span class="nc" id="L935">						return true;</span>
+					}
+<span class="nc" id="L937">					return false;</span>
+				}
+			};
+<span class="nc" id="L940">			btnWeapon.setRect( (WIDTH - BTN_GAP) / 2 - BTN_SIZE, message.top() + message.height() + GAP, BTN_SIZE, BTN_SIZE );</span>
+<span class="nc bnc" id="L941" title="All 2 branches missed.">			if (rose.weapon != null) {</span>
+<span class="nc" id="L942">				btnWeapon.item(rose.weapon);</span>
+			} else {
+<span class="nc" id="L944">				btnWeapon.item(new WndBag.Placeholder(ItemSpriteSheet.WEAPON_HOLDER));</span>
+			}
+<span class="nc" id="L946">			add( btnWeapon );</span>
+			
+<span class="nc" id="L948">			btnArmor = new ItemButton(){</span>
+				@Override
+				protected void onClick() {
+<span class="nc bnc" id="L951" title="All 2 branches missed.">					if (rose.armor != null){</span>
+<span class="nc" id="L952">						item(new WndBag.Placeholder(ItemSpriteSheet.ARMOR_HOLDER));</span>
+<span class="nc bnc" id="L953" title="All 2 branches missed.">						if (!rose.armor.doPickUp(Dungeon.hero)){</span>
+<span class="nc" id="L954">							Dungeon.level.drop( rose.armor, Dungeon.hero.pos);</span>
+						}
+<span class="nc" id="L956">						rose.armor = null;</span>
+					} else {
+<span class="nc" id="L958">						GameScene.selectItem(new WndBag.ItemSelector() {</span>
+
+							@Override
+							public String textPrompt() {
+<span class="nc" id="L962">								return Messages.get(WndGhostHero.class, &quot;armor_prompt&quot;);</span>
+							}
+
+							@Override
+							public Class&lt;?extends Bag&gt; preferredBag(){
+<span class="nc" id="L967">								return Belongings.Backpack.class;</span>
+							}
+
+							@Override
+							public boolean itemSelectable(Item item) {
+<span class="nc" id="L972">								return item instanceof Armor;</span>
+							}
+
+							@Override
+							public void onSelect(Item item) {
+<span class="nc bnc" id="L977" title="All 2 branches missed.">								if (!(item instanceof Armor)) {</span>
+									//do nothing, should only happen when window is cancelled
+<span class="nc bnc" id="L979" title="All 4 branches missed.">								} else if (item.unique || ((Armor) item).checkSeal() != null) {</span>
+<span class="nc" id="L980">									GLog.w( Messages.get(WndGhostHero.class, &quot;cant_unique&quot;));</span>
+<span class="nc" id="L981">									hide();</span>
+<span class="nc bnc" id="L982" title="All 2 branches missed.">								} else if (!item.isIdentified()) {</span>
+<span class="nc" id="L983">									GLog.w( Messages.get(WndGhostHero.class, &quot;cant_unidentified&quot;));</span>
+<span class="nc" id="L984">									hide();</span>
+<span class="nc bnc" id="L985" title="All 2 branches missed.">								} else if (item.cursed) {</span>
+<span class="nc" id="L986">									GLog.w( Messages.get(WndGhostHero.class, &quot;cant_cursed&quot;));</span>
+<span class="nc" id="L987">									hide();</span>
+<span class="nc bnc" id="L988" title="All 2 branches missed.">								} else if (((Armor)item).STRReq() &gt; rose.ghostStrength()) {</span>
+<span class="nc" id="L989">									GLog.w( Messages.get(WndGhostHero.class, &quot;cant_strength&quot;));</span>
+<span class="nc" id="L990">									hide();</span>
+								} else {
+<span class="nc bnc" id="L992" title="All 2 branches missed.">									if (item.isEquipped(Dungeon.hero)){</span>
+<span class="nc" id="L993">										((Armor) item).doUnequip(Dungeon.hero, false, false);</span>
+									} else {
+<span class="nc" id="L995">										item.detach(Dungeon.hero.belongings.backpack);</span>
+									}
+<span class="nc" id="L997">									rose.armor = (Armor) item;</span>
+<span class="nc" id="L998">									item(rose.armor);</span>
+								}
+								
+<span class="nc" id="L1001">							}</span>
+						});
+					}
+<span class="nc" id="L1004">				}</span>
+
+				@Override
+				protected boolean onLongClick() {
+<span class="nc bnc" id="L1008" title="All 4 branches missed.">					if (item() != null &amp;&amp; item().name() != null){</span>
+<span class="nc" id="L1009">						GameScene.show(new WndInfoItem(item()));</span>
+<span class="nc" id="L1010">						return true;</span>
+					}
+<span class="nc" id="L1012">					return false;</span>
+				}
+			};
+<span class="nc" id="L1015">			btnArmor.setRect( btnWeapon.right() + BTN_GAP, btnWeapon.top(), BTN_SIZE, BTN_SIZE );</span>
+<span class="nc bnc" id="L1016" title="All 2 branches missed.">			if (rose.armor != null) {</span>
+<span class="nc" id="L1017">				btnArmor.item(rose.armor);</span>
+			} else {
+<span class="nc" id="L1019">				btnArmor.item(new WndBag.Placeholder(ItemSpriteSheet.ARMOR_HOLDER));</span>
+			}
+<span class="nc" id="L1021">			add( btnArmor );</span>
+			
+<span class="nc" id="L1023">			resize(WIDTH, (int)(btnArmor.bottom() + GAP));</span>
+<span class="nc" id="L1024">		}</span>
+	
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TalentButton.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">TalentButton.java</span></div><h1>TalentButton.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfMetamorphosis;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoTalent;
+import com.watabou.noosa.ColorBlock;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.PointerArea;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+
+import java.util.LinkedHashMap;
+
+public class TalentButton extends Button {
+
+	public static final int WIDTH = 20;
+	public static final int HEIGHT = 26;
+
+	int tier;
+	Talent talent;
+	int pointsInTalent;
+	Mode mode;
+
+	TalentIcon icon;
+	Image bg;
+
+	ColorBlock fill;
+
+<span class="nc" id="L57">	public enum Mode {</span>
+<span class="nc" id="L58">		INFO,</span>
+<span class="nc" id="L59">		UPGRADE,</span>
+<span class="nc" id="L60">		METAMORPH_CHOOSE,</span>
+<span class="nc" id="L61">		METAMORPH_REPLACE</span>
+	}
+
+	public TalentButton(int tier, Talent talent, int points, Mode mode){
+<span class="nc" id="L65">		super();</span>
+<span class="nc" id="L66">		hotArea.blockLevel = PointerArea.NEVER_BLOCK;</span>
+
+<span class="nc" id="L68">		this.tier = tier;</span>
+<span class="nc" id="L69">		this.talent = talent;</span>
+<span class="nc" id="L70">		this.pointsInTalent = points;</span>
+<span class="nc" id="L71">		this.mode = mode;</span>
+
+<span class="nc" id="L73">		bg.frame(20*(talent.maxPoints()-1), 0, WIDTH, HEIGHT);</span>
+
+<span class="nc" id="L75">		icon = new TalentIcon( talent );</span>
+<span class="nc" id="L76">		add(icon);</span>
+<span class="nc" id="L77">	}</span>
+
+	@Override
+	protected void createChildren() {
+<span class="nc" id="L81">		super.createChildren();</span>
+
+<span class="nc" id="L83">		fill = new ColorBlock(0, 4, 0xFFFFFF44);</span>
+<span class="nc" id="L84">		add(fill);</span>
+
+<span class="nc" id="L86">		bg = new Image(Assets.Interfaces.TALENT_BUTTON);</span>
+<span class="nc" id="L87">		add(bg);</span>
+<span class="nc" id="L88">	}</span>
+
+	@Override
+	protected void layout() {
+<span class="nc" id="L92">		width = WIDTH;</span>
+<span class="nc" id="L93">		height = HEIGHT;</span>
+
+<span class="nc" id="L95">		super.layout();</span>
+
+<span class="nc" id="L97">		fill.x = x+2;</span>
+<span class="nc" id="L98">		fill.y = y + WIDTH - 1;</span>
+<span class="nc" id="L99">		fill.size( pointsInTalent/(float)talent.maxPoints() * (WIDTH-4), 5);</span>
+
+<span class="nc" id="L101">		bg.x = x;</span>
+<span class="nc" id="L102">		bg.y = y;</span>
+
+<span class="nc" id="L104">		icon.x = x + 2;</span>
+<span class="nc" id="L105">		icon.y = y + 2;</span>
+<span class="nc" id="L106">		PixelScene.align(icon);</span>
+<span class="nc" id="L107">	}</span>
+
+	@Override
+	protected void onClick() {
+<span class="nc" id="L111">		super.onClick();</span>
+
+		Window toAdd;
+<span class="nc bnc" id="L114" title="All 4 branches missed.">		if (mode == Mode.UPGRADE</span>
+				&amp;&amp; Dungeon.hero != null
+<span class="nc bnc" id="L116" title="All 2 branches missed.">				&amp;&amp; Dungeon.hero.isAlive()</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">				&amp;&amp; Dungeon.hero.talentPointsAvailable(tier) &gt; 0</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">				&amp;&amp; Dungeon.hero.pointsInTalent(talent) &lt; talent.maxPoints()){</span>
+<span class="nc" id="L119">			toAdd = new WndInfoTalent(talent, pointsInTalent, new WndInfoTalent.TalentButtonCallback() {</span>
+
+				@Override
+				public String prompt() {
+<span class="nc" id="L123">					return Messages.titleCase(Messages.get(WndInfoTalent.class, &quot;upgrade&quot;));</span>
+				}
+
+				@Override
+				public void call() {
+<span class="nc" id="L128">					upgradeTalent();</span>
+<span class="nc" id="L129">				}</span>
+			});
+<span class="nc bnc" id="L131" title="All 6 branches missed.">		} else if (mode == Mode.METAMORPH_CHOOSE &amp;&amp; Dungeon.hero != null &amp;&amp; Dungeon.hero.isAlive()) {</span>
+<span class="nc" id="L132">			toAdd = new WndInfoTalent(talent, pointsInTalent, new WndInfoTalent.TalentButtonCallback() {</span>
+
+				@Override
+				public String prompt() {
+<span class="nc" id="L136">					return Messages.titleCase(Messages.get(ScrollOfMetamorphosis.class, &quot;metamorphose_talent&quot;));</span>
+				}
+
+				@Override
+				public boolean metamorphDesc() {
+<span class="nc" id="L141">					return true;</span>
+				}
+
+				@Override
+				public void call() {
+<span class="nc bnc" id="L146" title="All 2 branches missed.">					if (ScrollOfMetamorphosis.WndMetamorphChoose.INSTANCE != null){</span>
+<span class="nc" id="L147">						ScrollOfMetamorphosis.WndMetamorphChoose.INSTANCE.hide();</span>
+					}
+<span class="nc" id="L149">					GameScene.show(new ScrollOfMetamorphosis.WndMetamorphReplace(talent, tier));</span>
+<span class="nc" id="L150">				}</span>
+			});
+<span class="nc bnc" id="L152" title="All 6 branches missed.">		} else if (mode == Mode.METAMORPH_REPLACE &amp;&amp; Dungeon.hero != null &amp;&amp; Dungeon.hero.isAlive()) {</span>
+<span class="nc" id="L153">			toAdd = new WndInfoTalent(talent, pointsInTalent, new WndInfoTalent.TalentButtonCallback() {</span>
+
+				@Override
+				public String prompt() {
+<span class="nc" id="L157">					return Messages.titleCase(Messages.get(ScrollOfMetamorphosis.class, &quot;metamorphose_talent&quot;));</span>
+				}
+
+				@Override
+				public boolean metamorphDesc() {
+<span class="nc" id="L162">					return true;</span>
+				}
+
+				@Override
+				public void call() {
+<span class="nc" id="L167">					Talent replacing = ScrollOfMetamorphosis.WndMetamorphReplace.INSTANCE.replacing;</span>
+
+<span class="nc bnc" id="L169" title="All 2 branches missed.">					for (LinkedHashMap&lt;Talent, Integer&gt; tier : Dungeon.hero.talents){</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">						if (tier.containsKey(replacing)){</span>
+<span class="nc" id="L171">							LinkedHashMap&lt;Talent, Integer&gt; newTier = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">							for (Talent t : tier.keySet()){</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">								if (t == replacing){</span>
+<span class="nc" id="L174">									newTier.put(talent, tier.get(replacing));</span>
+
+<span class="nc bnc" id="L176" title="All 2 branches missed.">									if (!Dungeon.hero.metamorphedTalents.containsValue(replacing)){</span>
+<span class="nc" id="L177">										Dungeon.hero.metamorphedTalents.put(replacing, talent);</span>
+
+									//if what we're replacing is already a value, we need to simplify the data structure
+									} else {
+										//a-&gt;b-&gt;a, we can just remove the entry entirely
+<span class="nc bnc" id="L182" title="All 2 branches missed.">										if (Dungeon.hero.metamorphedTalents.get(talent) == replacing){</span>
+<span class="nc" id="L183">											Dungeon.hero.metamorphedTalents.remove(talent);</span>
+
+										//a-&gt;b-&gt;c, we need to simplify to a-&gt;c
+										} else {
+<span class="nc bnc" id="L187" title="All 2 branches missed.">											for (Talent t2 : Dungeon.hero.metamorphedTalents.keySet()){</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">												if (Dungeon.hero.metamorphedTalents.get(t2) == replacing){</span>
+<span class="nc" id="L189">													Dungeon.hero.metamorphedTalents.put(t2, talent);</span>
+												}
+<span class="nc" id="L191">											}</span>
+										}
+									}
+
+								} else {
+<span class="nc" id="L196">									newTier.put(t, tier.get(t));</span>
+								}
+<span class="nc" id="L198">							}</span>
+<span class="nc" id="L199">							Dungeon.hero.talents.set(ScrollOfMetamorphosis.WndMetamorphReplace.INSTANCE.tier-1, newTier);</span>
+<span class="nc" id="L200">							break;</span>
+						}
+<span class="nc" id="L202">					}</span>
+
+<span class="nc" id="L204">					ScrollOfMetamorphosis.onMetamorph(replacing, talent);</span>
+
+<span class="nc bnc" id="L206" title="All 2 branches missed.">					if (ScrollOfMetamorphosis.WndMetamorphReplace.INSTANCE != null){</span>
+<span class="nc" id="L207">						ScrollOfMetamorphosis.WndMetamorphReplace.INSTANCE.hide();</span>
+					}
+
+<span class="nc" id="L210">				}</span>
+			});
+		} else {
+<span class="nc" id="L213">			toAdd = new WndInfoTalent(talent, pointsInTalent, null);</span>
+		}
+
+<span class="nc bnc" id="L216" title="All 2 branches missed.">		if (ShatteredPixelDungeon.scene() instanceof GameScene){</span>
+<span class="nc" id="L217">			GameScene.show(toAdd);</span>
+		} else {
+<span class="nc" id="L219">			ShatteredPixelDungeon.scene().addToFront(toAdd);</span>
+		}
+<span class="nc" id="L221">	}</span>
+
+	@Override
+	protected void onPointerDown() {
+<span class="nc" id="L225">		icon.brightness( 1.5f );</span>
+<span class="nc" id="L226">		bg.brightness( 1.5f );</span>
+<span class="nc" id="L227">		Sample.INSTANCE.play( Assets.Sounds.CLICK );</span>
+<span class="nc" id="L228">	}</span>
+
+	@Override
+	protected void onPointerUp() {
+<span class="nc" id="L232">		icon.resetColor();</span>
+<span class="nc" id="L233">		bg.resetColor();</span>
+<span class="nc" id="L234">	}</span>
+
+	@Override
+	protected String hoverText() {
+<span class="nc" id="L238">		return Messages.titleCase(talent.title());</span>
+	}
+
+	public void enable(boolean value ) {
+<span class="nc" id="L242">		active = value;</span>
+<span class="nc bnc" id="L243" title="All 2 branches missed.">		icon.alpha( value ? 1.0f : 0.3f );</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">		bg.alpha( value ? 1.0f : 0.3f );</span>
+<span class="nc" id="L245">	}</span>
+
+	public void upgradeTalent(){
+<span class="nc bnc" id="L248" title="All 4 branches missed.">		if (Dungeon.hero.talentPointsAvailable(tier) &gt; 0 &amp;&amp; parent != null) {</span>
+<span class="nc" id="L249">			Dungeon.hero.upgradeTalent(talent);</span>
+<span class="nc" id="L250">			float oldWidth = fill.width();</span>
+<span class="nc" id="L251">			pointsInTalent++;</span>
+<span class="nc" id="L252">			layout();</span>
+<span class="nc" id="L253">			Sample.INSTANCE.play(Assets.Sounds.LEVELUP, 0.7f, 1.2f);</span>
+<span class="nc" id="L254">			Emitter emitter = (Emitter) parent.recycle(Emitter.class);</span>
+<span class="nc" id="L255">			emitter.revive();</span>
+<span class="nc" id="L256">			emitter.pos(fill.x + (fill.width() + oldWidth) / 2f, fill.y + fill.height() / 2f);</span>
+<span class="nc" id="L257">			emitter.burst(Speck.factory(Speck.STAR), 12);</span>
+		}
+<span class="nc" id="L259">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

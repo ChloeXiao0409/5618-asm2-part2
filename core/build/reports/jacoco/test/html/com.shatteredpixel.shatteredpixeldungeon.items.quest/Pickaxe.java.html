@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Pickaxe.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.quest</a> &gt; <span class="el_source">Pickaxe.java</span></div><h1>Pickaxe.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.quest;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Vulnerable;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Bee;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Crab;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Scorpio;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Spinner;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Swarm;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.levels.MiningLevel;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.AttackIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Callback;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L48">public class Pickaxe extends MeleeWeapon {</span>
+	
+	{
+<span class="nc" id="L51">		image = ItemSpriteSheet.PICKAXE;</span>
+
+<span class="nc" id="L53">		levelKnown = true;</span>
+		
+<span class="nc" id="L55">		unique = true;</span>
+<span class="nc" id="L56">		bones = false;</span>
+
+<span class="nc" id="L58">		tier = 2;</span>
+<span class="nc" id="L59">	}</span>
+
+	@Override
+	public int STRReq(int lvl) {
+<span class="nc" id="L63">		return super.STRReq(lvl) + 2; //tier 3 strength requirement with tier 2 damage stats</span>
+	}
+
+	@Override
+	public ArrayList&lt;String&gt; actions( Hero hero ) {
+<span class="nc" id="L68">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		if (Dungeon.level instanceof MiningLevel){</span>
+<span class="nc" id="L70">			actions.remove(AC_DROP);</span>
+<span class="nc" id="L71">			actions.remove(AC_THROW);</span>
+		}
+<span class="nc" id="L73">		return actions;</span>
+	}
+
+	@Override
+	public boolean keptThroughLostInventory() {
+		//pickaxe is always kept when it's needed for the mining level
+<span class="nc bnc" id="L79" title="All 4 branches missed.">		return super.keptThroughLostInventory() || Dungeon.level instanceof MiningLevel;</span>
+	}
+	@Override
+	public String targetingPrompt() {
+<span class="nc" id="L83">		return Messages.get(this, &quot;prompt&quot;);</span>
+	}
+
+	@Override
+	protected void duelistAbility(Hero hero, Integer target) {
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		if (target == null) {</span>
+<span class="nc" id="L89">			return;</span>
+		}
+
+<span class="nc" id="L92">		Char enemy = Actor.findChar(target);</span>
+<span class="nc bnc" id="L93" title="All 8 branches missed.">		if (enemy == null || enemy == hero || hero.isCharmedBy(enemy) || !Dungeon.level.heroFOV[target]) {</span>
+<span class="nc" id="L94">			GLog.w(Messages.get(this, &quot;ability_no_target&quot;));</span>
+<span class="nc" id="L95">			return;</span>
+		}
+
+<span class="nc" id="L98">		hero.belongings.abilityWeapon = this;</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		if (!hero.canAttack(enemy)){</span>
+<span class="nc" id="L100">			GLog.w(Messages.get(this, &quot;ability_target_range&quot;));</span>
+<span class="nc" id="L101">			hero.belongings.abilityWeapon = null;</span>
+<span class="nc" id="L102">			return;</span>
+		}
+<span class="nc" id="L104">		hero.belongings.abilityWeapon = null;</span>
+
+<span class="nc" id="L106">		hero.sprite.attack(enemy.pos, new Callback() {</span>
+			@Override
+			public void call() {
+<span class="nc" id="L109">				int damageBoost = 0;</span>
+<span class="nc bnc" id="L110" title="All 12 branches missed.">				if (Char.hasProp(enemy, Char.Property.INORGANIC)</span>
+						|| enemy instanceof Swarm
+						|| enemy instanceof Bee
+						|| enemy instanceof Crab
+						|| enemy instanceof Spinner
+						|| enemy instanceof Scorpio) {
+					//+(8+2*lvl) damage, equivalent to +100% damage
+<span class="nc" id="L117">					damageBoost = augment.damageFactor(8 + 2*buffedLvl());</span>
+				}
+<span class="nc" id="L119">				beforeAbilityUsed(hero, enemy);</span>
+<span class="nc" id="L120">				AttackIndicator.target(enemy);</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">				if (hero.attack(enemy, 1, damageBoost, Char.INFINITE_ACCURACY)) {</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">					if (enemy.isAlive()) {</span>
+<span class="nc" id="L123">						Buff.affect(enemy, Vulnerable.class, 3f);</span>
+					} else {
+<span class="nc" id="L125">						onAbilityKill(hero, enemy);</span>
+					}
+<span class="nc" id="L127">					Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);</span>
+				}
+<span class="nc" id="L129">				Invisibility.dispel();</span>
+<span class="nc" id="L130">				hero.spendAndNext(hero.attackDelay());</span>
+<span class="nc" id="L131">				afterAbilityUsed(hero);</span>
+<span class="nc" id="L132">			}</span>
+		});
+<span class="nc" id="L134">	}</span>
+
+	@Override
+	public String abilityInfo() {
+<span class="nc" id="L138">		int dmgBoost = 8 + 2*buffedLvl();</span>
+<span class="nc" id="L139">		return Messages.get(this, &quot;ability_desc&quot;, augment.damageFactor(min()+dmgBoost), augment.damageFactor(max()+dmgBoost));</span>
+	}
+
+	public String upgradeAbilityStat(int level){
+<span class="nc" id="L143">		int dmgBoost = 8 + 2*level;</span>
+<span class="nc" id="L144">		return augment.damageFactor(min(level)+dmgBoost) + &quot;-&quot; + augment.damageFactor(max(level)+dmgBoost);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

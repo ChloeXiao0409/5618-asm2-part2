@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GuidingLight.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells</a> &gt; <span class="el_source">GuidingLight.java</span></div><h1>GuidingLight.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Callback;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L48">public class GuidingLight extends TargetedClericSpell {</span>
+
+<span class="nc" id="L50">	public static final GuidingLight INSTANCE = new GuidingLight();</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L54">		return HeroIcon.GUIDING_LIGHT;</span>
+	}
+
+	@Override
+	protected void onTargetSelected(HolyTome tome, Hero hero, Integer target) {
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		if (target == null){</span>
+<span class="nc" id="L60">			return;</span>
+		}
+
+<span class="nc" id="L63">		Ballistica aim = new Ballistica(hero.pos, target, targetingFlags());</span>
+
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		if (Actor.findChar( aim.collisionPos ) == hero){</span>
+<span class="nc" id="L66">			GLog.i( Messages.get(Wand.class, &quot;self_target&quot;) );</span>
+<span class="nc" id="L67">			return;</span>
+		}
+
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		if (Actor.findChar(aim.collisionPos) != null) {</span>
+<span class="nc" id="L71">			QuickSlotButton.target(Actor.findChar(aim.collisionPos));</span>
+		} else {
+<span class="nc" id="L73">			QuickSlotButton.target(Actor.findChar(target));</span>
+		}
+
+<span class="nc" id="L76">		hero.busy();</span>
+<span class="nc" id="L77">		Sample.INSTANCE.play( Assets.Sounds.ZAP );</span>
+<span class="nc" id="L78">		hero.sprite.zap(target);</span>
+<span class="nc" id="L79">		MagicMissile.boltFromChar(hero.sprite.parent, MagicMissile.LIGHT_MISSILE, hero.sprite, aim.collisionPos, new Callback() {</span>
+			@Override
+			public void call() {
+
+<span class="nc" id="L83">				Char ch = Actor.findChar( aim.collisionPos );</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">				if (ch != null) {</span>
+<span class="nc" id="L85">					ch.damage(Random.NormalIntRange(2, 6), GuidingLight.this);</span>
+<span class="nc" id="L86">					Sample.INSTANCE.play(Assets.Sounds.HIT_MAGIC, 1, Random.Float(0.87f, 1.15f));</span>
+<span class="nc" id="L87">					ch.sprite.burst(0xFFFFFF44, 3);</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">					if (ch.isAlive()){</span>
+<span class="nc" id="L89">						Buff.affect(ch, Illuminated.class);</span>
+<span class="nc" id="L90">						Buff.affect(ch, WasIlluminatedTracker.class);</span>
+					}
+				} else {
+<span class="nc" id="L93">					Dungeon.level.pressCell(aim.collisionPos);</span>
+				}
+
+<span class="nc" id="L96">				hero.spend( 1f );</span>
+<span class="nc" id="L97">				hero.next();</span>
+
+<span class="nc" id="L99">				onSpellCast(tome, hero);</span>
+<span class="nc bnc" id="L100" title="All 4 branches missed.">				if (hero.subClass == HeroSubClass.PRIEST &amp;&amp; hero.buff(GuidingLightPriestCooldown.class) == null) {</span>
+<span class="nc" id="L101">					Buff.prolong(hero, GuidingLightPriestCooldown.class, 100f);</span>
+				}
+
+<span class="nc" id="L104">			}</span>
+		});
+<span class="nc" id="L106">	}</span>
+
+	@Override
+	public float chargeUse(Hero hero) {
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		if (hero.subClass == HeroSubClass.PRIEST</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">			&amp;&amp; hero.buff(GuidingLightPriestCooldown.class) == null){</span>
+<span class="nc" id="L112">			return 0;</span>
+		} else {
+<span class="nc" id="L114">			return 1;</span>
+		}
+	}
+
+	public String desc(){
+<span class="nc" id="L119">		String desc = Messages.get(this, &quot;desc&quot;);</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">		if (Dungeon.hero.subClass == HeroSubClass.PRIEST){</span>
+<span class="nc" id="L121">			desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_priest&quot;);</span>
+		}
+<span class="nc" id="L123">		return desc + &quot;\n\n&quot; + Messages.get(this, &quot;charge_cost&quot;, (int)chargeUse(Dungeon.hero));</span>
+	}
+
+<span class="nc" id="L126">	public static class GuidingLightPriestCooldown extends FlavourBuff {</span>
+
+		@Override
+		public int icon() {
+<span class="nc" id="L130">			return BuffIndicator.ILLUMINATED;</span>
+		}
+
+		@Override
+		public void tintIcon(Image icon) {
+<span class="nc" id="L135">			icon.brightness(0.5f);</span>
+<span class="nc" id="L136">		}</span>
+
+<span class="nc" id="L138">		public float iconFadePercent() { return Math.max(0, visualcooldown() / 100); }</span>
+
+	}
+
+<span class="nc" id="L142">	public static class Illuminated extends Buff {</span>
+
+		{
+<span class="nc" id="L145">			type = buffType.NEGATIVE;</span>
+<span class="nc" id="L146">		}</span>
+
+		@Override
+		public int icon() {
+<span class="nc" id="L150">			return BuffIndicator.ILLUMINATED;</span>
+		}
+
+		@Override
+		public void fx(boolean on) {
+<span class="nc bnc" id="L155" title="All 2 branches missed.">			if (on) target.sprite.add(CharSprite.State.ILLUMINATED);</span>
+<span class="nc" id="L156">			else target.sprite.remove(CharSprite.State.ILLUMINATED);</span>
+<span class="nc" id="L157">		}</span>
+
+		@Override
+		public String desc() {
+<span class="nc" id="L161">			String desc = super.desc();</span>
+
+<span class="nc bnc" id="L163" title="All 2 branches missed.">			if (Dungeon.hero.subClass == HeroSubClass.PRIEST){</span>
+<span class="nc" id="L164">				desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_priest&quot;);</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">			} else if (Dungeon.hero.heroClass != HeroClass.CLERIC){</span>
+<span class="nc" id="L166">				desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_generic&quot;);</span>
+			}
+
+<span class="nc" id="L169">			return desc;</span>
+		}
+	}
+
+<span class="nc" id="L173">	public static class WasIlluminatedTracker extends Buff {}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

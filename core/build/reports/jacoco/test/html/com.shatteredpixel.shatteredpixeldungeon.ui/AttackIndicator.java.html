@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AttackIndicator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">AttackIndicator.java</span></div><h1>AttackIndicator.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndKeyBindings;
+import com.watabou.input.GameAction;
+import com.watabou.noosa.Game;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+
+//FIXME needs a refactor, lots of weird thread interaction here.
+public class AttackIndicator extends Tag {
+	
+	private static final float ENABLED	= 1.0f;
+	private static final float DISABLED	= 0.3f;
+
+	private static float delay;
+	
+	private static AttackIndicator instance;
+	
+<span class="nc" id="L49">	private CharSprite sprite = null;</span>
+	
+	private Mob lastTarget;
+<span class="nc" id="L52">	private ArrayList&lt;Mob&gt; candidates = new ArrayList&lt;&gt;();</span>
+	
+	public AttackIndicator() {
+<span class="nc" id="L55">		super( DangerIndicator.COLOR );</span>
+
+<span class="nc" id="L57">		synchronized (this) {</span>
+<span class="nc" id="L58">			instance = this;</span>
+<span class="nc" id="L59">			lastTarget = null;</span>
+
+<span class="nc" id="L61">			setSize(SIZE, SIZE);</span>
+<span class="nc" id="L62">			visible(false);</span>
+<span class="nc" id="L63">			enable(false);</span>
+<span class="nc" id="L64">		}</span>
+<span class="nc" id="L65">	}</span>
+	
+	@Override
+	public GameAction keyAction() {
+<span class="nc" id="L69">		return SPDAction.TAG_ATTACK;</span>
+	}
+	
+	@Override
+	protected void createChildren() {
+<span class="nc" id="L74">		super.createChildren();</span>
+<span class="nc" id="L75">	}</span>
+	
+	@Override
+	protected synchronized void layout() {
+<span class="nc" id="L79">		super.layout();</span>
+
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		if (sprite != null) {</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">			if (!flipped)   sprite.x = x + (SIZE - sprite.width()) / 2f + 1;</span>
+<span class="nc" id="L83">			else            sprite.x = x + width - (SIZE + sprite.width()) / 2f - 1;</span>
+<span class="nc" id="L84">			sprite.y = y + (height - sprite.height()) / 2f;</span>
+<span class="nc" id="L85">			PixelScene.align(sprite);</span>
+		}
+<span class="nc" id="L87">	}</span>
+	
+	@Override
+	public synchronized void update() {
+<span class="nc" id="L91">		super.update();</span>
+
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		if (!bg.visible){</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">			if (sprite != null) sprite.visible = false;</span>
+<span class="nc" id="L95">			enable(false);</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">			if (delay &gt; 0f) delay -= Game.elapsed;</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">			if (delay &lt;= 0f) active = false;</span>
+		} else {
+<span class="nc" id="L99">			delay = 0.75f;</span>
+<span class="nc" id="L100">			active = true;</span>
+<span class="nc bnc" id="L101" title="All 4 branches missed.">			if (bg.width &gt; 0 &amp;&amp; sprite != null)sprite.visible = true;</span>
+
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			if (Dungeon.hero.isAlive()) {</span>
+
+<span class="nc" id="L105">				enable(Dungeon.hero.ready);</span>
+
+			} else {
+<span class="nc" id="L108">				visible( false );</span>
+<span class="nc" id="L109">				enable( false );</span>
+			}
+		}
+<span class="nc" id="L112">	}</span>
+	
+	private synchronized void checkEnemies() {
+
+<span class="nc" id="L116">		candidates.clear();</span>
+<span class="nc" id="L117">		int v = Dungeon.hero.visibleEnemies();</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		for (int i=0; i &lt; v; i++) {</span>
+<span class="nc" id="L119">			Mob mob = Dungeon.hero.visibleEnemy( i );</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			if ( Dungeon.hero.canAttack( mob) ) {</span>
+<span class="nc" id="L121">				candidates.add( mob );</span>
+			}
+		}
+		
+<span class="nc bnc" id="L125" title="All 4 branches missed.">		if (lastTarget == null || !candidates.contains( lastTarget )) {</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">			if (candidates.isEmpty()) {</span>
+<span class="nc" id="L127">				lastTarget = null;</span>
+			} else {
+<span class="nc" id="L129">				active = true;</span>
+<span class="nc" id="L130">				lastTarget = Random.element( candidates );</span>
+<span class="nc" id="L131">				updateImage();</span>
+<span class="nc" id="L132">				flash();</span>
+			}
+		} else {
+<span class="nc" id="L135">			active = true;</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">			if (!bg.visible) {</span>
+<span class="nc" id="L137">				flash();</span>
+			}
+		}
+		
+<span class="nc bnc" id="L141" title="All 2 branches missed.">		visible( lastTarget != null );</span>
+<span class="nc" id="L142">		enable( bg.visible );</span>
+<span class="nc" id="L143">	}</span>
+	
+	private synchronized void updateImage() {
+		
+<span class="nc bnc" id="L147" title="All 2 branches missed.">		if (sprite != null) {</span>
+<span class="nc" id="L148">			sprite.killAndErase();</span>
+<span class="nc" id="L149">			sprite = null;</span>
+		}
+		
+<span class="nc" id="L152">		sprite = Reflection.newInstance(lastTarget.spriteClass);</span>
+<span class="nc" id="L153">		active = true;</span>
+<span class="nc" id="L154">		sprite.linkVisuals(lastTarget);</span>
+<span class="nc" id="L155">		sprite.idle();</span>
+<span class="nc" id="L156">		sprite.paused = true;</span>
+<span class="nc" id="L157">		sprite.visible = bg.visible;</span>
+
+<span class="nc bnc" id="L159" title="All 4 branches missed.">		if (sprite.width() &gt; 20 || sprite.height() &gt; 20){</span>
+<span class="nc" id="L160">			sprite.scale.set(PixelScene.align(20f/Math.max(sprite.width(), sprite.height())));</span>
+		}
+
+<span class="nc" id="L163">		add( sprite );</span>
+
+<span class="nc" id="L165">		layout();</span>
+<span class="nc" id="L166">	}</span>
+	
+<span class="nc" id="L168">	private boolean enabled = true;</span>
+	private synchronized void enable( boolean value ) {
+<span class="nc" id="L170">		enabled = value;</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">		if (sprite != null) {</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">			sprite.alpha( value ? ENABLED : DISABLED );</span>
+		}
+<span class="nc" id="L174">	}</span>
+	
+	private synchronized void visible( boolean value ) {
+<span class="nc" id="L177">		bg.visible = value;</span>
+<span class="nc" id="L178">	}</span>
+	
+	@Override
+	protected void onClick() {
+<span class="nc" id="L182">		super.onClick();</span>
+<span class="nc bnc" id="L183" title="All 4 branches missed.">		if (enabled &amp;&amp; Dungeon.hero.ready) {</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">			if (Dungeon.hero.handle( lastTarget.pos )) {</span>
+<span class="nc" id="L185">				Dungeon.hero.next();</span>
+			}
+		}
+<span class="nc" id="L188">	}</span>
+
+	@Override
+	protected String hoverText() {
+<span class="nc" id="L192">		return Messages.titleCase(Messages.get(WndKeyBindings.class, &quot;tag_attack&quot;));</span>
+	}
+
+	public static void target(Char target ) {
+<span class="nc bnc" id="L196" title="All 2 branches missed.">		if (target == null) return;</span>
+<span class="nc" id="L197">		synchronized (instance) {</span>
+<span class="nc" id="L198">			instance.lastTarget = (Mob) target;</span>
+<span class="nc" id="L199">			instance.updateImage();</span>
+
+<span class="nc" id="L201">			QuickSlotButton.target(target);</span>
+<span class="nc" id="L202">		}</span>
+<span class="nc" id="L203">	}</span>
+	
+	public static void updateState() {
+<span class="nc" id="L206">		instance.checkEnemies();</span>
+<span class="nc" id="L207">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScrollingGridPane.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">ScrollingGridPane.java</span></div><h1>ScrollingGridPane.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.watabou.noosa.ColorBlock;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.Visual;
+import com.watabou.noosa.ui.Component;
+
+import java.util.ArrayList;
+
+public class ScrollingGridPane extends ScrollPane {
+
+<span class="nc" id="L35">	private ArrayList&lt;Component&gt; items = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L36">	private ArrayList&lt;ColorBlock&gt; separators = new ArrayList&lt;&gt;();</span>
+
+	private static final int ITEM_SIZE	= 17;
+	private static final int MIN_GROUP_SIZE = 3*(ITEM_SIZE+1);
+
+	public ScrollingGridPane(){
+<span class="nc" id="L42">		super(new Component());</span>
+<span class="nc" id="L43">	}</span>
+
+	@Override
+	public void onClick(float x, float y) {
+<span class="nc bnc" id="L47" title="All 2 branches missed.">		for (Component item : items) {</span>
+<span class="nc bnc" id="L48" title="All 4 branches missed.">			if ((item instanceof ScrollingGridPane.GridItem) &amp;&amp; ((ScrollingGridPane.GridItem) item).onClick( x, y )) {</span>
+<span class="nc" id="L49">				break;</span>
+			}
+<span class="nc" id="L51">		}</span>
+<span class="nc" id="L52">	}</span>
+
+	public void addItem( ScrollingGridPane.GridItem item ){
+<span class="nc" id="L55">		content.add(item);</span>
+<span class="nc" id="L56">		items.add(item);</span>
+<span class="nc" id="L57">	}</span>
+
+	public void addHeader( String text ){
+<span class="nc" id="L60">		addHeader( text, 7, false );</span>
+<span class="nc" id="L61">	}</span>
+
+	public void addHeader( String text, int size, boolean center ){
+<span class="nc" id="L64">		GridHeader header = new GridHeader(text, size, center);</span>
+<span class="nc" id="L65">		content.add(header);</span>
+<span class="nc" id="L66">		items.add(header);</span>
+<span class="nc" id="L67">	}</span>
+
+	@Override
+	public synchronized void clear() {
+<span class="nc" id="L71">		content.clear();</span>
+<span class="nc" id="L72">		items.clear();</span>
+<span class="nc" id="L73">		separators.clear();</span>
+<span class="nc" id="L74">	}</span>
+
+	@Override
+	protected void layout() {
+
+<span class="nc" id="L79">		float left = 0;</span>
+<span class="nc" id="L80">		float top = 0;</span>
+
+<span class="nc" id="L82">		int sepsUsed = 0;</span>
+
+		//these variables help control logic for laying out multiple grid groups on one line
+<span class="nc" id="L85">		boolean freshRow = true; //whether the previous group is still on its first row</span>
+<span class="nc" id="L86">		boolean lastWasSmallheader = false; //whether the last UI element was a header on its own</span>
+<span class="nc" id="L87">		float widthThisGroup = 0; //how wide the current group is (we use a min of 3 items)</span>
+
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		for (int i = 0; i &lt; items.size(); i++){</span>
+<span class="nc" id="L90">			Component item = items.get(i);</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">			if (item instanceof GridHeader){</span>
+				//we can sometimes get two smaller headers next to each other if a group has no items in it
+				//so we need to treat it as if there were grid items for proper layout
+<span class="nc bnc" id="L94" title="All 4 branches missed.">				if (left &gt; 0 || lastWasSmallheader){</span>
+
+					//this bit of logic exists so that multiple headers can be on one row
+					// if all of their groups have a small number of items, with a min space for 3
+<span class="nc" id="L98">					float spacing = Math.max(0, MIN_GROUP_SIZE - widthThisGroup);</span>
+<span class="nc" id="L99">					float spaceLeft = width() - (left + spacing);</span>
+<span class="nc" id="L100">					int spaceReq = 0;</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">					for (int j = i+1; j &lt; items.size(); j++){</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">						if (items.get(j) instanceof GridItem){</span>
+<span class="nc" id="L103">							spaceReq += ITEM_SIZE+1;</span>
+						} else {
+							break;
+						}
+					}
+<span class="nc" id="L108">					spaceReq = Math.max(spaceReq, MIN_GROUP_SIZE);</span>
+<span class="nc bnc" id="L109" title="All 6 branches missed.">					if (!((GridHeader) item).center &amp;&amp; freshRow &amp;&amp; spaceLeft &gt;= spaceReq){</span>
+<span class="nc" id="L110">						left = left + spacing;</span>
+<span class="nc" id="L111">						top -= item.height()+1;</span>
+						ColorBlock sep;
+<span class="nc bnc" id="L113" title="All 2 branches missed.">						if (separators.size() &gt; sepsUsed){</span>
+<span class="nc" id="L114">							sep = separators.get(sepsUsed++);</span>
+						} else {
+<span class="nc" id="L116">							sep = new ColorBlock(1, 1, 0xFF222222);</span>
+<span class="nc" id="L117">							separators.add(sep);</span>
+<span class="nc" id="L118">							content.add(sep);</span>
+<span class="nc" id="L119">							sepsUsed++;</span>
+						}
+<span class="nc" id="L121">						sep.size(1, item.height()+1+ITEM_SIZE);</span>
+<span class="nc" id="L122">						sep.x = left-1;</span>
+<span class="nc" id="L123">						sep.y = top;</span>
+<span class="nc" id="L124">					} else {</span>
+<span class="nc" id="L125">						left = 0;</span>
+<span class="nc" id="L126">						top += ITEM_SIZE + 2;</span>
+<span class="nc" id="L127">						freshRow = true;</span>
+					}
+				}
+<span class="nc" id="L130">				item.setRect(left, top, width(), item.height());</span>
+<span class="nc" id="L131">				top += item.height()+1;</span>
+<span class="nc" id="L132">				widthThisGroup = 0;</span>
+
+<span class="nc bnc" id="L134" title="All 2 branches missed.">				if (!((GridHeader) item).center){</span>
+<span class="nc" id="L135">					lastWasSmallheader = true;</span>
+				} else {
+<span class="nc" id="L137">					lastWasSmallheader = false;</span>
+				}
+
+<span class="nc bnc" id="L140" title="All 2 branches missed.">			} if (item instanceof GridItem){</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">				if (left + ITEM_SIZE &gt; width()) {</span>
+<span class="nc" id="L142">					left = 0;</span>
+<span class="nc" id="L143">					widthThisGroup = 0;</span>
+<span class="nc" id="L144">					top += ITEM_SIZE+1;</span>
+<span class="nc" id="L145">					freshRow = false;</span>
+				}
+<span class="nc" id="L147">				item.setRect(left, top, ITEM_SIZE, ITEM_SIZE);</span>
+<span class="nc" id="L148">				left += ITEM_SIZE+1;</span>
+<span class="nc" id="L149">				widthThisGroup += ITEM_SIZE+1;</span>
+<span class="nc" id="L150">				lastWasSmallheader = false;</span>
+			}
+
+		}
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		if (left &gt; 0){</span>
+<span class="nc" id="L155">			left = 0;</span>
+<span class="nc" id="L156">			top += ITEM_SIZE+1;</span>
+		}
+
+<span class="nc bnc" id="L159" title="All 2 branches missed.">		while (separators.size() &gt; sepsUsed){</span>
+<span class="nc" id="L160">			ColorBlock sep = separators.remove(sepsUsed);</span>
+<span class="nc" id="L161">			content.remove(sep);</span>
+<span class="nc" id="L162">		}</span>
+
+<span class="nc" id="L164">		content.setSize(width, top);</span>
+<span class="nc" id="L165">		super.layout();</span>
+<span class="nc" id="L166">	}</span>
+
+	public static class GridItem extends Component {
+
+		protected Image icon;
+
+		protected Visual secondIcon;
+
+		protected ColorBlock bg;
+
+		public GridItem( Image icon ) {
+<span class="nc" id="L177">			super();</span>
+
+<span class="nc bnc" id="L179" title="All 2 branches missed.">			if (icon instanceof ItemSprite){</span>
+<span class="nc" id="L180">				this.icon = new ItemSprite();</span>
+			} else {
+<span class="nc" id="L182">				this.icon = new Image();</span>
+			}
+<span class="nc" id="L184">			this.icon.copy(icon);</span>
+<span class="nc" id="L185">			add(this.icon);</span>
+<span class="nc" id="L186">		}</span>
+
+		public void addSecondIcon( Visual icon ){
+<span class="nc" id="L189">			secondIcon = icon;</span>
+<span class="nc" id="L190">			add(secondIcon);</span>
+<span class="nc" id="L191">			layout();</span>
+<span class="nc" id="L192">		}</span>
+
+		public void hardLightBG( float r, float g, float b ){
+<span class="nc" id="L195">			bg.hardlight(r, g, b);</span>
+<span class="nc" id="L196">		}</span>
+
+		public boolean onClick( float x, float y ){
+<span class="nc" id="L199">			return false;</span>
+		}
+
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L204">			bg = new ColorBlock( 1, 1, 0x9953564D);</span>
+<span class="nc" id="L205">			add(bg);</span>
+<span class="nc" id="L206">		}</span>
+
+		@Override
+		protected void layout() {
+
+<span class="nc" id="L211">			bg.x = x;</span>
+<span class="nc" id="L212">			bg.y = y;</span>
+<span class="nc" id="L213">			bg.size(width(), height());</span>
+
+<span class="nc" id="L215">			icon.y = y + (height() - icon.height()) / 2f;</span>
+<span class="nc" id="L216">			icon.x = x + (width() - icon.width())/2f;</span>
+<span class="nc" id="L217">			PixelScene.align(icon);</span>
+
+<span class="nc bnc" id="L219" title="All 2 branches missed.">			if (secondIcon != null){</span>
+<span class="nc" id="L220">				secondIcon.x = x + width()-secondIcon.width();</span>
+<span class="nc" id="L221">				secondIcon.y = y;</span>
+			}
+
+<span class="nc" id="L224">		}</span>
+
+	}
+
+	public static class GridHeader extends Component {
+
+		protected RenderedTextBlock text;
+		boolean center;
+
+		public GridHeader( String text ){
+<span class="nc" id="L234">			this(text, 7, false);</span>
+<span class="nc" id="L235">		}</span>
+
+		public GridHeader( String text, int size, boolean center ){
+<span class="nc" id="L238">			super();</span>
+
+<span class="nc" id="L240">			this.center = center;</span>
+<span class="nc" id="L241">			this.text = PixelScene.renderTextBlock(text, size);</span>
+<span class="nc" id="L242">			add(this.text);</span>
+
+<span class="nc" id="L244">		}</span>
+
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L248">			super.createChildren();</span>
+<span class="nc" id="L249">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L253">			super.layout();</span>
+
+<span class="nc bnc" id="L255" title="All 2 branches missed.">			if (center){</span>
+<span class="nc" id="L256">				text.align(RenderedTextBlock.CENTER_ALIGN);</span>
+<span class="nc" id="L257">				text.maxWidth((int)width());</span>
+<span class="nc" id="L258">				text.setPos(x + (width() - text.width()) / 2, y+1);</span>
+			} else {
+<span class="nc" id="L260">				text.maxWidth((int)width());</span>
+<span class="nc" id="L261">				text.setPos(x, y+1);</span>
+			}
+<span class="nc" id="L263">		}</span>
+
+		@Override
+		public float height() {
+<span class="nc bnc" id="L267" title="All 2 branches missed.">			if (center){</span>
+<span class="nc" id="L268">				return text.height() + 3;</span>
+			} else {
+<span class="nc" id="L270">				return text.height() + 2;</span>
+			}
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

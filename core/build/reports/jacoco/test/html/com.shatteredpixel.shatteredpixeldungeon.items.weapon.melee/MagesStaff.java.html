@@ -1,0 +1,555 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MagesStaff.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee</a> &gt; <span class="el_source">MagesStaff.java</span></div><h1>MagesStaff.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ArtifactRecharge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ElmoParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.MagicalHolster;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRecharging;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfCorrosion;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfCorruption;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfDisintegration;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfLivingEarth;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfRegrowth;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndUseItem;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.noosa.particles.PixelParticle;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+public class MagesStaff extends MeleeWeapon {
+
+	private Wand wand;
+
+	public static final String AC_IMBUE = &quot;IMBUE&quot;;
+	public static final String AC_ZAP	= &quot;ZAP&quot;;
+
+	private static final float STAFF_SCALE_FACTOR = 0.75f;
+
+	{
+<span class="nc" id="L72">		image = ItemSpriteSheet.MAGES_STAFF;</span>
+<span class="nc" id="L73">		hitSound = Assets.Sounds.HIT;</span>
+<span class="nc" id="L74">		hitSoundPitch = 1.1f;</span>
+
+<span class="nc" id="L76">		tier = 1;</span>
+
+<span class="nc" id="L78">		defaultAction = AC_ZAP;</span>
+<span class="nc" id="L79">		usesTargeting = true;</span>
+
+<span class="nc" id="L81">		unique = true;</span>
+<span class="nc" id="L82">		bones = false;</span>
+	}
+
+<span class="nc" id="L85">	public MagesStaff() {</span>
+<span class="nc" id="L86">		wand = null;</span>
+<span class="nc" id="L87">	}</span>
+
+	@Override
+	public int max(int lvl) {
+<span class="nc" id="L91">		return  Math.round(3f*(tier+1)) +   //6 base damage, down from 10</span>
+				lvl*(tier+1);               //scaling unaffected
+	}
+
+	public MagesStaff(Wand wand){
+<span class="nc" id="L96">		this();</span>
+<span class="nc" id="L97">		wand.identify();</span>
+<span class="nc" id="L98">		wand.cursed = false;</span>
+<span class="nc" id="L99">		this.wand = wand;</span>
+<span class="nc" id="L100">		updateWand(false);</span>
+<span class="nc" id="L101">		wand.curCharges = wand.maxCharges;</span>
+<span class="nc" id="L102">	}</span>
+
+	@Override
+	public ArrayList&lt;String&gt; actions(Hero hero) {
+<span class="nc" id="L106">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc" id="L107">		actions.add(AC_IMBUE);</span>
+<span class="nc bnc" id="L108" title="All 4 branches missed.">		if (wand!= null &amp;&amp; wand.curCharges &gt; 0) {</span>
+<span class="nc" id="L109">			actions.add( AC_ZAP );</span>
+		}
+<span class="nc" id="L111">		return actions;</span>
+	}
+
+	@Override
+	public String defaultAction() {
+<span class="nc" id="L116">		return AC_ZAP;</span>
+	}
+
+	@Override
+	public void activate( Char ch ) {
+<span class="nc" id="L121">		super.activate(ch);</span>
+<span class="nc" id="L122">		applyWandChargeBuff(ch);</span>
+<span class="nc" id="L123">	}</span>
+
+	@Override
+	public int targetingPos(Hero user, int dst) {
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		if (wand != null) {</span>
+<span class="nc" id="L128">			return wand.targetingPos(user, dst);</span>
+		} else {
+<span class="nc" id="L130">			return super.targetingPos(user, dst);</span>
+		}
+	}
+
+	@Override
+	public void execute(Hero hero, String action) {
+
+<span class="nc" id="L137">		super.execute(hero, action);</span>
+
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		if (action.equals(AC_IMBUE)) {</span>
+
+<span class="nc" id="L141">			curUser = hero;</span>
+<span class="nc" id="L142">			GameScene.selectItem(itemSelector);</span>
+
+<span class="nc bnc" id="L144" title="All 2 branches missed.">		} else if (action.equals(AC_ZAP)){</span>
+
+<span class="nc bnc" id="L146" title="All 2 branches missed.">			if (wand == null) {</span>
+<span class="nc" id="L147">				GameScene.show(new WndUseItem(null, this));</span>
+<span class="nc" id="L148">				return;</span>
+			}
+
+<span class="nc bnc" id="L151" title="All 4 branches missed.">			if (cursed || hasCurseEnchant()) wand.cursed = true;</span>
+<span class="nc" id="L152">			else                             wand.cursed = false;</span>
+<span class="nc" id="L153">			wand.execute(hero, AC_ZAP);</span>
+		}
+<span class="nc" id="L155">	}</span>
+
+	@Override
+	public int buffedVisiblyUpgraded() {
+<span class="nc bnc" id="L159" title="All 2 branches missed.">		if (wand != null){</span>
+<span class="nc" id="L160">			return Math.max(super.buffedVisiblyUpgraded(), wand.buffedVisiblyUpgraded());</span>
+		} else {
+<span class="nc" id="L162">			return super.buffedVisiblyUpgraded();</span>
+		}
+	}
+
+	@Override
+	public int proc(Char attacker, Char defender, int damage) {
+<span class="nc bnc" id="L168" title="All 4 branches missed.">		if (attacker instanceof Hero &amp;&amp; ((Hero) attacker).hasTalent(Talent.MYSTICAL_CHARGE)){</span>
+<span class="nc" id="L169">			Hero hero = (Hero) attacker;</span>
+<span class="nc" id="L170">			ArtifactRecharge.chargeArtifacts(hero, hero.pointsInTalent(Talent.MYSTICAL_CHARGE)/2f);</span>
+		}
+
+<span class="nc" id="L173">		Talent.EmpoweredStrikeTracker empoweredStrike = attacker.buff(Talent.EmpoweredStrikeTracker.class);</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">		if (empoweredStrike != null){</span>
+<span class="nc" id="L175">			damage = Math.round( damage * (1f + Dungeon.hero.pointsInTalent(Talent.EMPOWERED_STRIKE)/6f));</span>
+		}
+
+<span class="nc bnc" id="L178" title="All 6 branches missed.">		if (wand != null &amp;&amp;</span>
+				attacker instanceof Hero &amp;&amp; ((Hero)attacker).subClass == HeroSubClass.BATTLEMAGE) {
+<span class="nc bnc" id="L180" title="All 2 branches missed.">			if (wand.curCharges &lt; wand.maxCharges) wand.partialCharge += 0.5f;</span>
+<span class="nc" id="L181">			ScrollOfRecharging.charge((Hero)attacker);</span>
+<span class="nc" id="L182">			wand.onHit(this, attacker, defender, damage);</span>
+		}
+
+<span class="nc bnc" id="L185" title="All 2 branches missed.">		if (empoweredStrike != null){</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">			if (!empoweredStrike.delayedDetach) empoweredStrike.detach();</span>
+<span class="nc bnc" id="L187" title="All 4 branches missed.">			if (!(defender instanceof Mob) || !((Mob) defender).surprisedBy(attacker)){</span>
+<span class="nc" id="L188">				Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG, 0.75f, 1.2f);</span>
+			}
+		}
+<span class="nc" id="L191">		return super.proc(attacker, defender, damage);</span>
+	}
+
+	@Override
+	public int reachFactor(Char owner) {
+<span class="nc" id="L196">		int reach = super.reachFactor(owner);</span>
+<span class="nc bnc" id="L197" title="All 6 branches missed.">		if (owner instanceof Hero</span>
+				&amp;&amp; wand instanceof WandOfDisintegration
+				&amp;&amp; ((Hero)owner).subClass == HeroSubClass.BATTLEMAGE){
+<span class="nc" id="L200">			reach += Math.round(Wand.procChanceMultiplier(owner));</span>
+		}
+<span class="nc" id="L202">		return reach;</span>
+	}
+
+	@Override
+	public boolean collect( Bag container ) {
+<span class="nc bnc" id="L207" title="All 2 branches missed.">		if (super.collect(container)) {</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">			if (container.owner != null) {</span>
+<span class="nc" id="L209">				applyWandChargeBuff(container.owner);</span>
+			}
+<span class="nc" id="L211">			return true;</span>
+		} else {
+<span class="nc" id="L213">			return false;</span>
+		}
+	}
+
+	@Override
+	public void onDetach( ) {
+<span class="nc bnc" id="L219" title="All 2 branches missed.">		if (wand != null) wand.stopCharging();</span>
+<span class="nc" id="L220">	}</span>
+
+	public Item imbueWand(Wand wand, Char owner){
+
+<span class="nc bnc" id="L224" title="All 2 branches missed.">		int oldStaffcharges = this.wand != null ? this.wand.curCharges : 0;</span>
+
+<span class="nc bnc" id="L226" title="All 4 branches missed.">		if (owner == Dungeon.hero &amp;&amp; Dungeon.hero.hasTalent(Talent.WAND_PRESERVATION)){</span>
+<span class="nc" id="L227">			Talent.WandPreservationCounter counter = Buff.affect(Dungeon.hero, Talent.WandPreservationCounter.class);</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">			if (counter.count() == 0){</span>
+<span class="nc" id="L229">				counter.countUp(1);</span>
+<span class="nc" id="L230">				this.wand.level(0);</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">				if (!this.wand.collect()) {</span>
+<span class="nc" id="L232">					Dungeon.level.drop(this.wand, owner.pos);</span>
+				}
+<span class="nc" id="L234">				GLog.newLine();</span>
+<span class="nc" id="L235">				GLog.p(Messages.get(this, &quot;preserved&quot;));</span>
+			}
+		}
+
+<span class="nc" id="L239">		this.wand = null;</span>
+
+<span class="nc" id="L241">		wand.resinBonus = 0;</span>
+<span class="nc" id="L242">		wand.updateLevel();</span>
+
+		//syncs the level of the two items.
+<span class="nc" id="L245">		int targetLevel = Math.max(this.trueLevel(), wand.trueLevel());</span>
+
+		//if the staff's level is being overridden by the wand, preserve 1 upgrade
+<span class="nc bnc" id="L248" title="All 4 branches missed.">		if (wand.trueLevel() &gt;= this.trueLevel() &amp;&amp; this.trueLevel() &gt; 0) targetLevel++;</span>
+		
+<span class="nc" id="L250">		level(targetLevel);</span>
+<span class="nc" id="L251">		this.wand = wand;</span>
+<span class="nc" id="L252">		updateWand(false);</span>
+<span class="nc" id="L253">		wand.curCharges = Math.min(wand.maxCharges, wand.curCharges+oldStaffcharges);</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">		if (owner != null){</span>
+<span class="nc" id="L255">			applyWandChargeBuff(owner);</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed."> 		} else if (Dungeon.hero.belongings.contains(this)){</span>
+<span class="nc" id="L257">			applyWandChargeBuff(Dungeon.hero);</span>
+		}
+
+		//This is necessary to reset any particles.
+		//FIXME this is gross, should implement a better way to fully reset quickslot visuals
+<span class="nc" id="L262">		int slot = Dungeon.quickslot.getSlot(this);</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">		if (slot != -1){</span>
+<span class="nc" id="L264">			Dungeon.quickslot.clearSlot(slot);</span>
+<span class="nc" id="L265">			updateQuickslot();</span>
+<span class="nc" id="L266">			Dungeon.quickslot.setSlot( slot, this );</span>
+<span class="nc" id="L267">			updateQuickslot();</span>
+		}
+		
+<span class="nc" id="L270">		Badges.validateItemLevelAquired(this);</span>
+
+<span class="nc" id="L272">		return this;</span>
+	}
+
+	public void gainCharge( float amt ){
+<span class="nc" id="L276">		gainCharge(amt, false);</span>
+<span class="nc" id="L277">	}</span>
+
+	public void gainCharge( float amt, boolean overcharge ){
+<span class="nc bnc" id="L280" title="All 2 branches missed.">		if (wand != null){</span>
+<span class="nc" id="L281">			wand.gainCharge(amt, overcharge);</span>
+		}
+<span class="nc" id="L283">	}</span>
+
+	public void applyWandChargeBuff(Char owner){
+<span class="nc bnc" id="L286" title="All 2 branches missed.">		if (wand != null){</span>
+<span class="nc" id="L287">			wand.charge(owner, STAFF_SCALE_FACTOR);</span>
+		}
+<span class="nc" id="L289">	}</span>
+
+	public Class&lt;?extends Wand&gt; wandClass(){
+<span class="nc bnc" id="L292" title="All 2 branches missed.">		return wand != null ? wand.getClass() : null;</span>
+	}
+
+	@Override
+	public Item upgrade(boolean enchant) {
+<span class="nc" id="L297">		super.upgrade( enchant );</span>
+
+<span class="nc" id="L299">		updateWand(true);</span>
+
+<span class="nc" id="L301">		return this;</span>
+	}
+
+	@Override
+	public Item degrade() {
+<span class="nc" id="L306">		super.degrade();</span>
+
+<span class="nc" id="L308">		updateWand(false);</span>
+
+<span class="nc" id="L310">		return this;</span>
+	}
+	
+	public void updateWand(boolean levelled){
+<span class="nc bnc" id="L314" title="All 2 branches missed.">		if (wand != null) {</span>
+<span class="nc" id="L315">			int curCharges = wand.curCharges;</span>
+<span class="nc" id="L316">			wand.level(level());</span>
+			//gives the wand one additional max charge
+<span class="nc" id="L318">			wand.maxCharges = Math.min(wand.maxCharges + 1, 10);</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">			wand.curCharges = Math.min(curCharges + (levelled ? 1 : 0), wand.maxCharges);</span>
+<span class="nc" id="L320">			updateQuickslot();</span>
+		}
+<span class="nc" id="L322">	}</span>
+
+	@Override
+	public String status() {
+<span class="nc bnc" id="L326" title="All 2 branches missed.">		if (wand == null) return super.status();</span>
+<span class="nc" id="L327">		else return wand.status();</span>
+	}
+
+	@Override
+	public String name() {
+<span class="nc bnc" id="L332" title="All 2 branches missed.">		if (wand == null) {</span>
+<span class="nc" id="L333">			return super.name();</span>
+		} else {
+<span class="nc" id="L335">			String name = Messages.get(wand, &quot;staff_name&quot;);</span>
+<span class="nc bnc" id="L336" title="All 6 branches missed.">			return enchantment != null &amp;&amp; (cursedKnown || !enchantment.curse()) ? enchantment.name( name ) : name;</span>
+		}
+	}
+
+	@Override
+	public String info() {
+<span class="nc" id="L342">		String info = super.info();</span>
+
+<span class="nc bnc" id="L344" title="All 2 branches missed.">		if (wand != null){</span>
+<span class="nc" id="L345">			info += &quot;\n\n&quot; + Messages.get(this, &quot;has_wand&quot;, Messages.get(wand, &quot;name&quot;));</span>
+<span class="nc bnc" id="L346" title="All 6 branches missed.">			if ((!cursed &amp;&amp; !hasCurseEnchant()) || !cursedKnown)    info += &quot; &quot; + wand.statsDesc();</span>
+<span class="nc" id="L347">			else                                                    info += &quot; &quot; + Messages.get(this, &quot;cursed_wand&quot;);</span>
+
+<span class="nc bnc" id="L349" title="All 2 branches missed.">			if (Dungeon.hero.subClass == HeroSubClass.BATTLEMAGE){</span>
+<span class="nc" id="L350">				info += &quot;\n\n&quot; + Messages.get(wand, &quot;bmage_desc&quot;);</span>
+			}
+		}
+
+<span class="nc" id="L354">		return info;</span>
+	}
+
+	@Override
+	public Emitter emitter() {
+<span class="nc bnc" id="L359" title="All 2 branches missed.">		if (wand == null) return null;</span>
+<span class="nc" id="L360">		Emitter emitter = new Emitter();</span>
+<span class="nc" id="L361">		emitter.pos(12.5f, 3);</span>
+<span class="nc" id="L362">		emitter.fillTarget = false;</span>
+<span class="nc" id="L363">		emitter.pour(StaffParticleFactory, 0.1f);</span>
+<span class="nc" id="L364">		return emitter;</span>
+	}
+
+	private static final String WAND = &quot;wand&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L371">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L372">		bundle.put(WAND, wand);</span>
+<span class="nc" id="L373">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L377">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L378">		wand = (Wand) bundle.get(WAND);</span>
+<span class="nc bnc" id="L379" title="All 2 branches missed.">		if (wand != null) {</span>
+<span class="nc" id="L380">			wand.maxCharges = Math.min(wand.maxCharges + 1, 10);</span>
+		}
+<span class="nc" id="L382">	}</span>
+
+	@Override
+	public int value() {
+<span class="nc" id="L386">		return 0;</span>
+	}
+	
+	@Override
+	public Weapon enchant(Enchantment ench) {
+<span class="nc bnc" id="L391" title="All 6 branches missed.">		if (curseInfusionBonus &amp;&amp; (ench == null || !ench.curse())){</span>
+<span class="nc" id="L392">			curseInfusionBonus = false;</span>
+<span class="nc" id="L393">			updateWand(false);</span>
+		}
+<span class="nc" id="L395">		return super.enchant(ench);</span>
+	}
+	
+<span class="nc" id="L398">	private final WndBag.ItemSelector itemSelector = new WndBag.ItemSelector() {</span>
+
+		@Override
+		public String textPrompt() {
+<span class="nc" id="L402">			return Messages.get(MagesStaff.class, &quot;prompt&quot;);</span>
+		}
+
+		@Override
+		public Class&lt;?extends Bag&gt; preferredBag(){
+<span class="nc" id="L407">			return MagicalHolster.class;</span>
+		}
+
+		@Override
+		public boolean itemSelectable(Item item) {
+<span class="nc" id="L412">			return item instanceof Wand;</span>
+		}
+
+		@Override
+		public void onSelect( final Item item ) {
+<span class="nc bnc" id="L417" title="All 2 branches missed.">			if (item != null) {</span>
+
+<span class="nc bnc" id="L419" title="All 2 branches missed.">				if (!item.isIdentified()) {</span>
+<span class="nc" id="L420">					GLog.w(Messages.get(MagesStaff.class, &quot;id_first&quot;));</span>
+<span class="nc" id="L421">					return;</span>
+<span class="nc bnc" id="L422" title="All 2 branches missed.">				} else if (item.cursed){</span>
+<span class="nc" id="L423">					GLog.w(Messages.get(MagesStaff.class, &quot;cursed&quot;));</span>
+<span class="nc" id="L424">					return;</span>
+				}
+
+<span class="nc bnc" id="L427" title="All 2 branches missed.">				if (wand == null){</span>
+<span class="nc" id="L428">					applyWand((Wand)item);</span>
+				} else {
+					int newLevel;
+<span class="nc" id="L431">					int itemLevel = item.trueLevel();</span>
+<span class="nc bnc" id="L432" title="All 2 branches missed.">					if (itemLevel &gt;= trueLevel()){</span>
+<span class="nc bnc" id="L433" title="All 2 branches missed.">						if (trueLevel() &gt; 0)    newLevel = itemLevel + 1;</span>
+<span class="nc" id="L434">						else                    newLevel = itemLevel;</span>
+					} else {
+<span class="nc" id="L436">						newLevel = trueLevel();</span>
+					}
+
+<span class="nc" id="L439">					String bodyText = Messages.get(MagesStaff.class, &quot;imbue_desc&quot;, newLevel);</span>
+<span class="nc bnc" id="L440" title="All 2 branches missed.">					if (Dungeon.hero.hasTalent(Talent.WAND_PRESERVATION)</span>
+<span class="nc bnc" id="L441" title="All 2 branches missed.">						&amp;&amp; Dungeon.hero.buff(Talent.WandPreservationCounter.class) == null){</span>
+<span class="nc" id="L442">						bodyText += &quot;\n\n&quot; + Messages.get(MagesStaff.class, &quot;imbue_talent&quot;);</span>
+					} else {
+<span class="nc" id="L444">						bodyText += &quot;\n\n&quot; + Messages.get(MagesStaff.class, &quot;imbue_lost&quot;);</span>
+					}
+
+<span class="nc" id="L447">					GameScene.show(</span>
+							new WndOptions(new ItemSprite(item),
+<span class="nc" id="L449">									Messages.titleCase(item.name()),</span>
+									bodyText,
+<span class="nc" id="L451">									Messages.get(MagesStaff.class, &quot;yes&quot;),</span>
+<span class="nc" id="L452">									Messages.get(MagesStaff.class, &quot;no&quot;)) {</span>
+								@Override
+								protected void onSelect(int index) {
+<span class="nc bnc" id="L455" title="All 2 branches missed.">									if (index == 0) {</span>
+<span class="nc" id="L456">										applyWand((Wand)item);</span>
+									}
+<span class="nc" id="L458">								}</span>
+							}
+					);
+				}
+			}
+<span class="nc" id="L463">		}</span>
+
+		private void applyWand(Wand wand){
+<span class="nc" id="L466">			Sample.INSTANCE.play(Assets.Sounds.BURNING);</span>
+<span class="nc" id="L467">			curUser.sprite.emitter().burst( ElmoParticle.FACTORY, 12 );</span>
+<span class="nc" id="L468">			evoke(curUser);</span>
+
+<span class="nc" id="L470">			Dungeon.quickslot.clearItem(wand);</span>
+
+<span class="nc" id="L472">			wand.detach(curUser.belongings.backpack);</span>
+
+<span class="nc" id="L474">			GLog.p( Messages.get(MagesStaff.class, &quot;imbue&quot;, wand.name()));</span>
+<span class="nc" id="L475">			imbueWand( wand, curUser );</span>
+
+<span class="nc" id="L477">			updateQuickslot();</span>
+<span class="nc" id="L478">		}</span>
+	};
+
+<span class="nc" id="L481">	private final Emitter.Factory StaffParticleFactory = new Emitter.Factory() {</span>
+		@Override
+		//reimplementing this is needed as instance creation of new staff particles must be within this class.
+		public void emit( Emitter emitter, int index, float x, float y ) {
+<span class="nc" id="L485">			StaffParticle c = (StaffParticle)emitter.getFirstAvailable(StaffParticle.class);</span>
+<span class="nc bnc" id="L486" title="All 2 branches missed.">			if (c == null) {</span>
+<span class="nc" id="L487">				c = new StaffParticle();</span>
+<span class="nc" id="L488">				emitter.add(c);</span>
+			}
+<span class="nc" id="L490">			c.reset(x, y);</span>
+<span class="nc" id="L491">		}</span>
+
+		@Override
+		//some particles need light mode, others don't
+		public boolean lightMode() {
+<span class="nc bnc" id="L496" title="All 2 branches missed.">			return !((wand instanceof WandOfDisintegration)</span>
+<span class="nc bnc" id="L497" title="All 2 branches missed.">					|| (wand instanceof WandOfCorruption)</span>
+<span class="nc bnc" id="L498" title="All 2 branches missed.">					|| (wand instanceof WandOfCorrosion)</span>
+<span class="nc bnc" id="L499" title="All 2 branches missed.">					|| (wand instanceof WandOfRegrowth)</span>
+<span class="nc bnc" id="L500" title="All 2 branches missed.">					|| (wand instanceof WandOfLivingEarth));</span>
+		}
+	};
+
+	//determines particle effects to use based on wand the staff owns.
+	public class StaffParticle extends PixelParticle{
+
+		private float minSize;
+		private float maxSize;
+<span class="nc" id="L509">		public float sizeJitter = 0;</span>
+
+<span class="nc" id="L511">		public StaffParticle(){</span>
+<span class="nc" id="L512">			super();</span>
+<span class="nc" id="L513">		}</span>
+
+		public void reset( float x, float y ) {
+<span class="nc" id="L516">			revive();</span>
+
+<span class="nc" id="L518">			speed.set(0);</span>
+
+<span class="nc" id="L520">			this.x = x;</span>
+<span class="nc" id="L521">			this.y = y;</span>
+
+<span class="nc bnc" id="L523" title="All 2 branches missed.">			if (wand != null)</span>
+<span class="nc" id="L524">				wand.staffFx( this );</span>
+
+<span class="nc" id="L526">		}</span>
+
+		public void setSize( float minSize, float maxSize ){
+<span class="nc" id="L529">			this.minSize = minSize;</span>
+<span class="nc" id="L530">			this.maxSize = maxSize;</span>
+<span class="nc" id="L531">		}</span>
+
+		public void setLifespan( float life ){
+<span class="nc" id="L534">			lifespan = left = life;</span>
+<span class="nc" id="L535">		}</span>
+
+		public void shuffleXY(float amt){
+<span class="nc" id="L538">			x += Random.Float(-amt, amt);</span>
+<span class="nc" id="L539">			y += Random.Float(-amt, amt);</span>
+<span class="nc" id="L540">		}</span>
+
+		public void radiateXY(float amt){
+<span class="nc" id="L543">			float hypot = (float)Math.hypot(speed.x, speed.y);</span>
+<span class="nc" id="L544">			this.x += speed.x/hypot*amt;</span>
+<span class="nc" id="L545">			this.y += speed.y/hypot*amt;</span>
+<span class="nc" id="L546">		}</span>
+
+		@Override
+		public void update() {
+<span class="nc" id="L550">			super.update();</span>
+<span class="nc" id="L551">			size(minSize + (left / lifespan)*(maxSize-minSize) + Random.Float(sizeJitter));</span>
+<span class="nc" id="L552">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

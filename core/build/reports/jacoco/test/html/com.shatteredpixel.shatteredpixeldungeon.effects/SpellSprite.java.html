@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SpellSprite.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.effects</a> &gt; <span class="el_source">SpellSprite.java</span></div><h1>SpellSprite.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.effects;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.TextureFilm;
+
+import java.util.HashMap;
+
+//FIXME this is seriously underused atm, should add more of these!
+public class SpellSprite extends Image {
+
+	public static final int FOOD		= 0;
+	public static final int MAP			= 1;
+	public static final int CHARGE		= 2;
+	public static final int BERSERK     = 3;
+	public static final int ANKH        = 4;
+	public static final int HASTE       = 5;
+	public static final int VISION      = 6;
+	public static final int PURITY      = 7;
+	
+	private static final int SIZE	= 16;
+	
+<span class="nc" id="L47">	private enum Phase {</span>
+<span class="nc" id="L48">		FADE_IN, STATIC, FADE_OUT</span>
+	}
+	
+	private static final float FADE_IN_TIME		= 0.2f;
+	private static final float STATIC_TIME		= 0.8f;
+	private static final float FADE_OUT_TIME	= 0.4f;
+	
+	private static TextureFilm film;
+	
+	private Char target;
+	
+	private Phase phase;
+	private float duration;
+	private float passed;
+	
+<span class="nc" id="L63">	private static HashMap&lt;Char,SpellSprite&gt; all = new HashMap&lt;&gt;();</span>
+	
+	public SpellSprite() {
+<span class="nc" id="L66">		super( Assets.Effects.SPELL_ICONS );</span>
+		
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		if (film == null) {</span>
+<span class="nc" id="L69">			film = new TextureFilm( texture, SIZE );</span>
+		}
+<span class="nc" id="L71">	}</span>
+	
+	public void reset( int index ) {
+<span class="nc" id="L74">		frame( film.get( index ) );</span>
+<span class="nc" id="L75">		origin.set( width / 2, height / 2 );</span>
+		
+<span class="nc" id="L77">		phase = Phase.FADE_IN;</span>
+		
+<span class="nc" id="L79">		duration = FADE_IN_TIME;</span>
+<span class="nc" id="L80">		passed = 0;</span>
+<span class="nc" id="L81">	}</span>
+	
+	@Override
+	public void update() {
+<span class="nc" id="L85">		super.update();</span>
+
+<span class="nc bnc" id="L87" title="All 4 branches missed.">		if (target != null &amp;&amp; target.sprite != null) {</span>
+<span class="nc" id="L88">			x = target.sprite.center().x - SIZE / 2;</span>
+<span class="nc" id="L89">			y = target.sprite.y - SIZE;</span>
+		}
+
+<span class="nc bnc" id="L92" title="All 4 branches missed.">		if (phase == null || target == null){</span>
+<span class="nc" id="L93">			return;</span>
+		}
+		
+<span class="nc bnc" id="L96" title="All 4 branches missed.">		switch (phase) {</span>
+			case FADE_IN:
+<span class="nc" id="L98">				alpha( passed / duration );</span>
+<span class="nc" id="L99">				scale.set( passed / duration );</span>
+<span class="nc" id="L100">				break;</span>
+			case STATIC:
+<span class="nc" id="L102">				break;</span>
+			case FADE_OUT:
+<span class="nc" id="L104">				alpha( 1 - passed / duration );</span>
+				break;
+		}
+		
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		if ((passed += Game.elapsed) &gt; duration) {</span>
+<span class="nc bnc" id="L109" title="All 4 branches missed.">			switch (phase) {</span>
+			case FADE_IN:
+<span class="nc" id="L111">				phase = Phase.STATIC;</span>
+<span class="nc" id="L112">				duration = STATIC_TIME;</span>
+<span class="nc" id="L113">				break;</span>
+			case STATIC:
+<span class="nc" id="L115">				phase = Phase.FADE_OUT;</span>
+<span class="nc" id="L116">				duration = FADE_OUT_TIME;</span>
+<span class="nc" id="L117">				break;</span>
+			case FADE_OUT:
+<span class="nc" id="L119">				kill();</span>
+				break;
+			}
+			
+<span class="nc" id="L123">			passed = 0;</span>
+		}
+<span class="nc" id="L125">	}</span>
+	
+	@Override
+	public void kill() {
+<span class="nc" id="L129">		super.kill();</span>
+<span class="nc" id="L130">		all.remove( target );</span>
+<span class="nc" id="L131">	}</span>
+	
+	public static void show( Char ch, int index ) {
+<span class="nc" id="L134">		show(ch, index, 1, 1, 1);</span>
+<span class="nc" id="L135">	}</span>
+	
+	public static void show( Char ch, int index, float r, float g, float b ) {
+		
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		if (!ch.sprite.visible) {</span>
+<span class="nc" id="L140">			return;</span>
+		}
+		
+<span class="nc" id="L143">		SpellSprite old = all.get( ch );</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">		if (old != null) {</span>
+<span class="nc" id="L145">			old.kill();</span>
+		}
+		
+<span class="nc" id="L148">		SpellSprite sprite = GameScene.spellSprite();</span>
+<span class="nc" id="L149">		sprite.target = ch;</span>
+<span class="nc" id="L150">		sprite.reset( index );</span>
+<span class="nc" id="L151">		sprite.hardlight(r, g, b);</span>
+<span class="nc" id="L152">		sprite.revive();</span>
+<span class="nc" id="L153">		all.put( ch, sprite );</span>
+<span class="nc" id="L154">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Degradation.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.effects</a> &gt; <span class="el_source">Degradation.java</span></div><h1>Degradation.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.effects;
+
+import com.watabou.glwrap.Blending;
+import com.watabou.noosa.Group;
+import com.watabou.noosa.particles.PixelParticle;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+
+public class Degradation extends Group {
+
+<span class="nc" id="L32">	private static int[] WEAPON = {</span>
+		+2, -2,
+		+1, -1,
+		 0,  0,
+		-1, +1,
+		-2, +2,
+		-2,  0,
+		 0, +2
+	};
+	
+<span class="nc" id="L42">	private static int[] ARMOR = {</span>
+		-2, -1,
+		-1, -1,
+		+1, -1,
+		+2, -1,
+		-2,  0,
+		-1,  0,
+		 0,  0,
+		+1,  0,
+		+2,  0,
+		-1, +1,
+		+1, +1,
+		-1, +2,
+		 0, +2,
+		+1, +2
+	};
+	
+<span class="nc" id="L59">	private static int[] RING = {</span>
+		 0, -1,
+		-1,  0,
+		 0,  0,
+		+1,  0,
+		-1, +1,
+		+1, +1,
+		-1, +2,
+		 0, +2,
+		+1, +2
+	};
+	
+<span class="nc" id="L71">	private static int[] WAND = {</span>
+		+2, -2,
+		+1, -1,
+		 0,  0,
+		-1, +1,
+		-2, +2,
+		+1, -2,
+		+2, -1
+	};
+	
+	public static Degradation weapon( PointF p ) {
+<span class="nc" id="L82">		return new Degradation( p, WEAPON );</span>
+	}
+	
+	public static Degradation armor( PointF p ) {
+<span class="nc" id="L86">		return new Degradation( p, ARMOR );</span>
+	}
+	
+	public static Degradation ring( PointF p ) {
+<span class="nc" id="L90">		return new Degradation( p, RING );</span>
+	}
+	
+	public static Degradation wand( PointF p ) {
+<span class="nc" id="L94">		return new Degradation( p, WAND );</span>
+	}
+	
+<span class="nc" id="L97">	private Degradation( PointF p, int[] matrix ) {</span>
+		
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		for (int i=0; i &lt; matrix.length; i += 2) {</span>
+<span class="nc" id="L100">			add( new Speck( p.x, p.y, matrix[i], matrix[i+1] ) );</span>
+<span class="nc" id="L101">			add( new Speck( p.x, p.y, matrix[i], matrix[i+1] ) );</span>
+		}
+<span class="nc" id="L103">	}</span>
+	
+	@Override
+	public void update() {
+<span class="nc" id="L107">		super.update();</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		if (countLiving() == 0) {</span>
+<span class="nc" id="L109">			killAndErase();</span>
+		}
+<span class="nc" id="L111">	}</span>
+	
+	@Override
+	public void draw() {
+<span class="nc" id="L115">		Blending.setLightMode();</span>
+<span class="nc" id="L116">		super.draw();</span>
+<span class="nc" id="L117">		Blending.setNormalMode();</span>
+<span class="nc" id="L118">	}</span>
+	
+	public static class Speck extends PixelParticle {
+		
+		private static final int COLOR = 0xFF4422;
+		private static final int SIZE = 3;
+		
+		public Speck( float x0, float y0, int mx, int my ) {
+			
+<span class="nc" id="L127">			super();</span>
+<span class="nc" id="L128">			color( COLOR );</span>
+			
+<span class="nc" id="L130">			float x1 = x0 + mx * SIZE;</span>
+<span class="nc" id="L131">			float y1 = y0 + my * SIZE;</span>
+			
+<span class="nc" id="L133">			PointF p = new PointF().polar( Random.Float( 2 * PointF.PI ), 8 );</span>
+<span class="nc" id="L134">			x0 += p.x;</span>
+<span class="nc" id="L135">			y0 += p.y;</span>
+			
+<span class="nc" id="L137">			float dx = x1 - x0;</span>
+<span class="nc" id="L138">			float dy = y1 - y0;</span>
+			
+<span class="nc" id="L140">			x = x0;</span>
+<span class="nc" id="L141">			y = y0;</span>
+<span class="nc" id="L142">			speed.set( dx, dy );</span>
+<span class="nc" id="L143">			acc.set( -dx / 4, -dy / 4 );</span>
+			
+<span class="nc" id="L145">			left = lifespan = 2f;</span>
+<span class="nc" id="L146">		}</span>
+		
+		@Override
+		public void update() {
+<span class="nc" id="L150">			super.update();</span>
+			
+<span class="nc" id="L152">			am = 1 - Math.abs( left / lifespan - 0.5f ) * 2;</span>
+<span class="nc" id="L153">			am *= am;</span>
+<span class="nc" id="L154">			size( am * SIZE );</span>
+<span class="nc" id="L155">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

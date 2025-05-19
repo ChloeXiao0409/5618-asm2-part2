@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RatKing.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs</a> &gt; <span class="el_source">RatKing.java</span></div><h1>RatKing.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.Ratmogrify;
+import com.shatteredpixel.shatteredpixeldungeon.items.KingsCrown;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.RatKingSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.Holiday;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoArmorAbility;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.watabou.noosa.Game;
+import com.watabou.utils.Callback;
+
+<span class="nc" id="L40">public class RatKing extends NPC {</span>
+
+	{
+<span class="nc" id="L43">		spriteClass = RatKingSprite.class;</span>
+		
+<span class="nc" id="L45">		state = SLEEPING;</span>
+<span class="nc" id="L46">	}</span>
+	
+	@Override
+	public int defenseSkill( Char enemy ) {
+<span class="nc" id="L50">		return INFINITE_EVASION;</span>
+	}
+	
+	@Override
+	public float speed() {
+<span class="nc" id="L55">		return 2f;</span>
+	}
+	
+	@Override
+	protected Char chooseEnemy() {
+<span class="nc" id="L60">		return null;</span>
+	}
+
+	@Override
+	public void damage( int dmg, Object src ) {
+		//do nothing
+<span class="nc" id="L66">	}</span>
+
+	@Override
+	public boolean add( Buff buff ) {
+<span class="nc" id="L70">		return false;</span>
+	}
+	
+	@Override
+	public boolean reset() {
+<span class="nc" id="L75">		return true;</span>
+	}
+
+	//***This functionality is for when rat king may be summoned by a distortion trap
+
+	@Override
+	protected void onAdd() {
+<span class="nc" id="L82">		super.onAdd();</span>
+<span class="nc bnc" id="L83" title="All 4 branches missed.">		if (firstAdded &amp;&amp; Dungeon.depth != 5){</span>
+<span class="nc" id="L84">			yell(Messages.get(this, &quot;confused&quot;));</span>
+		}
+<span class="nc" id="L86">	}</span>
+
+	@Override
+	public Notes.Landmark landmark() {
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		return Dungeon.depth == 5 ? Notes.Landmark.RAT_KING : null;</span>
+	}
+
+	@Override
+	protected boolean act() {
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		if (Dungeon.depth &lt; 5){</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">			if (pos == Dungeon.level.exit()){</span>
+<span class="nc" id="L97">				destroy();</span>
+<span class="nc" id="L98">				sprite.killAndErase();</span>
+			} else {
+<span class="nc" id="L100">				target = Dungeon.level.exit();</span>
+			}
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		} else if (Dungeon.depth &gt; 5){</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			if (pos == Dungeon.level.entrance()){</span>
+<span class="nc" id="L104">				destroy();</span>
+<span class="nc" id="L105">				sprite.killAndErase();</span>
+			} else {
+<span class="nc" id="L107">				target = Dungeon.level.entrance();</span>
+			}
+		}
+<span class="nc" id="L110">		return super.act();</span>
+	}
+
+	//***
+
+	@Override
+	public boolean interact(Char c) {
+<span class="nc" id="L117">		sprite.turnTo( pos, c.pos );</span>
+
+<span class="nc bnc" id="L119" title="All 2 branches missed.">		if (c != Dungeon.hero){</span>
+<span class="nc" id="L120">			return super.interact(c);</span>
+		}
+
+<span class="nc" id="L123">		KingsCrown crown = Dungeon.hero.belongings.getItem(KingsCrown.class);</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">		if (state == SLEEPING) {</span>
+<span class="nc" id="L125">			notice();</span>
+<span class="nc" id="L126">			yell( Messages.get(this, &quot;not_sleeping&quot;) );</span>
+<span class="nc" id="L127">			state = WANDERING;</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		} else if (crown != null){</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">			if (Dungeon.hero.belongings.armor() == null){</span>
+<span class="nc" id="L130">				yell( Messages.get(RatKing.class, &quot;crown_clothes&quot;) );</span>
+			} else {
+<span class="nc" id="L132">				Badges.validateRatmogrify();</span>
+<span class="nc" id="L133">				Game.runOnRenderThread(new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L136">						GameScene.show(new WndOptions(</span>
+<span class="nc" id="L137">								sprite(),</span>
+<span class="nc" id="L138">								Messages.titleCase(name()),</span>
+<span class="nc" id="L139">								Messages.get(RatKing.class, &quot;crown_desc&quot;),</span>
+<span class="nc" id="L140">								Messages.get(RatKing.class, &quot;crown_yes&quot;),</span>
+<span class="nc" id="L141">								Messages.get(RatKing.class, &quot;crown_info&quot;),</span>
+<span class="nc" id="L142">								Messages.get(RatKing.class, &quot;crown_no&quot;)</span>
+<span class="nc" id="L143">						){</span>
+							@Override
+							protected void onSelect(int index) {
+<span class="nc bnc" id="L146" title="All 2 branches missed.">								if (index == 0){</span>
+<span class="nc" id="L147">									crown.upgradeArmor(Dungeon.hero, Dungeon.hero.belongings.armor(), new Ratmogrify());</span>
+<span class="nc" id="L148">									((RatKingSprite)sprite).resetAnims();</span>
+<span class="nc" id="L149">									yell(Messages.get(RatKing.class, &quot;crown_thankyou&quot;));</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">								} else if (index == 1) {</span>
+<span class="nc" id="L151">									GameScene.show(new WndInfoArmorAbility(Dungeon.hero.heroClass, new Ratmogrify()));</span>
+								} else {
+<span class="nc" id="L153">									yell(Messages.get(RatKing.class, &quot;crown_fine&quot;));</span>
+								}
+<span class="nc" id="L155">							}</span>
+						});
+<span class="nc" id="L157">					}</span>
+				});
+			}
+<span class="nc bnc" id="L160" title="All 2 branches missed.">		} else if (Dungeon.hero.armorAbility instanceof Ratmogrify) {</span>
+<span class="nc" id="L161">			yell( Messages.get(RatKing.class, &quot;crown_after&quot;) );</span>
+		} else {
+<span class="nc" id="L163">			yell( Messages.get(this, &quot;what_is_it&quot;) );</span>
+		}
+<span class="nc" id="L165">		return true;</span>
+	}
+	
+	@Override
+	public String description() {
+<span class="nc bnc" id="L170" title="All 4 branches missed.">		if (Dungeon.hero != null &amp;&amp; Dungeon.hero.armorAbility instanceof Ratmogrify){</span>
+<span class="nc" id="L171">			return Messages.get(this, &quot;desc_crown&quot;);</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">		} else if (Holiday.getCurrentHoliday() == Holiday.APRIL_FOOLS){</span>
+<span class="nc" id="L173">			return Messages.get(this, &quot;desc_birthday&quot;);</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">		} else if (Holiday.getCurrentHoliday() == Holiday.WINTER_HOLIDAYS){</span>
+<span class="nc" id="L175">			return Messages.get(this, &quot;desc_winter&quot;);</span>
+		} else {
+<span class="nc" id="L177">			return super.description();</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

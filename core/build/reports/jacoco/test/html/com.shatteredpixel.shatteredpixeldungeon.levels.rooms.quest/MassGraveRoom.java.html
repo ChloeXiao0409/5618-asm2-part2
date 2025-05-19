@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MassGraveRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest</a> &gt; <span class="el_source">MassGraveRoom.java</span></div><h1>MassGraveRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Skeleton;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Gold;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLiquidFlame;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.CorpseDust;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.SpecialRoom;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.Tilemap;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L45">public class MassGraveRoom extends SpecialRoom {</span>
+	
+	@Override
+<span class="nc" id="L48">	public int minWidth() { return 7; }</span>
+	
+	@Override
+<span class="nc" id="L51">	public int minHeight() { return 7; }</span>
+	
+	public void paint(Level level){
+
+<span class="nc" id="L55">		Door entrance = entrance();</span>
+<span class="nc" id="L56">		entrance.set(Door.Type.BARRICADE);</span>
+<span class="nc" id="L57">		level.addItemToSpawn(new PotionOfLiquidFlame());</span>
+
+<span class="nc" id="L59">		Painter.fill(level, this, Terrain.WALL);</span>
+<span class="nc" id="L60">		Painter.fill(level, this, 1, Terrain.CUSTOM_DECO_EMPTY);</span>
+
+<span class="nc" id="L62">		Bones b = new Bones();</span>
+
+<span class="nc" id="L64">		b.setRect(left+1, top, width()-2, height()-1);</span>
+<span class="nc" id="L65">		level.customTiles.add(b);</span>
+
+		//50% 1 skeleton, 50% 2 skeletons
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		for (int i = 0; i &lt;= Random.Int(2); i++){</span>
+<span class="nc" id="L69">			Skeleton skele = new Skeleton();</span>
+
+			int pos;
+			do {
+<span class="nc" id="L73">				pos = level.pointToCell(random());</span>
+<span class="nc bnc" id="L74" title="All 4 branches missed.">			} while (level.map[pos] != Terrain.CUSTOM_DECO_EMPTY || level.findMob(pos) != null);</span>
+<span class="nc" id="L75">			skele.pos = pos;</span>
+<span class="nc" id="L76">			level.mobs.add( skele );</span>
+		}
+
+<span class="nc" id="L79">		ArrayList&lt;Item&gt; items = new ArrayList&lt;&gt;();</span>
+		//100% corpse dust, 2x100% 1 coin, 2x30% coins, 1x60% random item, 1x30% armor
+<span class="nc" id="L81">		items.add(new CorpseDust());</span>
+<span class="nc" id="L82">		items.add(new Gold(1));</span>
+<span class="nc" id="L83">		items.add(new Gold(1));</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		if (Random.Float() &lt;= 0.3f) items.add(new Gold());</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if (Random.Float() &lt;= 0.3f) items.add(new Gold());</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		if (Random.Float() &lt;= 0.6f) items.add(Generator.random());</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		if (Random.Float() &lt;= 0.3f) items.add(Generator.randomArmor());</span>
+
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		for (Item item : items){</span>
+			int pos;
+			do {
+<span class="nc" id="L92">				pos = level.pointToCell(random());</span>
+<span class="nc bnc" id="L93" title="All 4 branches missed.">			} while (level.map[pos] != Terrain.CUSTOM_DECO_EMPTY || level.heaps.get(pos) != null);</span>
+<span class="nc" id="L94">			Heap h = level.drop(item, pos);</span>
+<span class="nc" id="L95">			h.setHauntedIfCursed();</span>
+<span class="nc" id="L96">			h.type = Heap.Type.SKELETON;</span>
+<span class="nc" id="L97">		}</span>
+<span class="nc" id="L98">	}</span>
+
+	@Override
+	public boolean canConnect(Room r) {
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if (r.isEntrance()){</span>
+<span class="nc" id="L103">			return false;</span>
+		}
+
+		//must have at least 3 rooms between it and the entrance room
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		for (Room r1 : r.connected.keySet()) {</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">			if (r1.isEntrance()){</span>
+<span class="nc" id="L109">				return false;</span>
+			}
+<span class="nc bnc" id="L111" title="All 2 branches missed.">			for (Room r2 : r1.connected.keySet()) {</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">				if (r2.isEntrance()){</span>
+<span class="nc" id="L113">					return false;</span>
+				}
+<span class="nc bnc" id="L115" title="All 2 branches missed.">				for (Room r3 : r2.connected.keySet()) {</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">					if (r3.isEntrance()){</span>
+<span class="nc" id="L117">						return false;</span>
+					}
+<span class="nc" id="L119">				}</span>
+<span class="nc" id="L120">			}</span>
+<span class="nc" id="L121">		}</span>
+
+<span class="nc" id="L123">		return super.canConnect(r);</span>
+	}
+
+<span class="nc" id="L126">	public static class Bones extends CustomTilemap {</span>
+
+		private static final int WALL_OVERLAP   = 3;
+		private static final int FLOOR          = 7;
+
+		{
+<span class="nc" id="L132">			texture = Assets.Environment.PRISON_QUEST;</span>
+<span class="nc" id="L133">		}</span>
+
+		@Override
+		public Tilemap create() {
+<span class="nc" id="L137">			Tilemap v = super.create();</span>
+<span class="nc" id="L138">			int[] data = new int[tileW*tileH];</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">			for (int i = 0; i &lt; data.length; i++){</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">				if (i &lt; tileW)  data[i] = WALL_OVERLAP;</span>
+<span class="nc" id="L141">				else            data[i] = FLOOR;</span>
+			}
+<span class="nc" id="L143">			v.map( data, tileW );</span>
+<span class="nc" id="L144">			return v;</span>
+		}
+
+		@Override
+		public Image image(int tileX, int tileY) {
+<span class="nc bnc" id="L149" title="All 2 branches missed.">			if (tileY == 0) return null;</span>
+<span class="nc" id="L150">			else            return super.image(tileX, tileY);</span>
+		}
+
+		@Override
+		public String name(int tileX, int tileY) {
+<span class="nc" id="L155">			return Messages.get(this, &quot;name&quot;);</span>
+		}
+
+		@Override
+		public String desc(int tileX, int tileY) {
+<span class="nc" id="L160">			return Messages.get(this, &quot;desc&quot;);</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

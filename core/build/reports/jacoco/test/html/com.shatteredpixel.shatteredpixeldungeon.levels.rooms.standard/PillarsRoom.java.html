@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PillarsRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard</a> &gt; <span class="el_source">PillarsRoom.java</span></div><h1>PillarsRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard;
+
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L29">public class PillarsRoom extends StandardRoom {</span>
+	
+	@Override
+	public int minWidth() {
+<span class="nc" id="L33">		return Math.max(super.minWidth(), 7);</span>
+	}
+	
+	@Override
+	public int minHeight() {
+<span class="nc" id="L38">		return Math.max(super.minHeight(), 7);</span>
+	}
+	
+	@Override
+	public float[] sizeCatProbs() {
+<span class="nc" id="L43">		return new float[]{9, 3, 1};</span>
+	}
+	
+	@Override
+	public void paint(Level level) {
+<span class="nc" id="L48">		Painter.fill( level, this, Terrain.WALL );</span>
+<span class="nc" id="L49">		Painter.fill( level, this, 1 , Terrain.EMPTY );</span>
+		
+<span class="nc bnc" id="L51" title="All 2 branches missed.">		for (Door door : connected.values()) {</span>
+<span class="nc" id="L52">			door.set( Door.Type.REGULAR );</span>
+<span class="nc" id="L53">		}</span>
+		
+<span class="nc" id="L55">		int minDim = Math.min(width(), height());</span>
+		
+		//2 pillars
+<span class="nc bnc" id="L58" title="All 6 branches missed.">		if (minDim == 7 || (sizeCat == SizeCategory.NORMAL &amp;&amp; Random.Int(2) == 0)){</span>
+			
+<span class="nc bnc" id="L60" title="All 2 branches missed.">			int pillarInset = minDim &gt;= 11 ? 2 : 1;</span>
+<span class="nc" id="L61">			int pillarSize = ((minDim-3)/2) - pillarInset;</span>
+			
+			int pillarX, pillarY;
+<span class="nc bnc" id="L64" title="All 2 branches missed.">			if (Random.Int(2) == 0) {</span>
+<span class="nc" id="L65">				pillarX = Random.IntRange(left + 1 + pillarInset, right - pillarSize - pillarInset);</span>
+<span class="nc" id="L66">				pillarY = top + 1 + pillarInset;</span>
+			} else {
+<span class="nc" id="L68">				pillarX = left + 1 + pillarInset;</span>
+<span class="nc" id="L69">				pillarY = Random.IntRange(top + 1 + pillarInset, bottom - pillarSize - pillarInset);</span>
+			}
+			
+			//first pillar
+<span class="nc" id="L73">			Painter.fill(level, pillarX, pillarY, pillarSize, pillarSize, Terrain.WALL);</span>
+			
+			//invert for second pillar
+<span class="nc" id="L76">			pillarX = right - (pillarX - left + pillarSize - 1);</span>
+<span class="nc" id="L77">			pillarY = bottom - (pillarY - top + pillarSize - 1);</span>
+<span class="nc" id="L78">			Painter.fill(level, pillarX, pillarY, pillarSize, pillarSize, Terrain.WALL);</span>
+		
+		//4 pillars
+<span class="nc" id="L81">		} else {</span>
+			
+<span class="nc bnc" id="L83" title="All 2 branches missed.">			int pillarInset = minDim &gt;= 12 ? 2 : 1;</span>
+<span class="nc" id="L84">			int pillarSize = (minDim - 6)/(pillarInset + 1);</span>
+			
+<span class="nc" id="L86">			float xSpaces = width() - 2*pillarInset - pillarSize - 2;</span>
+<span class="nc" id="L87">			float ySpaces = height() - 2*pillarInset - pillarSize - 2;</span>
+<span class="nc" id="L88">			float minSpaces = Math.min(xSpaces, ySpaces);</span>
+			
+<span class="nc" id="L90">			float percentSkew = Math.round(Random.Float() * minSpaces) / minSpaces;</span>
+			
+			//top-left, skews right
+<span class="nc" id="L93">			Painter.fill(level, left + 1 + pillarInset + Math.round(percentSkew*xSpaces), top + 1 + pillarInset, pillarSize, pillarSize, Terrain.WALL);</span>
+			
+			//top-right, skews down
+<span class="nc" id="L96">			Painter.fill(level, right - pillarSize - pillarInset, top + 1 + pillarInset + Math.round(percentSkew*ySpaces), pillarSize, pillarSize, Terrain.WALL);</span>
+			
+			//bottom-right, skews left
+<span class="nc" id="L99">			Painter.fill(level, right - pillarSize - pillarInset - Math.round(percentSkew*xSpaces), bottom - pillarSize - pillarInset, pillarSize, pillarSize, Terrain.WALL);</span>
+			
+			//bottom-left, skews up
+<span class="nc" id="L102">			Painter.fill(level, left + 1 + pillarInset, bottom - pillarSize - pillarInset - Math.round(percentSkew*ySpaces), pillarSize, pillarSize, Terrain.WALL);</span>
+			
+		}
+<span class="nc" id="L105">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,554 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WndBlacksmith.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.windows</a> &gt; <span class="el_source">WndBlacksmith.java</span></div><h1>WndBlacksmith.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.windows;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Blacksmith;
+import com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal;
+import com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem;
+import com.shatteredpixel.shatteredpixeldungeon.items.Gold;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ItemButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+
+import java.util.ArrayList;
+
+public class WndBlacksmith extends Window {
+
+	private static final int WIDTH_P = 120;
+	private static final int WIDTH_L = 180;
+
+	private static final int GAP  = 2;
+
+	public WndBlacksmith( Blacksmith troll, Hero hero ) {
+<span class="nc" id="L62">		super();</span>
+
+<span class="nc bnc" id="L64" title="All 2 branches missed.">		int width = PixelScene.landscape() ? WIDTH_L : WIDTH_P;</span>
+
+<span class="nc" id="L66">		IconTitle titlebar = new IconTitle();</span>
+<span class="nc" id="L67">		titlebar.icon( troll.sprite() );</span>
+<span class="nc" id="L68">		titlebar.label( Messages.titleCase( troll.name() ) );</span>
+<span class="nc" id="L69">		titlebar.setRect( 0, 0, width, 0 );</span>
+<span class="nc" id="L70">		add( titlebar );</span>
+
+<span class="nc" id="L72">		RenderedTextBlock message = PixelScene.renderTextBlock( Messages.get(this, &quot;prompt&quot;, Blacksmith.Quest.favor), 6 );</span>
+<span class="nc" id="L73">		message.maxWidth( width );</span>
+<span class="nc" id="L74">		message.setPos(0, titlebar.bottom() + GAP);</span>
+<span class="nc" id="L75">		add( message );</span>
+
+<span class="nc" id="L77">		ArrayList&lt;RedButton&gt; buttons = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		int pickaxeCost = Statistics.questScores[2] &gt;= 2500 ? 0 : 250;</span>
+<span class="nc" id="L80">		RedButton pickaxe = new RedButton(Messages.get(this, &quot;pickaxe&quot;, pickaxeCost), 6){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L83">				GameScene.show(new WndOptions(</span>
+<span class="nc" id="L84">						troll.sprite(),</span>
+<span class="nc" id="L85">						Messages.titleCase( troll.name() ),</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">						Messages.get(WndBlacksmith.class, &quot;pickaxe_verify&quot;) + (pickaxeCost == 0 ? &quot;\n\n&quot; + Messages.get(WndBlacksmith.class, &quot;pickaxe_free&quot;) : &quot;&quot;),</span>
+<span class="nc" id="L87">						Messages.get(WndBlacksmith.class, &quot;pickaxe_yes&quot;),</span>
+<span class="nc" id="L88">						Messages.get(WndBlacksmith.class, &quot;pickaxe_no&quot;)</span>
+<span class="nc" id="L89">				){</span>
+					@Override
+					protected void onSelect(int index) {
+<span class="nc bnc" id="L92" title="All 2 branches missed.">						if (index == 0){</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">							if (Blacksmith.Quest.pickaxe.doPickUp( Dungeon.hero )) {</span>
+<span class="nc" id="L94">								GLog.i( Messages.capitalize(Messages.get(Dungeon.hero, &quot;you_now_have&quot;, Blacksmith.Quest.pickaxe.name()) ));</span>
+							} else {
+<span class="nc" id="L96">								Dungeon.level.drop( Blacksmith.Quest.pickaxe, Dungeon.hero.pos ).sprite.drop();</span>
+							}
+<span class="nc" id="L98">							Blacksmith.Quest.favor -= pickaxeCost;</span>
+<span class="nc" id="L99">							Blacksmith.Quest.pickaxe = null;</span>
+<span class="nc" id="L100">							WndBlacksmith.this.hide();</span>
+
+<span class="nc bnc" id="L102" title="All 2 branches missed.">							if (!Blacksmith.Quest.rewardsAvailable()){</span>
+<span class="nc" id="L103">								Notes.remove( Notes.Landmark.TROLL );</span>
+							}
+						}
+<span class="nc" id="L106">					}</span>
+				});
+<span class="nc" id="L108">			}</span>
+		};
+<span class="nc bnc" id="L110" title="All 4 branches missed.">		pickaxe.enable(Blacksmith.Quest.pickaxe != null &amp;&amp; Blacksmith.Quest.favor &gt;= pickaxeCost);</span>
+<span class="nc" id="L111">		buttons.add(pickaxe);</span>
+
+<span class="nc" id="L113">		int reforgecost = 500 + 1000*Blacksmith.Quest.reforges;</span>
+<span class="nc" id="L114">		RedButton reforge = new RedButton(Messages.get(this, &quot;reforge&quot;, reforgecost), 6){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L117">				GameScene.show(new WndReforge(troll, WndBlacksmith.this));</span>
+<span class="nc" id="L118">			}</span>
+		};
+<span class="nc bnc" id="L120" title="All 2 branches missed.">		reforge.enable(Blacksmith.Quest.favor &gt;= reforgecost);</span>
+<span class="nc" id="L121">		buttons.add(reforge);</span>
+
+<span class="nc" id="L123">		int hardenCost = 500 + 1000*Blacksmith.Quest.hardens;</span>
+<span class="nc" id="L124">		RedButton harden = new RedButton(Messages.get(this, &quot;harden&quot;, hardenCost), 6){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L127">				GameScene.selectItem(new HardenSelector());</span>
+<span class="nc" id="L128">			}</span>
+		};
+<span class="nc bnc" id="L130" title="All 2 branches missed.">		harden.enable(Blacksmith.Quest.favor &gt;= hardenCost);</span>
+<span class="nc" id="L131">		buttons.add(harden);</span>
+
+<span class="nc" id="L133">		int upgradeCost = 1000 + 1000*Blacksmith.Quest.upgrades;</span>
+<span class="nc" id="L134">		RedButton upgrade = new RedButton(Messages.get(this, &quot;upgrade&quot;, upgradeCost), 6){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L137">				GameScene.selectItem(new UpgradeSelector());</span>
+<span class="nc" id="L138">			}</span>
+		};
+<span class="nc bnc" id="L140" title="All 2 branches missed.">		upgrade.enable(Blacksmith.Quest.favor &gt;= upgradeCost);</span>
+<span class="nc" id="L141">		buttons.add(upgrade);</span>
+
+<span class="nc" id="L143">		RedButton smith = new RedButton(Messages.get(this, &quot;smith&quot;, 2000), 6){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L146">				GameScene.show(new WndOptions(</span>
+<span class="nc" id="L147">						troll.sprite(),</span>
+<span class="nc" id="L148">						Messages.titleCase( troll.name() ),</span>
+<span class="nc" id="L149">						Messages.get(WndBlacksmith.class, &quot;smith_verify&quot;),</span>
+<span class="nc" id="L150">						Messages.get(WndBlacksmith.class, &quot;smith_yes&quot;),</span>
+<span class="nc" id="L151">						Messages.get(WndBlacksmith.class, &quot;smith_no&quot;)</span>
+<span class="nc" id="L152">				){</span>
+					@Override
+					protected void onSelect(int index) {
+<span class="nc bnc" id="L155" title="All 2 branches missed.">						if (index == 0){</span>
+<span class="nc" id="L156">							Blacksmith.Quest.favor -= 2000;</span>
+<span class="nc" id="L157">							Blacksmith.Quest.smiths++;</span>
+<span class="nc" id="L158">							WndBlacksmith.this.hide();</span>
+<span class="nc" id="L159">							GameScene.show(new WndSmith(troll, hero));</span>
+						}
+<span class="nc" id="L161">					}</span>
+				});
+<span class="nc" id="L163">			}</span>
+		};
+<span class="nc bnc" id="L165" title="All 2 branches missed.">		smith.enable(Blacksmith.Quest.favor &gt;= 2000);</span>
+<span class="nc" id="L166">		buttons.add(smith);</span>
+
+<span class="nc" id="L168">		RedButton cashOut = new RedButton(Messages.get(this, &quot;cashout&quot;), 6){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L171">				GameScene.show(new WndOptions(</span>
+<span class="nc" id="L172">						troll.sprite(),</span>
+<span class="nc" id="L173">						Messages.titleCase( troll.name() ),</span>
+<span class="nc" id="L174">						Messages.get(WndBlacksmith.class, &quot;cashout_verify&quot;, Blacksmith.Quest.favor),</span>
+<span class="nc" id="L175">						Messages.get(WndBlacksmith.class, &quot;cashout_yes&quot;),</span>
+<span class="nc" id="L176">						Messages.get(WndBlacksmith.class, &quot;cashout_no&quot;)</span>
+<span class="nc" id="L177">				){</span>
+					@Override
+					protected void onSelect(int index) {
+<span class="nc bnc" id="L180" title="All 2 branches missed.">						if (index == 0){</span>
+<span class="nc" id="L181">							new Gold(Blacksmith.Quest.favor).doPickUp(Dungeon.hero, Dungeon.hero.pos);</span>
+<span class="nc" id="L182">							Blacksmith.Quest.favor = 0;</span>
+<span class="nc" id="L183">							WndBlacksmith.this.hide();</span>
+						}
+<span class="nc" id="L185">					}</span>
+				});
+<span class="nc" id="L187">			}</span>
+		};
+<span class="nc bnc" id="L189" title="All 2 branches missed.">		cashOut.enable(Blacksmith.Quest.favor &gt; 0);</span>
+<span class="nc" id="L190">		buttons.add(cashOut);</span>
+
+<span class="nc" id="L192">		float pos = message.bottom() + 3*GAP;</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">		for (RedButton b : buttons){</span>
+<span class="nc" id="L194">			b.leftJustify = true;</span>
+<span class="nc" id="L195">			b.multiline = true;</span>
+<span class="nc" id="L196">			b.setSize(width, b.reqHeight());</span>
+<span class="nc" id="L197">			b.setRect(0, pos, width, b.reqHeight());</span>
+<span class="nc" id="L198">			b.enable(b.active); //so that it's visually reflected</span>
+<span class="nc" id="L199">			add(b);</span>
+<span class="nc" id="L200">			pos = b.bottom() + GAP;</span>
+<span class="nc" id="L201">		}</span>
+
+<span class="nc" id="L203">		resize(width, (int)pos);</span>
+
+<span class="nc" id="L205">	}</span>
+
+	//public so that it can be directly called for pre-v2.2.0 quest completions
+	public static class WndReforge extends Window {
+
+		private static final int WIDTH		= 120;
+
+		private static final int BTN_SIZE	= 32;
+		private static final float GAP		= 2;
+		private static final float BTN_GAP	= 5;
+
+		private ItemButton btnPressed;
+
+		private ItemButton btnItem1;
+		private ItemButton btnItem2;
+		private RedButton btnReforge;
+
+		public WndReforge( Blacksmith troll, Window wndParent ) {
+<span class="nc" id="L223">			super();</span>
+
+<span class="nc" id="L225">			IconTitle titlebar = new IconTitle();</span>
+<span class="nc" id="L226">			titlebar.icon( troll.sprite() );</span>
+<span class="nc" id="L227">			titlebar.label( Messages.titleCase( troll.name() ) );</span>
+<span class="nc" id="L228">			titlebar.setRect( 0, 0, WIDTH, 0 );</span>
+<span class="nc" id="L229">			add( titlebar );</span>
+
+<span class="nc" id="L231">			RenderedTextBlock message = PixelScene.renderTextBlock( Messages.get(this, &quot;message&quot;), 6 );</span>
+<span class="nc" id="L232">			message.maxWidth( WIDTH);</span>
+<span class="nc" id="L233">			message.setPos(0, titlebar.bottom() + GAP);</span>
+<span class="nc" id="L234">			add( message );</span>
+
+<span class="nc" id="L236">			btnItem1 = new ItemButton() {</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L239">					btnPressed = btnItem1;</span>
+<span class="nc" id="L240">					GameScene.selectItem( itemSelector );</span>
+<span class="nc" id="L241">				}</span>
+			};
+<span class="nc" id="L243">			btnItem1.setRect( (WIDTH - BTN_GAP) / 2 - BTN_SIZE, message.top() + message.height() + BTN_GAP, BTN_SIZE, BTN_SIZE );</span>
+<span class="nc" id="L244">			add( btnItem1 );</span>
+
+<span class="nc" id="L246">			btnItem2 = new ItemButton() {</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L249">					btnPressed = btnItem2;</span>
+<span class="nc" id="L250">					GameScene.selectItem( itemSelector );</span>
+<span class="nc" id="L251">				}</span>
+			};
+<span class="nc" id="L253">			btnItem2.setRect( btnItem1.right() + BTN_GAP, btnItem1.top(), BTN_SIZE, BTN_SIZE );</span>
+<span class="nc" id="L254">			add( btnItem2 );</span>
+
+<span class="nc" id="L256">			btnReforge = new RedButton( Messages.get(this, &quot;reforge&quot;) ) {</span>
+				@Override
+				protected void onClick() {
+
+					Item first, second;
+<span class="nc bnc" id="L261" title="All 2 branches missed.">					if (btnItem1.item().trueLevel() &gt;= btnItem2.item().trueLevel()) {</span>
+<span class="nc" id="L262">						first = btnItem1.item();</span>
+<span class="nc" id="L263">						second = btnItem2.item();</span>
+					} else {
+<span class="nc" id="L265">						first = btnItem2.item();</span>
+<span class="nc" id="L266">						second = btnItem1.item();</span>
+					}
+
+<span class="nc" id="L269">					Sample.INSTANCE.play( Assets.Sounds.EVOKE );</span>
+<span class="nc" id="L270">					ScrollOfUpgrade.upgrade( Dungeon.hero );</span>
+<span class="nc" id="L271">					Item.evoke( Dungeon.hero );</span>
+
+<span class="nc bnc" id="L273" title="All 2 branches missed.">					if (second.isEquipped( Dungeon.hero )) {</span>
+<span class="nc" id="L274">						((EquipableItem)second).doUnequip( Dungeon.hero, false );</span>
+					}
+<span class="nc" id="L276">					second.detach( Dungeon.hero.belongings.backpack );</span>
+
+<span class="nc bnc" id="L278" title="All 2 branches missed.">					if (second instanceof Armor){</span>
+<span class="nc" id="L279">						BrokenSeal seal = ((Armor) second).checkSeal();</span>
+<span class="nc bnc" id="L280" title="All 2 branches missed.">						if (seal != null){</span>
+<span class="nc" id="L281">							Dungeon.level.drop( seal, Dungeon.hero.pos );</span>
+						}
+					}
+
+					//preserves enchant/glyphs if present
+<span class="nc bnc" id="L286" title="All 4 branches missed.">					if (first instanceof Weapon &amp;&amp; ((Weapon) first).hasGoodEnchant()){</span>
+<span class="nc" id="L287">						((Weapon) first).upgrade(true);</span>
+<span class="nc bnc" id="L288" title="All 4 branches missed.">					} else if (first instanceof Armor &amp;&amp; ((Armor) first).hasGoodGlyph()){</span>
+<span class="nc" id="L289">						((Armor) first).upgrade(true);</span>
+					} else {
+<span class="nc" id="L291">						first.upgrade();</span>
+					}
+<span class="nc" id="L293">					Badges.validateItemLevelAquired( first );</span>
+<span class="nc" id="L294">					Item.updateQuickslot();</span>
+
+<span class="nc" id="L296">					Blacksmith.Quest.favor -= 500 + 1000*Blacksmith.Quest.reforges;</span>
+<span class="nc" id="L297">					Blacksmith.Quest.reforges++;</span>
+
+<span class="nc bnc" id="L299" title="All 2 branches missed.">					if (!Blacksmith.Quest.rewardsAvailable()){</span>
+<span class="nc" id="L300">						Notes.remove( Notes.Landmark.TROLL );</span>
+					}
+
+<span class="nc" id="L303">					hide();</span>
+<span class="nc bnc" id="L304" title="All 2 branches missed.">					if (wndParent != null){</span>
+<span class="nc" id="L305">						wndParent.hide();</span>
+					}
+<span class="nc" id="L307">				}</span>
+			};
+<span class="nc" id="L309">			btnReforge.enable( false );</span>
+<span class="nc" id="L310">			btnReforge.setRect( 0, btnItem1.bottom() + BTN_GAP, WIDTH, 20 );</span>
+<span class="nc" id="L311">			add( btnReforge );</span>
+
+
+<span class="nc" id="L314">			resize( WIDTH, (int)btnReforge.bottom() );</span>
+<span class="nc" id="L315">		}</span>
+
+<span class="nc" id="L317">		protected WndBag.ItemSelector itemSelector = new WndBag.ItemSelector() {</span>
+
+			@Override
+			public String textPrompt() {
+<span class="nc" id="L321">				return Messages.get(WndReforge.class, &quot;prompt&quot;);</span>
+			}
+
+			@Override
+			public Class&lt;?extends Bag&gt; preferredBag(){
+<span class="nc" id="L326">				return Belongings.Backpack.class;</span>
+			}
+
+			@Override
+			public boolean itemSelectable(Item item) {
+<span class="nc bnc" id="L331" title="All 6 branches missed.">				return item.isIdentified() &amp;&amp; !item.cursed &amp;&amp; item.isUpgradable();</span>
+			}
+
+			@Override
+			public void onSelect( Item item ) {
+<span class="nc bnc" id="L336" title="All 4 branches missed.">				if (item != null &amp;&amp; btnPressed.parent != null) {</span>
+<span class="nc" id="L337">					btnPressed.item(item);</span>
+
+<span class="nc" id="L339">					Item item1 = btnItem1.item();</span>
+<span class="nc" id="L340">					Item item2 = btnItem2.item();</span>
+
+					//need 2 items
+<span class="nc bnc" id="L343" title="All 4 branches missed.">					if (item1 == null || item2 == null) {</span>
+<span class="nc" id="L344">						btnReforge.enable(false);</span>
+
+					//both of the same type
+<span class="nc bnc" id="L347" title="All 2 branches missed.">					} else if (item1.getClass() != item2.getClass()) {</span>
+<span class="nc" id="L348">						btnReforge.enable(false);</span>
+
+					//and not the literal same item (unless quantity is &gt;1)
+<span class="nc bnc" id="L351" title="All 4 branches missed.">					} else if (item1 == item2 &amp;&amp; item1.quantity() == 1) {</span>
+<span class="nc" id="L352">						btnReforge.enable(false);</span>
+
+					} else {
+<span class="nc" id="L355">						btnReforge.enable(true);</span>
+					}
+				}
+<span class="nc" id="L358">			}</span>
+		};
+
+	}
+
+<span class="nc" id="L363">	private class HardenSelector extends WndBag.ItemSelector {</span>
+
+		@Override
+		public String textPrompt() {
+<span class="nc" id="L367">			return Messages.get(this, &quot;prompt&quot;);</span>
+		}
+
+		@Override
+		public Class&lt;?extends Bag&gt; preferredBag(){
+<span class="nc" id="L372">			return Belongings.Backpack.class;</span>
+		}
+
+		@Override
+		public boolean itemSelectable(Item item) {
+<span class="nc bnc" id="L377" title="All 2 branches missed.">			return item.isUpgradable()</span>
+<span class="nc bnc" id="L378" title="All 12 branches missed.">					&amp;&amp; item.isIdentified() &amp;&amp; !item.cursed</span>
+					&amp;&amp; ((item instanceof MeleeWeapon &amp;&amp; !((Weapon) item).enchantHardened)
+					|| (item instanceof Armor &amp;&amp; !((Armor) item).glyphHardened));
+		}
+
+		@Override
+		public void onSelect(Item item) {
+<span class="nc bnc" id="L385" title="All 2 branches missed.">			if (item != null) {</span>
+<span class="nc bnc" id="L386" title="All 2 branches missed.">				if (item instanceof Weapon){</span>
+<span class="nc" id="L387">					((Weapon) item).enchantHardened = true;</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">				} else if (item instanceof Armor){</span>
+<span class="nc" id="L389">					((Armor) item).glyphHardened = true;</span>
+				}
+
+<span class="nc" id="L392">				Blacksmith.Quest.favor -= 500 + 1000*Blacksmith.Quest.hardens;</span>
+<span class="nc" id="L393">				Blacksmith.Quest.hardens++;</span>
+
+<span class="nc" id="L395">				WndBlacksmith.this.hide();</span>
+
+<span class="nc" id="L397">				Sample.INSTANCE.play(Assets.Sounds.EVOKE);</span>
+<span class="nc" id="L398">				Item.evoke( Dungeon.hero );</span>
+
+<span class="nc bnc" id="L400" title="All 2 branches missed.">				if (!Blacksmith.Quest.rewardsAvailable()){</span>
+<span class="nc" id="L401">					Notes.remove( Notes.Landmark.TROLL );</span>
+				}
+			}
+<span class="nc" id="L404">		}</span>
+	}
+
+<span class="nc" id="L407">	private class UpgradeSelector extends WndBag.ItemSelector {</span>
+
+		@Override
+		public String textPrompt() {
+<span class="nc" id="L411">			return Messages.get(this, &quot;prompt&quot;);</span>
+		}
+
+		@Override
+		public Class&lt;?extends Bag&gt; preferredBag(){
+<span class="nc" id="L416">			return Belongings.Backpack.class;</span>
+		}
+
+		@Override
+		public boolean itemSelectable(Item item) {
+<span class="nc bnc" id="L421" title="All 2 branches missed.">			return item.isUpgradable()</span>
+<span class="nc bnc" id="L422" title="All 4 branches missed.">					&amp;&amp; item.isIdentified()</span>
+					&amp;&amp; !item.cursed
+<span class="nc bnc" id="L424" title="All 2 branches missed.">					&amp;&amp; item.level() &lt; 2;</span>
+		}
+
+		@Override
+		public void onSelect(Item item) {
+<span class="nc bnc" id="L429" title="All 2 branches missed.">			if (item != null) {</span>
+<span class="nc" id="L430">				item.upgrade();</span>
+<span class="nc" id="L431">				int upgradeCost = 1000 + 1000*Blacksmith.Quest.upgrades;</span>
+<span class="nc" id="L432">				Blacksmith.Quest.favor -= upgradeCost;</span>
+<span class="nc" id="L433">				Blacksmith.Quest.upgrades++;</span>
+
+<span class="nc" id="L435">				WndBlacksmith.this.hide();</span>
+
+<span class="nc" id="L437">				Sample.INSTANCE.play(Assets.Sounds.EVOKE);</span>
+<span class="nc" id="L438">				ScrollOfUpgrade.upgrade( Dungeon.hero );</span>
+<span class="nc" id="L439">				Item.evoke( Dungeon.hero );</span>
+
+<span class="nc" id="L441">				Badges.validateItemLevelAquired( item );</span>
+
+<span class="nc bnc" id="L443" title="All 2 branches missed.">				if (!Blacksmith.Quest.rewardsAvailable()){</span>
+<span class="nc" id="L444">					Notes.remove( Notes.Landmark.TROLL );</span>
+				}
+
+<span class="nc" id="L447">				Catalog.countUse(item.getClass());</span>
+			}
+<span class="nc" id="L449">		}</span>
+	}
+
+	public static class WndSmith extends Window {
+
+		private static final int WIDTH      = 120;
+		private static final int BTN_SIZE	= 32;
+		private static final int BTN_GAP	= 5;
+		private static final int GAP		= 2;
+
+		public WndSmith( Blacksmith troll, Hero hero ){
+<span class="nc" id="L460">			super();</span>
+
+<span class="nc" id="L462">			IconTitle titlebar = new IconTitle();</span>
+<span class="nc" id="L463">			titlebar.icon(troll.sprite());</span>
+<span class="nc" id="L464">			titlebar.label(Messages.titleCase(troll.name()));</span>
+
+<span class="nc" id="L466">			RenderedTextBlock message = PixelScene.renderTextBlock( Messages.get(this, &quot;prompt&quot;), 6 );</span>
+
+<span class="nc" id="L468">			titlebar.setRect( 0, 0, WIDTH, 0 );</span>
+<span class="nc" id="L469">			add( titlebar );</span>
+
+<span class="nc" id="L471">			message.maxWidth(WIDTH);</span>
+<span class="nc" id="L472">			message.setPos(0, titlebar.bottom() + GAP);</span>
+<span class="nc" id="L473">			add( message );</span>
+
+<span class="nc bnc" id="L475" title="All 4 branches missed.">			if (Blacksmith.Quest.smithRewards == null || Blacksmith.Quest.smithRewards.isEmpty()){</span>
+<span class="nc" id="L476">				Blacksmith.Quest.generateRewards(false);</span>
+			}
+
+<span class="nc" id="L479">			int count = 0;</span>
+<span class="nc bnc" id="L480" title="All 2 branches missed.">			for (Item i : Blacksmith.Quest.smithRewards){</span>
+<span class="nc" id="L481">				count++;</span>
+<span class="nc" id="L482">				ItemButton btnReward = new ItemButton(){</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L485">						GameScene.show(new RewardWindow(troll, hero, item()));</span>
+<span class="nc" id="L486">					}</span>
+				};
+<span class="nc" id="L488">				btnReward.item( i );</span>
+<span class="nc" id="L489">				btnReward.setRect( count*(WIDTH - BTN_GAP) / 3 - BTN_SIZE, message.top() + message.height() + BTN_GAP, BTN_SIZE, BTN_SIZE );</span>
+<span class="nc" id="L490">				add( btnReward );</span>
+
+<span class="nc" id="L492">			}</span>
+
+<span class="nc" id="L494">			resize(WIDTH, (int)message.bottom() + 2*BTN_GAP + BTN_SIZE);</span>
+
+<span class="nc" id="L496">		}</span>
+
+		@Override
+		public void onBackPressed() {
+			//do nothing
+<span class="nc" id="L501">		}</span>
+
+		private class RewardWindow extends WndInfoItem {
+
+<span class="nc" id="L505">			public RewardWindow( Blacksmith troll, Hero hero, Item item ) {</span>
+<span class="nc" id="L506">				super(item);</span>
+
+<span class="nc" id="L508">				RedButton btnConfirm = new RedButton(Messages.get(WndSadGhost.class, &quot;confirm&quot;)){</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L511">						RewardWindow.this.hide();</span>
+
+<span class="nc bnc" id="L513" title="All 4 branches missed.">						if (item instanceof Weapon &amp;&amp; Blacksmith.Quest.smithEnchant != null){</span>
+<span class="nc" id="L514">							((Weapon) item).enchant(Blacksmith.Quest.smithEnchant);</span>
+<span class="nc bnc" id="L515" title="All 4 branches missed.">						} else if (item instanceof Armor &amp;&amp; Blacksmith.Quest.smithGlyph != null){</span>
+<span class="nc" id="L516">							((Armor) item).inscribe(Blacksmith.Quest.smithGlyph);</span>
+						}
+
+<span class="nc" id="L519">						item.identify(false);</span>
+<span class="nc" id="L520">						Sample.INSTANCE.play(Assets.Sounds.EVOKE);</span>
+<span class="nc" id="L521">						Item.evoke( Dungeon.hero );</span>
+<span class="nc bnc" id="L522" title="All 2 branches missed.">						if (item.doPickUp( Dungeon.hero )) {</span>
+<span class="nc" id="L523">							GLog.i( Messages.capitalize(Messages.get(Dungeon.hero, &quot;you_now_have&quot;, item.name())) );</span>
+						} else {
+<span class="nc" id="L525">							Dungeon.level.drop( item, Dungeon.hero.pos ).sprite.drop();</span>
+						}
+<span class="nc" id="L527">						WndSmith.this.hide();</span>
+<span class="nc" id="L528">						Blacksmith.Quest.smithRewards = null;</span>
+
+<span class="nc bnc" id="L530" title="All 2 branches missed.">						if (!Blacksmith.Quest.rewardsAvailable()){</span>
+<span class="nc" id="L531">							Notes.remove( Notes.Landmark.TROLL );</span>
+						}
+<span class="nc" id="L533">					}</span>
+				};
+<span class="nc" id="L535">				btnConfirm.setRect(0, height+2, width/2-1, 16);</span>
+<span class="nc" id="L536">				add(btnConfirm);</span>
+
+<span class="nc" id="L538">				RedButton btnCancel = new RedButton(Messages.get(WndSadGhost.class, &quot;cancel&quot;)){</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L541">						RewardWindow.this.hide();</span>
+<span class="nc" id="L542">					}</span>
+				};
+<span class="nc" id="L544">				btnCancel.setRect(btnConfirm.right()+2, height+2, btnConfirm.width(), 16);</span>
+<span class="nc" id="L545">				add(btnCancel);</span>
+
+<span class="nc" id="L547">				resize(width, (int)btnCancel.bottom());</span>
+<span class="nc" id="L548">			}</span>
+		}
+
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

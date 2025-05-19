@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Blob.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.blobs</a> &gt; <span class="el_source">Blob.java</span></div><h1>Blob.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.blobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.effects.BlobEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Rect;
+import com.watabou.utils.Reflection;
+
+<span class="nc" id="L33">public class Blob extends Actor {</span>
+
+	{
+<span class="nc" id="L36">		actPriority = BLOB_PRIO;</span>
+	}
+	
+<span class="nc" id="L39">	public int volume = 0;</span>
+	
+	public int[] cur;
+	protected int[] off;
+	
+	public BlobEmitter emitter;
+
+<span class="nc" id="L46">	public Rect area = new Rect();</span>
+	
+<span class="nc" id="L48">	public boolean alwaysVisible = false;</span>
+
+	private static final String CUR		= &quot;cur&quot;;
+	private static final String START	= &quot;start&quot;;
+	private static final String LENGTH	= &quot;length&quot;;
+	
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L56">		super.storeInBundle( bundle );</span>
+		
+<span class="nc bnc" id="L58" title="All 2 branches missed.">		if (volume &gt; 0) {</span>
+		
+			int start;
+<span class="nc bnc" id="L61" title="All 2 branches missed.">			for (start=0; start &lt; Dungeon.level.length(); start++) {</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">				if (cur[start] &gt; 0) {</span>
+<span class="nc" id="L63">					break;</span>
+				}
+			}
+			int end;
+<span class="nc bnc" id="L67" title="All 2 branches missed.">			for (end=Dungeon.level.length()-1; end &gt; start; end--) {</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">				if (cur[end] &gt; 0) {</span>
+<span class="nc" id="L69">					break;</span>
+				}
+			}
+			
+<span class="nc" id="L73">			bundle.put( START, start );</span>
+<span class="nc" id="L74">			bundle.put( LENGTH, cur.length );</span>
+<span class="nc" id="L75">			bundle.put( CUR, trim( start, end + 1 ) );</span>
+			
+		}
+<span class="nc" id="L78">	}</span>
+	
+	private int[] trim( int start, int end ) {
+<span class="nc" id="L81">		int len = end - start;</span>
+<span class="nc" id="L82">		int[] copy = new int[len];</span>
+<span class="nc" id="L83">		System.arraycopy( cur, start, copy, 0, len );</span>
+<span class="nc" id="L84">		return copy;</span>
+	}
+	
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+		
+<span class="nc" id="L90">		super.restoreFromBundle( bundle );</span>
+
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		if (bundle.contains( CUR )) {</span>
+
+<span class="nc" id="L94">			cur = new int[bundle.getInt(LENGTH)];</span>
+<span class="nc" id="L95">			off = new int[cur.length];</span>
+
+<span class="nc" id="L97">			int[] data = bundle.getIntArray(CUR);</span>
+<span class="nc" id="L98">			int start = bundle.getInt(START);</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">			for (int i = 0; i &lt; data.length; i++) {</span>
+<span class="nc" id="L100">				cur[i + start] = data[i];</span>
+<span class="nc" id="L101">				volume += data[i];</span>
+			}
+
+		}
+<span class="nc" id="L105">	}</span>
+	
+	@Override
+	public boolean act() {
+		
+<span class="nc" id="L110">		spend( TICK );</span>
+		
+<span class="nc bnc" id="L112" title="All 2 branches missed.">		if (volume &gt; 0) {</span>
+
+<span class="nc bnc" id="L114" title="All 2 branches missed.">			if (area.isEmpty())</span>
+<span class="nc" id="L115">				setupArea();</span>
+
+<span class="nc" id="L117">			volume = 0;</span>
+
+<span class="nc" id="L119">			evolve();</span>
+<span class="nc" id="L120">			int[] tmp = off;</span>
+<span class="nc" id="L121">			off = cur;</span>
+<span class="nc" id="L122">			cur = tmp;</span>
+			
+<span class="nc" id="L124">		} else {</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">			if (!area.isEmpty()) {</span>
+<span class="nc" id="L126">				area.setEmpty();</span>
+				//clear any values remaining in off
+<span class="nc" id="L128">				System.arraycopy(cur, 0, off, 0, cur.length);</span>
+			}
+		}
+		
+<span class="nc" id="L132">		return true;</span>
+	}
+
+	public void setupArea(){
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		for (int cell=0; cell &lt; cur.length; cell++) {</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">			if (cur[cell] != 0){</span>
+<span class="nc" id="L138">				area.union(cell%Dungeon.level.width(), cell/Dungeon.level.width());</span>
+			}
+		}
+<span class="nc" id="L141">	}</span>
+	
+	public void use( BlobEmitter emitter ) {
+<span class="nc" id="L144">		this.emitter = emitter;</span>
+<span class="nc" id="L145">	}</span>
+	
+	protected void evolve() {
+		
+<span class="nc" id="L149">		boolean[] blocking = Dungeon.level.solid;</span>
+		int cell;
+<span class="nc bnc" id="L151" title="All 2 branches missed.">		for (int i=area.top-1; i &lt;= area.bottom; i++) {</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">			for (int j = area.left-1; j &lt;= area.right; j++) {</span>
+<span class="nc" id="L153">				cell = j + i*Dungeon.level.width();</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">				if (Dungeon.level.insideMap(cell)) {</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">					if (!blocking[cell]) {</span>
+
+<span class="nc" id="L157">						int count = 1;</span>
+<span class="nc" id="L158">						int sum = cur[cell];</span>
+
+<span class="nc bnc" id="L160" title="All 4 branches missed.">						if (j &gt; area.left &amp;&amp; !blocking[cell-1]) {</span>
+<span class="nc" id="L161">							sum += cur[cell-1];</span>
+<span class="nc" id="L162">							count++;</span>
+						}
+<span class="nc bnc" id="L164" title="All 4 branches missed.">						if (j &lt; area.right &amp;&amp; !blocking[cell+1]) {</span>
+<span class="nc" id="L165">							sum += cur[cell+1];</span>
+<span class="nc" id="L166">							count++;</span>
+						}
+<span class="nc bnc" id="L168" title="All 4 branches missed.">						if (i &gt; area.top &amp;&amp; !blocking[cell-Dungeon.level.width()]) {</span>
+<span class="nc" id="L169">							sum += cur[cell-Dungeon.level.width()];</span>
+<span class="nc" id="L170">							count++;</span>
+						}
+<span class="nc bnc" id="L172" title="All 4 branches missed.">						if (i &lt; area.bottom &amp;&amp; !blocking[cell+Dungeon.level.width()]) {</span>
+<span class="nc" id="L173">							sum += cur[cell+Dungeon.level.width()];</span>
+<span class="nc" id="L174">							count++;</span>
+						}
+
+<span class="nc bnc" id="L177" title="All 2 branches missed.">						int value = sum &gt;= count ? (sum / count) - 1 : 0;</span>
+<span class="nc" id="L178">						off[cell] = value;</span>
+
+<span class="nc bnc" id="L180" title="All 2 branches missed.">						if (value &gt; 0){</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">							if (i &lt; area.top)</span>
+<span class="nc" id="L182">								area.top = i;</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">							else if (i &gt;= area.bottom)</span>
+<span class="nc" id="L184">								area.bottom = i+1;</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">							if (j &lt; area.left)</span>
+<span class="nc" id="L186">								area.left = j;</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">							else if (j &gt;= area.right)</span>
+<span class="nc" id="L188">								area.right = j+1;</span>
+						}
+
+<span class="nc" id="L191">						volume += value;</span>
+<span class="nc" id="L192">					} else {</span>
+<span class="nc" id="L193">						off[cell] = 0;</span>
+					}
+				}
+			}
+		}
+<span class="nc" id="L198">	}</span>
+
+	public void seed( Level level, int cell, int amount ) {
+<span class="nc bnc" id="L201" title="All 2 branches missed.">		if (cur == null) cur = new int[level.length()];</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">		if (off == null) off = new int[cur.length];</span>
+
+<span class="nc" id="L204">		cur[cell] += amount;</span>
+<span class="nc" id="L205">		volume += amount;</span>
+
+<span class="nc" id="L207">		area.union(cell%level.width(), cell/level.width());</span>
+<span class="nc" id="L208">	}</span>
+	
+	public void clear( int cell ) {
+<span class="nc bnc" id="L211" title="All 2 branches missed.">		if (volume == 0) return;</span>
+<span class="nc" id="L212">		volume -= cur[cell];</span>
+<span class="nc" id="L213">		cur[cell] = 0;</span>
+<span class="nc" id="L214">	}</span>
+
+	public void fullyClear(){
+<span class="nc" id="L217">		volume = 0;</span>
+<span class="nc" id="L218">		area.setEmpty();</span>
+<span class="nc" id="L219">		cur = new int[Dungeon.level.length()];</span>
+<span class="nc" id="L220">		off = new int[Dungeon.level.length()];</span>
+<span class="nc" id="L221">	}</span>
+
+	public void onBuildFlagMaps( Level l ){
+		//do nothing by default, only some blobs affect flags
+<span class="nc" id="L225">	}</span>
+
+	//some blobs have an associated landmark entry, which is added when the hero sees them
+	//blobs may also remove this landmark in some cases, such as when they expire or are consumed
+	public Notes.Landmark landmark(){
+<span class="nc" id="L230">		return null;</span>
+	}
+	
+	public String tileDesc() {
+<span class="nc" id="L234">		return null;</span>
+	}
+	
+	public static&lt;T extends Blob&gt; T seed( int cell, int amount, Class&lt;T&gt; type ) {
+<span class="nc" id="L238">		return seed(cell, amount, type, Dungeon.level);</span>
+	}
+	
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public static&lt;T extends Blob&gt; T seed( int cell, int amount, Class&lt;T&gt; type, Level level ) {
+		
+<span class="nc" id="L244">		T gas = (T)level.blobs.get( type );</span>
+		
+<span class="nc bnc" id="L246" title="All 2 branches missed.">		if (gas == null) {</span>
+<span class="nc" id="L247">			gas = Reflection.newInstance(type);</span>
+			//this ensures that gasses do not get an 'extra turn' if they are added by a mob or buff
+<span class="nc bnc" id="L249" title="All 2 branches missed.">			if (Actor.curActorPriority() &lt; gas.actPriority) {</span>
+<span class="nc" id="L250">				gas.spend(1f);</span>
+			}
+		}
+		
+<span class="nc bnc" id="L254" title="All 2 branches missed.">		if (gas != null){</span>
+<span class="nc" id="L255">			level.blobs.put( type, gas );</span>
+<span class="nc" id="L256">			gas.seed( level, cell, amount );</span>
+		}
+		
+<span class="nc" id="L259">		return gas;</span>
+	}
+
+	public static int volumeAt( int cell, Class&lt;? extends Blob&gt; type){
+<span class="nc" id="L263">		Blob gas = Dungeon.level.blobs.get( type );</span>
+<span class="nc bnc" id="L264" title="All 4 branches missed.">		if (gas == null || gas.volume == 0) {</span>
+<span class="nc" id="L265">			return 0;</span>
+		} else {
+<span class="nc" id="L267">			return gas.cur[cell];</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

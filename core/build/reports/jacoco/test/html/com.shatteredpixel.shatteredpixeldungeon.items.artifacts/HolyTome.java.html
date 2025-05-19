@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HolyTome.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.artifacts</a> &gt; <span class="el_source">HolyTome.java</span></div><h1>HolyTome.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.ClericSpell;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ActionIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndClericSpells;
+import com.watabou.utils.Bundle;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L48">public class HolyTome extends Artifact {</span>
+
+	{
+<span class="nc" id="L51">		image = ItemSpriteSheet.ARTIFACT_TOME;</span>
+
+<span class="nc" id="L53">		exp = 0;</span>
+<span class="nc" id="L54">		levelCap = 10;</span>
+
+<span class="nc" id="L56">		charge = Math.min(level()+3, 10);</span>
+<span class="nc" id="L57">		partialCharge = 0;</span>
+<span class="nc" id="L58">		chargeCap = Math.min(level()+3, 10);</span>
+
+<span class="nc" id="L60">		defaultAction = AC_CAST;</span>
+
+<span class="nc" id="L62">		unique = true;</span>
+<span class="nc" id="L63">		bones = false;</span>
+	}
+
+	public static final String AC_CAST = &quot;CAST&quot;;
+
+	@Override
+	public ArrayList&lt;String&gt; actions( Hero hero ) {
+<span class="nc" id="L70">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc bnc" id="L71" title="All 6 branches missed.">		if ((isEquipped( hero ) || hero.hasTalent(Talent.LIGHT_READING))</span>
+				&amp;&amp; !cursed
+<span class="nc bnc" id="L73" title="All 2 branches missed.">				&amp;&amp; hero.buff(MagicImmune.class) == null) {</span>
+<span class="nc" id="L74">			actions.add(AC_CAST);</span>
+		}
+<span class="nc" id="L76">		return actions;</span>
+	}
+
+	@Override
+	public void execute( Hero hero, String action ) {
+
+<span class="nc" id="L82">		super.execute(hero, action);</span>
+
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		if (hero.buff(MagicImmune.class) != null) return;</span>
+
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		if (action.equals(AC_CAST)) {</span>
+
+<span class="nc bnc" id="L88" title="All 4 branches missed.">			if (!isEquipped(hero) &amp;&amp; !hero.hasTalent(Talent.LIGHT_READING)) GLog.i(Messages.get(Artifact.class, &quot;need_to_equip&quot;));</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">			else if (cursed)       GLog.i( Messages.get(this, &quot;cursed&quot;) );</span>
+			else {
+
+<span class="nc" id="L92">				GameScene.show(new WndClericSpells(this, hero, false));</span>
+
+			}
+
+		}
+<span class="nc" id="L97">	}</span>
+
+	//used to ensure tome has variable targeting logic for whatever spell is being case
+<span class="nc" id="L100">	public ClericSpell targetingSpell = null;</span>
+
+	@Override
+	public int targetingPos(Hero user, int dst) {
+<span class="nc bnc" id="L104" title="All 4 branches missed.">		if (targetingSpell == null || targetingSpell.targetingFlags() == -1) {</span>
+<span class="nc" id="L105">			return super.targetingPos(user, dst);</span>
+		} else {
+<span class="nc" id="L107">			return new Ballistica( user.pos, dst, targetingSpell.targetingFlags() ).collisionPos;</span>
+		}
+	}
+
+	@Override
+	public boolean doUnequip(Hero hero, boolean collect, boolean single) {
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		if (super.doUnequip(hero, collect, single)){</span>
+<span class="nc bnc" id="L114" title="All 4 branches missed.">			if (collect &amp;&amp; hero.hasTalent(Talent.LIGHT_READING)){</span>
+<span class="nc" id="L115">				activate(hero);</span>
+			}
+
+<span class="nc" id="L118">			return true;</span>
+		} else
+<span class="nc" id="L120">			return false;</span>
+	}
+
+	@Override
+	public boolean collect( Bag container ) {
+<span class="nc bnc" id="L125" title="All 2 branches missed.">		if (super.collect(container)){</span>
+<span class="nc bnc" id="L126" title="All 4 branches missed.">			if (container.owner instanceof Hero</span>
+					&amp;&amp; passiveBuff == null
+<span class="nc bnc" id="L128" title="All 2 branches missed.">					&amp;&amp; ((Hero) container.owner).hasTalent(Talent.LIGHT_READING)){</span>
+<span class="nc" id="L129">				activate((Hero) container.owner);</span>
+			}
+<span class="nc" id="L131">			return true;</span>
+		} else{
+<span class="nc" id="L133">			return false;</span>
+		}
+	}
+
+	@Override
+	protected void onDetach() {
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		if (passiveBuff != null){</span>
+<span class="nc" id="L140">			passiveBuff.detach();</span>
+<span class="nc" id="L141">			passiveBuff = null;</span>
+		}
+<span class="nc" id="L143">	}</span>
+
+	public boolean canCast( Hero hero, ClericSpell spell ){
+<span class="nc bnc" id="L146" title="All 6 branches missed.">		return (isEquipped(hero) || (Dungeon.hero.hasTalent(Talent.LIGHT_READING) &amp;&amp; hero.belongings.contains(this)))</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">				&amp;&amp; hero.buff(MagicImmune.class) == null</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">				&amp;&amp; charge &gt;= spell.chargeUse(hero)</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">				&amp;&amp; spell.canCast(hero);</span>
+	}
+
+	public void spendCharge( float chargesSpent ){
+<span class="nc" id="L153">		partialCharge -= chargesSpent;</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		while (partialCharge &lt; 0){</span>
+<span class="nc" id="L155">			charge--;</span>
+<span class="nc" id="L156">			partialCharge++;</span>
+		}
+
+		//target hero level is 1 + 2*tome level
+<span class="nc" id="L160">		int lvlDiffFromTarget = Dungeon.hero.lvl - (1+level()*2);</span>
+		//plus an extra one for each level after 6
+<span class="nc bnc" id="L162" title="All 2 branches missed.">		if (level() &gt;= 7){</span>
+<span class="nc" id="L163">			lvlDiffFromTarget -= level()-6;</span>
+		}
+
+<span class="nc bnc" id="L166" title="All 2 branches missed.">		if (lvlDiffFromTarget &gt;= 0){</span>
+<span class="nc" id="L167">			exp += Math.round(chargesSpent * 10f * Math.pow(1.1f, lvlDiffFromTarget));</span>
+		} else {
+<span class="nc" id="L169">			exp += Math.round(chargesSpent * 10f * Math.pow(0.75f, -lvlDiffFromTarget));</span>
+		}
+
+<span class="nc bnc" id="L172" title="All 4 branches missed.">		if (exp &gt;= (level() + 1) * 50 &amp;&amp; level() &lt; levelCap) {</span>
+<span class="nc" id="L173">			upgrade();</span>
+<span class="nc" id="L174">			Catalog.countUse(HolyTome.class);</span>
+<span class="nc" id="L175">			exp -= level() * 50;</span>
+<span class="nc" id="L176">			GLog.p(Messages.get(this, &quot;levelup&quot;));</span>
+
+		}
+
+<span class="nc" id="L180">		updateQuickslot();</span>
+<span class="nc" id="L181">	}</span>
+
+	public void directCharge(float amount){
+<span class="nc bnc" id="L184" title="All 2 branches missed.">		if (charge &lt; chargeCap) {</span>
+<span class="nc" id="L185">			partialCharge += amount;</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">			while (partialCharge &gt;= 1f) {</span>
+<span class="nc" id="L187">				charge++;</span>
+<span class="nc" id="L188">				partialCharge--;</span>
+			}
+<span class="nc bnc" id="L190" title="All 2 branches missed.">			if (charge &gt;= chargeCap){</span>
+<span class="nc" id="L191">				partialCharge = 0;</span>
+<span class="nc" id="L192">				charge = chargeCap;</span>
+			}
+<span class="nc" id="L194">			updateQuickslot();</span>
+		}
+<span class="nc" id="L196">		updateQuickslot();</span>
+<span class="nc" id="L197">	}</span>
+
+	@Override
+	public Item upgrade() {
+<span class="nc" id="L201">		chargeCap = Math.min(chargeCap + 1, 10);</span>
+<span class="nc" id="L202">		return super.upgrade();</span>
+	}
+
+	@Override
+	protected ArtifactBuff passiveBuff() {
+<span class="nc" id="L207">		return new TomeRecharge();</span>
+	}
+
+	@Override
+	public void charge(Hero target, float amount) {
+<span class="nc bnc" id="L212" title="All 4 branches missed.">		if (cursed || target.buff(MagicImmune.class) != null) return;</span>
+
+<span class="nc bnc" id="L214" title="All 2 branches missed.">		if (charge &lt; chargeCap) {</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">			if (!isEquipped(target)) amount *= 0.75f*target.pointsInTalent(Talent.LIGHT_READING)/3f;</span>
+<span class="nc" id="L216">			partialCharge += 0.25f*amount;</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">			while (partialCharge &gt;= 1f) {</span>
+<span class="nc" id="L218">				charge++;</span>
+<span class="nc" id="L219">				partialCharge--;</span>
+			}
+<span class="nc bnc" id="L221" title="All 2 branches missed.">			if (charge &gt;= chargeCap){</span>
+<span class="nc" id="L222">				partialCharge = 0;</span>
+<span class="nc" id="L223">				charge = chargeCap;</span>
+			}
+<span class="nc" id="L225">			updateQuickslot();</span>
+		}
+<span class="nc" id="L227">	}</span>
+
+<span class="nc" id="L229">	private ClericSpell quickSpell = null;</span>
+
+	public void setQuickSpell(ClericSpell spell){
+<span class="nc bnc" id="L232" title="All 2 branches missed.">		if (quickSpell == spell){</span>
+<span class="nc" id="L233">			quickSpell = null; //re-assigning the same spell clears the quick spell</span>
+<span class="nc bnc" id="L234" title="All 2 branches missed.">			if (passiveBuff != null){</span>
+<span class="nc" id="L235">				ActionIndicator.clearAction((ActionIndicator.Action) passiveBuff);</span>
+			}
+		} else {
+<span class="nc" id="L238">			quickSpell = spell;</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">			if (passiveBuff != null){</span>
+<span class="nc" id="L240">				ActionIndicator.setAction((ActionIndicator.Action) passiveBuff);</span>
+			}
+		}
+<span class="nc" id="L243">	}</span>
+
+	private static final String QUICK_CLS = &quot;quick_cls&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L249">		super.storeInBundle(bundle);</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">		if (quickSpell != null) {</span>
+<span class="nc" id="L251">			bundle.put(QUICK_CLS, quickSpell.getClass());</span>
+		}
+<span class="nc" id="L253">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L257">		super.restoreFromBundle(bundle);</span>
+<span class="nc bnc" id="L258" title="All 2 branches missed.">		if (bundle.contains(QUICK_CLS)){</span>
+<span class="nc" id="L259">			Class quickCls = bundle.getClass(QUICK_CLS);</span>
+<span class="nc bnc" id="L260" title="All 2 branches missed.">			for (ClericSpell spell : ClericSpell.getAllSpells()){</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">				if (spell.getClass() == quickCls){</span>
+<span class="nc" id="L262">					quickSpell = spell;</span>
+				}
+<span class="nc" id="L264">			}</span>
+		}
+<span class="nc" id="L266">	}</span>
+
+<span class="nc" id="L268">	public class TomeRecharge extends ArtifactBuff implements ActionIndicator.Action {</span>
+
+		@Override
+		public boolean attachTo(Char target) {
+<span class="nc bnc" id="L272" title="All 2 branches missed.">			if (super.attachTo(target)) {</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">				if (quickSpell != null) ActionIndicator.setAction(this);</span>
+<span class="nc" id="L274">				return true;</span>
+			} else {
+<span class="nc" id="L276">				return false;</span>
+			}
+		}
+
+		@Override
+		public void detach() {
+<span class="nc" id="L282">			super.detach();</span>
+<span class="nc" id="L283">			ActionIndicator.clearAction(this);</span>
+<span class="nc" id="L284">		}</span>
+
+		@Override
+		public boolean act() {
+<span class="nc bnc" id="L288" title="All 6 branches missed.">			if (charge &lt; chargeCap &amp;&amp; !cursed &amp;&amp; target.buff(MagicImmune.class) == null) {</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">				if (Regeneration.regenOn()) {</span>
+<span class="nc" id="L290">					float missing = (chargeCap - charge);</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">					if (level() &gt; 7) missing += 5*(level() - 7)/3f;</span>
+<span class="nc" id="L292">					float turnsToCharge = (45 - missing);</span>
+<span class="nc" id="L293">					turnsToCharge /= RingOfEnergy.artifactChargeMultiplier(target);</span>
+<span class="nc" id="L294">					float chargeToGain = (1f / turnsToCharge);</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">					if (!isEquipped(Dungeon.hero)){</span>
+<span class="nc" id="L296">						chargeToGain *= 0.75f*Dungeon.hero.pointsInTalent(Talent.LIGHT_READING)/3f;</span>
+					}
+<span class="nc" id="L298">					partialCharge += chargeToGain;</span>
+				}
+
+<span class="nc bnc" id="L301" title="All 2 branches missed.">				while (partialCharge &gt;= 1) {</span>
+<span class="nc" id="L302">					charge++;</span>
+<span class="nc" id="L303">					partialCharge -= 1;</span>
+<span class="nc bnc" id="L304" title="All 2 branches missed.">					if (charge == chargeCap){</span>
+<span class="nc" id="L305">						partialCharge = 0;</span>
+					}
+
+				}
+			} else {
+<span class="nc" id="L310">				partialCharge = 0;</span>
+			}
+
+<span class="nc" id="L313">			updateQuickslot();</span>
+
+<span class="nc" id="L315">			spend( TICK );</span>
+
+<span class="nc" id="L317">			return true;</span>
+		}
+
+		@Override
+		public String actionName() {
+<span class="nc" id="L322">			return quickSpell.name();</span>
+		}
+
+		@Override
+		public int actionIcon() {
+<span class="nc" id="L327">			return quickSpell.icon() + HeroIcon.SPELL_ACTION_OFFSET;</span>
+		}
+
+		@Override
+		public int indicatorColor() {
+<span class="nc" id="L332">			return 0x002157;</span>
+		}
+
+		@Override
+		public void doAction() {
+<span class="nc bnc" id="L337" title="All 2 branches missed.">			if (cursed){</span>
+<span class="nc" id="L338">				GLog.w(Messages.get(HolyTome.this, &quot;cursed&quot;));</span>
+<span class="nc" id="L339">				return;</span>
+			}
+
+<span class="nc bnc" id="L342" title="All 2 branches missed.">			if (!canCast(Dungeon.hero, quickSpell)){</span>
+<span class="nc" id="L343">				GLog.w(Messages.get(HolyTome.this, &quot;no_spell&quot;));</span>
+<span class="nc" id="L344">				return;</span>
+			}
+
+<span class="nc bnc" id="L347" title="All 2 branches missed.">			if (QuickSlotButton.targetingSlot != -1 &amp;&amp;</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">					Dungeon.quickslot.getItem(QuickSlotButton.targetingSlot) == HolyTome.this) {</span>
+<span class="nc" id="L349">				targetingSpell = quickSpell;</span>
+<span class="nc" id="L350">				int cell = QuickSlotButton.autoAim(QuickSlotButton.lastTarget, HolyTome.this);</span>
+
+<span class="nc bnc" id="L352" title="All 2 branches missed.">				if (cell != -1){</span>
+<span class="nc" id="L353">					GameScene.handleCell(cell);</span>
+				} else {
+					//couldn't auto-aim, just target the position and hope for the best.
+<span class="nc" id="L356">					GameScene.handleCell( QuickSlotButton.lastTarget.pos );</span>
+				}
+<span class="nc" id="L358">			} else {</span>
+<span class="nc" id="L359">				quickSpell.onCast(HolyTome.this, Dungeon.hero);</span>
+
+<span class="nc bnc" id="L361" title="All 4 branches missed.">				if (quickSpell.targetingFlags() != -1 &amp;&amp; Dungeon.quickslot.contains(HolyTome.this)){</span>
+<span class="nc" id="L362">					targetingSpell = quickSpell;</span>
+<span class="nc" id="L363">					QuickSlotButton.useTargeting(Dungeon.quickslot.getSlot(HolyTome.this));</span>
+				}
+			}
+<span class="nc" id="L366">		}</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

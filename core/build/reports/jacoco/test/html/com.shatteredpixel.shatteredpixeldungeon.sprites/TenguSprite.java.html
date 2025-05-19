@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TenguSprite.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.sprites</a> &gt; <span class="el_source">TenguSprite.java</span></div><h1>TenguSprite.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.sprites;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.watabou.noosa.TextureFilm;
+import com.watabou.utils.Callback;
+
+public class TenguSprite extends MobSprite {
+	
+	public TenguSprite() {
+<span class="nc" id="L34">		super();</span>
+		
+<span class="nc" id="L36">		texture( Assets.Sprites.TENGU );</span>
+		
+<span class="nc" id="L38">		TextureFilm frames = new TextureFilm( texture, 14, 16 );</span>
+		
+<span class="nc" id="L40">		idle = new Animation( 2, true );</span>
+<span class="nc" id="L41">		idle.frames( frames, 0, 0, 0, 1 );</span>
+		
+<span class="nc" id="L43">		run = new Animation( 15, false );</span>
+<span class="nc" id="L44">		run.frames( frames, 2, 3, 4, 5, 0 );</span>
+		
+<span class="nc" id="L46">		attack = new Animation( 15, false );</span>
+<span class="nc" id="L47">		attack.frames( frames, 6, 7, 7, 0 );</span>
+		
+<span class="nc" id="L49">		zap = attack.clone();</span>
+		
+<span class="nc" id="L51">		die = new Animation( 8, false );</span>
+<span class="nc" id="L52">		die.frames( frames, 8, 9, 10, 10, 10, 10, 10, 10 );</span>
+		
+<span class="nc" id="L54">		play( run );</span>
+<span class="nc" id="L55">		isMoving = true;</span>
+<span class="nc" id="L56">	}</span>
+
+	@Override
+	public void play(Animation anim) {
+<span class="nc bnc" id="L60" title="All 4 branches missed.">		if (isMoving &amp;&amp; anim != run){</span>
+<span class="nc" id="L61">			synchronized (this){</span>
+<span class="nc" id="L62">				isMoving = false;</span>
+<span class="nc" id="L63">				notifyAll();</span>
+<span class="nc" id="L64">			}</span>
+		}
+<span class="nc" id="L66">		super.play(anim);</span>
+<span class="nc" id="L67">	}</span>
+
+	@Override
+	public void move( int from, int to ) {
+		
+<span class="nc" id="L72">		place( to );</span>
+		
+<span class="nc" id="L74">		play( run );</span>
+<span class="nc" id="L75">		turnTo( from , to );</span>
+
+<span class="nc" id="L77">		isMoving = true;</span>
+
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if (Dungeon.level.water[to]) {</span>
+<span class="nc" id="L80">			GameScene.ripple( to );</span>
+		}
+
+<span class="nc" id="L83">	}</span>
+
+	@Override
+	public void update() {
+<span class="nc bnc" id="L87" title="All 4 branches missed.">		if (paused &amp;&amp; !curAnim.looped){</span>
+<span class="nc" id="L88">			updateAnimation();</span>
+		}
+<span class="nc" id="L90">		super.update();</span>
+<span class="nc" id="L91">	}</span>
+
+	@Override
+	public void attack( int cell ) {
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		if (!Dungeon.level.adjacent( cell, ch.pos )) {</span>
+
+<span class="nc" id="L97">			((MissileSprite)parent.recycle( MissileSprite.class )).</span>
+<span class="nc" id="L98">				reset( this, cell, new TenguShuriken(), new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L101">						ch.onAttackComplete();</span>
+<span class="nc" id="L102">					}</span>
+				} );
+			
+<span class="nc" id="L105">			zap( ch.pos );</span>
+			
+		} else {
+			
+<span class="nc" id="L109">			super.attack( cell );</span>
+			
+		}
+<span class="nc" id="L112">	}</span>
+	
+	@Override
+	public void onComplete( Animation anim ) {
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		if (anim == run) {</span>
+<span class="nc" id="L117">			synchronized (this){</span>
+<span class="nc" id="L118">				isMoving = false;</span>
+<span class="nc" id="L119">				idle();</span>
+
+<span class="nc" id="L121">				notifyAll();</span>
+<span class="nc" id="L122">			}</span>
+		} else {
+<span class="nc" id="L124">			super.onComplete( anim );</span>
+		}
+<span class="nc" id="L126">	}</span>
+	
+<span class="nc" id="L128">	public static class TenguShuriken extends Item {</span>
+		{
+<span class="nc" id="L130">			image = ItemSpriteSheet.SHURIKEN;</span>
+<span class="nc" id="L131">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

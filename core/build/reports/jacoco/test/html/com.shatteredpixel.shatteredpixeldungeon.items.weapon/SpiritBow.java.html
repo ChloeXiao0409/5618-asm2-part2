@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SpiritBow.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.weapon</a> &gt; <span class="el_source">SpiritBow.java</span></div><h1>SpiritBow.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.weapon;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.RevealedArea;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.huntress.NaturesPower;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.LeafParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfSharpshooting;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Blindweed;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Icecap;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Sorrowmoss;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Stormvine;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.utils.Callback;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L57">public class SpiritBow extends Weapon {</span>
+	
+	public static final String AC_SHOOT		= &quot;SHOOT&quot;;
+	
+	{
+<span class="nc" id="L62">		image = ItemSpriteSheet.SPIRIT_BOW;</span>
+		
+<span class="nc" id="L64">		defaultAction = AC_SHOOT;</span>
+<span class="nc" id="L65">		usesTargeting = true;</span>
+		
+<span class="nc" id="L67">		unique = true;</span>
+<span class="nc" id="L68">		bones = false;</span>
+	}
+	
+<span class="nc" id="L71">	public boolean sniperSpecial = false;</span>
+<span class="nc" id="L72">	public float sniperSpecialBonusDamage = 0f;</span>
+	
+	@Override
+	public ArrayList&lt;String&gt; actions(Hero hero) {
+<span class="nc" id="L76">		ArrayList&lt;String&gt; actions = super.actions(hero);</span>
+<span class="nc" id="L77">		actions.remove(AC_EQUIP);</span>
+<span class="nc" id="L78">		actions.add(AC_SHOOT);</span>
+<span class="nc" id="L79">		return actions;</span>
+	}
+	
+	@Override
+	public void execute(Hero hero, String action) {
+		
+<span class="nc" id="L85">		super.execute(hero, action);</span>
+		
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		if (action.equals(AC_SHOOT)) {</span>
+			
+<span class="nc" id="L89">			curUser = hero;</span>
+<span class="nc" id="L90">			curItem = this;</span>
+<span class="nc" id="L91">			GameScene.selectCell( shooter );</span>
+			
+		}
+<span class="nc" id="L94">	}</span>
+
+<span class="nc" id="L96">	private static Class[] harmfulPlants = new Class[]{</span>
+			Blindweed.class, Firebloom.class, Icecap.class, Sorrowmoss.class,  Stormvine.class
+	};
+
+	@Override
+	public int proc(Char attacker, Char defender, int damage) {
+
+<span class="nc bnc" id="L103" title="All 4 branches missed.">		if (attacker.buff(NaturesPower.naturesPowerTracker.class) != null &amp;&amp; !sniperSpecial){</span>
+
+<span class="nc" id="L105">			Actor.add(new Actor() {</span>
+				{
+<span class="nc" id="L107">					actPriority = VFX_PRIO;</span>
+<span class="nc" id="L108">				}</span>
+
+				@Override
+				protected boolean act() {
+
+<span class="nc bnc" id="L113" title="All 2 branches missed.">					if (Random.Int(12) &lt; ((Hero)attacker).pointsInTalent(Talent.NATURES_WRATH)){</span>
+<span class="nc" id="L114">						Plant plant = (Plant) Reflection.newInstance(Random.element(harmfulPlants));</span>
+<span class="nc" id="L115">						plant.pos = defender.pos;</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">						plant.activate( defender.isAlive() ? defender : null );</span>
+					}
+
+<span class="nc bnc" id="L119" title="All 2 branches missed.">					if (!defender.isAlive()){</span>
+<span class="nc" id="L120">						NaturesPower.naturesPowerTracker tracker = attacker.buff(NaturesPower.naturesPowerTracker.class);</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">						if (tracker != null){</span>
+<span class="nc" id="L122">							tracker.extend(((Hero) attacker).pointsInTalent(Talent.WILD_MOMENTUM));</span>
+						}
+					}
+
+<span class="nc" id="L126">					Actor.remove(this);</span>
+<span class="nc" id="L127">					return true;</span>
+				}
+			});
+
+		}
+
+<span class="nc" id="L133">		return super.proc(attacker, defender, damage);</span>
+	}
+
+	@Override
+	public String info() {
+<span class="nc" id="L138">		String info = super.info();</span>
+		
+<span class="nc" id="L140">		info += &quot;\n\n&quot; + Messages.get( SpiritBow.class, &quot;stats&quot;,</span>
+<span class="nc" id="L141">				Math.round(augment.damageFactor(min())),</span>
+<span class="nc" id="L142">				Math.round(augment.damageFactor(max())),</span>
+<span class="nc" id="L143">				STRReq());</span>
+		
+<span class="nc bnc" id="L145" title="All 2 branches missed.">		if (STRReq() &gt; Dungeon.hero.STR()) {</span>
+<span class="nc" id="L146">			info += &quot; &quot; + Messages.get(Weapon.class, &quot;too_heavy&quot;);</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">		} else if (Dungeon.hero.STR() &gt; STRReq()){</span>
+<span class="nc" id="L148">			info += &quot; &quot; + Messages.get(Weapon.class, &quot;excess_str&quot;, Dungeon.hero.STR() - STRReq());</span>
+		}
+		
+<span class="nc bnc" id="L151" title="All 3 branches missed.">		switch (augment) {</span>
+			case SPEED:
+<span class="nc" id="L153">				info += &quot;\n\n&quot; + Messages.get(Weapon.class, &quot;faster&quot;);</span>
+<span class="nc" id="L154">				break;</span>
+			case DAMAGE:
+<span class="nc" id="L156">				info += &quot;\n\n&quot; + Messages.get(Weapon.class, &quot;stronger&quot;);</span>
+<span class="nc" id="L157">				break;</span>
+			case NONE:
+		}
+
+<span class="nc bnc" id="L161" title="All 6 branches missed.">		if (enchantment != null &amp;&amp; (cursedKnown || !enchantment.curse())){</span>
+<span class="nc" id="L162">			info += &quot;\n\n&quot; + Messages.capitalize(Messages.get(Weapon.class, &quot;enchanted&quot;, enchantment.name()));</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">			if (enchantHardened) info += &quot; &quot; + Messages.get(Weapon.class, &quot;enchant_hardened&quot;);</span>
+<span class="nc" id="L164">			info += &quot; &quot; + enchantment.desc();</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">		} else if (enchantHardened){</span>
+<span class="nc" id="L166">			info += &quot;\n\n&quot; + Messages.get(Weapon.class, &quot;hardened_no_enchant&quot;);</span>
+		}
+		
+<span class="nc bnc" id="L169" title="All 4 branches missed.">		if (cursed &amp;&amp; isEquipped( Dungeon.hero )) {</span>
+<span class="nc" id="L170">			info += &quot;\n\n&quot; + Messages.get(Weapon.class, &quot;cursed_worn&quot;);</span>
+<span class="nc bnc" id="L171" title="All 4 branches missed.">		} else if (cursedKnown &amp;&amp; cursed) {</span>
+<span class="nc" id="L172">			info += &quot;\n\n&quot; + Messages.get(Weapon.class, &quot;cursed&quot;);</span>
+<span class="nc bnc" id="L173" title="All 4 branches missed.">		} else if (!isIdentified() &amp;&amp; cursedKnown){</span>
+<span class="nc" id="L174">			info += &quot;\n\n&quot; + Messages.get(Weapon.class, &quot;not_cursed&quot;);</span>
+		}
+		
+<span class="nc" id="L177">		info += &quot;\n\n&quot; + Messages.get(MissileWeapon.class, &quot;distance&quot;);</span>
+		
+<span class="nc" id="L179">		return info;</span>
+	}
+	
+	@Override
+	public int STRReq(int lvl) {
+<span class="nc" id="L184">		return STRReq(1, lvl); //tier 1</span>
+	}
+	
+	@Override
+	public int min(int lvl) {
+<span class="nc" id="L189">		int dmg = 1 + Dungeon.hero.lvl/5</span>
+<span class="nc" id="L190">				+ RingOfSharpshooting.levelDamageBonus(Dungeon.hero)</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">				+ (curseInfusionBonus ? 1 + Dungeon.hero.lvl/30 : 0);</span>
+<span class="nc" id="L192">		return Math.max(0, dmg);</span>
+	}
+	
+	@Override
+	public int max(int lvl) {
+<span class="nc" id="L197">		int dmg = 6 + (int)(Dungeon.hero.lvl/2.5f)</span>
+<span class="nc" id="L198">				+ 2*RingOfSharpshooting.levelDamageBonus(Dungeon.hero)</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">				+ (curseInfusionBonus ? 2 + Dungeon.hero.lvl/15 : 0);</span>
+<span class="nc" id="L200">		return Math.max(0, dmg);</span>
+	}
+
+	@Override
+	public int targetingPos(Hero user, int dst) {
+<span class="nc" id="L205">		return knockArrow().targetingPos(user, dst);</span>
+	}
+	
+	private int targetPos;
+	
+	@Override
+	public int damageRoll(Char owner) {
+<span class="nc" id="L212">		int damage = augment.damageFactor(super.damageRoll(owner));</span>
+		
+<span class="nc bnc" id="L214" title="All 2 branches missed.">		if (owner instanceof Hero) {</span>
+<span class="nc" id="L215">			int exStr = ((Hero)owner).STR() - STRReq();</span>
+<span class="nc bnc" id="L216" title="All 2 branches missed.">			if (exStr &gt; 0) {</span>
+<span class="nc" id="L217">				damage += Hero.heroDamageIntRange( 0, exStr );</span>
+			}
+		}
+
+<span class="nc bnc" id="L221" title="All 2 branches missed.">		if (sniperSpecial){</span>
+<span class="nc" id="L222">			damage = Math.round(damage * (1f + sniperSpecialBonusDamage));</span>
+
+<span class="nc bnc" id="L224" title="All 4 branches missed.">			switch (augment){</span>
+				case NONE:
+<span class="nc" id="L226">					damage = Math.round(damage * 0.667f);</span>
+<span class="nc" id="L227">					break;</span>
+				case SPEED:
+<span class="nc" id="L229">					damage = Math.round(damage * 0.5f);</span>
+<span class="nc" id="L230">					break;</span>
+				case DAMAGE:
+					//as distance increases so does damage, capping at 3x:
+					//1.20x|1.35x|1.52x|1.71x|1.92x|2.16x|2.43x|2.74x|3.00x
+<span class="nc" id="L234">					int distance = Dungeon.level.distance(owner.pos, targetPos) - 1;</span>
+<span class="nc" id="L235">					float multiplier = Math.min(3f, 1.2f * (float)Math.pow(1.125f, distance));</span>
+<span class="nc" id="L236">					damage = Math.round(damage * multiplier);</span>
+					break;
+			}
+		}
+		
+<span class="nc" id="L241">		return damage;</span>
+	}
+	
+	@Override
+	protected float baseDelay(Char owner) {
+<span class="nc bnc" id="L246" title="All 2 branches missed.">		if (sniperSpecial){</span>
+<span class="nc bnc" id="L247" title="All 3 branches missed.">			switch (augment){</span>
+				case NONE: default:
+<span class="nc" id="L249">					return 0f;</span>
+				case SPEED:
+<span class="nc" id="L251">					return 1f;</span>
+				case DAMAGE:
+<span class="nc" id="L253">					return 2f;</span>
+			}
+		} else{
+<span class="nc" id="L256">			return super.baseDelay(owner);</span>
+		}
+	}
+
+	@Override
+	protected float speedMultiplier(Char owner) {
+<span class="nc" id="L262">		float speed = super.speedMultiplier(owner);</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">		if (owner.buff(NaturesPower.naturesPowerTracker.class) != null){</span>
+			// +33% speed to +50% speed, depending on talent points
+<span class="nc" id="L265">			speed += ((8 + ((Hero)owner).pointsInTalent(Talent.GROWING_POWER)) / 24f);</span>
+		}
+<span class="nc" id="L267">		return speed;</span>
+	}
+
+	@Override
+	public int level() {
+<span class="nc bnc" id="L272" title="All 2 branches missed.">		int level = Dungeon.hero == null ? 0 : Dungeon.hero.lvl/5;</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">		if (curseInfusionBonus) level += 1 + level/6;</span>
+<span class="nc" id="L274">		return level;</span>
+	}
+
+	@Override
+	public int buffedLvl() {
+		//level isn't affected by buffs/debuffs
+<span class="nc" id="L280">		return level();</span>
+	}
+	
+	@Override
+	public boolean isUpgradable() {
+<span class="nc" id="L285">		return false;</span>
+	}
+	
+	public SpiritArrow knockArrow(){
+<span class="nc" id="L289">		return new SpiritArrow();</span>
+	}
+	
+<span class="nc" id="L292">	public class SpiritArrow extends MissileWeapon {</span>
+		
+		{
+<span class="nc" id="L295">			image = ItemSpriteSheet.SPIRIT_ARROW;</span>
+
+<span class="nc" id="L297">			hitSound = Assets.Sounds.HIT_ARROW;</span>
+		}
+
+		@Override
+		public Emitter emitter() {
+<span class="nc bnc" id="L302" title="All 4 branches missed.">			if (Dungeon.hero.buff(NaturesPower.naturesPowerTracker.class) != null &amp;&amp; !sniperSpecial){</span>
+<span class="nc" id="L303">				Emitter e = new Emitter();</span>
+<span class="nc" id="L304">				e.pos(5, 5);</span>
+<span class="nc" id="L305">				e.fillTarget = false;</span>
+<span class="nc" id="L306">				e.pour(LeafParticle.GENERAL, 0.01f);</span>
+<span class="nc" id="L307">				return e;</span>
+			} else {
+<span class="nc" id="L309">				return super.emitter();</span>
+			}
+		}
+
+		@Override
+		public int damageRoll(Char owner) {
+<span class="nc" id="L315">			return SpiritBow.this.damageRoll(owner);</span>
+		}
+		
+		@Override
+		public boolean hasEnchant(Class&lt;? extends Enchantment&gt; type, Char owner) {
+<span class="nc" id="L320">			return SpiritBow.this.hasEnchant(type, owner);</span>
+		}
+		
+		@Override
+		public int proc(Char attacker, Char defender, int damage) {
+<span class="nc" id="L325">			return SpiritBow.this.proc(attacker, defender, damage);</span>
+		}
+		
+		@Override
+		public float delayFactor(Char user) {
+<span class="nc" id="L330">			return SpiritBow.this.delayFactor(user);</span>
+		}
+		
+		@Override
+		public float accuracyFactor(Char owner, Char target) {
+<span class="nc bnc" id="L335" title="All 4 branches missed.">			if (sniperSpecial &amp;&amp; SpiritBow.this.augment == Augment.DAMAGE){</span>
+<span class="nc" id="L336">				return Float.POSITIVE_INFINITY;</span>
+			} else {
+<span class="nc" id="L338">				return super.accuracyFactor(owner, target);</span>
+			}
+		}
+		
+		@Override
+		public int STRReq(int lvl) {
+<span class="nc" id="L344">			return SpiritBow.this.STRReq();</span>
+		}
+
+		@Override
+		protected void onThrow( int cell ) {
+<span class="nc" id="L349">			Char enemy = Actor.findChar( cell );</span>
+<span class="nc bnc" id="L350" title="All 4 branches missed.">			if (enemy == null || enemy == curUser) {</span>
+<span class="nc" id="L351">				parent = null;</span>
+<span class="nc" id="L352">				Splash.at( cell, 0xCC99FFFF, 1 );</span>
+			} else {
+<span class="nc bnc" id="L354" title="All 2 branches missed.">				if (!curUser.shoot( enemy, this )) {</span>
+<span class="nc" id="L355">					Splash.at(cell, 0xCC99FFFF, 1);</span>
+				}
+<span class="nc bnc" id="L357" title="All 4 branches missed.">				if (sniperSpecial &amp;&amp; SpiritBow.this.augment != Augment.SPEED) sniperSpecial = false;</span>
+			}
+<span class="nc" id="L359">		}</span>
+
+		@Override
+		public void throwSound() {
+<span class="nc" id="L363">			Sample.INSTANCE.play( Assets.Sounds.ATK_SPIRITBOW, 1, Random.Float(0.87f, 1.15f) );</span>
+<span class="nc" id="L364">		}</span>
+
+<span class="nc" id="L366">		int flurryCount = -1;</span>
+<span class="nc" id="L367">		Actor flurryActor = null;</span>
+
+		@Override
+		public void cast(final Hero user, final int dst) {
+<span class="nc" id="L371">			final int cell = throwPos( user, dst );</span>
+<span class="nc" id="L372">			SpiritBow.this.targetPos = cell;</span>
+<span class="nc bnc" id="L373" title="All 4 branches missed.">			if (sniperSpecial &amp;&amp; SpiritBow.this.augment == Augment.SPEED){</span>
+<span class="nc bnc" id="L374" title="All 2 branches missed.">				if (flurryCount == -1) flurryCount = 3;</span>
+				
+<span class="nc" id="L376">				final Char enemy = Actor.findChar( cell );</span>
+				
+<span class="nc bnc" id="L378" title="All 2 branches missed.">				if (enemy == null){</span>
+<span class="nc bnc" id="L379" title="All 2 branches missed.">					if (user.buff(Talent.LethalMomentumTracker.class) != null){</span>
+<span class="nc" id="L380">						user.buff(Talent.LethalMomentumTracker.class).detach();</span>
+<span class="nc" id="L381">						user.next();</span>
+					} else {
+<span class="nc" id="L383">						user.spendAndNext(castDelay(user, dst));</span>
+					}
+<span class="nc" id="L385">					sniperSpecial = false;</span>
+<span class="nc" id="L386">					flurryCount = -1;</span>
+
+<span class="nc bnc" id="L388" title="All 2 branches missed.">					if (flurryActor != null){</span>
+<span class="nc" id="L389">						flurryActor.next();</span>
+<span class="nc" id="L390">						flurryActor = null;</span>
+					}
+<span class="nc" id="L392">					return;</span>
+				}
+
+<span class="nc" id="L395">				QuickSlotButton.target(enemy);</span>
+				
+<span class="nc" id="L397">				user.busy();</span>
+				
+<span class="nc" id="L399">				throwSound();</span>
+
+<span class="nc" id="L401">				user.sprite.zap(cell);</span>
+<span class="nc" id="L402">				((MissileSprite) user.sprite.parent.recycle(MissileSprite.class)).</span>
+<span class="nc" id="L403">						reset(user.sprite,</span>
+								cell,
+								this,
+<span class="nc" id="L406">								new Callback() {</span>
+									@Override
+									public void call() {
+<span class="nc bnc" id="L409" title="All 2 branches missed.">										if (enemy.isAlive()) {</span>
+<span class="nc" id="L410">											curUser = user;</span>
+<span class="nc" id="L411">											onThrow(cell);</span>
+										}
+
+<span class="nc" id="L414">										flurryCount--;</span>
+<span class="nc bnc" id="L415" title="All 2 branches missed.">										if (flurryCount &gt; 0){</span>
+<span class="nc" id="L416">											Actor.add(new Actor() {</span>
+
+												{
+<span class="nc" id="L419">													actPriority = VFX_PRIO-1;</span>
+<span class="nc" id="L420">												}</span>
+
+												@Override
+												protected boolean act() {
+<span class="nc" id="L424">													flurryActor = this;</span>
+<span class="nc" id="L425">													int target = QuickSlotButton.autoAim(enemy, SpiritArrow.this);</span>
+<span class="nc bnc" id="L426" title="All 2 branches missed.">													if (target == -1) target = cell;</span>
+<span class="nc" id="L427">													cast(user, target);</span>
+<span class="nc" id="L428">													Actor.remove(this);</span>
+<span class="nc" id="L429">													return false;</span>
+												}
+											});
+<span class="nc" id="L432">											curUser.next();</span>
+										} else {
+<span class="nc bnc" id="L434" title="All 2 branches missed.">											if (user.buff(Talent.LethalMomentumTracker.class) != null){</span>
+<span class="nc" id="L435">												user.buff(Talent.LethalMomentumTracker.class).detach();</span>
+<span class="nc" id="L436">												user.next();</span>
+											} else {
+<span class="nc" id="L438">												user.spendAndNext(castDelay(user, dst));</span>
+											}
+<span class="nc" id="L440">											sniperSpecial = false;</span>
+<span class="nc" id="L441">											flurryCount = -1;</span>
+										}
+
+<span class="nc bnc" id="L444" title="All 2 branches missed.">										if (flurryActor != null){</span>
+<span class="nc" id="L445">											flurryActor.next();</span>
+<span class="nc" id="L446">											flurryActor = null;</span>
+										}
+<span class="nc" id="L448">									}</span>
+								});
+				
+<span class="nc" id="L451">			} else {</span>
+
+<span class="nc bnc" id="L453" title="All 2 branches missed.">				if (user.hasTalent(Talent.SEER_SHOT)</span>
+<span class="nc bnc" id="L454" title="All 2 branches missed.">						&amp;&amp; user.buff(Talent.SeerShotCooldown.class) == null){</span>
+<span class="nc" id="L455">					int shotPos = throwPos(user, dst);</span>
+<span class="nc bnc" id="L456" title="All 2 branches missed.">					if (Actor.findChar(shotPos) == null) {</span>
+<span class="nc" id="L457">						RevealedArea a = Buff.affect(user, RevealedArea.class, 5 * user.pointsInTalent(Talent.SEER_SHOT));</span>
+<span class="nc" id="L458">						a.depth = Dungeon.depth;</span>
+<span class="nc" id="L459">						a.branch = Dungeon.branch;</span>
+<span class="nc" id="L460">						a.pos = shotPos;</span>
+<span class="nc" id="L461">						Buff.affect(user, Talent.SeerShotCooldown.class, 20f);</span>
+					}
+				}
+
+<span class="nc" id="L465">				super.cast(user, dst);</span>
+			}
+<span class="nc" id="L467">		}</span>
+	}
+	
+<span class="nc" id="L470">	private CellSelector.Listener shooter = new CellSelector.Listener() {</span>
+		@Override
+		public void onSelect( Integer target ) {
+<span class="nc bnc" id="L473" title="All 2 branches missed.">			if (target != null) {</span>
+<span class="nc" id="L474">				knockArrow().cast(curUser, target);</span>
+			}
+<span class="nc" id="L476">		}</span>
+		@Override
+		public String prompt() {
+<span class="nc" id="L479">			return Messages.get(SpiritBow.class, &quot;prompt&quot;);</span>
+		}
+	};
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

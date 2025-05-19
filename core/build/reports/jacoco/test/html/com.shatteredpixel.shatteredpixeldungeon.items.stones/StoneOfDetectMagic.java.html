@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StoneOfDetectMagic.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.stones</a> &gt; <span class="el_source">StoneOfDetectMagic.java</span></div><h1>StoneOfDetectMagic.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.stones;
+
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+
+<span class="nc" id="L37">public class StoneOfDetectMagic extends InventoryStone {</span>
+
+	{
+<span class="nc" id="L40">		preferredBag = Belongings.Backpack.class;</span>
+<span class="nc" id="L41">		image = ItemSpriteSheet.STONE_DETECT;</span>
+<span class="nc" id="L42">	}</span>
+
+	@Override
+	public boolean usableOnItem(Item item){
+<span class="nc bnc" id="L46" title="All 6 branches missed.">		return (item instanceof EquipableItem || item instanceof Wand)</span>
+				&amp;&amp; !(item instanceof MissileWeapon)
+<span class="nc bnc" id="L48" title="All 4 branches missed.">				&amp;&amp; (!item.isIdentified() || !item.cursedKnown);</span>
+	}
+
+	@Override
+	protected void onItemSelected(Item item) {
+
+<span class="nc" id="L54">		item.cursedKnown = true;</span>
+<span class="nc" id="L55">		useAnimation();</span>
+
+<span class="nc" id="L57">		boolean negativeMagic = false;</span>
+<span class="nc" id="L58">		boolean positiveMagic = false;</span>
+
+<span class="nc" id="L60">		negativeMagic = item.cursed;</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if (!negativeMagic){</span>
+<span class="nc bnc" id="L62" title="All 4 branches missed.">			if (item instanceof Weapon &amp;&amp; ((Weapon) item).hasCurseEnchant()){</span>
+<span class="nc" id="L63">				negativeMagic = true;</span>
+<span class="nc bnc" id="L64" title="All 4 branches missed.">			} else if (item instanceof Armor &amp;&amp; ((Armor) item).hasCurseGlyph()){</span>
+<span class="nc" id="L65">				negativeMagic = true;</span>
+			}
+		}
+
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		positiveMagic = item.trueLevel() &gt; 0;</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		if (!positiveMagic){</span>
+<span class="nc bnc" id="L71" title="All 4 branches missed.">			if (item instanceof Weapon &amp;&amp; ((Weapon) item).hasGoodEnchant()){</span>
+<span class="nc" id="L72">				positiveMagic = true;</span>
+<span class="nc bnc" id="L73" title="All 4 branches missed.">			} else if (item instanceof Armor &amp;&amp; ((Armor) item).hasGoodGlyph()){</span>
+<span class="nc" id="L74">				positiveMagic = true;</span>
+			}
+		}
+
+<span class="nc bnc" id="L78" title="All 4 branches missed.">		if (!positiveMagic &amp;&amp; !negativeMagic){</span>
+<span class="nc" id="L79">			GLog.i(Messages.get(this, &quot;detected_none&quot;));</span>
+<span class="nc bnc" id="L80" title="All 4 branches missed.">		} else if (positiveMagic &amp;&amp; negativeMagic) {</span>
+<span class="nc" id="L81">			GLog.h(Messages.get(this, &quot;detected_both&quot;));</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		} else if (positiveMagic){</span>
+<span class="nc" id="L83">			GLog.p(Messages.get(this, &quot;detected_good&quot;));</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		} else if (negativeMagic){</span>
+<span class="nc" id="L85">			GLog.w(Messages.get(this, &quot;detected_bad&quot;));</span>
+		}
+
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		if (!anonymous) {</span>
+<span class="nc" id="L89">			curItem.detach(curUser.belongings.backpack);</span>
+<span class="nc" id="L90">			Catalog.countUse(getClass());</span>
+<span class="nc" id="L91">			Talent.onRunestoneUsed(curUser, curUser.pos, getClass());</span>
+		}
+
+<span class="nc" id="L94">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

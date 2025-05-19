@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConeAOE.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.mechanics</a> &gt; <span class="el_source">ConeAOE.java</span></div><h1>ConeAOE.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.mechanics;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.Point;
+import com.watabou.utils.PointF;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+
+//a cone made of up several ballisticas scanning in an arc
+public class ConeAOE {
+
+	public Ballistica coreRay;
+
+<span class="nc" id="L38">	public ArrayList&lt;Ballistica&gt; outerRays = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L39">	public ArrayList&lt;Ballistica&gt; rays = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L40">	public HashSet&lt;Integer&gt; cells = new HashSet&lt;&gt;();</span>
+
+	public ConeAOE( Ballistica core, float degrees ){
+<span class="nc" id="L43">		this( core, Float.POSITIVE_INFINITY, degrees, core.collisionProperties );</span>
+<span class="nc" id="L44">	}</span>
+
+<span class="nc" id="L46">	public ConeAOE( Ballistica core, float maxDist, float degrees, int ballisticaParams ){</span>
+
+<span class="nc" id="L48">		coreRay = core;</span>
+
+		//we want to use true coordinates for our trig functions, not game cells
+		// so get the center of from and to as points
+<span class="nc" id="L52">		PointF fromP = new PointF(Dungeon.level.cellToPoint(core.sourcePos));</span>
+<span class="nc" id="L53">		fromP.x += 0.5f;</span>
+<span class="nc" id="L54">		fromP.y += 0.5f;</span>
+
+<span class="nc" id="L56">		PointF toP = new PointF(Dungeon.level.cellToPoint(core.collisionPos));</span>
+<span class="nc" id="L57">		toP.x += 0.5f;</span>
+<span class="nc" id="L58">		toP.y += 0.5f;</span>
+
+		//clamp distance of cone to maxDist (in true distance, not game distance)
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if (PointF.distance(fromP, toP) &gt; maxDist){</span>
+<span class="nc" id="L62">			toP = PointF.inter(fromP, toP, maxDist/PointF.distance(fromP, toP) );</span>
+		}
+
+		//now we can get the circle's radius. We bump it by 0.5 as we want the cone to reach
+		// The edge of the target cell, not the center.
+<span class="nc" id="L67">		float circleRadius = PointF.distance(fromP, toP);</span>
+<span class="nc" id="L68">		circleRadius += 0.5f;</span>
+
+		//Now we find every unique cell along the outer arc of our cone.
+<span class="nc" id="L71">		PointF scan = new PointF();</span>
+<span class="nc" id="L72">		Point scanInt = new Point();</span>
+<span class="nc" id="L73">		float initalAngle = PointF.angle(fromP, toP)/PointF.G2R;</span>
+		//want to preserve order so that our collection of rays is going clockwise
+<span class="nc" id="L75">		LinkedHashSet&lt;Integer&gt; targetCells = new LinkedHashSet&lt;&gt;();</span>
+<span class="nc" id="L76">		LinkedHashSet&lt;Integer&gt; outerCells = new LinkedHashSet&lt;&gt;();</span>
+
+		//cast a ray every 0.5 degrees in a clockwise arc, to find cells along the cone's outer arc
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		for (float a = initalAngle+degrees/2f; a &gt;= initalAngle-degrees/2f; a-=0.5f){</span>
+<span class="nc" id="L80">			scan.polar(a * PointF.G2R, circleRadius);</span>
+<span class="nc" id="L81">			scan.offset(fromP);</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">			scan.x += (fromP.x &gt; scan.x ? +0.5f : -0.5f);</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">			scan.y += (fromP.y &gt; scan.y ? +0.5f : -0.5f);</span>
+<span class="nc" id="L84">			scanInt.set(</span>
+<span class="nc" id="L85">					(int)GameMath.gate(0, (int)Math.floor(scan.x), Dungeon.level.width()-1),</span>
+<span class="nc" id="L86">					(int)GameMath.gate(0, (int)Math.floor(scan.y), Dungeon.level.height()-1));</span>
+<span class="nc" id="L87">			targetCells.add(Dungeon.level.pointToCell(scanInt));</span>
+<span class="nc" id="L88">			outerCells.add(Dungeon.level.pointToCell(scanInt));</span>
+			//if the cone is large enough, also cast rays to cells just inside of the outer arc
+			// this helps fill in any holes when casting rays
+<span class="nc bnc" id="L91" title="All 2 branches missed.">			if (circleRadius &gt;= 4) {</span>
+<span class="nc" id="L92">				scan.polar(a * PointF.G2R, circleRadius - 1);</span>
+<span class="nc" id="L93">				scan.offset(fromP);</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">				scan.x += (fromP.x &gt; scan.x ? +0.5f : -0.5f);</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">				scan.y += (fromP.y &gt; scan.y ? +0.5f : -0.5f);</span>
+<span class="nc" id="L96">				scanInt.set(</span>
+<span class="nc" id="L97">						(int)GameMath.gate(0, (int)Math.floor(scan.x), Dungeon.level.width()-1),</span>
+<span class="nc" id="L98">						(int)GameMath.gate(0, (int)Math.floor(scan.y), Dungeon.level.height()-1));</span>
+<span class="nc" id="L99">				targetCells.add(Dungeon.level.pointToCell(scanInt));</span>
+			}
+		}
+
+		//cast a ray to each found cell, these make up the cone
+		//we don't add the core ray as its collision properties may differ from the cone
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		for( int c : targetCells ){</span>
+<span class="nc" id="L106">			Ballistica ray = new Ballistica(core.sourcePos, c, ballisticaParams);</span>
+<span class="nc" id="L107">			cells.addAll(ray.subPath(1, ray.dist));</span>
+<span class="nc" id="L108">			rays.add(ray);</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">			if (outerCells.contains(c)){</span>
+<span class="nc" id="L110">				outerRays.add(ray);</span>
+			}
+<span class="nc" id="L112">		}</span>
+
+<span class="nc" id="L114">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

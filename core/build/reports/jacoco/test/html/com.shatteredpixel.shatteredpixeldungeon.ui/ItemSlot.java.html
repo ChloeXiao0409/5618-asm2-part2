@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ItemSlot.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">ItemSlot.java</span></div><h1>ItemSlot.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.Image;
+import com.watabou.utils.Rect;
+
+public class ItemSlot extends Button {
+
+	public static final int DEGRADED	= 0xFF4444;
+	public static final int UPGRADED	= 0x44FF44;
+	public static final int FADED       = 0x999999;
+	public static final int WARNING		= 0xFF8800;
+	public static final int ENHANCED	= 0x3399FF;
+	public static final int MASTERED	= 0xFFFF44;
+	public static final int CURSE_INFUSED	= 0x8800FF;
+	
+	private static final float ENABLED	= 1.0f;
+	private static final float DISABLED	= 0.3f;
+
+<span class="nc" id="L54">	private Rect margin = new Rect();</span>
+
+	protected ItemSprite sprite;
+	protected Item       item;
+	protected BitmapText status;
+	protected BitmapText extra;
+	protected Image      itemIcon;
+	protected BitmapText level;
+	
+	private static final String TXT_STRENGTH	= &quot;:%d&quot;;
+	private static final String TXT_TYPICAL_STR	= &quot;%d?&quot;;
+
+	private static final String TXT_LEVEL	= &quot;%+d&quot;;
+
+	// Special &quot;virtual items&quot;
+<span class="nc" id="L69">	public static final Item CHEST = new Item() {</span>
+<span class="nc" id="L70">		public int image() { return ItemSpriteSheet.CHEST; }</span>
+<span class="nc" id="L71">		public String name() { return Messages.get(Heap.class, &quot;chest&quot;); }</span>
+	};
+<span class="nc" id="L73">	public static final Item LOCKED_CHEST = new Item() {</span>
+<span class="nc" id="L74">		public int image() { return ItemSpriteSheet.LOCKED_CHEST; }</span>
+<span class="nc" id="L75">		public String name() { return Messages.get(Heap.class, &quot;locked_chest&quot;); }</span>
+	};
+<span class="nc" id="L77">	public static final Item CRYSTAL_CHEST = new Item() {</span>
+<span class="nc" id="L78">		public int image() { return ItemSpriteSheet.CRYSTAL_CHEST; }</span>
+<span class="nc" id="L79">		public String name() { return Messages.get(Heap.class, &quot;crystal_chest&quot;); }</span>
+	};
+<span class="nc" id="L81">	public static final Item TOMB = new Item() {</span>
+<span class="nc" id="L82">		public int image() { return ItemSpriteSheet.TOMB; }</span>
+<span class="nc" id="L83">		public String name() { return Messages.get(Heap.class, &quot;tomb&quot;); }</span>
+	};
+<span class="nc" id="L85">	public static final Item SKELETON = new Item() {</span>
+<span class="nc" id="L86">		public int image() { return ItemSpriteSheet.BONES; }</span>
+<span class="nc" id="L87">		public String name() { return Messages.get(Heap.class, &quot;skeleton&quot;); }</span>
+	};
+<span class="nc" id="L89">	public static final Item REMAINS = new Item() {</span>
+<span class="nc" id="L90">		public int image() { return ItemSpriteSheet.REMAINS; }</span>
+<span class="nc" id="L91">		public String name() { return Messages.get(Heap.class, &quot;remains&quot;); }</span>
+	};
+	
+	public ItemSlot() {
+<span class="nc" id="L95">		super();</span>
+<span class="nc" id="L96">		sprite.visible(false);</span>
+<span class="nc" id="L97">		enable(false);</span>
+<span class="nc" id="L98">	}</span>
+	
+	public ItemSlot( Item item ) {
+<span class="nc" id="L101">		this();</span>
+<span class="nc" id="L102">		item( item );</span>
+<span class="nc" id="L103">	}</span>
+		
+	@Override
+	protected void createChildren() {
+		
+<span class="nc" id="L108">		super.createChildren();</span>
+		
+<span class="nc" id="L110">		sprite = new ItemSprite();</span>
+<span class="nc" id="L111">		add(sprite);</span>
+		
+<span class="nc" id="L113">		status = new BitmapText( PixelScene.pixelFont);</span>
+<span class="nc" id="L114">		add(status);</span>
+		
+<span class="nc" id="L116">		extra = new BitmapText( PixelScene.pixelFont);</span>
+<span class="nc" id="L117">		add(extra);</span>
+		
+<span class="nc" id="L119">		level = new BitmapText( PixelScene.pixelFont);</span>
+<span class="nc" id="L120">		add(level);</span>
+<span class="nc" id="L121">	}</span>
+	
+	@Override
+	protected void layout() {
+<span class="nc" id="L125">		super.layout();</span>
+		
+<span class="nc" id="L127">		sprite.x = x + margin.left + (width - sprite.width - (margin.left + margin.right)) / 2f;</span>
+<span class="nc" id="L128">		sprite.y = y + margin.top + (height - sprite.height - (margin.top + margin.bottom)) / 2f;</span>
+<span class="nc" id="L129">		PixelScene.align(sprite);</span>
+		
+<span class="nc bnc" id="L131" title="All 2 branches missed.">		if (status != null) {</span>
+<span class="nc" id="L132">			status.measure();</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">			if (status.width &gt; width - (margin.left + margin.right)){</span>
+<span class="nc" id="L134">				status.scale.set(PixelScene.align(0.8f));</span>
+			} else {
+<span class="nc" id="L136">				status.scale.set(1f);</span>
+			}
+<span class="nc" id="L138">			status.x = x + margin.left;</span>
+<span class="nc" id="L139">			status.y = y + margin.top;</span>
+<span class="nc" id="L140">			PixelScene.align(status);</span>
+		}
+		
+<span class="nc bnc" id="L143" title="All 2 branches missed.">		if (extra != null) {</span>
+<span class="nc" id="L144">			extra.x = x + (width - extra.width()) - margin.right;</span>
+<span class="nc" id="L145">			extra.y = y + margin.top;</span>
+<span class="nc" id="L146">			PixelScene.align(extra);</span>
+
+<span class="nc bnc" id="L148" title="All 2 branches missed.">			if ((status.width() + extra.width()) &gt; width){</span>
+<span class="nc" id="L149">				extra.visible = false;</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">			} else if (item != null) {</span>
+<span class="nc" id="L151">				extra.visible = true;</span>
+			}
+		}
+
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		if (itemIcon != null){</span>
+			//center the icon slightly if there is enough room
+<span class="nc bnc" id="L157" title="All 4 branches missed.">			if (width &gt;= 24 || height &gt;= 24) {</span>
+<span class="nc" id="L158">				itemIcon.x = x + width - (ItemSpriteSheet.Icons.SIZE + itemIcon.width()) / 2f - margin.right;</span>
+<span class="nc" id="L159">				itemIcon.y = y + (ItemSpriteSheet.Icons.SIZE - itemIcon.height) / 2f + margin.top;</span>
+			} else {
+<span class="nc" id="L161">				itemIcon.x = x + width - itemIcon.width() - margin.right;</span>
+<span class="nc" id="L162">				itemIcon.y = y + margin.top;</span>
+			}
+<span class="nc" id="L164">			PixelScene.align(itemIcon);</span>
+		}
+		
+<span class="nc bnc" id="L167" title="All 2 branches missed.">		if (level != null) {</span>
+<span class="nc" id="L168">			level.x = x + (width - level.width()) - margin.right;</span>
+<span class="nc" id="L169">			level.y = y + (height - level.baseLine() - 1) - margin.bottom;</span>
+<span class="nc" id="L170">			PixelScene.align(level);</span>
+		}
+
+<span class="nc" id="L173">	}</span>
+
+	public void alpha( float value ){
+<span class="nc bnc" id="L176" title="All 2 branches missed.">		if (!active) value *= 0.3f;</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">		if (sprite != null)     sprite.alpha(value);</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">		if (extra != null)      extra.alpha(value);</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">		if (status != null)     status.alpha(value);</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">		if (itemIcon != null)   itemIcon.alpha(value);</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">		if (level != null)      level.alpha(value);</span>
+<span class="nc" id="L182">	}</span>
+
+	public void clear(){
+<span class="nc" id="L185">		item(null);</span>
+<span class="nc" id="L186">		enable(true);</span>
+<span class="nc" id="L187">		sprite.visible(true);</span>
+<span class="nc" id="L188">		sprite.view(ItemSpriteSheet.SOMETHING, null);</span>
+<span class="nc" id="L189">		layout();</span>
+<span class="nc" id="L190">	}</span>
+	
+	public void item( Item item ) {
+<span class="nc bnc" id="L193" title="All 2 branches missed.">		if (this.item == item) {</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">			if (item != null) {</span>
+<span class="nc" id="L195">				sprite.view( item );</span>
+			}
+<span class="nc" id="L197">			updateText();</span>
+<span class="nc" id="L198">			return;</span>
+		}
+
+<span class="nc" id="L201">		this.item = item;</span>
+
+<span class="nc bnc" id="L203" title="All 2 branches missed.">		if (item == null) {</span>
+
+<span class="nc" id="L205">			enable(false);</span>
+<span class="nc" id="L206">			sprite.visible(false);</span>
+
+<span class="nc" id="L208">			updateText();</span>
+			
+		} else {
+			
+<span class="nc" id="L212">			enable(true);</span>
+<span class="nc" id="L213">			sprite.visible(true);</span>
+
+<span class="nc" id="L215">			sprite.view( item );</span>
+<span class="nc" id="L216">			updateText();</span>
+		}
+<span class="nc" id="L218">	}</span>
+
+	public void updateText(){
+
+<span class="nc bnc" id="L222" title="All 2 branches missed.">		if (itemIcon != null){</span>
+<span class="nc" id="L223">			remove(itemIcon);</span>
+<span class="nc" id="L224">			itemIcon = null;</span>
+		}
+
+<span class="nc bnc" id="L227" title="All 2 branches missed.">		if (item == null){</span>
+<span class="nc" id="L228">			status.visible = extra.visible = level.visible = false;</span>
+<span class="nc" id="L229">			return;</span>
+		} else {
+<span class="nc" id="L231">			status.visible = extra.visible = level.visible = true;</span>
+		}
+
+<span class="nc" id="L234">		status.text( item.status() );</span>
+
+		//thrown weapons on their last use show quantity in orange, unless they are single-use
+<span class="nc bnc" id="L237" title="All 2 branches missed.">		if (item instanceof MissileWeapon</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">				&amp;&amp; ((MissileWeapon) item).durabilityLeft() &lt;= 50f</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">				&amp;&amp; ((MissileWeapon) item).durabilityLeft() &lt;= ((MissileWeapon) item).durabilityPerUse()){</span>
+<span class="nc" id="L240">			status.hardlight(WARNING);</span>
+		} else {
+<span class="nc" id="L242">			status.resetColor();</span>
+		}
+
+<span class="nc bnc" id="L245" title="All 8 branches missed.">		if (item.icon != -1 &amp;&amp; (item.isIdentified() || (item instanceof Ring &amp;&amp; ((Ring) item).isKnown()))){</span>
+<span class="nc" id="L246">			extra.text( null );</span>
+
+<span class="nc" id="L248">			itemIcon = new Image(Assets.Sprites.ITEM_ICONS);</span>
+<span class="nc" id="L249">			itemIcon.frame(ItemSpriteSheet.Icons.film.get(item.icon));</span>
+<span class="nc" id="L250">			add(itemIcon);</span>
+
+<span class="nc bnc" id="L252" title="All 4 branches missed.">		} else if (item instanceof Weapon || item instanceof Armor) {</span>
+
+<span class="nc bnc" id="L254" title="All 2 branches missed.">			if (item.levelKnown){</span>
+<span class="nc bnc" id="L255" title="All 2 branches missed.">				int str = item instanceof Weapon ? ((Weapon)item).STRReq() : ((Armor)item).STRReq();</span>
+<span class="nc" id="L256">				extra.text( Messages.format( TXT_STRENGTH, str ) );</span>
+<span class="nc bnc" id="L257" title="All 4 branches missed.">				if (Dungeon.hero != null &amp;&amp; str &gt; Dungeon.hero.STR()) {</span>
+<span class="nc" id="L258">					extra.hardlight( DEGRADED );</span>
+<span class="nc bnc" id="L259" title="All 4 branches missed.">				} else if (item instanceof Weapon &amp;&amp; ((Weapon) item).masteryPotionBonus){</span>
+<span class="nc" id="L260">					extra.hardlight( MASTERED );</span>
+<span class="nc bnc" id="L261" title="All 4 branches missed.">				} else if (item instanceof Armor &amp;&amp; ((Armor) item).masteryPotionBonus) {</span>
+<span class="nc" id="L262">					extra.hardlight( MASTERED );</span>
+				} else {
+<span class="nc" id="L264">					extra.resetColor();</span>
+				}
+<span class="nc" id="L266">			} else {</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">				int str = item instanceof Weapon ? ((Weapon)item).STRReq(0) : ((Armor)item).STRReq(0);</span>
+<span class="nc" id="L268">				extra.text( Messages.format( TXT_TYPICAL_STR, str ) );</span>
+<span class="nc" id="L269">				extra.hardlight( WARNING );</span>
+			}
+<span class="nc" id="L271">			extra.measure();</span>
+
+		} else {
+
+<span class="nc" id="L275">			extra.text( null );</span>
+
+		}
+
+<span class="nc" id="L279">		int trueLvl = item.visiblyUpgraded();</span>
+<span class="nc" id="L280">		int buffedLvl = item.buffedVisiblyUpgraded();</span>
+
+<span class="nc bnc" id="L282" title="All 4 branches missed.">		if (trueLvl != 0 || buffedLvl != 0) {</span>
+<span class="nc" id="L283">			level.text( Messages.format( TXT_LEVEL, buffedLvl ) );</span>
+<span class="nc" id="L284">			level.measure();</span>
+<span class="nc bnc" id="L285" title="All 4 branches missed.">			if (trueLvl == buffedLvl || buffedLvl &lt;= 0) {</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">				if (buffedLvl &gt; 0){</span>
+<span class="nc bnc" id="L287" title="All 12 branches missed.">					if ((item instanceof Weapon &amp;&amp; ((Weapon) item).curseInfusionBonus)</span>
+						|| (item instanceof Armor &amp;&amp; ((Armor) item).curseInfusionBonus)
+							|| (item instanceof Wand &amp;&amp; ((Wand) item).curseInfusionBonus)){
+<span class="nc" id="L290">						level.hardlight(CURSE_INFUSED);</span>
+					} else {
+<span class="nc" id="L292">						level.hardlight(UPGRADED);</span>
+					}
+				} else {
+<span class="nc" id="L295">					level.hardlight( DEGRADED );</span>
+				}
+			} else {
+<span class="nc bnc" id="L298" title="All 2 branches missed.">				level.hardlight(buffedLvl &gt; trueLvl ? ENHANCED : WARNING);</span>
+			}
+		} else {
+<span class="nc" id="L301">			level.text( null );</span>
+		}
+
+<span class="nc" id="L304">		layout();</span>
+<span class="nc" id="L305">	}</span>
+	
+	public void enable( boolean value ) {
+		
+<span class="nc" id="L309">		active = value;</span>
+		//reset properties if was pressed
+<span class="nc bnc" id="L311" title="All 4 branches missed.">		if (!active &amp;&amp; pressedButton == this){</span>
+<span class="nc" id="L312">			hotArea.reset();</span>
+<span class="nc" id="L313">			pressedButton = null;</span>
+<span class="nc" id="L314">			clickReady = false;</span>
+<span class="nc" id="L315">			onPointerUp();</span>
+		}
+		
+<span class="nc bnc" id="L318" title="All 2 branches missed.">		float alpha = value ? ENABLED : DISABLED;</span>
+<span class="nc" id="L319">		sprite.alpha( alpha );</span>
+<span class="nc" id="L320">		status.alpha( alpha );</span>
+<span class="nc" id="L321">		extra.alpha( alpha );</span>
+<span class="nc" id="L322">		level.alpha( alpha );</span>
+<span class="nc bnc" id="L323" title="All 2 branches missed.">		if (itemIcon != null) itemIcon.alpha( alpha );</span>
+<span class="nc" id="L324">	}</span>
+
+	public void showExtraInfo( boolean show ){
+
+<span class="nc bnc" id="L328" title="All 2 branches missed.">		if (show){</span>
+<span class="nc" id="L329">			add(extra);</span>
+		} else {
+<span class="nc" id="L331">			remove(extra);</span>
+		}
+
+<span class="nc" id="L334">	}</span>
+
+	public void textVisible( boolean visible ){
+<span class="nc bnc" id="L337" title="All 2 branches missed.">		if (visible){</span>
+<span class="nc" id="L338">			add(status);</span>
+<span class="nc" id="L339">			add(extra);</span>
+<span class="nc" id="L340">			add(level);</span>
+		} else {
+<span class="nc" id="L342">			remove(status);</span>
+<span class="nc" id="L343">			remove(extra);</span>
+<span class="nc" id="L344">			remove(level);</span>
+		}
+<span class="nc" id="L346">	}</span>
+
+	public void setMargins( int left, int top, int right, int bottom){
+<span class="nc" id="L349">		margin.set(left, top, right, bottom);</span>
+<span class="nc" id="L350">		layout();</span>
+<span class="nc" id="L351">	}</span>
+
+	@Override
+	protected String hoverText() {
+<span class="nc bnc" id="L355" title="All 4 branches missed.">		if (item != null &amp;&amp; item.name() != null) {</span>
+<span class="nc" id="L356">			return Messages.titleCase(item.name());</span>
+		} else {
+<span class="nc" id="L358">			return super.hoverText();</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

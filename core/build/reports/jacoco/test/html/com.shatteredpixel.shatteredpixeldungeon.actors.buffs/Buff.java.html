@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Buff.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.buffs</a> &gt; <span class="el_source">Buff.java</span></div><h1>Buff.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.buffs;
+
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.watabou.noosa.Image;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Reflection;
+
+import java.util.HashSet;
+
+<span class="nc" id="L34">public class Buff extends Actor {</span>
+	
+	public Char target;
+
+	//whether this buff was already extended by the mnemonic prayer spell
+<span class="nc" id="L39">	public boolean mnemonicExtended = false;</span>
+
+	{
+<span class="nc" id="L42">		actPriority = BUFF_PRIO; //low priority, towards the end of a turn</span>
+	}
+
+	//determines how the buff is announced when it is shown.
+<span class="nc" id="L46">	public enum buffType {POSITIVE, NEGATIVE, NEUTRAL}</span>
+<span class="nc" id="L47">	public buffType type = buffType.NEUTRAL;</span>
+	
+	//whether or not the buff announces its name
+<span class="nc" id="L50">	public boolean announced = false;</span>
+
+	//whether a buff should persist through revive effects or similar (e.g. transmogrify)
+<span class="nc" id="L53">	public boolean revivePersists = false;</span>
+	
+<span class="nc" id="L55">	protected HashSet&lt;Class&gt; resistances = new HashSet&lt;&gt;();</span>
+	
+	public HashSet&lt;Class&gt; resistances() {
+<span class="nc" id="L58">		return new HashSet&lt;&gt;(resistances);</span>
+	}
+	
+<span class="nc" id="L61">	protected HashSet&lt;Class&gt; immunities = new HashSet&lt;&gt;();</span>
+	
+	public HashSet&lt;Class&gt; immunities() {
+<span class="nc" id="L64">		return new HashSet&lt;&gt;(immunities);</span>
+	}
+	
+	public boolean attachTo( Char target ) {
+
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		if (target.isImmune( getClass() )) {</span>
+<span class="nc" id="L70">			return false;</span>
+		}
+		
+<span class="nc" id="L73">		this.target = target;</span>
+
+<span class="nc bnc" id="L75" title="All 2 branches missed.">		if (target.add( this )){</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">			if (target.sprite != null) fx( true );</span>
+<span class="nc" id="L77">			return true;</span>
+		} else {
+<span class="nc" id="L79">			this.target = null;</span>
+<span class="nc" id="L80">			return false;</span>
+		}
+	}
+	
+	public void detach() {
+<span class="nc bnc" id="L85" title="All 4 branches missed.">		if (target.remove( this ) &amp;&amp; target.sprite != null) fx( false );</span>
+<span class="nc" id="L86">	}</span>
+	
+	@Override
+	public boolean act() {
+<span class="nc" id="L90">		diactivate();</span>
+<span class="nc" id="L91">		return true;</span>
+	}
+	
+	public int icon() {
+<span class="nc" id="L95">		return BuffIndicator.NONE;</span>
+	}
+
+	//some buffs may want to tint the base texture color of their icon
+	public void tintIcon( Image icon ){
+		//do nothing by default
+<span class="nc" id="L101">	}</span>
+
+	//percent (0-1) to fade out out the buff icon, usually if buff is expiring
+	public float iconFadePercent(){
+<span class="nc" id="L105">		return 0;</span>
+	}
+
+	//text to display on large buff icons in the desktop UI
+	public String iconTextDisplay(){
+<span class="nc" id="L110">		return &quot;&quot;;</span>
+	}
+
+	//visual effect usually attached to the sprite of the character the buff is attacked to
+	public void fx(boolean on) {
+		//do nothing by default
+<span class="nc" id="L116">	}</span>
+
+	public String heroMessage(){
+<span class="nc" id="L119">		String msg = Messages.get(this, &quot;heromsg&quot;);</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">		if (msg.isEmpty()) {</span>
+<span class="nc" id="L121">			return null;</span>
+		} else {
+<span class="nc" id="L123">			return msg;</span>
+		}
+	}
+
+	public String name() {
+<span class="nc" id="L128">		return Messages.get(this, &quot;name&quot;);</span>
+	}
+
+	public String desc(){
+<span class="nc" id="L132">		return Messages.get(this, &quot;desc&quot;);</span>
+	}
+
+	//to handle the common case of showing how many turns are remaining in a buff description.
+	protected String dispTurns(float input){
+<span class="nc" id="L137">		return Messages.decimalFormat(&quot;#.##&quot;, input);</span>
+	}
+
+	//buffs act after the hero, so it is often useful to use cooldown+1 when display buff time remaining
+	public float visualcooldown(){
+<span class="nc" id="L142">		return cooldown()+1f;</span>
+	}
+
+	private static final String MNEMONIC_EXTENDED    = &quot;mnemonic_extended&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L149">		super.storeInBundle(bundle);</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">		if (mnemonicExtended) bundle.put(MNEMONIC_EXTENDED, mnemonicExtended);</span>
+<span class="nc" id="L151">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L155">		super.restoreFromBundle(bundle);</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		if (bundle.contains(MNEMONIC_EXTENDED)) {</span>
+<span class="nc" id="L157">			mnemonicExtended = bundle.getBoolean(MNEMONIC_EXTENDED);</span>
+		}
+<span class="nc" id="L159">	}</span>
+
+	//creates a fresh instance of the buff and attaches that, this allows duplication.
+	public static&lt;T extends Buff&gt; T append( Char target, Class&lt;T&gt; buffClass ) {
+<span class="nc" id="L163">		T buff = Reflection.newInstance(buffClass);</span>
+<span class="nc" id="L164">		buff.attachTo( target );</span>
+<span class="nc" id="L165">		return buff;</span>
+	}
+
+	public static&lt;T extends FlavourBuff&gt; T append( Char target, Class&lt;T&gt; buffClass, float duration ) {
+<span class="nc" id="L169">		T buff = append( target, buffClass );</span>
+<span class="nc" id="L170">		buff.spend( duration * target.resist(buffClass) );</span>
+<span class="nc" id="L171">		return buff;</span>
+	}
+
+	//same as append, but prevents duplication.
+	public static&lt;T extends Buff&gt; T affect( Char target, Class&lt;T&gt; buffClass ) {
+<span class="nc" id="L176">		T buff = target.buff( buffClass );</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">		if (buff != null) {</span>
+<span class="nc" id="L178">			return buff;</span>
+		} else {
+<span class="nc" id="L180">			return append( target, buffClass );</span>
+		}
+	}
+	
+	public static&lt;T extends FlavourBuff&gt; T affect( Char target, Class&lt;T&gt; buffClass, float duration ) {
+<span class="nc" id="L185">		T buff = affect( target, buffClass );</span>
+<span class="nc" id="L186">		buff.spend( duration * target.resist(buffClass) );</span>
+<span class="nc" id="L187">		return buff;</span>
+	}
+
+	//postpones an already active buff, or creates &amp; attaches a new buff and delays that.
+	public static&lt;T extends FlavourBuff&gt; T prolong( Char target, Class&lt;T&gt; buffClass, float duration ) {
+<span class="nc" id="L192">		T buff = affect( target, buffClass );</span>
+<span class="nc" id="L193">		buff.postpone( duration * target.resist(buffClass) );</span>
+<span class="nc" id="L194">		return buff;</span>
+	}
+
+	public static&lt;T extends CounterBuff&gt; T count( Char target, Class&lt;T&gt; buffclass, float count ) {
+<span class="nc" id="L198">		T buff = affect( target, buffclass );</span>
+<span class="nc" id="L199">		buff.countUp( count );</span>
+<span class="nc" id="L200">		return buff;</span>
+	}
+	
+	public static void detach( Char target, Class&lt;? extends Buff&gt; cl ) {
+<span class="nc bnc" id="L204" title="All 2 branches missed.">		for ( Buff b : target.buffs( cl )){</span>
+<span class="nc" id="L205">			b.detach();</span>
+<span class="nc" id="L206">		}</span>
+<span class="nc" id="L207">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
