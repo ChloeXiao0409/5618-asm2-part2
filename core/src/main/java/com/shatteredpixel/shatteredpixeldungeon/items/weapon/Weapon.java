@@ -80,6 +80,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import com.shatteredpixel.shatteredpixeldungeon.equipment.IEquipment;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Augment;
 
 
 
@@ -88,29 +89,6 @@ public abstract class Weapon extends KindOfWeapon implements IEquipment {
 	public float    ACC = 1f;	// Accuracy modifier
 	public float	DLY	= 1f;	// Speed modifier
 	public int      RCH = 1;    // Reach modifier (only applies to melee hits)
-
-	public enum Augment {
-		SPEED   (0.7f, 2/3f),
-		DAMAGE  (1.5f, 5/3f),
-		NONE	(1.0f, 1f);
-
-		private float damageFactor;
-		private float delayFactor;
-
-		Augment(float dmg, float dly){
-			damageFactor = dmg;
-			delayFactor = dly;
-		}
-
-		public int damageFactor(int dmg){
-			return Math.round(dmg * damageFactor);
-		}
-
-		public float delayFactor(float dly){
-			return dly * delayFactor;
-		}
-	}
-	
 	public Augment augment = Augment.NONE;
 	
 	private static final int USES_TO_ID = 20;
