@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Amulet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items</a> &gt; <span class="el_source">Amulet.java</span></div><h1>Amulet.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items;
+
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AscensionChallenge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.AmuletScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.watabou.noosa.Game;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import com.shatteredpixel.shatteredpixeldungeon.equipment.IEquipment;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+
+
+<span class="nc" id="L43">public class Amulet extends Item implements IEquipment {</span>
+	
+	private static final String AC_END = &quot;END&quot;;
+	
+	{
+<span class="nc" id="L48">		image = ItemSpriteSheet.AMULET;</span>
+		
+<span class="nc" id="L50">		unique = true;</span>
+<span class="nc" id="L51">	}</span>
+	
+	@Override
+	public ArrayList&lt;String&gt; actions( Hero hero ) {
+<span class="nc" id="L55">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">		if (hero.buff(AscensionChallenge.class) != null){</span>
+<span class="nc" id="L57">			actions.clear();</span>
+		} else {
+<span class="nc" id="L59">			actions.add(AC_END);</span>
+		}
+<span class="nc" id="L61">		return actions;</span>
+	}
+	
+	@Override
+	public void execute( Hero hero, String action ) {
+
+<span class="nc" id="L67">		super.execute( hero, action );</span>
+
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		if (action.equals(AC_END)) {</span>
+<span class="nc" id="L70">			showAmuletScene( false );</span>
+		}
+<span class="nc" id="L72">	}</span>
+	
+	@Override
+	public boolean doPickUp(Hero hero, int pos) {
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		if (super.doPickUp( hero, pos )) {</span>
+			
+<span class="nc bnc" id="L78" title="All 2 branches missed.">			if (!Statistics.amuletObtained) {</span>
+<span class="nc" id="L79">				Statistics.amuletObtained = true;</span>
+<span class="nc" id="L80">				hero.spend(-hero.cooldown());</span>
+
+				//delay with an actor here so pickup behaviour can fully process.
+<span class="nc" id="L83">				Actor.add(new Actor(){</span>
+
+					{
+<span class="nc" id="L86">						actPriority = VFX_PRIO;</span>
+<span class="nc" id="L87">					}</span>
+
+					@Override
+					protected boolean act() {
+<span class="nc" id="L91">						Actor.remove(this);</span>
+<span class="nc" id="L92">						showAmuletScene( true );</span>
+<span class="nc" id="L93">						return false;</span>
+					}
+				});
+			}
+			
+<span class="nc" id="L98">			return true;</span>
+		} else {
+<span class="nc" id="L100">			return false;</span>
+		}
+	}
+	
+	private void showAmuletScene( boolean showText ) {
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		AmuletScene.noText = !showText;</span>
+<span class="nc" id="L106">		Game.switchScene( AmuletScene.class, new Game.SceneChangeCallback() {</span>
+			@Override
+			public void beforeCreate() {
+
+<span class="nc" id="L110">			}</span>
+
+			@Override
+			public void afterCreate() {
+<span class="nc" id="L114">				Badges.validateVictory();</span>
+<span class="nc" id="L115">				Badges.validateChampion(Challenges.activeChallenges());</span>
+				try {
+<span class="nc" id="L117">					Dungeon.saveAll();</span>
+<span class="nc" id="L118">					Badges.saveGlobal();</span>
+<span class="nc" id="L119">				} catch (IOException e) {</span>
+<span class="nc" id="L120">					ShatteredPixelDungeon.reportException(e);</span>
+<span class="nc" id="L121">				}</span>
+<span class="nc" id="L122">			}</span>
+		});
+<span class="nc" id="L124">	}</span>
+	
+	@Override
+	public boolean isIdentified() {
+<span class="nc" id="L128">		return true;</span>
+	}
+	
+	@Override
+	public boolean isUpgradable() {
+<span class="nc" id="L133">		return false;</span>
+	}
+
+	@Override
+	public String desc() {
+<span class="nc" id="L138">		String desc = super.desc();</span>
+
+<span class="nc bnc" id="L140" title="All 4 branches missed.">		if (Dungeon.hero == null || Dungeon.hero.buff(AscensionChallenge.class) == null){</span>
+<span class="nc" id="L141">			desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_origins&quot;);</span>
+		} else {
+<span class="nc" id="L143">			desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_ascent&quot;);</span>
+		}
+
+<span class="nc" id="L146">		return desc;</span>
+	}
+
+	@Override
+	public void applyEffect(Hero hero) {
+		// 示例：提升幸运值或其他能力，你可以自由定义
+<span class="nc" id="L152">		hero.increaseLuck(1);</span>
+<span class="nc" id="L153">	}</span>
+
+	@Override
+	public void removeEffect(Hero hero) {
+<span class="nc" id="L157">		hero.increaseLuck(-1);</span>
+<span class="nc" id="L158">	}</span>
+
+	@Override
+	public String getName() {
+<span class="nc" id="L162">		return this.name();  // 或其他命名逻辑</span>
+}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

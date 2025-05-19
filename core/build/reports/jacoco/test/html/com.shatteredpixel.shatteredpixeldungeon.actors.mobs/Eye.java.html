@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Eye.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">Eye.java</span></div><h1>Eye.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AscensionChallenge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Light;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.PurpleParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Dewdrop;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfAggression;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfDisintegration;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.DisintegrationTrap;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.EyeSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L49">public class Eye extends Mob {</span>
+	
+	{
+<span class="nc" id="L52">		spriteClass = EyeSprite.class;</span>
+		
+<span class="nc" id="L54">		HP = HT = 100;</span>
+<span class="nc" id="L55">		defenseSkill = 20;</span>
+<span class="nc" id="L56">		viewDistance = Light.DISTANCE;</span>
+		
+<span class="nc" id="L58">		EXP = 13;</span>
+<span class="nc" id="L59">		maxLvl = 26;</span>
+		
+<span class="nc" id="L61">		flying = true;</span>
+
+<span class="nc" id="L63">		HUNTING = new Hunting();</span>
+		
+<span class="nc" id="L65">		loot = new Dewdrop();</span>
+<span class="nc" id="L66">		lootChance = 1f;</span>
+
+<span class="nc" id="L68">		properties.add(Property.DEMONIC);</span>
+	}
+
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L73">		return Random.NormalIntRange(20, 30);</span>
+	}
+
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L78">		return 30;</span>
+	}
+	
+	@Override
+	public int drRoll() {
+<span class="nc" id="L83">		return super.drRoll() + Random.NormalIntRange(0, 10);</span>
+	}
+	
+	private Ballistica beam;
+<span class="nc" id="L87">	private int beamTarget = -1;</span>
+	private int beamCooldown;
+	public boolean beamCharged;
+
+	@Override
+	protected boolean canAttack( Char enemy ) {
+
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		if (beamCooldown == 0) {</span>
+<span class="nc" id="L95">			Ballistica aim = new Ballistica(pos, enemy.pos, Ballistica.STOP_SOLID);</span>
+
+<span class="nc bnc" id="L97" title="All 6 branches missed.">			if (enemy.invisible == 0 &amp;&amp; !isCharmedBy(enemy) &amp;&amp; fieldOfView[enemy.pos]</span>
+<span class="nc bnc" id="L98" title="All 4 branches missed.">					&amp;&amp; (super.canAttack(enemy) || aim.subPath(1, aim.dist).contains(enemy.pos))){</span>
+<span class="nc" id="L99">				beam = aim;</span>
+<span class="nc" id="L100">				beamTarget = enemy.pos;</span>
+<span class="nc" id="L101">				return true;</span>
+			} else {
+				//if the beam is charged, it has to attack, will aim at previous location of target.
+<span class="nc" id="L104">				return beamCharged;</span>
+			}
+		} else {
+<span class="nc" id="L107">			return super.canAttack(enemy);</span>
+		}
+	}
+
+	@Override
+	protected boolean act() {
+<span class="nc bnc" id="L113" title="All 4 branches missed.">		if (beamCharged &amp;&amp; state != HUNTING){</span>
+<span class="nc" id="L114">			beamCharged = false;</span>
+<span class="nc" id="L115">			sprite.idle();</span>
+		}
+<span class="nc bnc" id="L117" title="All 4 branches missed.">		if (beam == null &amp;&amp; beamTarget != -1) {</span>
+<span class="nc" id="L118">			beam = new Ballistica(pos, beamTarget, Ballistica.STOP_SOLID);</span>
+<span class="nc" id="L119">			sprite.turnTo(pos, beamTarget);</span>
+		}
+<span class="nc bnc" id="L121" title="All 2 branches missed.">		if (beamCooldown &gt; 0)</span>
+<span class="nc" id="L122">			beamCooldown--;</span>
+<span class="nc" id="L123">		return super.act();</span>
+	}
+
+	@Override
+	protected boolean doAttack( Char enemy ) {
+
+<span class="nc" id="L129">		beam = new Ballistica(pos, beamTarget, Ballistica.STOP_SOLID);</span>
+<span class="nc bnc" id="L130" title="All 6 branches missed.">		if (beamCooldown &gt; 0 || (!beamCharged &amp;&amp; !beam.subPath(1, beam.dist).contains(enemy.pos))) {</span>
+<span class="nc" id="L131">			return super.doAttack(enemy);</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">		} else if (!beamCharged){</span>
+<span class="nc" id="L133">			((EyeSprite)sprite).charge( enemy.pos );</span>
+<span class="nc" id="L134">			spend( attackDelay()*2f );</span>
+<span class="nc" id="L135">			beamCharged = true;</span>
+<span class="nc" id="L136">			return true;</span>
+		} else {
+
+<span class="nc" id="L139">			spend( attackDelay() );</span>
+			
+<span class="nc bnc" id="L141" title="All 4 branches missed.">			if (Dungeon.level.heroFOV[pos] || Dungeon.level.heroFOV[beam.collisionPos] ) {</span>
+<span class="nc" id="L142">				sprite.zap( beam.collisionPos );</span>
+<span class="nc" id="L143">				return false;</span>
+			} else {
+<span class="nc" id="L145">				sprite.idle();</span>
+<span class="nc" id="L146">				deathGaze();</span>
+<span class="nc" id="L147">				return true;</span>
+			}
+		}
+
+	}
+
+	@Override
+	public void damage(int dmg, Object src) {
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		if (beamCharged) dmg /= 4;</span>
+<span class="nc" id="L156">		super.damage(dmg, src);</span>
+<span class="nc" id="L157">	}</span>
+
+	@Override
+	public void die(Object cause) {
+<span class="nc" id="L161">		flying = false;</span>
+<span class="nc" id="L162">		super.die(cause);</span>
+<span class="nc" id="L163">	}</span>
+	
+	//used so resistances can differentiate between melee and magical attacks
+<span class="nc" id="L166">	public static class DeathGaze{}</span>
+
+	public void deathGaze(){
+<span class="nc bnc" id="L169" title="All 6 branches missed.">		if (!beamCharged || beamCooldown &gt; 0 || beam == null)</span>
+<span class="nc" id="L170">			return;</span>
+
+<span class="nc" id="L172">		beamCharged = false;</span>
+<span class="nc" id="L173">		beamCooldown = Random.IntRange(4, 6);</span>
+
+<span class="nc" id="L175">		boolean terrainAffected = false;</span>
+
+<span class="nc" id="L177">		Invisibility.dispel(this);</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">		for (int pos : beam.subPath(1, beam.dist)) {</span>
+
+<span class="nc bnc" id="L180" title="All 2 branches missed.">			if (Dungeon.level.flamable[pos]) {</span>
+
+<span class="nc" id="L182">				Dungeon.level.destroy( pos );</span>
+<span class="nc" id="L183">				GameScene.updateMap( pos );</span>
+<span class="nc" id="L184">				terrainAffected = true;</span>
+
+			}
+
+<span class="nc" id="L188">			Char ch = Actor.findChar( pos );</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">			if (ch == null) {</span>
+<span class="nc" id="L190">				continue;</span>
+			}
+
+<span class="nc bnc" id="L193" title="All 2 branches missed.">			if (hit( this, ch, true )) {</span>
+<span class="nc" id="L194">				int dmg = Random.NormalIntRange( 30, 50 );</span>
+<span class="nc" id="L195">				dmg = Math.round(dmg * AscensionChallenge.statModifier(this));</span>
+
+				//logic for fists or Yog-Dzewa taking 1/2 or 1/4 damage from aggression stoned minions
+<span class="nc bnc" id="L198" title="All 4 branches missed.">				if ( ch.buff(StoneOfAggression.Aggression.class) != null</span>
+						&amp;&amp; ch.alignment == alignment
+<span class="nc bnc" id="L200" title="All 4 branches missed.">						&amp;&amp; (Char.hasProp(ch, Property.BOSS) || Char.hasProp(ch, Property.MINIBOSS))){</span>
+<span class="nc" id="L201">					dmg *= 0.5f;</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">					if (ch instanceof YogDzewa){</span>
+<span class="nc" id="L203">						dmg *= 0.5f;</span>
+					}
+				}
+
+<span class="nc" id="L207">				ch.damage( dmg, new DeathGaze() );</span>
+
+<span class="nc bnc" id="L209" title="All 2 branches missed.">				if (Dungeon.level.heroFOV[pos]) {</span>
+<span class="nc" id="L210">					ch.sprite.flash();</span>
+<span class="nc" id="L211">					CellEmitter.center( pos ).burst( PurpleParticle.BURST, Random.IntRange( 1, 2 ) );</span>
+				}
+
+<span class="nc bnc" id="L214" title="All 4 branches missed.">				if (!ch.isAlive() &amp;&amp; ch == Dungeon.hero) {</span>
+<span class="nc" id="L215">					Badges.validateDeathFromEnemyMagic();</span>
+<span class="nc" id="L216">					Dungeon.fail( this );</span>
+<span class="nc" id="L217">					GLog.n( Messages.get(this, &quot;deathgaze_kill&quot;) );</span>
+				}
+<span class="nc" id="L219">			} else {</span>
+<span class="nc" id="L220">				ch.sprite.showStatus( CharSprite.NEUTRAL,  ch.defenseVerb() );</span>
+			}
+<span class="nc" id="L222">		}</span>
+
+<span class="nc bnc" id="L224" title="All 2 branches missed.">		if (terrainAffected) {</span>
+<span class="nc" id="L225">			Dungeon.observe();</span>
+		}
+
+<span class="nc" id="L228">		beam = null;</span>
+<span class="nc" id="L229">		beamTarget = -1;</span>
+<span class="nc" id="L230">	}</span>
+
+	//generates an average of 1 dew, 0.25 seeds, and 0.25 stones
+	@Override
+	public Item createLoot() {
+		Item loot;
+<span class="nc bnc" id="L236" title="All 3 branches missed.">		switch(Random.Int(4)){</span>
+			case 0: case 1: default:
+<span class="nc" id="L238">				loot = new Dewdrop();</span>
+				int ofs;
+				do {
+<span class="nc" id="L241">					ofs = PathFinder.NEIGHBOURS8[Random.Int(8)];</span>
+<span class="nc bnc" id="L242" title="All 4 branches missed.">				} while (Dungeon.level.solid[pos + ofs] &amp;&amp; !Dungeon.level.passable[pos + ofs]);</span>
+<span class="nc bnc" id="L243" title="All 2 branches missed.">				if (Dungeon.level.heaps.get(pos+ofs) == null) {</span>
+<span class="nc" id="L244">					Dungeon.level.drop(new Dewdrop(), pos + ofs).sprite.drop(pos);</span>
+				} else {
+<span class="nc" id="L246">					Dungeon.level.drop(new Dewdrop(), pos + ofs).sprite.drop(pos + ofs);</span>
+				}
+<span class="nc" id="L248">				break;</span>
+			case 2:
+<span class="nc" id="L250">				loot = Generator.randomUsingDefaults(Generator.Category.SEED);</span>
+<span class="nc" id="L251">				break;</span>
+			case 3:
+<span class="nc" id="L253">				loot = Generator.randomUsingDefaults(Generator.Category.STONE);</span>
+				break;
+		}
+<span class="nc" id="L256">		return loot;</span>
+	}
+
+	private static final String BEAM_TARGET     = &quot;beamTarget&quot;;
+	private static final String BEAM_COOLDOWN   = &quot;beamCooldown&quot;;
+	private static final String BEAM_CHARGED    = &quot;beamCharged&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L265">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L266">		bundle.put( BEAM_TARGET, beamTarget);</span>
+<span class="nc" id="L267">		bundle.put( BEAM_COOLDOWN, beamCooldown );</span>
+<span class="nc" id="L268">		bundle.put( BEAM_CHARGED, beamCharged );</span>
+<span class="nc" id="L269">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L273">		super.restoreFromBundle(bundle);</span>
+<span class="nc bnc" id="L274" title="All 2 branches missed.">		if (bundle.contains(BEAM_TARGET))</span>
+<span class="nc" id="L275">			beamTarget = bundle.getInt(BEAM_TARGET);</span>
+<span class="nc" id="L276">		beamCooldown = bundle.getInt(BEAM_COOLDOWN);</span>
+<span class="nc" id="L277">		beamCharged = bundle.getBoolean(BEAM_CHARGED);</span>
+<span class="nc" id="L278">	}</span>
+
+	{
+<span class="nc" id="L281">		resistances.add( WandOfDisintegration.class );</span>
+<span class="nc" id="L282">		resistances.add( DeathGaze.class );</span>
+<span class="nc" id="L283">		resistances.add( DisintegrationTrap.class );</span>
+<span class="nc" id="L284">	}</span>
+
+<span class="nc" id="L286">	private class Hunting extends Mob.Hunting{</span>
+		@Override
+		public boolean act(boolean enemyInFOV, boolean justAlerted) {
+			//even if enemy isn't seen, attack them if the beam is charged
+<span class="nc bnc" id="L290" title="All 6 branches missed.">			if (beamCharged &amp;&amp; enemy != null &amp;&amp; canAttack(enemy)) {</span>
+<span class="nc" id="L291">				enemySeen = enemyInFOV;</span>
+<span class="nc" id="L292">				return doAttack(enemy);</span>
+			}
+<span class="nc" id="L294">			return super.act(enemyInFOV, justAlerted);</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

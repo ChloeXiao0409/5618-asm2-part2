@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Artifact.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.artifacts</a> &gt; <span class="el_source">Artifact.java</span></div><h1>Artifact.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Blindness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.GuidingLight;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.KindofMisc;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L41">public class Artifact extends KindofMisc {</span>
+
+	protected Buff passiveBuff;
+	protected Buff activeBuff;
+
+	//level is used internally to track upgrades to artifacts, size/logic varies per artifact.
+	//already inherited from item superclass
+	//exp is used to count progress towards levels for some artifacts
+<span class="nc" id="L49">	protected int exp = 0;</span>
+	//levelCap is the artifact's maximum level
+<span class="nc" id="L51">	protected int levelCap = 0;</span>
+
+	//the current artifact charge
+<span class="nc" id="L54">	protected int charge = 0;</span>
+	//the build towards next charge, usually rolls over at 1.
+	//better to keep charge as an int and use a separate float than casting.
+<span class="nc" id="L57">	protected float partialCharge = 0;</span>
+	//the maximum charge, varies per artifact, not all artifacts use this.
+<span class="nc" id="L59">	protected int chargeCap = 0;</span>
+
+	//used by some artifacts to keep track of duration of effects or cooldowns to use.
+<span class="nc" id="L62">	protected int cooldown = 0;</span>
+
+	@Override
+	public boolean doEquip( final Hero hero ) {
+
+<span class="nc bnc" id="L67" title="All 6 branches missed.">		if ((hero.belongings.artifact != null &amp;&amp; hero.belongings.artifact.getClass() == this.getClass())</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">				|| (hero.belongings.misc != null &amp;&amp; hero.belongings.misc.getClass() == this.getClass())){</span>
+
+<span class="nc" id="L70">			GLog.w( Messages.get(Artifact.class, &quot;cannot_wear_two&quot;) );</span>
+<span class="nc" id="L71">			return false;</span>
+
+		} else {
+
+<span class="nc bnc" id="L75" title="All 2 branches missed.">			if (super.doEquip( hero )){</span>
+
+<span class="nc" id="L77">				identify();</span>
+<span class="nc" id="L78">				return true;</span>
+
+			} else {
+
+<span class="nc" id="L82">				return false;</span>
+
+			}
+
+		}
+
+	}
+
+	public void activate( Char ch ) {
+<span class="nc bnc" id="L91" title="All 2 branches missed.">		if (passiveBuff != null){</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">			if (passiveBuff.target != null) passiveBuff.detach();</span>
+<span class="nc" id="L93">			passiveBuff = null;</span>
+		}
+<span class="nc" id="L95">		passiveBuff = passiveBuff();</span>
+<span class="nc" id="L96">		passiveBuff.attachTo(ch);</span>
+<span class="nc" id="L97">	}</span>
+
+	@Override
+	public boolean doUnequip( Hero hero, boolean collect, boolean single ) {
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (super.doUnequip( hero, collect, single )) {</span>
+
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			if (passiveBuff != null) {</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">				if (passiveBuff.target != null) passiveBuff.detach();</span>
+<span class="nc" id="L105">				passiveBuff = null;</span>
+			}
+
+<span class="nc" id="L108">			return true;</span>
+
+		} else {
+
+<span class="nc" id="L112">			return false;</span>
+
+		}
+	}
+
+	@Override
+	public boolean isUpgradable() {
+<span class="nc" id="L119">		return false;</span>
+	}
+
+	@Override
+	public int visiblyUpgraded() {
+<span class="nc bnc" id="L124" title="All 2 branches missed.">		return levelKnown ? Math.round((level()*10)/(float)levelCap): 0;</span>
+	}
+
+	@Override
+	public int buffedVisiblyUpgraded() {
+<span class="nc" id="L129">		return visiblyUpgraded();</span>
+	}
+
+	@Override
+	public int buffedLvl() {
+		//level isn't affected by buffs/debuffs
+<span class="nc" id="L135">		return level();</span>
+	}
+
+	//transfers upgrades from another artifact, transfer level will equal the displayed level
+	public void transferUpgrade(int transferLvl) {
+<span class="nc" id="L140">		upgrade(Math.round((transferLvl*levelCap)/10f));</span>
+<span class="nc" id="L141">	}</span>
+
+	public void resetForTrinity(int visibleLevel){
+<span class="nc" id="L144">		level(Math.round((visibleLevel*levelCap)/10f));</span>
+<span class="nc" id="L145">		exp = Integer.MIN_VALUE; //ensures no levelling</span>
+<span class="nc" id="L146">		charge = chargeCap;</span>
+<span class="nc" id="L147">		cooldown = 0;</span>
+<span class="nc" id="L148">	}</span>
+
+	public static void artifactProc(Char target, int artifLevel, int chargesUsed){
+<span class="nc bnc" id="L151" title="All 4 branches missed.">		if (Dungeon.hero.subClass == HeroSubClass.PRIEST &amp;&amp; target.buff(GuidingLight.Illuminated.class) != null) {</span>
+<span class="nc" id="L152">			target.buff(GuidingLight.Illuminated.class).detach();</span>
+<span class="nc" id="L153">			target.damage(Dungeon.hero.lvl, GuidingLight.INSTANCE);</span>
+		}
+
+<span class="nc bnc" id="L156" title="All 4 branches missed.">		if (target.alignment != Char.Alignment.ALLY</span>
+				&amp;&amp; Dungeon.hero.heroClass != HeroClass.CLERIC
+<span class="nc bnc" id="L158" title="All 2 branches missed.">				&amp;&amp; Dungeon.hero.hasTalent(Talent.SEARING_LIGHT)</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">				&amp;&amp; Dungeon.hero.buff(Talent.SearingLightCooldown.class) == null){</span>
+<span class="nc" id="L160">			Buff.affect(target, GuidingLight.Illuminated.class);</span>
+<span class="nc" id="L161">			Buff.affect(Dungeon.hero, Talent.SearingLightCooldown.class, 20f);</span>
+		}
+
+<span class="nc bnc" id="L164" title="All 4 branches missed.">		if (target.alignment != Char.Alignment.ALLY</span>
+				&amp;&amp; Dungeon.hero.heroClass != HeroClass.CLERIC
+<span class="nc bnc" id="L166" title="All 2 branches missed.">				&amp;&amp; Dungeon.hero.hasTalent(Talent.SUNRAY)){</span>
+			// 15/25% chance
+<span class="nc bnc" id="L168" title="All 2 branches missed.">			if (Random.Int(20) &lt; 1 + 2*Dungeon.hero.pointsInTalent(Talent.SUNRAY)){</span>
+<span class="nc" id="L169">				Buff.prolong(target, Blindness.class, 4f);</span>
+			}
+		}
+<span class="nc" id="L172">	}</span>
+
+	@Override
+	public String info() {
+<span class="nc bnc" id="L176" title="All 6 branches missed.">		if (cursed &amp;&amp; cursedKnown &amp;&amp; !isEquipped( Dungeon.hero )) {</span>
+<span class="nc" id="L177">			return super.info() + &quot;\n\n&quot; + Messages.get(Artifact.class, &quot;curse_known&quot;);</span>
+			
+<span class="nc bnc" id="L179" title="All 6 branches missed.">		} else if (!isIdentified() &amp;&amp; cursedKnown &amp;&amp; !isEquipped( Dungeon.hero)) {</span>
+<span class="nc" id="L180">			return super.info() + &quot;\n\n&quot; + Messages.get(Artifact.class, &quot;not_cursed&quot;);</span>
+			
+		} else {
+<span class="nc" id="L183">			return super.info();</span>
+			
+		}
+	}
+
+	@Override
+	public String status() {
+		
+		//if the artifact isn't IDed, or is cursed, don't display anything
+<span class="nc bnc" id="L192" title="All 4 branches missed.">		if (!isIdentified() || cursed){</span>
+<span class="nc" id="L193">			return null;</span>
+		}
+
+		//display the current cooldown
+<span class="nc bnc" id="L197" title="All 2 branches missed.">		if (cooldown != 0)</span>
+<span class="nc" id="L198">			return Messages.format( &quot;%d&quot;, cooldown );</span>
+
+		//display as percent
+<span class="nc bnc" id="L201" title="All 2 branches missed.">		if (chargeCap == 100)</span>
+<span class="nc" id="L202">			return Messages.format( &quot;%d%%&quot;, charge );</span>
+
+		//display as #/#
+<span class="nc bnc" id="L205" title="All 2 branches missed.">		if (chargeCap &gt; 0)</span>
+<span class="nc" id="L206">			return Messages.format( &quot;%d/%d&quot;, charge, chargeCap );</span>
+
+		//if there's no cap -
+		//- but there is charge anyway, display that charge
+<span class="nc bnc" id="L210" title="All 2 branches missed.">		if (charge != 0)</span>
+<span class="nc" id="L211">			return Messages.format( &quot;%d&quot;, charge );</span>
+
+		//otherwise, if there's no charge, return null.
+<span class="nc" id="L214">		return null;</span>
+	}
+
+	@Override
+	public Item random() {
+		//always +0
+		
+		//30% chance to be cursed
+<span class="nc bnc" id="L222" title="All 2 branches missed.">		if (Random.Float() &lt; 0.3f) {</span>
+<span class="nc" id="L223">			cursed = true;</span>
+		}
+<span class="nc" id="L225">		return this;</span>
+	}
+
+	@Override
+	public int value() {
+<span class="nc" id="L230">		int price = 100;</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">		if (level() &gt; 0)</span>
+<span class="nc" id="L232">			price += 20*visiblyUpgraded();</span>
+<span class="nc bnc" id="L233" title="All 4 branches missed.">		if (cursed &amp;&amp; cursedKnown) {</span>
+<span class="nc" id="L234">			price /= 2;</span>
+		}
+<span class="nc bnc" id="L236" title="All 2 branches missed.">		if (price &lt; 1) {</span>
+<span class="nc" id="L237">			price = 1;</span>
+		}
+<span class="nc" id="L239">		return price;</span>
+	}
+
+
+	protected ArtifactBuff passiveBuff() {
+<span class="nc" id="L244">		return null;</span>
+	}
+
+<span class="nc" id="L247">	protected ArtifactBuff activeBuff() {return null; }</span>
+	
+	public void charge(Hero target, float amount){
+		//do nothing by default;
+<span class="nc" id="L251">	}</span>
+
+<span class="nc" id="L253">	public class ArtifactBuff extends Buff {</span>
+
+		@Override
+		public boolean attachTo( Char target ) {
+<span class="nc bnc" id="L257" title="All 2 branches missed.">			if (super.attachTo( target )) {</span>
+				//if we're loading in and the hero has partially spent a turn, delay for 1 turn
+<span class="nc bnc" id="L259" title="All 8 branches missed.">				if (target instanceof Hero &amp;&amp; Dungeon.hero == null &amp;&amp; cooldown() == 0 &amp;&amp; target.cooldown() &gt; 0) {</span>
+<span class="nc" id="L260">					spend(TICK);</span>
+				}
+<span class="nc" id="L262">				return true;</span>
+			}
+<span class="nc" id="L264">			return false;</span>
+		}
+
+		public int itemLevel() {
+<span class="nc" id="L268">			return level();</span>
+		}
+
+		public boolean isCursed() {
+<span class="nc bnc" id="L272" title="All 4 branches missed.">			return target.buff(MagicImmune.class) == null &amp;&amp; cursed;</span>
+		}
+
+		public void charge(Hero target, float amount){
+<span class="nc" id="L276">			Artifact.this.charge(target, amount);</span>
+<span class="nc" id="L277">		}</span>
+
+	}
+	
+	private static final String EXP = &quot;exp&quot;;
+	private static final String CHARGE = &quot;charge&quot;;
+	private static final String PARTIALCHARGE = &quot;partialcharge&quot;;
+
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L287">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L288">		bundle.put( EXP , exp );</span>
+<span class="nc" id="L289">		bundle.put( CHARGE , charge );</span>
+<span class="nc" id="L290">		bundle.put( PARTIALCHARGE , partialCharge );</span>
+<span class="nc" id="L291">	}</span>
+
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L295">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L296">		exp = bundle.getInt( EXP );</span>
+<span class="nc bnc" id="L297" title="All 2 branches missed.">		if (chargeCap &gt; 0)  charge = Math.min( chargeCap, bundle.getInt( CHARGE ));</span>
+<span class="nc" id="L298">		else                charge = bundle.getInt( CHARGE );</span>
+<span class="nc" id="L299">		partialCharge = bundle.getFloat( PARTIALCHARGE );</span>
+<span class="nc" id="L300">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

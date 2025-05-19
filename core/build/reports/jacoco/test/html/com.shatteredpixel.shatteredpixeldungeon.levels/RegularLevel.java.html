@@ -1,0 +1,832 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RegularLevel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels</a> &gt; <span class="el_source">RegularLevel.java</span></div><h1>RegularLevel.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels;
+
+import com.shatteredpixel.shatteredpixeldungeon.Bones;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SacrificialFire;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EbonyMimic;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GoldenMimic;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Statue;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Ghost;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.Torch;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose;
+import com.shatteredpixel.shatteredpixeldungeon.items.food.SupplyRation;
+import com.shatteredpixel.shatteredpixeldungeon.items.journal.DocumentPage;
+import com.shatteredpixel.shatteredpixeldungeon.items.journal.GuidePage;
+import com.shatteredpixel.shatteredpixeldungeon.items.journal.RegionLorePage;
+import com.shatteredpixel.shatteredpixeldungeon.items.keys.GoldenKey;
+import com.shatteredpixel.shatteredpixeldungeon.items.keys.Key;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.MimicTooth;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.TrinketCatalyst;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Document;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
+import com.shatteredpixel.shatteredpixeldungeon.levels.builders.Builder;
+import com.shatteredpixel.shatteredpixeldungeon.levels.builders.FigureEightBuilder;
+import com.shatteredpixel.shatteredpixeldungeon.levels.builders.LoopBuilder;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret.SecretRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.MagicalFireRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.PitRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.ShopRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.SpecialRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.StandardRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.entrance.EntranceRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.exit.ExitRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.BlazingTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.BurningTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.ChillingTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.DisintegrationTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.ExplosiveTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.FrostTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.PitfallTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.WornDartTrap;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.ShadowCaster;
+import com.watabou.utils.BArray;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+
+<span class="nc" id="L90">public abstract class RegularLevel extends Level {</span>
+	
+	protected ArrayList&lt;Room&gt; rooms;
+	
+	protected Builder builder;
+	
+	protected Room roomEntrance;
+	protected Room roomExit;
+	
+	@Override
+	protected boolean build() {
+		
+<span class="nc" id="L102">		builder = builder();</span>
+		
+<span class="nc" id="L104">		ArrayList&lt;Room&gt; initRooms = initRooms();</span>
+<span class="nc" id="L105">		Random.shuffle(initRooms);</span>
+		
+		do {
+<span class="nc bnc" id="L108" title="All 2 branches missed.">			for (Room r : initRooms){</span>
+<span class="nc" id="L109">				r.neigbours.clear();</span>
+<span class="nc" id="L110">				r.connected.clear();</span>
+<span class="nc" id="L111">			}</span>
+<span class="nc" id="L112">			rooms = builder.build((ArrayList&lt;Room&gt;)initRooms.clone());</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		} while (rooms == null);</span>
+		
+<span class="nc" id="L115">		return painter().paint(this, rooms);</span>
+		
+	}
+	
+	protected ArrayList&lt;Room&gt; initRooms() {
+<span class="nc" id="L120">		ArrayList&lt;Room&gt; initRooms = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L121">		initRooms.add ( roomEntrance = EntranceRoom.createEntrance());</span>
+<span class="nc" id="L122">		initRooms.add( roomExit = ExitRoom.createExit());</span>
+
+		//force max standard rooms and multiple by 1.5x for large levels
+<span class="nc bnc" id="L125" title="All 2 branches missed.">		int standards = standardRooms(feeling == Feeling.LARGE);</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">		if (feeling == Feeling.LARGE){</span>
+<span class="nc" id="L127">			standards = (int)Math.ceil(standards * 1.5f);</span>
+		}
+<span class="nc bnc" id="L129" title="All 2 branches missed.">		for (int i = 0; i &lt; standards; i++) {</span>
+			StandardRoom s;
+			do {
+<span class="nc" id="L132">				s = StandardRoom.createRoom();</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">			} while (!s.setSizeCat( standards-i ));</span>
+<span class="nc" id="L134">			i += s.sizeFactor()-1;</span>
+<span class="nc" id="L135">			initRooms.add(s);</span>
+		}
+		
+<span class="nc bnc" id="L138" title="All 2 branches missed.">		if (Dungeon.shopOnLevel())</span>
+<span class="nc" id="L139">			initRooms.add(new ShopRoom());</span>
+
+		//force max special rooms and add one more for large levels
+<span class="nc bnc" id="L142" title="All 2 branches missed.">		int specials = specialRooms(feeling == Feeling.LARGE);</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">		if (feeling == Feeling.LARGE){</span>
+<span class="nc" id="L144">			specials++;</span>
+		}
+<span class="nc" id="L146">		SpecialRoom.initForFloor();</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">		for (int i = 0; i &lt; specials; i++) {</span>
+<span class="nc" id="L148">			SpecialRoom s = SpecialRoom.createRoom();</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">			if (s instanceof PitRoom) specials++;</span>
+<span class="nc" id="L150">			initRooms.add(s);</span>
+		}
+		
+<span class="nc" id="L153">		int secrets = SecretRoom.secretsForFloor(Dungeon.depth);</span>
+		//one additional secret for secret levels
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		if (feeling == Feeling.SECRETS) secrets++;</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		for (int i = 0; i &lt; secrets; i++) {</span>
+<span class="nc" id="L157">			initRooms.add(SecretRoom.createRoom());</span>
+		}
+		
+<span class="nc" id="L160">		return initRooms;</span>
+	}
+	
+	protected int standardRooms(boolean forceMax){
+<span class="nc" id="L164">		return 0;</span>
+	}
+	
+	protected int specialRooms(boolean forceMax){
+<span class="nc" id="L168">		return 0;</span>
+	}
+	
+	protected Builder builder(){
+<span class="nc bnc" id="L172" title="All 2 branches missed.">		if (Random.Int(2) == 0){</span>
+<span class="nc" id="L173">			return new LoopBuilder()</span>
+<span class="nc" id="L174">					.setLoopShape( 2 ,</span>
+<span class="nc" id="L175">							Random.Float(0f, 0.65f),</span>
+<span class="nc" id="L176">							Random.Float(0f, 0.50f));</span>
+		} else {
+<span class="nc" id="L178">			return new FigureEightBuilder()</span>
+<span class="nc" id="L179">					.setLoopShape( 2 ,</span>
+<span class="nc" id="L180">							Random.Float(0.3f, 0.8f),</span>
+							0f);
+		}
+
+	}
+	
+	protected abstract Painter painter();
+	
+	protected int nTraps() {
+<span class="nc" id="L189">		return Random.NormalIntRange( 2, 3 + (Dungeon.depth/5) );</span>
+	}
+	
+	protected Class&lt;?&gt;[] trapClasses(){
+<span class="nc" id="L193">		return new Class&lt;?&gt;[]{WornDartTrap.class};</span>
+	}
+
+	protected float[] trapChances() {
+<span class="nc" id="L197">		return new float[]{1};</span>
+	}
+	
+	@Override
+	public int mobLimit() {
+<span class="nc bnc" id="L202" title="All 2 branches missed.">		if (Dungeon.depth &lt;= 1){</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">			if (!Statistics.amuletObtained) return 0;</span>
+<span class="nc" id="L204">			else                            return 10;</span>
+		}
+
+<span class="nc" id="L207">		int mobs = 3 + Dungeon.depth % 5 + Random.Int(3);</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">		if (feeling == Feeling.LARGE){</span>
+<span class="nc" id="L209">			mobs = (int)Math.ceil(mobs * 1.33f);</span>
+		}
+<span class="nc" id="L211">		return mobs;</span>
+	}
+	
+	@Override
+	protected void createMobs() {
+		//on floor 1, 8 pre-set mobs are created so the player can get level 2.
+<span class="nc bnc" id="L217" title="All 2 branches missed.">		int mobsToSpawn = Dungeon.depth == 1 ? 8 : mobLimit();</span>
+
+<span class="nc" id="L219">		ArrayList&lt;Room&gt; stdRooms = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">		for (Room room : rooms) {</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">			if (room instanceof StandardRoom) {</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">				for (int i = 0; i &lt; ((StandardRoom) room).mobSpawnWeight(); i++) {</span>
+<span class="nc" id="L223">					stdRooms.add(room);</span>
+				}
+			}
+<span class="nc" id="L226">		}</span>
+<span class="nc" id="L227">		Random.shuffle(stdRooms);</span>
+<span class="nc" id="L228">		Iterator&lt;Room&gt; stdRoomIter = stdRooms.iterator();</span>
+
+		//enemies cannot be within an 8-tile FOV of the entrance
+		// or a 6-tile open space distance from the entrance
+<span class="nc" id="L232">		boolean[] entranceFOV = new boolean[length()];</span>
+<span class="nc" id="L233">		Point c = cellToPoint(entrance());</span>
+<span class="nc" id="L234">		ShadowCaster.castShadow(c.x, c.y, width(), entranceFOV, losBlocking, 6);</span>
+<span class="nc" id="L235">		PathFinder.buildDistanceMap(entrance(), BArray.not(solid, null), 8);</span>
+
+<span class="nc" id="L237">		Mob mob = null;</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">		while (mobsToSpawn &gt; 0) {</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">			if (mob == null) mob = createMob();</span>
+			Room roomToSpawn;
+			
+<span class="nc bnc" id="L242" title="All 2 branches missed.">			if (!stdRoomIter.hasNext()) {</span>
+<span class="nc" id="L243">				stdRoomIter = stdRooms.iterator();</span>
+			}
+<span class="nc" id="L245">			roomToSpawn = stdRoomIter.next();</span>
+
+<span class="nc" id="L247">			int tries = 30;</span>
+			do {
+<span class="nc" id="L249">				mob.pos = pointToCell(roomToSpawn.random());</span>
+<span class="nc" id="L250">				tries--;</span>
+<span class="nc bnc" id="L251" title="All 12 branches missed.">			} while (tries &gt;= 0 &amp;&amp; (findMob(mob.pos) != null</span>
+					|| entranceFOV[mob.pos] || PathFinder.distance[mob.pos] != Integer.MAX_VALUE
+					|| !passable[mob.pos]
+					|| solid[mob.pos]
+<span class="nc bnc" id="L255" title="All 2 branches missed.">					|| !roomToSpawn.canPlaceCharacter(cellToPoint(mob.pos), this)</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">					|| mob.pos == exit()</span>
+<span class="nc bnc" id="L257" title="All 6 branches missed.">					|| traps.get(mob.pos) != null || plants.get(mob.pos) != null</span>
+<span class="nc bnc" id="L258" title="All 2 branches missed.">					|| (!openSpace[mob.pos] &amp;&amp; mob.properties().contains(Char.Property.LARGE))));</span>
+
+<span class="nc bnc" id="L260" title="All 2 branches missed.">			if (tries &gt;= 0) {</span>
+<span class="nc" id="L261">				mobsToSpawn--;</span>
+<span class="nc" id="L262">				mobs.add(mob);</span>
+<span class="nc" id="L263">				mob = null;</span>
+
+				//chance to add a second mob to this room, except on floor 1
+<span class="nc bnc" id="L266" title="All 6 branches missed.">				if (Dungeon.depth &gt; 1 &amp;&amp; mobsToSpawn &gt; 0 &amp;&amp; Random.Int(4) == 0){</span>
+<span class="nc" id="L267">					mob = createMob();</span>
+
+<span class="nc" id="L269">					tries = 30;</span>
+					do {
+<span class="nc" id="L271">						mob.pos = pointToCell(roomToSpawn.random());</span>
+<span class="nc" id="L272">						tries--;</span>
+<span class="nc bnc" id="L273" title="All 12 branches missed.">					} while (tries &gt;= 0 &amp;&amp; (findMob(mob.pos) != null</span>
+							|| entranceFOV[mob.pos] || PathFinder.distance[mob.pos] != Integer.MAX_VALUE
+							|| !passable[mob.pos]
+							|| solid[mob.pos]
+<span class="nc bnc" id="L277" title="All 2 branches missed.">							|| !roomToSpawn.canPlaceCharacter(cellToPoint(mob.pos), this)</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">							|| mob.pos == exit()</span>
+<span class="nc bnc" id="L279" title="All 6 branches missed.">							|| traps.get(mob.pos) != null || plants.get(mob.pos) != null</span>
+<span class="nc bnc" id="L280" title="All 2 branches missed.">							|| (!openSpace[mob.pos] &amp;&amp; mob.properties().contains(Char.Property.LARGE))));</span>
+
+<span class="nc bnc" id="L282" title="All 2 branches missed.">					if (tries &gt;= 0) {</span>
+<span class="nc" id="L283">						mobsToSpawn--;</span>
+<span class="nc" id="L284">						mobs.add(mob);</span>
+<span class="nc" id="L285">						mob = null;</span>
+					}
+				}
+			}
+<span class="nc" id="L289">		}</span>
+
+<span class="nc bnc" id="L291" title="All 2 branches missed.">		for (Mob m : mobs){</span>
+<span class="nc bnc" id="L292" title="All 4 branches missed.">			if (map[m.pos] == Terrain.HIGH_GRASS || map[m.pos] == Terrain.FURROWED_GRASS) {</span>
+<span class="nc" id="L293">				map[m.pos] = Terrain.GRASS;</span>
+<span class="nc" id="L294">				losBlocking[m.pos] = false;</span>
+			}
+
+<span class="nc" id="L297">		}</span>
+
+<span class="nc" id="L299">	}</span>
+
+	@Override
+	public int randomRespawnCell( Char ch ) {
+<span class="nc" id="L303">		int count = 0;</span>
+<span class="nc" id="L304">		int cell = -1;</span>
+
+		while (true) {
+
+<span class="nc bnc" id="L308" title="All 2 branches missed.">			if (++count &gt; 30) {</span>
+<span class="nc" id="L309">				return -1;</span>
+			}
+
+<span class="nc" id="L312">			Room room = randomRoom( StandardRoom.class );</span>
+<span class="nc bnc" id="L313" title="All 4 branches missed.">			if (room == null || room == roomEntrance) {</span>
+<span class="nc" id="L314">				continue;</span>
+			}
+
+<span class="nc" id="L317">			cell = pointToCell(room.random(1));</span>
+<span class="nc bnc" id="L318" title="All 2 branches missed.">			if (!heroFOV[cell]</span>
+<span class="nc bnc" id="L319" title="All 6 branches missed.">					&amp;&amp; Actor.findChar( cell ) == null</span>
+					&amp;&amp; passable[cell]
+					&amp;&amp; !solid[cell]
+<span class="nc bnc" id="L322" title="All 4 branches missed.">					&amp;&amp; (!Char.hasProp(ch, Char.Property.LARGE) || openSpace[cell])</span>
+<span class="nc bnc" id="L323" title="All 2 branches missed.">					&amp;&amp; room.canPlaceCharacter(cellToPoint(cell), this)</span>
+<span class="nc bnc" id="L324" title="All 2 branches missed.">					&amp;&amp; cell != exit()) {</span>
+<span class="nc" id="L325">				return cell;</span>
+			}
+
+<span class="nc" id="L328">		}</span>
+	}
+	
+	@Override
+	public int randomDestination( Char ch ) {
+		
+<span class="nc" id="L334">		int count = 0;</span>
+<span class="nc" id="L335">		int cell = -1;</span>
+		
+		while (true) {
+			
+<span class="nc bnc" id="L339" title="All 2 branches missed.">			if (++count &gt; 30) {</span>
+<span class="nc" id="L340">				return -1;</span>
+			}
+			
+<span class="nc" id="L343">			Room room = Random.element( rooms );</span>
+<span class="nc bnc" id="L344" title="All 2 branches missed.">			if (room == null) {</span>
+<span class="nc" id="L345">				continue;</span>
+			}
+
+<span class="nc" id="L348">			ArrayList&lt;Point&gt; points = room.charPlaceablePoints(this);</span>
+<span class="nc bnc" id="L349" title="All 2 branches missed.">			if (!points.isEmpty()){</span>
+<span class="nc" id="L350">				cell = pointToCell(Random.element(points));</span>
+<span class="nc bnc" id="L351" title="All 6 branches missed.">				if (passable[cell] &amp;&amp; (!Char.hasProp(ch, Char.Property.LARGE) || openSpace[cell])) {</span>
+<span class="nc" id="L352">					return cell;</span>
+				}
+			}
+			
+<span class="nc" id="L356">		}</span>
+	}
+	
+	@Override
+	protected void createItems() {
+		
+		// drops 3/4/5 items 60%/30%/10% of the time
+<span class="nc" id="L363">		int nItems = 3 + Random.chances(new float[]{6, 3, 1});</span>
+
+<span class="nc bnc" id="L365" title="All 2 branches missed.">		if (feeling == Feeling.LARGE){</span>
+<span class="nc" id="L366">			nItems += 2;</span>
+		}
+		
+<span class="nc bnc" id="L369" title="All 2 branches missed.">		for (int i=0; i &lt; nItems; i++) {</span>
+
+<span class="nc" id="L371">			Item toDrop = Generator.random();</span>
+<span class="nc bnc" id="L372" title="All 2 branches missed.">			if (toDrop == null) continue;</span>
+
+<span class="nc" id="L374">			int cell = randomDropCell();</span>
+<span class="nc bnc" id="L375" title="All 4 branches missed.">			if (map[cell] == Terrain.HIGH_GRASS || map[cell] == Terrain.FURROWED_GRASS) {</span>
+<span class="nc" id="L376">				map[cell] = Terrain.GRASS;</span>
+<span class="nc" id="L377">				losBlocking[cell] = false;</span>
+			}
+
+<span class="nc" id="L380">			Heap.Type type = null;</span>
+<span class="nc bnc" id="L381" title="All 4 branches missed.">			switch (Random.Int( 20 )) {</span>
+			case 0:
+<span class="nc" id="L383">				type = Heap.Type.SKELETON;</span>
+<span class="nc" id="L384">				break;</span>
+			case 1:
+			case 2:
+			case 3:
+			case 4:
+				//base mimic chance is 1/20, regular chest is 4/20
+				// so each +1x mimic spawn rate converts to a 25% chance here
+<span class="nc bnc" id="L391" title="All 4 branches missed.">				if (Random.Float() &lt; (MimicTooth.mimicChanceMultiplier() - 1f)/4f  &amp;&amp; findMob(cell) == null){</span>
+<span class="nc" id="L392">					mobs.add(Mimic.spawnAt(cell, toDrop));</span>
+<span class="nc" id="L393">					continue;</span>
+				}
+
+<span class="nc" id="L396">				type = Heap.Type.CHEST;</span>
+<span class="nc" id="L397">				break;</span>
+			case 5:
+<span class="nc bnc" id="L399" title="All 4 branches missed.">				if (Dungeon.depth &gt; 1 &amp;&amp; findMob(cell) == null){</span>
+<span class="nc" id="L400">					mobs.add(Mimic.spawnAt(cell, toDrop));</span>
+<span class="nc" id="L401">					continue;</span>
+				}
+<span class="nc" id="L403">				type = Heap.Type.CHEST;</span>
+<span class="nc" id="L404">				break;</span>
+			default:
+<span class="nc" id="L406">				type = Heap.Type.HEAP;</span>
+				break;
+			}
+
+<span class="nc bnc" id="L410" title="All 4 branches missed.">			if ((toDrop instanceof Artifact &amp;&amp; Random.Int(2) == 0) ||</span>
+<span class="nc bnc" id="L411" title="All 4 branches missed.">					(toDrop.isUpgradable() &amp;&amp; Random.Int(4 - toDrop.level()) == 0)){</span>
+
+<span class="nc" id="L413">				float mimicChance = 1/10f * MimicTooth.mimicChanceMultiplier();</span>
+<span class="nc bnc" id="L414" title="All 6 branches missed.">				if (Dungeon.depth &gt; 1 &amp;&amp; Random.Float() &lt; mimicChance &amp;&amp; findMob(cell) == null){</span>
+<span class="nc" id="L415">					mobs.add(Mimic.spawnAt(cell, GoldenMimic.class, toDrop));</span>
+				} else {
+<span class="nc" id="L417">					Heap dropped = drop(toDrop, cell);</span>
+<span class="nc bnc" id="L418" title="All 2 branches missed.">					if (heaps.get(cell) == dropped) {</span>
+<span class="nc" id="L419">						dropped.type = Heap.Type.LOCKED_CHEST;</span>
+<span class="nc" id="L420">						addItemToSpawn(new GoldenKey(Dungeon.depth));</span>
+					}
+				}
+<span class="nc" id="L423">			} else {</span>
+<span class="nc" id="L424">				Heap dropped = drop( toDrop, cell );</span>
+<span class="nc" id="L425">				dropped.type = type;</span>
+<span class="nc bnc" id="L426" title="All 2 branches missed.">				if (type == Heap.Type.SKELETON){</span>
+<span class="nc" id="L427">					dropped.setHauntedIfCursed();</span>
+				}
+			}
+			
+		}
+
+<span class="nc bnc" id="L433" title="All 2 branches missed.">		for (Item item : itemsToSpawn) {</span>
+<span class="nc" id="L434">			int cell = randomDropCell();</span>
+<span class="nc bnc" id="L435" title="All 2 branches missed.">			if (item instanceof TrinketCatalyst){</span>
+<span class="nc" id="L436">				drop( item, cell ).type = Heap.Type.LOCKED_CHEST;</span>
+<span class="nc" id="L437">				int keyCell = randomDropCell();</span>
+<span class="nc" id="L438">				drop( new GoldenKey(Dungeon.depth), keyCell ).type = Heap.Type.HEAP;</span>
+<span class="nc bnc" id="L439" title="All 4 branches missed.">				if (map[keyCell] == Terrain.HIGH_GRASS || map[keyCell] == Terrain.FURROWED_GRASS) {</span>
+<span class="nc" id="L440">					map[keyCell] = Terrain.GRASS;</span>
+<span class="nc" id="L441">					losBlocking[keyCell] = false;</span>
+				}
+<span class="nc" id="L443">			} else {</span>
+<span class="nc" id="L444">				drop( item, cell ).type = Heap.Type.HEAP;</span>
+			}
+<span class="nc bnc" id="L446" title="All 4 branches missed.">			if (map[cell] == Terrain.HIGH_GRASS || map[cell] == Terrain.FURROWED_GRASS) {</span>
+<span class="nc" id="L447">				map[cell] = Terrain.GRASS;</span>
+<span class="nc" id="L448">				losBlocking[cell] = false;</span>
+			}
+<span class="nc" id="L450">		}</span>
+
+		//use separate generator(s) for this to prevent held items, meta progress, and talents from affecting levelgen
+		//we can use a random long for these as they will be the same longs every time
+
+<span class="nc" id="L455">		Random.pushGenerator( Random.Long() );</span>
+<span class="nc bnc" id="L456" title="All 2 branches missed.">			if (Dungeon.isChallenged(Challenges.DARKNESS)){</span>
+<span class="nc" id="L457">				int cell = randomDropCell();</span>
+<span class="nc bnc" id="L458" title="All 4 branches missed.">				if (map[cell] == Terrain.HIGH_GRASS || map[cell] == Terrain.FURROWED_GRASS) {</span>
+<span class="nc" id="L459">					map[cell] = Terrain.GRASS;</span>
+<span class="nc" id="L460">					losBlocking[cell] = false;</span>
+				}
+<span class="nc" id="L462">				drop( new Torch(), cell );</span>
+				//add a second torch to help with the larger floor
+<span class="nc bnc" id="L464" title="All 2 branches missed.">				if (feeling == Feeling.LARGE){</span>
+<span class="nc" id="L465">					cell = randomDropCell();</span>
+<span class="nc bnc" id="L466" title="All 4 branches missed.">					if (map[cell] == Terrain.HIGH_GRASS || map[cell] == Terrain.FURROWED_GRASS) {</span>
+<span class="nc" id="L467">						map[cell] = Terrain.GRASS;</span>
+<span class="nc" id="L468">						losBlocking[cell] = false;</span>
+					}
+<span class="nc" id="L470">					drop( new Torch(), cell );</span>
+				}
+			}
+<span class="nc" id="L473">		Random.popGenerator();</span>
+
+<span class="nc" id="L475">		Random.pushGenerator( Random.Long() );</span>
+<span class="nc" id="L476">			ArrayList&lt;Item&gt; bonesItems = Bones.get();</span>
+<span class="nc bnc" id="L477" title="All 2 branches missed.">			if (bonesItems != null) {</span>
+<span class="nc" id="L478">				int cell = randomDropCell();</span>
+<span class="nc bnc" id="L479" title="All 4 branches missed.">				if (map[cell] == Terrain.HIGH_GRASS || map[cell] == Terrain.FURROWED_GRASS) {</span>
+<span class="nc" id="L480">					map[cell] = Terrain.GRASS;</span>
+<span class="nc" id="L481">					losBlocking[cell] = false;</span>
+				}
+<span class="nc bnc" id="L483" title="All 2 branches missed.">				for (Item i : bonesItems) {</span>
+<span class="nc" id="L484">					drop(i, cell).setHauntedIfCursed().type = Heap.Type.REMAINS;</span>
+<span class="nc" id="L485">				}</span>
+			}
+<span class="nc" id="L487">		Random.popGenerator();</span>
+
+<span class="nc" id="L489">		Random.pushGenerator( Random.Long() );</span>
+<span class="nc" id="L490">			DriedRose rose = Dungeon.hero.belongings.getItem( DriedRose.class );</span>
+<span class="nc bnc" id="L491" title="All 8 branches missed.">			if (rose != null &amp;&amp; rose.isIdentified() &amp;&amp; !rose.cursed &amp;&amp; Ghost.Quest.completed()){</span>
+				//aim to drop 1 petal every 2 floors
+<span class="nc" id="L493">				int petalsNeeded = (int) Math.ceil((float)((Dungeon.depth / 2) - rose.droppedPetals) / 3);</span>
+
+<span class="nc bnc" id="L495" title="All 2 branches missed.">				for (int i=1; i &lt;= petalsNeeded; i++) {</span>
+					//the player may miss a single petal and still max their rose.
+<span class="nc bnc" id="L497" title="All 2 branches missed.">					if (rose.droppedPetals &lt; 11) {</span>
+<span class="nc" id="L498">						Item item = new DriedRose.Petal();</span>
+<span class="nc" id="L499">						int cell = randomDropCell();</span>
+<span class="nc" id="L500">						drop( item, cell ).type = Heap.Type.HEAP;</span>
+<span class="nc bnc" id="L501" title="All 4 branches missed.">						if (map[cell] == Terrain.HIGH_GRASS || map[cell] == Terrain.FURROWED_GRASS) {</span>
+<span class="nc" id="L502">							map[cell] = Terrain.GRASS;</span>
+<span class="nc" id="L503">							losBlocking[cell] = false;</span>
+						}
+<span class="nc" id="L505">						rose.droppedPetals++;</span>
+					}
+				}
+			}
+<span class="nc" id="L509">		Random.popGenerator();</span>
+
+		//cached rations try to drop in a special room on floors 2/4/7, to a max of 2/3
+		//we incremented dropped by 2 for compatibility with pre-v2.4 saves (when the talent dropped 4/6 items)
+<span class="nc" id="L513">		Random.pushGenerator( Random.Long() );</span>
+<span class="nc bnc" id="L514" title="All 2 branches missed.">			if (Dungeon.hero.hasTalent(Talent.CACHED_RATIONS)){</span>
+<span class="nc" id="L515">				Talent.CachedRationsDropped dropped = Buff.affect(Dungeon.hero, Talent.CachedRationsDropped.class);</span>
+<span class="nc" id="L516">				int targetFloor = (int)(2 + dropped.count());</span>
+<span class="nc bnc" id="L517" title="All 2 branches missed.">				if (dropped.count() &gt; 4) targetFloor++;</span>
+<span class="nc bnc" id="L518" title="All 4 branches missed.">				if (Dungeon.depth &gt;= targetFloor &amp;&amp; dropped.count() &lt; 2 + 2*Dungeon.hero.pointsInTalent(Talent.CACHED_RATIONS)){</span>
+					int cell;
+<span class="nc" id="L520">					int tries = 100;</span>
+					boolean valid;
+					do {
+<span class="nc" id="L523">						cell = randomDropCell(SpecialRoom.class);</span>
+<span class="nc bnc" id="L524" title="All 4 branches missed.">						valid = cell != -1 &amp;&amp; !(room(cell) instanceof SecretRoom)</span>
+<span class="nc bnc" id="L525" title="All 8 branches missed.">								&amp;&amp; !(room(cell) instanceof ShopRoom)</span>
+								&amp;&amp; map[cell] != Terrain.EMPTY_SP
+								&amp;&amp; map[cell] != Terrain.WATER
+								&amp;&amp; map[cell] != Terrain.PEDESTAL;
+<span class="nc bnc" id="L529" title="All 4 branches missed.">					} while (tries-- &gt; 0 &amp;&amp; !valid);</span>
+<span class="nc bnc" id="L530" title="All 2 branches missed.">					if (valid) {</span>
+<span class="nc bnc" id="L531" title="All 4 branches missed.">						if (map[cell] == Terrain.HIGH_GRASS || map[cell] == Terrain.FURROWED_GRASS) {</span>
+<span class="nc" id="L532">							map[cell] = Terrain.GRASS;</span>
+<span class="nc" id="L533">							losBlocking[cell] = false;</span>
+						}
+<span class="nc" id="L535">						drop(new SupplyRation(), cell).type = Heap.Type.CHEST;</span>
+<span class="nc" id="L536">						dropped.countUp(2);</span>
+					}
+				}
+			}
+<span class="nc" id="L540">		Random.popGenerator();</span>
+
+		//guide pages
+<span class="nc" id="L543">		Random.pushGenerator( Random.Long() );</span>
+<span class="nc" id="L544">			Collection&lt;String&gt; allPages = Document.ADVENTURERS_GUIDE.pageNames();</span>
+<span class="nc" id="L545">			ArrayList&lt;String&gt; missingPages = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L546" title="All 2 branches missed.">			for ( String page : allPages){</span>
+<span class="nc bnc" id="L547" title="All 2 branches missed.">				if (!Document.ADVENTURERS_GUIDE.isPageFound(page)){</span>
+<span class="nc" id="L548">					missingPages.add(page);</span>
+				}
+<span class="nc" id="L550">			}</span>
+
+			//a total of 6 pages drop randomly, the rest are specially dropped or are given at the start
+<span class="nc" id="L553">			missingPages.remove(Document.GUIDE_SEARCHING);</span>
+
+			//chance to find a page is 0/25/50/75/100% for floors 1/2/3/4/5+
+<span class="nc" id="L556">			float dropChance = 0.25f*(Dungeon.depth-1);</span>
+<span class="nc bnc" id="L557" title="All 4 branches missed.">			if (!missingPages.isEmpty() &amp;&amp; Random.Float() &lt; dropChance){</span>
+<span class="nc" id="L558">				GuidePage p = new GuidePage();</span>
+<span class="nc" id="L559">				p.page(missingPages.get(0));</span>
+<span class="nc" id="L560">				int cell = randomDropCell();</span>
+<span class="nc bnc" id="L561" title="All 4 branches missed.">				if (map[cell] == Terrain.HIGH_GRASS || map[cell] == Terrain.FURROWED_GRASS) {</span>
+<span class="nc" id="L562">					map[cell] = Terrain.GRASS;</span>
+<span class="nc" id="L563">					losBlocking[cell] = false;</span>
+				}
+<span class="nc" id="L565">				drop( p, cell );</span>
+			}
+<span class="nc" id="L567">		Random.popGenerator();</span>
+
+		//lore pages
+		//TODO a fair bit going on here, I might want to refactor/externalize this in the future
+<span class="nc" id="L571">		Random.pushGenerator( Random.Long() );</span>
+<span class="nc bnc" id="L572" title="All 2 branches missed.">			if (Document.ADVENTURERS_GUIDE.allPagesFound()){</span>
+
+<span class="nc" id="L574">				int region = 1+(Dungeon.depth-1)/5;</span>
+
+				Document regionDoc;
+<span class="nc bnc" id="L577" title="All 6 branches missed.">				switch( region ){</span>
+<span class="nc" id="L578">					default: regionDoc = null; break;</span>
+<span class="nc" id="L579">					case 1: regionDoc = Document.SEWERS_GUARD; break;</span>
+<span class="nc" id="L580">					case 2: regionDoc = Document.PRISON_WARDEN; break;</span>
+<span class="nc" id="L581">					case 3: regionDoc = Document.CAVES_EXPLORER; break;</span>
+<span class="nc" id="L582">					case 4: regionDoc = Document.CITY_WARLOCK; break;</span>
+<span class="nc" id="L583">					case 5: regionDoc = Document.HALLS_KING; break;</span>
+				}
+
+<span class="nc bnc" id="L586" title="All 4 branches missed.">				if (regionDoc != null &amp;&amp; !regionDoc.allPagesFound()) {</span>
+
+<span class="nc" id="L588">					Dungeon.LimitedDrops limit = limitedDocs.get(regionDoc);</span>
+
+<span class="nc bnc" id="L590" title="All 4 branches missed.">					if (limit == null || !limit.dropped()) {</span>
+
+<span class="nc" id="L592">						float totalPages = 0;</span>
+<span class="nc" id="L593">						float pagesFound = 0;</span>
+<span class="nc" id="L594">						String pageToDrop = null;</span>
+<span class="nc bnc" id="L595" title="All 2 branches missed.">						for (String page : regionDoc.pageNames()) {</span>
+<span class="nc" id="L596">							totalPages++;</span>
+<span class="nc bnc" id="L597" title="All 2 branches missed.">							if (!regionDoc.isPageFound(page)) {</span>
+<span class="nc bnc" id="L598" title="All 2 branches missed.">								if (pageToDrop == null) {</span>
+<span class="nc" id="L599">									pageToDrop = page;</span>
+								}
+							} else {
+<span class="nc" id="L602">								pagesFound++;</span>
+							}
+<span class="nc" id="L604">						}</span>
+<span class="nc" id="L605">						float percentComplete = pagesFound / totalPages;</span>
+
+						// initial value is the first floor in a region
+<span class="nc" id="L608">						int targetFloor = 5*(region-1) + 1;</span>
+<span class="nc" id="L609">						targetFloor += Math.round(3*percentComplete);</span>
+
+						//TODO maybe drop last page in boss floor with custom logic?
+<span class="nc bnc" id="L612" title="All 2 branches missed.">						if (Dungeon.depth &gt;= targetFloor){</span>
+<span class="nc" id="L613">							DocumentPage page = RegionLorePage.pageForDoc(regionDoc);</span>
+<span class="nc" id="L614">							page.page(pageToDrop);</span>
+<span class="nc" id="L615">							int cell = randomDropCell();</span>
+<span class="nc bnc" id="L616" title="All 4 branches missed.">							if (map[cell] == Terrain.HIGH_GRASS || map[cell] == Terrain.FURROWED_GRASS) {</span>
+<span class="nc" id="L617">								map[cell] = Terrain.GRASS;</span>
+<span class="nc" id="L618">								losBlocking[cell] = false;</span>
+							}
+<span class="nc" id="L620">							drop(page, cell);</span>
+<span class="nc bnc" id="L621" title="All 2 branches missed.">							if (limit != null) limit.drop();</span>
+						}
+
+					}
+
+				}
+
+			}
+<span class="nc" id="L629">		Random.popGenerator();</span>
+
+		//ebony mimics &gt;:)
+<span class="nc" id="L632">		Random.pushGenerator(Random.Long());</span>
+<span class="nc bnc" id="L633" title="All 2 branches missed.">			if (Random.Float() &lt; MimicTooth.ebonyMimicChance()){</span>
+<span class="nc" id="L634">				ArrayList&lt;Integer&gt; candidateCells = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L635" title="All 2 branches missed.">				if (Random.Int(2) == 0){</span>
+<span class="nc bnc" id="L636" title="All 2 branches missed.">					for (Heap h : heaps.valueList()){</span>
+<span class="nc bnc" id="L637" title="All 2 branches missed.">						if (h.type == Heap.Type.HEAP</span>
+<span class="nc bnc" id="L638" title="All 2 branches missed.">								&amp;&amp; !(room(h.pos) instanceof SpecialRoom)</span>
+<span class="nc bnc" id="L639" title="All 2 branches missed.">								&amp;&amp; findMob(h.pos) == null){</span>
+<span class="nc" id="L640">							candidateCells.add(h.pos);</span>
+						}
+<span class="nc" id="L642">					}</span>
+				} else {
+<span class="nc bnc" id="L644" title="All 4 branches missed.">					if (Random.Int(5) == 0 &amp;&amp; findMob(exit()) == null){</span>
+<span class="nc" id="L645">						candidateCells.add(exit());</span>
+					} else {
+<span class="nc bnc" id="L647" title="All 2 branches missed.">						for (int i = 0; i &lt; length(); i++) {</span>
+<span class="nc bnc" id="L648" title="All 4 branches missed.">							if (map[i] == Terrain.DOOR &amp;&amp; findMob(i) == null) {</span>
+<span class="nc" id="L649">								candidateCells.add(i);</span>
+							}
+						}
+					}
+				}
+
+<span class="nc" id="L655">				int pos = Random.element(candidateCells);</span>
+<span class="nc" id="L656">				mobs.add(Mimic.spawnAt(pos, EbonyMimic.class, false));</span>
+			}
+<span class="nc" id="L658">		Random.popGenerator();</span>
+
+<span class="nc" id="L660">	}</span>
+
+<span class="nc" id="L662">	private static HashMap&lt;Document, Dungeon.LimitedDrops&gt; limitedDocs = new HashMap&lt;&gt;();</span>
+	static {
+<span class="nc" id="L664">		limitedDocs.put(Document.SEWERS_GUARD, Dungeon.LimitedDrops.LORE_SEWERS);</span>
+<span class="nc" id="L665">		limitedDocs.put(Document.PRISON_WARDEN, Dungeon.LimitedDrops.LORE_PRISON);</span>
+<span class="nc" id="L666">		limitedDocs.put(Document.CAVES_EXPLORER, Dungeon.LimitedDrops.LORE_CAVES);</span>
+<span class="nc" id="L667">		limitedDocs.put(Document.CITY_WARLOCK, Dungeon.LimitedDrops.LORE_CITY);</span>
+<span class="nc" id="L668">		limitedDocs.put(Document.HALLS_KING, Dungeon.LimitedDrops.LORE_HALLS);</span>
+<span class="nc" id="L669">	}</span>
+	
+	public ArrayList&lt;Room&gt; rooms() {
+<span class="nc" id="L672">		return new ArrayList&lt;&gt;(rooms);</span>
+	}
+	
+	protected Room randomRoom( Class&lt;?extends Room&gt; type ) {
+<span class="nc" id="L676">		Random.shuffle( rooms );</span>
+<span class="nc bnc" id="L677" title="All 2 branches missed.">		for (Room r : rooms) {</span>
+<span class="nc bnc" id="L678" title="All 2 branches missed.">			if (type.isInstance(r)) {</span>
+<span class="nc" id="L679">				return r;</span>
+			}
+<span class="nc" id="L681">		}</span>
+<span class="nc" id="L682">		return null;</span>
+	}
+	
+	public Room room( int pos ) {
+<span class="nc bnc" id="L686" title="All 2 branches missed.">		for (Room room : rooms) {</span>
+<span class="nc bnc" id="L687" title="All 2 branches missed.">			if (room.inside( cellToPoint(pos) )) {</span>
+<span class="nc" id="L688">				return room;</span>
+			}
+<span class="nc" id="L690">		}</span>
+		
+<span class="nc" id="L692">		return null;</span>
+	}
+
+	protected int randomDropCell(){
+<span class="nc" id="L696">		return randomDropCell(StandardRoom.class);</span>
+	}
+	
+	protected int randomDropCell( Class&lt;?extends Room&gt; roomType ) {
+<span class="nc" id="L700">		int tries = 100;</span>
+<span class="nc bnc" id="L701" title="All 2 branches missed.">		while (tries-- &gt; 0) {</span>
+<span class="nc" id="L702">			Room room = randomRoom( roomType );</span>
+<span class="nc bnc" id="L703" title="All 2 branches missed.">			if (room == null){</span>
+<span class="nc" id="L704">				return -1;</span>
+			}
+<span class="nc bnc" id="L706" title="All 2 branches missed.">			if (room != roomEntrance) {</span>
+<span class="nc" id="L707">				int pos = pointToCell(room.random());</span>
+<span class="nc bnc" id="L708" title="All 4 branches missed.">				if (passable[pos] &amp;&amp; !solid[pos]</span>
+<span class="nc bnc" id="L709" title="All 2 branches missed.">						&amp;&amp; pos != exit()</span>
+<span class="nc bnc" id="L710" title="All 2 branches missed.">						&amp;&amp; heaps.get(pos) == null</span>
+<span class="nc bnc" id="L711" title="All 2 branches missed.">						&amp;&amp; room.canPlaceItem(cellToPoint(pos), this)</span>
+<span class="nc bnc" id="L712" title="All 2 branches missed.">						&amp;&amp; findMob(pos) == null) {</span>
+					
+<span class="nc" id="L714">					Trap t = traps.get(pos);</span>
+					
+					//items cannot spawn on traps which destroy items
+<span class="nc bnc" id="L717" title="All 16 branches missed.">					if (t == null ||</span>
+							! (t instanceof BurningTrap || t instanceof BlazingTrap
+							|| t instanceof ChillingTrap || t instanceof FrostTrap
+							|| t instanceof ExplosiveTrap || t instanceof DisintegrationTrap
+							|| t instanceof PitfallTrap)) {
+						
+<span class="nc" id="L723">						return pos;</span>
+					}
+				}
+			}
+<span class="nc" id="L727">		}</span>
+<span class="nc" id="L728">		return -1;</span>
+	}
+	
+	@Override
+	public int fallCell( boolean fallIntoPit ) {
+<span class="nc bnc" id="L733" title="All 2 branches missed.">		if (fallIntoPit) {</span>
+<span class="nc bnc" id="L734" title="All 2 branches missed.">			for (Room room : rooms) {</span>
+<span class="nc bnc" id="L735" title="All 2 branches missed.">				if (room instanceof PitRoom) {</span>
+<span class="nc" id="L736">					ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L737" title="All 2 branches missed.">					for (Point p : room.getPoints()){</span>
+<span class="nc" id="L738">						int cell = pointToCell(p);</span>
+<span class="nc bnc" id="L739" title="All 2 branches missed.">						if (passable[cell] &amp;&amp;</span>
+<span class="nc bnc" id="L740" title="All 2 branches missed.">								findMob(cell) == null){</span>
+<span class="nc" id="L741">							candidates.add(cell);</span>
+						}
+<span class="nc" id="L743">					}</span>
+
+<span class="nc bnc" id="L745" title="All 2 branches missed.">					if (!candidates.isEmpty()){</span>
+<span class="nc" id="L746">						return Random.element(candidates);</span>
+					}
+				}
+<span class="nc" id="L749">			}</span>
+		}
+		
+<span class="nc" id="L752">		return super.fallCell( fallIntoPit );</span>
+	}
+
+	@Override
+	public boolean isLevelExplored( int depth ) {
+		//A level is considered fully explored if:
+
+		//There are no levelgen heaps which are undiscovered, in an openable container, or which contain keys
+<span class="nc bnc" id="L760" title="All 2 branches missed.">		for (Heap h : heaps.valueList()){</span>
+<span class="nc bnc" id="L761" title="All 2 branches missed.">			if (h.autoExplored) continue;</span>
+
+<span class="nc bnc" id="L763" title="All 8 branches missed.">			if (!h.seen || (h.type != Heap.Type.HEAP &amp;&amp; h.type != Heap.Type.FOR_SALE &amp;&amp; h.type != Heap.Type.CRYSTAL_CHEST)){</span>
+<span class="nc" id="L764">				return false;</span>
+			}
+<span class="nc bnc" id="L766" title="All 2 branches missed.">			for (Item i : h.items){</span>
+<span class="nc bnc" id="L767" title="All 2 branches missed.">				if (i instanceof Key){</span>
+<span class="nc" id="L768">					return false;</span>
+				}
+<span class="nc" id="L770">			}</span>
+<span class="nc" id="L771">		}</span>
+
+		//There is no magical fire or sacrificial fire
+<span class="nc bnc" id="L774" title="All 2 branches missed.">		for (Blob b : blobs.values()){</span>
+<span class="nc bnc" id="L775" title="All 6 branches missed.">			if (b.volume &gt; 0 &amp;&amp; (b instanceof MagicalFireRoom.EternalFire || b instanceof SacrificialFire)){</span>
+<span class="nc" id="L776">				return false;</span>
+			}
+<span class="nc" id="L778">		}</span>
+
+		//There are no statues or mimics (unless they were made allies)
+<span class="nc bnc" id="L781" title="All 2 branches missed.">		for (Mob m : mobs.toArray(new Mob[0])){</span>
+<span class="nc bnc" id="L782" title="All 2 branches missed.">			if (m.alignment != Char.Alignment.ALLY){</span>
+<span class="nc bnc" id="L783" title="All 4 branches missed.">				if (m instanceof Statue &amp;&amp; ((Statue) m).levelGenStatue){</span>
+<span class="nc" id="L784">					return false;</span>
+<span class="nc bnc" id="L785" title="All 2 branches missed.">				} else if (m instanceof Mimic){</span>
+<span class="nc" id="L786">					return false;</span>
+				}
+			}
+		}
+
+		//There are no barricades, locked doors, or hidden doors
+<span class="nc bnc" id="L792" title="All 2 branches missed.">		for (int i = 0; i &lt; length; i++){</span>
+<span class="nc bnc" id="L793" title="All 6 branches missed.">			if (map[i] == Terrain.BARRICADE || map[i] == Terrain.LOCKED_DOOR || map[i] == Terrain.SECRET_DOOR){</span>
+<span class="nc" id="L794">				return false;</span>
+			}
+		}
+
+		//There are no unused keys for this depth in the journal
+<span class="nc bnc" id="L799" title="All 2 branches missed.">		for (Notes.KeyRecord rec : Notes.getRecords(Notes.KeyRecord.class)){</span>
+<span class="nc bnc" id="L800" title="All 2 branches missed.">			if (rec.depth() == depth){</span>
+<span class="nc" id="L801">				return false;</span>
+			}
+<span class="nc" id="L803">		}</span>
+
+		//Note that it is NOT required for the player to see every tile or discover every trap.
+<span class="nc" id="L806">		return true;</span>
+	}
+
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L811">		super.storeInBundle( bundle );</span>
+<span class="nc" id="L812">		bundle.put( &quot;rooms&quot;, rooms );</span>
+<span class="nc" id="L813">	}</span>
+	
+	@SuppressWarnings(&quot;unchecked&quot;)
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L818">		super.restoreFromBundle( bundle );</span>
+		
+<span class="nc" id="L820">		rooms = new ArrayList&lt;&gt;( (Collection&lt;Room&gt;) ((Collection&lt;?&gt;) bundle.getCollection( &quot;rooms&quot; )) );</span>
+<span class="nc bnc" id="L821" title="All 2 branches missed.">		for (Room r : rooms) {</span>
+<span class="nc" id="L822">			r.onLevelLoad( this );</span>
+<span class="nc bnc" id="L823" title="All 2 branches missed.">			if (r.isEntrance()){</span>
+<span class="nc" id="L824">				roomEntrance = r;</span>
+<span class="nc bnc" id="L825" title="All 2 branches missed.">			} else if (r.isExit()){</span>
+<span class="nc" id="L826">				roomExit = r;</span>
+			}
+<span class="nc" id="L828">		}</span>
+<span class="nc" id="L829">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

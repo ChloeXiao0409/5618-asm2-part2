@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DM300Sprite.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.sprites</a> &gt; <span class="el_source">DM300Sprite.java</span></div><h1>DM300Sprite.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.sprites;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DM300;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.BlastParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SparkParticle;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.watabou.noosa.TextureFilm;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.utils.Callback;
+
+public class DM300Sprite extends MobSprite {
+
+	private Animation charge;
+	private Animation slam;
+
+	private Emitter superchargeSparks;
+	
+	public DM300Sprite() {
+<span class="nc" id="L45">		super();</span>
+		
+<span class="nc" id="L47">		texture( Assets.Sprites.DM300 );</span>
+		
+<span class="nc" id="L49">		updateChargeState(false);</span>
+<span class="nc" id="L50">	}</span>
+
+	public void updateChargeState( boolean enraged ){
+<span class="nc bnc" id="L53" title="All 2 branches missed.">		if (superchargeSparks != null) superchargeSparks.on = enraged;</span>
+
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		int c = enraged ? 10 : 0;</span>
+
+<span class="nc" id="L57">		TextureFilm frames = new TextureFilm( texture, 25, 22 );</span>
+
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		idle = new Animation( enraged ? 15 : 10, true );</span>
+<span class="nc" id="L60">		idle.frames( frames, c+0, c+1 );</span>
+
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		run = new Animation( enraged ? 15 : 10, true );</span>
+<span class="nc" id="L63">		run.frames( frames, c+0, c+2 );</span>
+
+<span class="nc" id="L65">		attack = new Animation( 15, false );</span>
+<span class="nc" id="L66">		attack.frames( frames, c+3, c+4, c+5 );</span>
+
+		//unaffected by enrage state
+
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		if (charge == null) {</span>
+<span class="nc" id="L71">			charge = new Animation(4, true);</span>
+<span class="nc" id="L72">			charge.frames(frames, 0, 10);</span>
+
+<span class="nc" id="L74">			slam = attack.clone();</span>
+
+<span class="nc" id="L76">			zap = new Animation(15, false);</span>
+<span class="nc" id="L77">			zap.frames(frames, 6, 7, 7, 6);</span>
+
+<span class="nc" id="L79">			die = new Animation(20, false);</span>
+<span class="nc" id="L80">			die.frames(frames, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10);</span>
+		}
+
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if (curAnim != charge) play(idle);</span>
+<span class="nc" id="L84">	}</span>
+
+	public void zap( int cell ) {
+
+<span class="nc" id="L88">		super.zap( cell );</span>
+
+<span class="nc" id="L90">		MagicMissile.boltFromChar( parent,</span>
+				MagicMissile.SPECK + Speck.TOXIC,
+				this,
+				cell,
+<span class="nc" id="L94">				new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L97">						((DM300)ch).onZapComplete();</span>
+<span class="nc" id="L98">					}</span>
+				} );
+<span class="nc" id="L100">		Sample.INSTANCE.play( Assets.Sounds.GAS );</span>
+<span class="nc" id="L101">	}</span>
+
+	public void charge(){
+<span class="nc" id="L104">		play( charge );</span>
+<span class="nc" id="L105">	}</span>
+
+	public void slam( int cell ){
+<span class="nc" id="L108">		turnTo( ch.pos , cell );</span>
+<span class="nc" id="L109">		play( slam );</span>
+<span class="nc" id="L110">		Sample.INSTANCE.play( Assets.Sounds.ROCKS );</span>
+<span class="nc" id="L111">		PixelScene.shake( 3, 0.7f );</span>
+<span class="nc" id="L112">	}</span>
+
+	@Override
+	public void onComplete( Animation anim ) {
+
+<span class="nc bnc" id="L117" title="All 4 branches missed.">		if (anim == zap || anim == slam){</span>
+<span class="nc" id="L118">			idle();</span>
+		}
+
+<span class="nc bnc" id="L121" title="All 2 branches missed.">		if (anim == slam){</span>
+<span class="nc" id="L122">			((DM300)ch).onSlamComplete();</span>
+		}
+
+<span class="nc" id="L125">		super.onComplete( anim );</span>
+		
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		if (anim == die) {</span>
+<span class="nc" id="L128">			Sample.INSTANCE.play(Assets.Sounds.BLAST);</span>
+<span class="nc" id="L129">			emitter().burst( BlastParticle.FACTORY, 100 );</span>
+<span class="nc" id="L130">			killAndErase();</span>
+		}
+<span class="nc" id="L132">	}</span>
+
+	@Override
+	public void place(int cell) {
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		if (parent != null) parent.bringToFront(this);</span>
+<span class="nc" id="L137">		super.place(cell);</span>
+<span class="nc" id="L138">	}</span>
+
+	@Override
+	public void link(Char ch) {
+<span class="nc" id="L142">		super.link(ch);</span>
+
+<span class="nc" id="L144">		superchargeSparks = emitter();</span>
+<span class="nc" id="L145">		superchargeSparks.autoKill = false;</span>
+<span class="nc" id="L146">		superchargeSparks.pour(SparkParticle.STATIC, 0.05f);</span>
+<span class="nc" id="L147">		superchargeSparks.on = false;</span>
+
+<span class="nc bnc" id="L149" title="All 4 branches missed.">		if (ch instanceof DM300 &amp;&amp; ((DM300) ch).isSupercharged()){</span>
+<span class="nc" id="L150">			updateChargeState(true);</span>
+		}
+<span class="nc" id="L152">	}</span>
+
+	@Override
+	public void update() {
+<span class="nc" id="L156">		super.update();</span>
+
+<span class="nc bnc" id="L158" title="All 2 branches missed.">		if (superchargeSparks != null){</span>
+<span class="nc" id="L159">			superchargeSparks.visible = visible;</span>
+		}
+<span class="nc" id="L161">	}</span>
+
+	@Override
+	public void die() {
+<span class="nc" id="L165">		super.die();</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">		if (superchargeSparks != null){</span>
+<span class="nc" id="L167">			superchargeSparks.on = false;</span>
+		}
+<span class="nc" id="L169">	}</span>
+
+	@Override
+	public void kill() {
+<span class="nc" id="L173">		super.kill();</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">		if (superchargeSparks != null){</span>
+<span class="nc" id="L175">			superchargeSparks.killAndErase();</span>
+		}
+<span class="nc" id="L177">	}</span>
+
+	@Override
+	public int blood() {
+<span class="nc" id="L181">		return 0xFFFFFF88;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

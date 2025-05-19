@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LostBackpack.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items</a> &gt; <span class="el_source">LostBackpack.java</span></div><h1>LostBackpack.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.LostInventory;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CloakOfShadows;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.MagicalHolster;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.watabou.noosa.audio.Sample;
+
+<span class="nc" id="L38">public class LostBackpack extends Item {</span>
+
+	{
+<span class="nc" id="L41">		image = ItemSpriteSheet.BACKPACK;</span>
+
+<span class="nc" id="L43">		unique = true;</span>
+<span class="nc" id="L44">	}</span>
+
+	@Override
+	public boolean doPickUp(Hero hero, int pos) {
+<span class="nc bnc" id="L48" title="All 2 branches missed.">		if (hero.buff(LostInventory.class) != null){</span>
+<span class="nc" id="L49">			hero.buff(LostInventory.class).detach();</span>
+		}
+
+<span class="nc" id="L52">		MagicalHolster holster = hero.belongings.getItem(MagicalHolster.class);</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">		for (Item i : hero.belongings){</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">			if (i.keptThroughLostInventory()){</span>
+<span class="nc" id="L55">				i.keptThoughLostInvent = false; //don't reactivate, was previously activated</span>
+			} else {
+<span class="nc bnc" id="L57" title="All 4 branches missed.">				if (i instanceof EquipableItem &amp;&amp; i.isEquipped(hero)){</span>
+<span class="nc" id="L58">					((EquipableItem) i).activate(hero);</span>
+<span class="nc bnc" id="L59" title="All 4 branches missed.">				} else if ( i instanceof CloakOfShadows &amp;&amp; hero.hasTalent(Talent.LIGHT_CLOAK)){</span>
+<span class="nc" id="L60">					((CloakOfShadows) i).activate(hero);</span>
+<span class="nc bnc" id="L61" title="All 4 branches missed.">				} else if ( i instanceof HolyTome &amp;&amp; hero.hasTalent(Talent.LIGHT_READING)){</span>
+<span class="nc" id="L62">					((HolyTome) i).activate(hero);</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">				} else if (i instanceof Wand){</span>
+<span class="nc bnc" id="L64" title="All 4 branches missed.">					if (holster != null &amp;&amp; holster.contains(i)){</span>
+<span class="nc" id="L65">						((Wand) i).charge(hero, MagicalHolster.HOLSTER_SCALE_FACTOR);</span>
+					} else {
+<span class="nc" id="L67">						((Wand) i).charge(hero);</span>
+					}
+<span class="nc bnc" id="L69" title="All 2 branches missed.">				} else if (i instanceof MagesStaff){</span>
+<span class="nc" id="L70">					((MagesStaff) i).applyWandChargeBuff(hero);</span>
+				}
+			}
+<span class="nc" id="L73">		}</span>
+
+<span class="nc" id="L75">		hero.updateHT(false);</span>
+
+<span class="nc" id="L77">		Item.updateQuickslot();</span>
+<span class="nc" id="L78">		Sample.INSTANCE.play( Assets.Sounds.DEWDROP );</span>
+<span class="nc" id="L79">		hero.spendAndNext(TIME_TO_PICK_UP);</span>
+<span class="nc" id="L80">		GameScene.pickUp( this, pos );</span>
+<span class="nc" id="L81">		((HeroSprite)hero.sprite).updateArmor();</span>
+<span class="nc" id="L82">		return true;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

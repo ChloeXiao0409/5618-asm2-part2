@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StoneOfIntuition.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.stones</a> &gt; <span class="el_source">StoneOfIntuition.java</span></div><h1>StoneOfIntuition.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.stones;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Identification;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.ExoticPotion;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ExoticScroll;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.IconButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.IconTitle;
+import com.watabou.noosa.Image;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L52">public class StoneOfIntuition extends InventoryStone {</span>
+	
+	{
+<span class="nc" id="L55">		image = ItemSpriteSheet.STONE_INTUITION;</span>
+<span class="nc" id="L56">	}</span>
+
+	@Override
+	protected boolean usableOnItem(Item item) {
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		if (item instanceof Ring){</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">			return !((Ring) item).isKnown();</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		} else if (item instanceof Potion){</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">			return !((Potion) item).isKnown();</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">		} else if (item instanceof Scroll){</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">			return !((Scroll) item).isKnown();</span>
+		}
+<span class="nc" id="L67">		return false;</span>
+	}
+	
+	@Override
+	protected void onItemSelected(Item item) {
+
+<span class="nc" id="L73">		GameScene.show( new WndGuess(item));</span>
+		
+<span class="nc" id="L75">	}</span>
+
+	@Override
+	public String desc() {
+<span class="nc" id="L79">		String text = super.desc();</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		if (Dungeon.hero != null){</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">			if (Dungeon.hero.buff(IntuitionUseTracker.class) == null){</span>
+<span class="nc" id="L82">				text += &quot;\n\n&quot; + Messages.get(this, &quot;break_info&quot;);</span>
+			} else {
+<span class="nc" id="L84">				text += &quot;\n\n&quot; + Messages.get(this, &quot;break_warn&quot;);</span>
+			}
+		}
+<span class="nc" id="L87">		return text;</span>
+	}
+
+<span class="nc" id="L90">	public static class IntuitionUseTracker extends Buff {{ revivePersists = true; }};</span>
+	
+<span class="nc" id="L92">	private static Class curGuess = null;</span>
+
+	public class WndGuess extends Window {
+		
+		private static final int WIDTH = 120;
+		private static final int BTN_SIZE = 20;
+		
+<span class="nc" id="L99">		public WndGuess(final Item item){</span>
+			
+<span class="nc" id="L101">			IconTitle titlebar = new IconTitle();</span>
+<span class="nc" id="L102">			titlebar.icon( new ItemSprite(ItemSpriteSheet.STONE_INTUITION, null) );</span>
+<span class="nc" id="L103">			titlebar.label( Messages.titleCase(Messages.get(StoneOfIntuition.class, &quot;name&quot;)) );</span>
+<span class="nc" id="L104">			titlebar.setRect( 0, 0, WIDTH, 0 );</span>
+<span class="nc" id="L105">			add( titlebar );</span>
+			
+<span class="nc" id="L107">			RenderedTextBlock text = PixelScene.renderTextBlock(6);</span>
+<span class="nc" id="L108">			text.text( Messages.get(this, &quot;text&quot;) );</span>
+<span class="nc" id="L109">			text.setPos(0, titlebar.bottom());</span>
+<span class="nc" id="L110">			text.maxWidth( WIDTH );</span>
+<span class="nc" id="L111">			add(text);</span>
+			
+<span class="nc" id="L113">			final RedButton guess = new RedButton(&quot;&quot;){</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L116">					super.onClick();</span>
+<span class="nc" id="L117">					useAnimation();</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">					if (item.getClass() == curGuess){</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">						if (item instanceof Ring){</span>
+<span class="nc" id="L120">							((Ring) item).setKnown();</span>
+						} else {
+<span class="nc" id="L122">							item.identify();</span>
+						}
+<span class="nc" id="L124">						GLog.p( Messages.get(WndGuess.class, &quot;correct&quot;) );</span>
+<span class="nc" id="L125">						curUser.sprite.parent.add( new Identification( curUser.sprite.center().offset( 0, -16 ) ) );</span>
+					} else {
+<span class="nc" id="L127">						GLog.w( Messages.get(WndGuess.class, &quot;incorrect&quot;) );</span>
+					}
+<span class="nc bnc" id="L129" title="All 2 branches missed.">					if (!anonymous) {</span>
+<span class="nc" id="L130">						Catalog.countUse(StoneOfIntuition.class);</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">						if (curUser.buff(IntuitionUseTracker.class) == null) {</span>
+<span class="nc" id="L132">							Buff.affect(curUser, IntuitionUseTracker.class);</span>
+						} else {
+<span class="nc" id="L134">							curItem.detach(curUser.belongings.backpack);</span>
+<span class="nc" id="L135">							curUser.buff(IntuitionUseTracker.class).detach();</span>
+						}
+<span class="nc" id="L137">						Talent.onRunestoneUsed(curUser, curUser.pos, StoneOfIntuition.class);</span>
+					}
+<span class="nc" id="L139">					curGuess = null;</span>
+<span class="nc" id="L140">					hide();</span>
+<span class="nc" id="L141">				}</span>
+			};
+<span class="nc" id="L143">			guess.visible = false;</span>
+<span class="nc" id="L144">			guess.icon( new ItemSprite(item) );</span>
+<span class="nc" id="L145">			guess.enable(false);</span>
+<span class="nc" id="L146">			guess.setRect(0, 80, WIDTH, 20);</span>
+<span class="nc" id="L147">			add(guess);</span>
+			
+			float left;
+<span class="nc" id="L150">			float top = text.bottom() + 5;</span>
+			int rows;
+<span class="nc" id="L152">			int placed = 0;</span>
+			
+<span class="nc" id="L154">			final ArrayList&lt;Class&lt;?extends Item&gt;&gt; unIDed = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">			if (item.isIdentified()){</span>
+<span class="nc" id="L156">				hide();</span>
+<span class="nc" id="L157">				return;</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">			} else if (item instanceof Potion){</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">				if (item instanceof ExoticPotion) {</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">					for (Class&lt;?extends Item&gt; i : Potion.getUnknown()){</span>
+<span class="nc" id="L161">						unIDed.add(ExoticPotion.regToExo.get(i));</span>
+<span class="nc" id="L162">					}</span>
+				} else {
+<span class="nc" id="L164">					unIDed.addAll(Potion.getUnknown());</span>
+				}
+<span class="nc bnc" id="L166" title="All 2 branches missed.">			} else if (item instanceof Scroll){</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">				if (item instanceof ExoticScroll) {</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">					for (Class&lt;?extends Item&gt; i : Scroll.getUnknown()){</span>
+<span class="nc" id="L169">						unIDed.add(ExoticScroll.regToExo.get(i));</span>
+<span class="nc" id="L170">					}</span>
+				} else {
+<span class="nc" id="L172">					unIDed.addAll(Scroll.getUnknown());</span>
+				}
+<span class="nc bnc" id="L174" title="All 2 branches missed.">			} else if (item instanceof Ring) {</span>
+<span class="nc" id="L175">				unIDed.addAll(Ring.getUnknown());</span>
+			} else {
+<span class="nc" id="L177">				hide();</span>
+<span class="nc" id="L178">				return;</span>
+			}
+			
+<span class="nc bnc" id="L181" title="All 2 branches missed.">			if (unIDed.size() &lt;= 5){</span>
+<span class="nc" id="L182">				rows = 1;</span>
+<span class="nc" id="L183">				top += BTN_SIZE/2f;</span>
+<span class="nc" id="L184">				left = (WIDTH - BTN_SIZE*unIDed.size())/2f;</span>
+			} else {
+<span class="nc" id="L186">				rows = 2;</span>
+<span class="nc" id="L187">				left = (WIDTH - BTN_SIZE*((unIDed.size()+1)/2))/2f;</span>
+			}
+			
+<span class="nc bnc" id="L190" title="All 2 branches missed.">			for (final Class&lt;?extends Item&gt; i : unIDed){</span>
+
+<span class="nc" id="L192">				IconButton btn = new IconButton(){</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L195">						curGuess = i;</span>
+<span class="nc" id="L196">						guess.visible = true;</span>
+<span class="nc" id="L197">						guess.text( Messages.titleCase(Messages.get(curGuess, &quot;name&quot;)) );</span>
+<span class="nc" id="L198">						guess.enable(true);</span>
+<span class="nc" id="L199">						super.onClick();</span>
+<span class="nc" id="L200">					}</span>
+				};
+<span class="nc" id="L202">				Image im = new Image(Assets.Sprites.ITEM_ICONS);</span>
+<span class="nc" id="L203">				im.frame(ItemSpriteSheet.Icons.film.get(Reflection.newInstance(i).icon));</span>
+<span class="nc" id="L204">				im.scale.set(2f);</span>
+<span class="nc" id="L205">				btn.icon(im);</span>
+<span class="nc" id="L206">				btn.setRect(left + placed*BTN_SIZE, top, BTN_SIZE, BTN_SIZE);</span>
+<span class="nc" id="L207">				add(btn);</span>
+				
+<span class="nc" id="L209">				placed++;</span>
+<span class="nc bnc" id="L210" title="All 4 branches missed.">				if (rows == 2 &amp;&amp; placed == ((unIDed.size()+1)/2)){</span>
+<span class="nc" id="L211">					placed = 0;</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">					if (unIDed.size() % 2 == 1){</span>
+<span class="nc" id="L213">						left += BTN_SIZE/2f;</span>
+					}
+<span class="nc" id="L215">					top += BTN_SIZE;</span>
+				}
+<span class="nc" id="L217">			}</span>
+			
+<span class="nc" id="L219">			resize(WIDTH, 100);</span>
+			
+<span class="nc" id="L221">		}</span>
+
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

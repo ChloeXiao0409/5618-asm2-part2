@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>KindofMisc.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items</a> &gt; <span class="el_source">KindofMisc.java</span></div><h1>KindofMisc.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.watabou.utils.Random;
+
+
+<span class="nc" id="L38">public abstract class KindofMisc extends EquipableItem {</span>
+
+	@Override
+	public boolean doEquip(final Hero hero) {
+
+<span class="nc" id="L43">		boolean equipFull = false;</span>
+<span class="nc bnc" id="L44" title="All 6 branches missed.">		if ( this instanceof Artifact</span>
+				&amp;&amp; hero.belongings.artifact != null
+				&amp;&amp; hero.belongings.misc != null){
+
+			//see if we can re-arrange items first
+<span class="nc bnc" id="L49" title="All 4 branches missed.">			if (hero.belongings.misc instanceof Ring &amp;&amp; hero.belongings.ring == null){</span>
+<span class="nc" id="L50">				hero.belongings.ring = (Ring) hero.belongings.misc;</span>
+<span class="nc" id="L51">				hero.belongings.misc = null;</span>
+			} else {
+<span class="nc" id="L53">				equipFull = true;</span>
+			}
+<span class="nc bnc" id="L55" title="All 6 branches missed.">		} else if (this instanceof Ring</span>
+				&amp;&amp; hero.belongings.misc != null
+				&amp;&amp; hero.belongings.ring != null){
+
+			//see if we can re-arrange items first
+<span class="nc bnc" id="L60" title="All 4 branches missed.">			if (hero.belongings.misc instanceof Artifact &amp;&amp; hero.belongings.artifact == null){</span>
+<span class="nc" id="L61">				hero.belongings.artifact = (Artifact) hero.belongings.misc;</span>
+<span class="nc" id="L62">				hero.belongings.misc = null;</span>
+			} else {
+<span class="nc" id="L64">				equipFull = true;</span>
+			}
+		}
+
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		if (equipFull) {</span>
+
+<span class="nc" id="L70">			final KindofMisc[] miscs = new KindofMisc[3];</span>
+<span class="nc" id="L71">			miscs[0] = hero.belongings.artifact;</span>
+<span class="nc" id="L72">			miscs[1] = hero.belongings.misc;</span>
+<span class="nc" id="L73">			miscs[2] = hero.belongings.ring;</span>
+
+<span class="nc" id="L75">			final boolean[] enabled = new boolean[3];</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">			enabled[0] = miscs[0] != null;</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">			enabled[1] = miscs[1] != null;</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">			enabled[2] = miscs[2] != null;</span>
+
+			//force swapping with the same type of item if 2x of that type is already present
+<span class="nc bnc" id="L81" title="All 4 branches missed.">			if (this instanceof Ring &amp;&amp; hero.belongings.misc instanceof Ring){</span>
+<span class="nc" id="L82">				enabled[0] = false; //disable artifact</span>
+<span class="nc bnc" id="L83" title="All 4 branches missed.">			} else if (this instanceof Artifact &amp;&amp; hero.belongings.misc instanceof Artifact){</span>
+<span class="nc" id="L84">				enabled[2] = false; //disable ring</span>
+			}
+
+<span class="nc" id="L87">			GameScene.show(</span>
+					new WndOptions(new ItemSprite(this),
+<span class="nc" id="L89">							Messages.get(KindofMisc.class, &quot;unequip_title&quot;),</span>
+<span class="nc" id="L90">							Messages.get(KindofMisc.class, &quot;unequip_message&quot;),</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">							miscs[0] == null ? &quot;---&quot; : Messages.titleCase(miscs[0].title()),</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">							miscs[1] == null ? &quot;---&quot; : Messages.titleCase(miscs[1].title()),</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">							miscs[2] == null ? &quot;---&quot; : Messages.titleCase(miscs[2].title())) {</span>
+
+						@Override
+						protected void onSelect(int index) {
+
+<span class="nc" id="L98">							KindofMisc equipped = miscs[index];</span>
+							//we directly remove the item because we want to have inventory capacity
+							// to unequip the equipped one, but don't want to trigger any other
+							// item detaching logic
+<span class="nc" id="L102">							int slot = Dungeon.quickslot.getSlot(KindofMisc.this);</span>
+<span class="nc" id="L103">							slotOfUnequipped = -1;</span>
+<span class="nc" id="L104">							Dungeon.hero.belongings.backpack.items.remove(KindofMisc.this);</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">							if (equipped.doUnequip(hero, true, false)) {</span>
+								//swap out equip in misc slot if needed
+<span class="nc bnc" id="L107" title="All 4 branches missed.">								if (index == 0 &amp;&amp; KindofMisc.this instanceof Ring){</span>
+<span class="nc" id="L108">									hero.belongings.artifact = (Artifact)hero.belongings.misc;</span>
+<span class="nc" id="L109">									hero.belongings.misc = null;</span>
+<span class="nc bnc" id="L110" title="All 4 branches missed.">								} else if (index == 2 &amp;&amp; KindofMisc.this instanceof Artifact){</span>
+<span class="nc" id="L111">									hero.belongings.ring = (Ring) hero.belongings.misc;</span>
+<span class="nc" id="L112">									hero.belongings.misc = null;</span>
+								}
+<span class="nc" id="L114">								Dungeon.hero.belongings.backpack.items.add(KindofMisc.this);</span>
+<span class="nc" id="L115">								doEquip(hero);</span>
+							} else {
+<span class="nc" id="L117">								Dungeon.hero.belongings.backpack.items.add(KindofMisc.this);</span>
+							}
+<span class="nc bnc" id="L119" title="All 2 branches missed.">							if (slot != -1) {</span>
+<span class="nc" id="L120">								Dungeon.quickslot.setSlot(slot, KindofMisc.this);</span>
+<span class="nc bnc" id="L121" title="All 4 branches missed.">							} else if (slotOfUnequipped != -1 &amp;&amp; defaultAction() != null){</span>
+<span class="nc" id="L122">								Dungeon.quickslot.setSlot(slotOfUnequipped, KindofMisc.this);</span>
+							}
+<span class="nc" id="L124">							updateQuickslot();</span>
+<span class="nc" id="L125">						}</span>
+
+						@Override
+						protected boolean enabled(int index) {
+<span class="nc" id="L129">							return enabled[index];</span>
+						}
+					});
+
+<span class="nc" id="L133">			return false;</span>
+
+		} else {
+
+			// 15/25% chance
+<span class="nc bnc" id="L138" title="All 8 branches missed.">			if (hero.heroClass != HeroClass.CLERIC &amp;&amp; hero.hasTalent(Talent.HOLY_INTUITION)</span>
+					&amp;&amp; cursed &amp;&amp; !cursedKnown
+<span class="nc bnc" id="L140" title="All 2 branches missed.">					&amp;&amp; Random.Int(20) &lt; 1 + 2*hero.pointsInTalent(Talent.HOLY_INTUITION)){</span>
+<span class="nc" id="L141">				cursedKnown = true;</span>
+<span class="nc" id="L142">				GLog.p(Messages.get(this, &quot;curse_detected&quot;));</span>
+<span class="nc" id="L143">				return false;</span>
+			}
+
+<span class="nc bnc" id="L146" title="All 2 branches missed.">			if (this instanceof Artifact){</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">				if (hero.belongings.artifact == null)   hero.belongings.artifact = (Artifact) this;</span>
+<span class="nc" id="L148">				else                                    hero.belongings.misc = (Artifact) this;</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">			} else if (this instanceof Ring){</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">				if (hero.belongings.ring == null)   hero.belongings.ring = (Ring) this;</span>
+<span class="nc" id="L151">				else                                hero.belongings.misc = (Ring) this;</span>
+			}
+
+<span class="nc" id="L154">			detach( hero.belongings.backpack );</span>
+
+<span class="nc" id="L156">			Talent.onItemEquipped(hero, this);</span>
+<span class="nc" id="L157">			activate( hero );</span>
+
+<span class="nc" id="L159">			cursedKnown = true;</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">			if (cursed) {</span>
+<span class="nc" id="L161">				equipCursed( hero );</span>
+<span class="nc" id="L162">				GLog.n( Messages.get(this, &quot;equip_cursed&quot;, this) );</span>
+			}
+
+<span class="nc" id="L165">			hero.spendAndNext( timeToEquip(hero) );</span>
+<span class="nc" id="L166">			return true;</span>
+
+		}
+
+	}
+
+	@Override
+	public boolean doUnequip(Hero hero, boolean collect, boolean single) {
+<span class="nc bnc" id="L174" title="All 2 branches missed.">		if (super.doUnequip(hero, collect, single)){</span>
+
+<span class="nc bnc" id="L176" title="All 2 branches missed.">			if (hero.belongings.artifact == this) {</span>
+<span class="nc" id="L177">				hero.belongings.artifact = null;</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">			} else if (hero.belongings.misc == this) {</span>
+<span class="nc" id="L179">				hero.belongings.misc = null;</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">			} else if (hero.belongings.ring == this){</span>
+<span class="nc" id="L181">				hero.belongings.ring = null;</span>
+			}
+
+<span class="nc" id="L184">			return true;</span>
+
+		} else {
+
+<span class="nc" id="L188">			return false;</span>
+
+		}
+	}
+
+	@Override
+	public boolean isEquipped( Hero hero ) {
+<span class="nc bnc" id="L195" title="All 4 branches missed.">		return hero != null &amp;&amp; (hero.belongings.artifact() == this</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">				|| hero.belongings.misc() == this</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">				|| hero.belongings.ring() == this);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

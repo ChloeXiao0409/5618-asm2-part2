@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScrollingListPane.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">ScrollingListPane.java</span></div><h1>ScrollingListPane.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.ColorBlock;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.ui.Component;
+
+import java.util.ArrayList;
+
+public class ScrollingListPane extends ScrollPane {
+
+<span class="nc" id="L34">	private ArrayList&lt;Component&gt; items = new ArrayList&lt;&gt;();</span>
+
+	private static final int ITEM_HEIGHT	= 18;
+
+	public ScrollingListPane(){
+<span class="nc" id="L39">		super(new Component());</span>
+<span class="nc" id="L40">	}</span>
+
+	@Override
+	public void onClick(float x, float y) {
+<span class="nc bnc" id="L44" title="All 2 branches missed.">		for (Component item : items) {</span>
+<span class="nc bnc" id="L45" title="All 4 branches missed.">			if ((item instanceof ListItem) &amp;&amp; ((ListItem) item).onClick( x, y )) {</span>
+<span class="nc" id="L46">				break;</span>
+			}
+<span class="nc" id="L48">		}</span>
+<span class="nc" id="L49">	}</span>
+
+	public void addItem( Image icon, String iconText, String text ){
+<span class="nc" id="L52">		addItem( new ListItem(icon, iconText, text) );</span>
+<span class="nc" id="L53">	}</span>
+
+	public void addItem( ListItem item ){
+<span class="nc" id="L56">		content.add(item);</span>
+<span class="nc" id="L57">		items.add(item);</span>
+<span class="nc" id="L58">		layout();</span>
+<span class="nc" id="L59">	}</span>
+
+	public void addTitle( String text ){
+<span class="nc" id="L62">		ListTitle title = new ListTitle(text);</span>
+<span class="nc" id="L63">		content.add(title);</span>
+<span class="nc" id="L64">		items.add(title);</span>
+<span class="nc" id="L65">		layout();</span>
+<span class="nc" id="L66">	}</span>
+
+	@Override
+	public synchronized void clear() {
+<span class="nc" id="L70">		content.clear();</span>
+<span class="nc" id="L71">		items.clear();</span>
+<span class="nc" id="L72">	}</span>
+
+	@Override
+	protected void layout() {
+<span class="nc" id="L76">		super.layout();</span>
+
+<span class="nc" id="L78">		float pos = 0;</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		for (Component item : items){</span>
+<span class="nc" id="L80">			item.setRect(0, pos, width, ITEM_HEIGHT);</span>
+<span class="nc" id="L81">			pos += item.height();</span>
+<span class="nc" id="L82">		}</span>
+
+<span class="nc" id="L84">		content.setSize(width, pos);</span>
+<span class="nc" id="L85">	}</span>
+
+	public static class ListItem extends Component {
+
+		protected Image icon;
+		protected BitmapText iconLabel;
+		protected RenderedTextBlock label;
+		protected ColorBlock line;
+
+		public ListItem( Image icon, String text ) {
+<span class="nc" id="L95">			this(icon, null, text);</span>
+<span class="nc" id="L96">		}</span>
+
+		public ListItem( Image icon, String iconText, String text ) {
+<span class="nc" id="L99">			super();</span>
+
+<span class="nc bnc" id="L101" title="All 2 branches missed.">			if (icon != null) {</span>
+<span class="nc" id="L102">				this.icon.copy(icon);</span>
+			} else {
+<span class="nc" id="L104">				remove(label);</span>
+<span class="nc" id="L105">				label = PixelScene.renderTextBlock(9);</span>
+<span class="nc" id="L106">				add(label);</span>
+			}
+
+<span class="nc" id="L109">			label.text( text );</span>
+
+<span class="nc bnc" id="L111" title="All 2 branches missed.">			if (iconText != null) {</span>
+<span class="nc" id="L112">				iconLabel.text(iconText);</span>
+<span class="nc" id="L113">				iconLabel.measure();</span>
+			}
+<span class="nc" id="L115">		}</span>
+
+		public boolean onClick( float x, float y ){
+<span class="nc" id="L118">			return false;</span>
+		}
+
+		public void hardlight( int color ){
+<span class="nc" id="L122">			iconLabel.hardlight(color);</span>
+<span class="nc" id="L123">			label.hardlight(color);</span>
+<span class="nc" id="L124">		}</span>
+
+		public void hardlightIcon( int color ){
+<span class="nc" id="L127">			icon.hardlight(color);</span>
+<span class="nc" id="L128">		}</span>
+
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L132">			icon = new Image();</span>
+<span class="nc" id="L133">			add( icon );</span>
+
+<span class="nc" id="L135">			iconLabel = new BitmapText( PixelScene.pixelFont);</span>
+<span class="nc" id="L136">			add( iconLabel );</span>
+
+<span class="nc" id="L138">			label = PixelScene.renderTextBlock( 7 );</span>
+<span class="nc" id="L139">			add( label );</span>
+
+<span class="nc" id="L141">			line = new ColorBlock( 1, 1, 0xFF222222);</span>
+<span class="nc" id="L142">			add(line);</span>
+
+<span class="nc" id="L144">		}</span>
+
+		@Override
+		protected void layout() {
+
+<span class="nc" id="L149">			icon.y = y + 1 + (height() - 1 - icon.height()) / 2f;</span>
+<span class="nc" id="L150">			icon.x = x + (16 - icon.width())/2f;</span>
+<span class="nc" id="L151">			PixelScene.align(icon);</span>
+
+<span class="nc" id="L153">			iconLabel.x = icon.x + (icon.width - iconLabel.width()) / 2f;</span>
+<span class="nc" id="L154">			iconLabel.y = icon.y + (icon.height - iconLabel.height()) / 2f + 0.5f;</span>
+<span class="nc" id="L155">			PixelScene.align(iconLabel);</span>
+
+<span class="nc" id="L157">			line.size(width, 1);</span>
+<span class="nc" id="L158">			line.x = x;</span>
+<span class="nc" id="L159">			line.y = y;</span>
+
+<span class="nc" id="L161">			label.maxWidth((int)(width - 16 - 1));</span>
+<span class="nc" id="L162">			label.setPos(x + 17, y + (height() - label.height()) / 2f);</span>
+<span class="nc" id="L163">			PixelScene.align(label);</span>
+<span class="nc" id="L164">		}</span>
+	}
+
+	public static class ListTitle extends Component {
+
+		protected RenderedTextBlock label;
+		protected ColorBlock line;
+
+		public ListTitle (String title){
+<span class="nc" id="L173">			super();</span>
+<span class="nc" id="L174">			label.text(title);</span>
+<span class="nc" id="L175">		}</span>
+
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L179">			label = PixelScene.renderTextBlock( 9 );</span>
+<span class="nc" id="L180">			label.hardlight(Window.TITLE_COLOR);</span>
+<span class="nc" id="L181">			add( label );</span>
+
+<span class="nc" id="L183">			line = new ColorBlock( 1, 1, 0xFF222222);</span>
+<span class="nc" id="L184">			add(line);</span>
+
+<span class="nc" id="L186">		}</span>
+
+		@Override
+		protected void layout() {
+
+<span class="nc" id="L191">			line.size(width, 1);</span>
+<span class="nc" id="L192">			line.x = x;</span>
+<span class="nc" id="L193">			line.y = y;</span>
+
+<span class="nc" id="L195">			label.maxWidth((int)(width - 1));</span>
+<span class="nc" id="L196">			label.setPos((width-label.width())/2f,</span>
+<span class="nc" id="L197">					y + (height() - label.height()) / 2f);</span>
+<span class="nc" id="L198">			PixelScene.align(label);</span>
+<span class="nc" id="L199">		}</span>
+
+	}
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,488 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Room.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms</a> &gt; <span class="el_source">Room.java</span></div><h1>Room.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms;
+
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.watabou.utils.Bundlable;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Graph;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+import com.watabou.utils.Rect;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+
+public abstract class Room extends Rect implements Graph.Node, Bundlable {
+	
+<span class="nc" id="L39">	public ArrayList&lt;Room&gt; neigbours = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L40">	public LinkedHashMap&lt;Room, Door&gt; connected = new LinkedHashMap&lt;&gt;();</span>
+	
+	public int distance;
+<span class="nc" id="L43">	public int price = 1;</span>
+	
+	public Room(){
+<span class="nc" id="L46">		super();</span>
+<span class="nc" id="L47">	}</span>
+	
+	public Room( Rect other ){
+<span class="nc" id="L50">		super(other);</span>
+<span class="nc" id="L51">	}</span>
+	
+	public Room set( Room other ) {
+<span class="nc" id="L54">		super.set( other );</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		for (Room r : other.neigbours){</span>
+<span class="nc" id="L56">			neigbours.add(r);</span>
+<span class="nc" id="L57">			r.neigbours.remove(other);</span>
+<span class="nc" id="L58">			r.neigbours.add(this);</span>
+<span class="nc" id="L59">		}</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		for (Room r : other.connected.keySet()){</span>
+<span class="nc" id="L61">			Door d = other.connected.get(r);</span>
+<span class="nc" id="L62">			r.connected.remove(other);</span>
+<span class="nc" id="L63">			r.connected.put(this, d);</span>
+<span class="nc" id="L64">			connected.put(r, d);</span>
+<span class="nc" id="L65">		}</span>
+<span class="nc" id="L66">		return this;</span>
+	}
+	
+	// **** Spatial logic ****
+	
+	//Note: when overriding these YOU MUST store any randomly decided values.
+	//With the same room and the same parameters these should always return
+	//the same value over multiple calls, even if there's some randomness initially.
+	public int minWidth(){
+<span class="nc" id="L75">		return -1;</span>
+	}
+<span class="nc" id="L77">	public int maxWidth() { return -1; }</span>
+	
+<span class="nc" id="L79">	public int minHeight() { return -1; }</span>
+<span class="nc" id="L80">	public int maxHeight() { return -1; }</span>
+	
+	public boolean setSize(){
+<span class="nc" id="L83">		return setSize(minWidth(), maxWidth(), minHeight(), maxHeight());</span>
+	}
+	
+	public boolean forceSize( int w, int h ){
+<span class="nc" id="L87">		return setSize( w, w, h, h );</span>
+	}
+	
+	public boolean setSizeWithLimit( int w, int h ){
+<span class="nc bnc" id="L91" title="All 4 branches missed.">		if ( w &lt; minWidth() || h &lt; minHeight()) {</span>
+<span class="nc" id="L92">			return false;</span>
+		} else {
+<span class="nc" id="L94">			setSize();</span>
+			
+<span class="nc bnc" id="L96" title="All 4 branches missed.">			if (width() &gt; w || height() &gt; h){</span>
+<span class="nc" id="L97">				resize(Math.min(width(), w)-1, Math.min(height(), h)-1);</span>
+			}
+			
+<span class="nc" id="L100">			return true;</span>
+		}
+	}
+	
+	protected boolean setSize(int minW, int maxW, int minH, int maxH) {
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		if (minW &lt; minWidth()</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">				|| maxW &gt; maxWidth()</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">				|| minH &lt; minHeight()</span>
+<span class="nc bnc" id="L108" title="All 6 branches missed.">				|| maxH &gt; maxHeight()</span>
+				|| minW &gt; maxW
+				|| minH &gt; maxH){
+<span class="nc" id="L111">			return false;</span>
+		} else {
+			//subtract one because rooms are inclusive to their right and bottom sides
+<span class="nc" id="L114">			resize(Random.NormalIntRange(minW, maxW) - 1,</span>
+<span class="nc" id="L115">					Random.NormalIntRange(minH, maxH) - 1);</span>
+<span class="nc" id="L116">			return true;</span>
+		}
+	}
+
+	public Point pointInside(Point from, int n){
+<span class="nc" id="L121">		Point step = new Point(from);</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">		if (from.x == left) {</span>
+<span class="nc" id="L123">			step.offset( +n, 0 );</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">		} else if (from.x == right) {</span>
+<span class="nc" id="L125">			step.offset( -n, 0 );</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">		} else if (from.y == top) {</span>
+<span class="nc" id="L127">			step.offset( 0, +n );</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		} else if (from.y == bottom) {</span>
+<span class="nc" id="L129">			step.offset( 0, -n );</span>
+		}
+<span class="nc" id="L131">		return step;</span>
+	}
+	
+	//Width and height are increased by 1 because rooms are inclusive to their right and bottom sides
+	@Override
+	public int width() {
+<span class="nc" id="L137">		return super.width()+1;</span>
+	}
+	
+	@Override
+	public int height() {
+<span class="nc" id="L142">		return super.height()+1;</span>
+	}
+	
+	public Point random() {
+<span class="nc" id="L146">		return random( 1 );</span>
+	}
+	
+	public Point random( int m ) {
+<span class="nc" id="L150">		return new Point( Random.IntRange( left + m, right - m ),</span>
+<span class="nc" id="L151">				Random.IntRange( top + m, bottom - m ));</span>
+	}
+	
+	//a point is only considered to be inside if it is within the 1 tile perimeter
+	public boolean inside( Point p ) {
+<span class="nc bnc" id="L156" title="All 8 branches missed.">		return p.x &gt; left &amp;&amp; p.y &gt; top &amp;&amp; p.x &lt; right &amp;&amp; p.y &lt; bottom;</span>
+	}
+	
+	public Point center() {
+<span class="nc" id="L160">		return new Point(</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">				(left + right) / 2 + (((right - left) % 2) == 1 ? Random.Int( 2 ) : 0),</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">				(top + bottom) / 2 + (((bottom - top) % 2) == 1 ? Random.Int( 2 ) : 0) );</span>
+	}
+	
+	
+	// **** Connection logic ****
+	
+	public static final int ALL     = 0;
+	public static final int LEFT    = 1;
+	public static final int TOP     = 2;
+	public static final int RIGHT   = 3;
+	public static final int BOTTOM  = 4;
+	
+	public int minConnections(int direction){
+<span class="nc bnc" id="L175" title="All 2 branches missed.">		if (direction == ALL)   return 1;</span>
+<span class="nc" id="L176">		else                    return 0;</span>
+	}
+	
+	public int curConnections(int direction){
+<span class="nc bnc" id="L180" title="All 2 branches missed.">		if (direction == ALL) {</span>
+<span class="nc" id="L181">			return connected.size();</span>
+			
+		} else {
+<span class="nc" id="L184">			int total = 0;</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">			for (Room r : connected.keySet()){</span>
+<span class="nc" id="L186">				Rect i = intersect( r );</span>
+<span class="nc bnc" id="L187" title="All 6 branches missed.">				if      (direction == LEFT &amp;&amp; i.width() == 0 &amp;&amp; i.left == left)         total++;</span>
+<span class="nc bnc" id="L188" title="All 6 branches missed.">				else if (direction == TOP &amp;&amp; i.height() == 0 &amp;&amp; i.top == top)           total++;</span>
+<span class="nc bnc" id="L189" title="All 6 branches missed.">				else if (direction == RIGHT &amp;&amp; i.width() == 0 &amp;&amp; i.right == right)      total++;</span>
+<span class="nc bnc" id="L190" title="All 6 branches missed.">				else if (direction == BOTTOM &amp;&amp; i.height() == 0 &amp;&amp; i.bottom == bottom)  total++;</span>
+<span class="nc" id="L191">			}</span>
+<span class="nc" id="L192">			return total;</span>
+		}
+	}
+	
+	public int remConnections(int direction){
+<span class="nc bnc" id="L197" title="All 2 branches missed.">		if (curConnections(ALL) &gt;= maxConnections(ALL)) return 0;</span>
+<span class="nc" id="L198">		else return maxConnections(direction) - curConnections(direction);</span>
+	}
+	
+	public int maxConnections(int direction){
+<span class="nc bnc" id="L202" title="All 2 branches missed.">		if (direction == ALL)   return 16;</span>
+<span class="nc" id="L203">		else                    return 4;</span>
+	}
+	
+	//only considers point-specific limits, not direction limits
+	public boolean canConnect(Point p){
+		//point must be along exactly one edge, no corners.
+<span class="nc bnc" id="L209" title="All 10 branches missed.">		return (p.x == left || p.x == right) != (p.y == top || p.y == bottom);</span>
+	}
+	
+	//only considers direction limits, not point-specific limits
+	public boolean canConnect(int direction){
+<span class="nc bnc" id="L214" title="All 2 branches missed.">		return remConnections(direction) &gt; 0;</span>
+	}
+	
+	//considers both direction and point limits
+	public boolean canConnect( Room r ){
+<span class="nc" id="L219">		Rect i = intersect( r );</span>
+		
+<span class="nc" id="L221">		boolean foundPoint = false;</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">		for (Point p : i.getPoints()){</span>
+<span class="nc bnc" id="L223" title="All 4 branches missed.">			if (canConnect(p) &amp;&amp; r.canConnect(p)){</span>
+<span class="nc" id="L224">				foundPoint = true;</span>
+<span class="nc" id="L225">				break;</span>
+			}
+<span class="nc" id="L227">		}</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">		if (!foundPoint) return false;</span>
+		
+<span class="nc bnc" id="L230" title="All 4 branches missed.">		if (i.width() == 0 &amp;&amp; i.left == left)</span>
+<span class="nc bnc" id="L231" title="All 4 branches missed.">			return canConnect(LEFT) &amp;&amp; r.canConnect(RIGHT);</span>
+<span class="nc bnc" id="L232" title="All 4 branches missed.">		else if (i.height() == 0 &amp;&amp; i.top == top)</span>
+<span class="nc bnc" id="L233" title="All 4 branches missed.">			return canConnect(TOP) &amp;&amp; r.canConnect(BOTTOM);</span>
+<span class="nc bnc" id="L234" title="All 4 branches missed.">		else if (i.width() == 0 &amp;&amp; i.right == right)</span>
+<span class="nc bnc" id="L235" title="All 4 branches missed.">			return canConnect(RIGHT) &amp;&amp; r.canConnect(LEFT);</span>
+<span class="nc bnc" id="L236" title="All 4 branches missed.">		else if (i.height() == 0 &amp;&amp; i.bottom == bottom)</span>
+<span class="nc bnc" id="L237" title="All 4 branches missed.">			return canConnect(BOTTOM) &amp;&amp; r.canConnect(TOP);</span>
+		else
+<span class="nc" id="L239">			return false;</span>
+	}
+
+	public boolean canMerge(Level l, Room other, Point p, int mergeTerrain){
+<span class="nc" id="L243">		return false;</span>
+	}
+
+	//can be overriden for special merge logic between rooms
+	public void merge(Level l, Room other, Rect merge, int mergeTerrain){
+<span class="nc" id="L248">		Painter.fill(l, merge, mergeTerrain);</span>
+<span class="nc" id="L249">	}</span>
+	
+	public boolean addNeigbour( Room other ) {
+<span class="nc bnc" id="L252" title="All 2 branches missed.">		if (neigbours.contains(other))</span>
+<span class="nc" id="L253">			return true;</span>
+		
+<span class="nc" id="L255">		Rect i = intersect( other );</span>
+<span class="nc bnc" id="L256" title="All 4 branches missed.">		if ((i.width() == 0 &amp;&amp; i.height() &gt;= 2) ||</span>
+<span class="nc bnc" id="L257" title="All 4 branches missed.">			(i.height() == 0 &amp;&amp; i.width() &gt;= 2)) {</span>
+<span class="nc" id="L258">			neigbours.add( other );</span>
+<span class="nc" id="L259">			other.neigbours.add( this );</span>
+<span class="nc" id="L260">			return true;</span>
+		}
+<span class="nc" id="L262">		return false;</span>
+	}
+	
+	public boolean connect( Room room ) {
+<span class="nc bnc" id="L266" title="All 8 branches missed.">		if (isExit() &amp;&amp; room.isEntrance() || isEntrance() &amp;&amp; room.isExit()){</span>
+			//entrance and exit rooms cannot directly connect
+<span class="nc" id="L268">			return false;</span>
+		}
+
+<span class="nc bnc" id="L271" title="All 4 branches missed.">		if ((neigbours.contains(room) || addNeigbour(room))</span>
+<span class="nc bnc" id="L272" title="All 4 branches missed.">				&amp;&amp; !connected.containsKey( room ) &amp;&amp; canConnect(room)) {</span>
+<span class="nc" id="L273">			connected.put( room, null );</span>
+<span class="nc" id="L274">			room.connected.put( this, null );</span>
+<span class="nc" id="L275">			return true;</span>
+		}
+<span class="nc" id="L277">		return false;</span>
+	}
+	
+	public void clearConnections(){
+<span class="nc bnc" id="L281" title="All 2 branches missed.">		for (Room r : neigbours){</span>
+<span class="nc" id="L282">			r.neigbours.remove(this);</span>
+<span class="nc" id="L283">		}</span>
+<span class="nc" id="L284">		neigbours.clear();</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">		for (Room r : connected.keySet()){</span>
+<span class="nc" id="L286">			r.connected.remove(this);</span>
+<span class="nc" id="L287">		}</span>
+<span class="nc" id="L288">		connected.clear();</span>
+<span class="nc" id="L289">	}</span>
+
+	public boolean isEntrance(){
+<span class="nc" id="L292">		return false;</span>
+	}
+
+	public boolean isExit(){
+<span class="nc" id="L296">		return false;</span>
+	}
+	
+	// **** Painter Logic ****
+	
+	public abstract void paint(Level level);
+	
+	//whether or not a painter can make its own modifications to a specific point
+	public boolean canPlaceWater(Point p){
+<span class="nc" id="L305">		return true;</span>
+	}
+	
+	public final ArrayList&lt;Point&gt; waterPlaceablePoints(){
+<span class="nc" id="L309">		ArrayList&lt;Point&gt; points = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L310" title="All 2 branches missed.">		for (int i = left; i &lt;= right; i++) {</span>
+<span class="nc bnc" id="L311" title="All 2 branches missed.">			for (int j = top; j &lt;= bottom; j++) {</span>
+<span class="nc" id="L312">				Point p = new Point(i, j);</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">				if (canPlaceWater(p)) points.add(p);</span>
+			}
+		}
+<span class="nc" id="L316">		return points;</span>
+	}
+
+	//whether or not a painter can make place grass at a specific point
+	public boolean canPlaceGrass(Point p){
+<span class="nc" id="L321">		return true;</span>
+	}
+
+	public final ArrayList&lt;Point&gt; grassPlaceablePoints(){
+<span class="nc" id="L325">		ArrayList&lt;Point&gt; points = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L326" title="All 2 branches missed.">		for (int i = left; i &lt;= right; i++) {</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">			for (int j = top; j &lt;= bottom; j++) {</span>
+<span class="nc" id="L328">				Point p = new Point(i, j);</span>
+<span class="nc bnc" id="L329" title="All 2 branches missed.">				if (canPlaceGrass(p)) points.add(p);</span>
+			}
+		}
+<span class="nc" id="L332">		return points;</span>
+	}
+	
+	//whether or not a painter can place a trap at a specific point
+	public boolean canPlaceTrap(Point p){
+<span class="nc" id="L337">		return true;</span>
+	}
+	
+	public final ArrayList&lt;Point&gt; trapPlaceablePoints(){
+<span class="nc" id="L341">		ArrayList&lt;Point&gt; points = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L342" title="All 2 branches missed.">		for (int i = left; i &lt;= right; i++) {</span>
+<span class="nc bnc" id="L343" title="All 2 branches missed.">			for (int j = top; j &lt;= bottom; j++) {</span>
+<span class="nc" id="L344">				Point p = new Point(i, j);</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">				if (canPlaceTrap(p)) points.add(p);</span>
+			}
+		}
+<span class="nc" id="L348">		return points;</span>
+	}
+
+	//whether or not an item can be placed here (usually via randomDropCell)
+	public boolean canPlaceItem(Point p, Level l){
+<span class="nc" id="L353">		return inside(p);</span>
+	}
+
+	public final ArrayList&lt;Point&gt; itemPlaceablePoints(Level l){
+<span class="nc" id="L357">		ArrayList&lt;Point&gt; points = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L358" title="All 2 branches missed.">		for (int i = left; i &lt;= right; i++) {</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">			for (int j = top; j &lt;= bottom; j++) {</span>
+<span class="nc" id="L360">				Point p = new Point(i, j);</span>
+<span class="nc bnc" id="L361" title="All 2 branches missed.">				if (canPlaceItem(p, l)) points.add(p);</span>
+			}
+		}
+<span class="nc" id="L364">		return points;</span>
+	}
+	
+	//whether or not a character can be placed here (usually via spawn, tele, or wander)
+	public boolean canPlaceCharacter(Point p, Level l){
+<span class="nc" id="L369">		return inside(p);</span>
+	}
+	
+	public final ArrayList&lt;Point&gt; charPlaceablePoints(Level l){
+<span class="nc" id="L373">		ArrayList&lt;Point&gt; points = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L374" title="All 2 branches missed.">		for (int i = left; i &lt;= right; i++) {</span>
+<span class="nc bnc" id="L375" title="All 2 branches missed.">			for (int j = top; j &lt;= bottom; j++) {</span>
+<span class="nc" id="L376">				Point p = new Point(i, j);</span>
+<span class="nc bnc" id="L377" title="All 2 branches missed.">				if (canPlaceCharacter(p, l)) points.add(p);</span>
+			}
+		}
+<span class="nc" id="L380">		return points;</span>
+	}
+
+	
+	// **** Graph.Node interface ****
+
+	@Override
+	public int distance() {
+<span class="nc" id="L388">		return distance;</span>
+	}
+
+	@Override
+	public void distance( int value ) {
+<span class="nc" id="L393">		distance = value;</span>
+<span class="nc" id="L394">	}</span>
+	
+	@Override
+	public int price() {
+<span class="nc" id="L398">		return price;</span>
+	}
+
+	@Override
+	public void price( int value ) {
+<span class="nc" id="L403">		price = value;</span>
+<span class="nc" id="L404">	}</span>
+
+	@Override
+	public Collection&lt;Room&gt; edges() {
+<span class="nc" id="L408">		ArrayList&lt;Room&gt; edges = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L409" title="All 2 branches missed.">		for( Room r : connected.keySet()){</span>
+<span class="nc" id="L410">			Door d = connected.get(r);</span>
+			//for the purposes of path building, ignore all doors that are locked, blocked, or hidden
+<span class="nc bnc" id="L412" title="All 8 branches missed.">			if (d.type == Door.Type.EMPTY || d.type == Door.Type.TUNNEL</span>
+					|| d.type == Door.Type.UNLOCKED || d.type == Door.Type.REGULAR){
+<span class="nc" id="L414">				edges.add(r);</span>
+			}
+<span class="nc" id="L416">		}</span>
+<span class="nc" id="L417">		return edges;</span>
+	}
+	
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L422">		bundle.put( &quot;left&quot;, left );</span>
+<span class="nc" id="L423">		bundle.put( &quot;top&quot;, top );</span>
+<span class="nc" id="L424">		bundle.put( &quot;right&quot;, right );</span>
+<span class="nc" id="L425">		bundle.put( &quot;bottom&quot;, bottom );</span>
+<span class="nc" id="L426">	}</span>
+	
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L430">		left = bundle.getInt( &quot;left&quot; );</span>
+<span class="nc" id="L431">		top = bundle.getInt( &quot;top&quot; );</span>
+<span class="nc" id="L432">		right = bundle.getInt( &quot;right&quot; );</span>
+<span class="nc" id="L433">		bottom = bundle.getInt( &quot;bottom&quot; );</span>
+<span class="nc" id="L434">	}</span>
+
+	//FIXME currently connections and neighbours are not preserved on load
+	public void onLevelLoad( Level level ){
+		//does nothing by default
+<span class="nc" id="L439">	}</span>
+	
+	public static class Door extends Point implements Bundlable {
+		
+<span class="nc" id="L443">		public enum Type {</span>
+<span class="nc" id="L444">			EMPTY, TUNNEL, WATER, REGULAR, UNLOCKED, HIDDEN, BARRICADE, LOCKED, CRYSTAL, WALL</span>
+		}
+<span class="nc" id="L446">		public Type type = Type.EMPTY;</span>
+		
+<span class="nc" id="L448">		public Door(){</span>
+<span class="nc" id="L449">		}</span>
+		
+		public Door( Point p ){
+<span class="nc" id="L452">			super(p);</span>
+<span class="nc" id="L453">		}</span>
+		
+		public Door( int x, int y ) {
+<span class="nc" id="L456">			super( x, y );</span>
+<span class="nc" id="L457">		}</span>
+
+<span class="nc" id="L459">		private boolean typeLocked = false;</span>
+
+		public void lockTypeChanges( boolean lock ){
+<span class="nc" id="L462">			typeLocked = lock;</span>
+<span class="nc" id="L463">		}</span>
+
+		public void set( Type type ) {
+<span class="nc bnc" id="L466" title="All 4 branches missed.">			if (!typeLocked &amp;&amp; type.compareTo( this.type ) &gt; 0) {</span>
+<span class="nc" id="L467">				this.type = type;</span>
+			}
+<span class="nc" id="L469">		}</span>
+		
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L473">			bundle.put(&quot;x&quot;, x);</span>
+<span class="nc" id="L474">			bundle.put(&quot;y&quot;, y);</span>
+<span class="nc" id="L475">			bundle.put(&quot;type&quot;, type);</span>
+<span class="nc" id="L476">			bundle.put(&quot;type_locked&quot;, typeLocked);</span>
+<span class="nc" id="L477">		}</span>
+		
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L481">			x = bundle.getInt(&quot;x&quot;);</span>
+<span class="nc" id="L482">			y = bundle.getInt(&quot;y&quot;);</span>
+<span class="nc" id="L483">			type = bundle.getEnum(&quot;type&quot;, Type.class);</span>
+<span class="nc" id="L484">			typeLocked = bundle.getBoolean(&quot;type_locked&quot;);</span>
+<span class="nc" id="L485">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,687 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>YogDzewa.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">YogDzewa.java</span></div><h1>YogDzewa.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Light;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.LockedFloor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Sheep;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Beam;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.PurpleParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Bestiary;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.LarvaSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.YogSprite;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.audio.Music;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+
+<span class="nc" id="L66">public class YogDzewa extends Mob {</span>
+
+	{
+<span class="nc" id="L69">		spriteClass = YogSprite.class;</span>
+
+<span class="nc" id="L71">		HP = HT = 1000;</span>
+
+<span class="nc" id="L73">		EXP = 50;</span>
+
+		//so that allies can attack it. States are never actually used.
+<span class="nc" id="L76">		state = HUNTING;</span>
+
+<span class="nc" id="L78">		viewDistance = 12;</span>
+
+<span class="nc" id="L80">		properties.add(Property.BOSS);</span>
+<span class="nc" id="L81">		properties.add(Property.IMMOVABLE);</span>
+<span class="nc" id="L82">		properties.add(Property.DEMONIC);</span>
+<span class="nc" id="L83">		properties.add(Property.STATIC);</span>
+	}
+
+<span class="nc" id="L86">	private int phase = 0;</span>
+
+	private float abilityCooldown;
+	private static final int MIN_ABILITY_CD = 10;
+	private static final int MAX_ABILITY_CD = 15;
+
+	private float summonCooldown;
+	private static final int MIN_SUMMON_CD = 10;
+	private static final int MAX_SUMMON_CD = 15;
+
+	private static Class getPairedFist(Class fist){
+<span class="nc bnc" id="L97" title="All 2 branches missed.">		if (fist == YogFist.BurningFist.class) return YogFist.SoiledFist.class;</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">		if (fist == YogFist.SoiledFist.class) return YogFist.BurningFist.class;</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		if (fist == YogFist.RottingFist.class) return YogFist.RustedFist.class;</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">		if (fist == YogFist.RustedFist.class) return YogFist.RottingFist.class;</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (fist == YogFist.BrightFist.class) return YogFist.DarkFist.class;</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if (fist == YogFist.DarkFist.class) return YogFist.BrightFist.class;</span>
+<span class="nc" id="L103">		return null;</span>
+	}
+
+<span class="nc" id="L106">	private ArrayList&lt;Class&gt; fistSummons = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L107">	private ArrayList&lt;Class&gt; challengeSummons = new ArrayList&lt;&gt;();</span>
+	{
+		//offset seed slightly to avoid output patterns
+<span class="nc" id="L110">		Random.pushGenerator(Dungeon.seedCurDepth()+1);</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">			fistSummons.add(Random.Int(2) == 0 ? YogFist.BurningFist.class : YogFist.SoiledFist.class);</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">			fistSummons.add(Random.Int(2) == 0 ? YogFist.RottingFist.class : YogFist.RustedFist.class);</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">			fistSummons.add(Random.Int(2) == 0 ? YogFist.BrightFist.class : YogFist.DarkFist.class);</span>
+<span class="nc" id="L114">			Random.shuffle(fistSummons);</span>
+			//randomly place challenge summons so that two fists of a pair can never spawn together
+<span class="nc bnc" id="L116" title="All 2 branches missed.">			if (Random.Int(2) == 0){</span>
+<span class="nc" id="L117">				challengeSummons.add(getPairedFist(fistSummons.get(1)));</span>
+<span class="nc" id="L118">				challengeSummons.add(getPairedFist(fistSummons.get(2)));</span>
+<span class="nc" id="L119">				challengeSummons.add(getPairedFist(fistSummons.get(0)));</span>
+			} else {
+<span class="nc" id="L121">				challengeSummons.add(getPairedFist(fistSummons.get(2)));</span>
+<span class="nc" id="L122">				challengeSummons.add(getPairedFist(fistSummons.get(0)));</span>
+<span class="nc" id="L123">				challengeSummons.add(getPairedFist(fistSummons.get(1)));</span>
+			}
+<span class="nc" id="L125">		Random.popGenerator();</span>
+	}
+
+<span class="nc" id="L128">	private ArrayList&lt;Class&gt; regularSummons = new ArrayList&lt;&gt;();</span>
+	{
+<span class="nc bnc" id="L130" title="All 2 branches missed.">		if (Dungeon.isChallenged(Challenges.STRONGER_BOSSES)){</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">			for (int i = 0; i &lt; 6; i++){</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">				if (i &gt;= 4){</span>
+<span class="nc" id="L133">					regularSummons.add(YogRipper.class);</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">				} else if (i &gt;= Statistics.spawnersAlive){</span>
+<span class="nc" id="L135">					regularSummons.add(Larva.class);</span>
+				} else {
+<span class="nc bnc" id="L137" title="All 2 branches missed.">					regularSummons.add( i % 2 == 0 ? YogEye.class : YogScorpio.class);</span>
+				}
+			}
+		} else {
+<span class="nc bnc" id="L141" title="All 2 branches missed.">			for (int i = 0; i &lt; 4; i++){</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">				if (i &gt;= Statistics.spawnersAlive){</span>
+<span class="nc" id="L143">					regularSummons.add(Larva.class);</span>
+				} else {
+<span class="nc" id="L145">					regularSummons.add(YogRipper.class);</span>
+				}
+			}
+		}
+<span class="nc" id="L149">		Random.shuffle(regularSummons);</span>
+	}
+
+<span class="nc" id="L152">	private ArrayList&lt;Integer&gt; targetedCells = new ArrayList&lt;&gt;();</span>
+
+	@Override
+	public int attackSkill(Char target) {
+<span class="nc" id="L156">		return INFINITE_ACCURACY;</span>
+	}
+
+	@Override
+	protected boolean act() {
+		//char logic
+<span class="nc bnc" id="L162" title="All 4 branches missed.">		if (fieldOfView == null || fieldOfView.length != Dungeon.level.length()){</span>
+<span class="nc" id="L163">			fieldOfView = new boolean[Dungeon.level.length()];</span>
+		}
+<span class="nc" id="L165">		Dungeon.level.updateFieldOfView( this, fieldOfView );</span>
+
+<span class="nc" id="L167">		throwItems();</span>
+
+<span class="nc" id="L169">		sprite.hideAlert();</span>
+<span class="nc" id="L170">		sprite.hideLost();</span>
+
+		//mob logic
+<span class="nc" id="L173">		enemy = chooseEnemy();</span>
+
+<span class="nc bnc" id="L175" title="All 8 branches missed.">		enemySeen = enemy != null &amp;&amp; enemy.isAlive() &amp;&amp; fieldOfView[enemy.pos] &amp;&amp; enemy.invisible &lt;= 0;</span>
+		//end of char/mob logic
+
+<span class="nc bnc" id="L178" title="All 2 branches missed.">		if (phase == 0){</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">			if (Dungeon.hero.viewDistance &gt;= Dungeon.level.distance(pos, Dungeon.hero.pos)) {</span>
+<span class="nc" id="L180">				Dungeon.observe();</span>
+			}
+<span class="nc bnc" id="L182" title="All 2 branches missed.">			if (Dungeon.level.heroFOV[pos]) {</span>
+<span class="nc" id="L183">				notice();</span>
+			}
+		}
+
+<span class="nc bnc" id="L187" title="All 2 branches missed.">		if (phase == 0){</span>
+<span class="nc" id="L188">			spend(TICK);</span>
+<span class="nc" id="L189">			return true;</span>
+		} else {
+
+<span class="nc" id="L192">			boolean terrainAffected = false;</span>
+<span class="nc" id="L193">			HashSet&lt;Char&gt; affected = new HashSet&lt;&gt;();</span>
+			//delay fire on a rooted hero
+<span class="nc bnc" id="L195" title="All 2 branches missed.">			if (!Dungeon.hero.rooted) {</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">				for (int i : targetedCells) {</span>
+<span class="nc" id="L197">					Ballistica b = new Ballistica(pos, i, Ballistica.WONT_STOP);</span>
+					//shoot beams
+<span class="nc" id="L199">					sprite.parent.add(new Beam.DeathRay(sprite.center(), DungeonTilemap.raisedTileCenterToWorld(b.collisionPos)));</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">					for (int p : b.path) {</span>
+<span class="nc" id="L201">						Char ch = Actor.findChar(p);</span>
+<span class="nc bnc" id="L202" title="All 6 branches missed.">						if (ch != null &amp;&amp; (ch.alignment != alignment || ch instanceof Bee)) {</span>
+<span class="nc" id="L203">							affected.add(ch);</span>
+						}
+<span class="nc bnc" id="L205" title="All 2 branches missed.">						if (Dungeon.level.flamable[p]) {</span>
+<span class="nc" id="L206">							Dungeon.level.destroy(p);</span>
+<span class="nc" id="L207">							GameScene.updateMap(p);</span>
+<span class="nc" id="L208">							terrainAffected = true;</span>
+						}
+<span class="nc" id="L210">					}</span>
+<span class="nc" id="L211">				}</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">				if (terrainAffected) {</span>
+<span class="nc" id="L213">					Dungeon.observe();</span>
+				}
+<span class="nc" id="L215">				Invisibility.dispel(this);</span>
+<span class="nc bnc" id="L216" title="All 2 branches missed.">				for (Char ch : affected) {</span>
+
+<span class="nc bnc" id="L218" title="All 2 branches missed.">					if (ch == Dungeon.hero) {</span>
+<span class="nc" id="L219">						Statistics.bossScores[4] -= 500;</span>
+					}
+
+<span class="nc bnc" id="L222" title="All 2 branches missed.">					if (hit( this, ch, true )) {</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">						if (Dungeon.isChallenged(Challenges.STRONGER_BOSSES)) {</span>
+<span class="nc" id="L224">							ch.damage(Random.NormalIntRange(30, 50), new Eye.DeathGaze());</span>
+						} else {
+<span class="nc" id="L226">							ch.damage(Random.NormalIntRange(20, 30), new Eye.DeathGaze());</span>
+						}
+<span class="nc bnc" id="L228" title="All 2 branches missed.">						if (Dungeon.level.heroFOV[pos]) {</span>
+<span class="nc" id="L229">							ch.sprite.flash();</span>
+<span class="nc" id="L230">							CellEmitter.center(pos).burst(PurpleParticle.BURST, Random.IntRange(1, 2));</span>
+						}
+<span class="nc bnc" id="L232" title="All 4 branches missed.">						if (!ch.isAlive() &amp;&amp; ch == Dungeon.hero) {</span>
+<span class="nc" id="L233">							Badges.validateDeathFromEnemyMagic();</span>
+<span class="nc" id="L234">							Dungeon.fail(this);</span>
+<span class="nc" id="L235">							GLog.n(Messages.get(Char.class, &quot;kill&quot;, name()));</span>
+						}
+					} else {
+<span class="nc" id="L238">						ch.sprite.showStatus( CharSprite.NEUTRAL,  ch.defenseVerb() );</span>
+					}
+<span class="nc" id="L240">				}</span>
+<span class="nc" id="L241">				targetedCells.clear();</span>
+			}
+
+<span class="nc bnc" id="L244" title="All 2 branches missed.">			if (abilityCooldown &lt;= 0){</span>
+
+<span class="nc" id="L246">				int beams = 1 + (HT - HP)/400;</span>
+<span class="nc" id="L247">				HashSet&lt;Integer&gt; affectedCells = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L248" title="All 2 branches missed.">				for (int i = 0; i &lt; beams; i++){</span>
+
+<span class="nc" id="L250">					int targetPos = Dungeon.hero.pos;</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">					if (i != 0){</span>
+						do {
+<span class="nc" id="L253">							targetPos = Dungeon.hero.pos + PathFinder.NEIGHBOURS8[Random.Int(8)];</span>
+<span class="nc" id="L254">						} while (Dungeon.level.trueDistance(pos, Dungeon.hero.pos)</span>
+<span class="nc bnc" id="L255" title="All 2 branches missed.">								&gt; Dungeon.level.trueDistance(pos, targetPos));</span>
+					}
+<span class="nc" id="L257">					targetedCells.add(targetPos);</span>
+<span class="nc" id="L258">					Ballistica b = new Ballistica(pos, targetPos, Ballistica.WONT_STOP);</span>
+<span class="nc" id="L259">					affectedCells.addAll(b.path);</span>
+				}
+
+				//remove one beam if multiple shots would cause every cell next to the hero to be targeted
+<span class="nc" id="L263">				boolean allAdjTargeted = true;</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">				for (int i : PathFinder.NEIGHBOURS9){</span>
+<span class="nc bnc" id="L265" title="All 4 branches missed.">					if (!affectedCells.contains(Dungeon.hero.pos + i) &amp;&amp; Dungeon.level.passable[Dungeon.hero.pos + i]){</span>
+<span class="nc" id="L266">						allAdjTargeted = false;</span>
+<span class="nc" id="L267">						break;</span>
+					}
+				}
+<span class="nc bnc" id="L270" title="All 2 branches missed.">				if (allAdjTargeted){</span>
+<span class="nc" id="L271">					targetedCells.remove(targetedCells.size()-1);</span>
+				}
+<span class="nc bnc" id="L273" title="All 2 branches missed.">				for (int i : targetedCells){</span>
+<span class="nc" id="L274">					Ballistica b = new Ballistica(pos, i, Ballistica.WONT_STOP);</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">					for (int p : b.path){</span>
+<span class="nc" id="L276">						sprite.parent.add(new TargetedCell(p, 0xFF0000));</span>
+<span class="nc" id="L277">						affectedCells.add(p);</span>
+<span class="nc" id="L278">					}</span>
+<span class="nc" id="L279">				}</span>
+
+				//don't want to overly punish players with slow move or attack speed
+<span class="nc" id="L282">				spend(GameMath.gate(TICK, (int)Math.ceil(Dungeon.hero.cooldown()), 3*TICK));</span>
+<span class="nc" id="L283">				Dungeon.hero.interrupt();</span>
+
+<span class="nc" id="L285">				abilityCooldown += Random.NormalFloat(MIN_ABILITY_CD, MAX_ABILITY_CD);</span>
+<span class="nc" id="L286">				abilityCooldown -= (phase - 1);</span>
+
+<span class="nc" id="L288">			} else {</span>
+<span class="nc" id="L289">				spend(TICK);</span>
+			}
+
+<span class="nc bnc" id="L292" title="All 2 branches missed.">			while (summonCooldown &lt;= 0){</span>
+
+<span class="nc" id="L294">				Class&lt;?extends Mob&gt; cls = regularSummons.remove(0);</span>
+<span class="nc" id="L295">				Mob summon = Reflection.newInstance(cls);</span>
+<span class="nc" id="L296">				regularSummons.add(cls);</span>
+
+<span class="nc" id="L298">				int spawnPos = -1;</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">				for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L300" title="All 2 branches missed.">					if (Actor.findChar(pos+i) == null){</span>
+<span class="nc bnc" id="L301" title="All 4 branches missed.">						if (spawnPos == -1 || Dungeon.level.trueDistance(Dungeon.hero.pos, spawnPos) &gt; Dungeon.level.trueDistance(Dungeon.hero.pos, pos+i)){</span>
+<span class="nc" id="L302">							spawnPos = pos + i;</span>
+						}
+					}
+				}
+
+				//if no other valid spawn spots exist, try to kill an adjacent sheep to spawn anyway
+<span class="nc bnc" id="L308" title="All 2 branches missed.">				if (spawnPos == -1){</span>
+<span class="nc bnc" id="L309" title="All 2 branches missed.">					for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L310" title="All 2 branches missed.">						if (Actor.findChar(pos+i) instanceof Sheep){</span>
+<span class="nc bnc" id="L311" title="All 4 branches missed.">							if (spawnPos == -1 || Dungeon.level.trueDistance(Dungeon.hero.pos, spawnPos) &gt; Dungeon.level.trueDistance(Dungeon.hero.pos, pos+i)){</span>
+<span class="nc" id="L312">								spawnPos = pos + i;</span>
+							}
+						}
+					}
+<span class="nc bnc" id="L316" title="All 2 branches missed.">					if (spawnPos != -1){</span>
+<span class="nc" id="L317">						Actor.findChar(spawnPos).die(null);</span>
+					}
+				}
+
+<span class="nc bnc" id="L321" title="All 2 branches missed.">				if (spawnPos != -1) {</span>
+<span class="nc" id="L322">					summon.pos = spawnPos;</span>
+<span class="nc" id="L323">					GameScene.add( summon );</span>
+<span class="nc" id="L324">					Actor.add( new Pushing( summon, pos, summon.pos ) );</span>
+<span class="nc" id="L325">					summon.beckon(Dungeon.hero.pos);</span>
+<span class="nc" id="L326">					Dungeon.level.occupyCell(summon);</span>
+
+<span class="nc" id="L328">					summonCooldown += Random.NormalFloat(MIN_SUMMON_CD, MAX_SUMMON_CD);</span>
+<span class="nc" id="L329">					summonCooldown -= (phase - 1);</span>
+<span class="nc bnc" id="L330" title="All 2 branches missed.">					if (findFist() != null){</span>
+<span class="nc" id="L331">						summonCooldown += MIN_SUMMON_CD - (phase - 1);</span>
+					}
+				} else {
+					break;
+				}
+<span class="nc" id="L336">			}</span>
+
+		}
+
+<span class="nc bnc" id="L340" title="All 2 branches missed.">		if (summonCooldown &gt; 0) summonCooldown--;</span>
+<span class="nc bnc" id="L341" title="All 2 branches missed.">		if (abilityCooldown &gt; 0) abilityCooldown--;</span>
+
+		//extra fast abilities and summons at the final 100 HP
+<span class="nc bnc" id="L344" title="All 4 branches missed.">		if (phase == 5 &amp;&amp; abilityCooldown &gt; 2){</span>
+<span class="nc" id="L345">			abilityCooldown = 2;</span>
+		}
+<span class="nc bnc" id="L347" title="All 4 branches missed.">		if (phase == 5 &amp;&amp; summonCooldown &gt; 3){</span>
+<span class="nc" id="L348">			summonCooldown = 3;</span>
+		}
+
+<span class="nc" id="L351">		return true;</span>
+	}
+
+	public void processFistDeath(){
+		//normally Yog has no logic when a fist dies specifically
+		//but the very last fist to die does trigger the final phase
+<span class="nc bnc" id="L357" title="All 4 branches missed.">		if (phase == 4 &amp;&amp; findFist() == null){</span>
+<span class="nc" id="L358">			yell(Messages.get(this, &quot;hope&quot;));</span>
+<span class="nc" id="L359">			summonCooldown = -15; //summon a burst of minions!</span>
+<span class="nc" id="L360">			phase = 5;</span>
+<span class="nc" id="L361">			BossHealthBar.bleed(true);</span>
+<span class="nc" id="L362">			Game.runOnRenderThread(new Callback() {</span>
+				@Override
+				public void call() {
+<span class="nc" id="L365">					Music.INSTANCE.fadeOut(0.5f, new Callback() {</span>
+						@Override
+						public void call() {
+<span class="nc" id="L368">							Music.INSTANCE.play(Assets.Music.HALLS_BOSS_FINALE, true);</span>
+<span class="nc" id="L369">						}</span>
+					});
+<span class="nc" id="L371">				}</span>
+			});
+		}
+<span class="nc" id="L374">	}</span>
+
+	@Override
+	public boolean isAlive() {
+<span class="nc bnc" id="L378" title="All 4 branches missed.">		return super.isAlive() || phase != 5;</span>
+	}
+
+	@Override
+	public boolean isInvulnerable(Class effect) {
+<span class="nc bnc" id="L383" title="All 6 branches missed.">		return phase == 0 || findFist() != null || super.isInvulnerable(effect);</span>
+	}
+
+	@Override
+	public void damage( int dmg, Object src ) {
+
+<span class="nc" id="L389">		int preHP = HP;</span>
+<span class="nc" id="L390">		super.damage( dmg, src );</span>
+
+<span class="nc bnc" id="L392" title="All 4 branches missed.">		if (phase == 0 || findFist() != null) return;</span>
+
+<span class="nc bnc" id="L394" title="All 2 branches missed.">		if (phase &lt; 4) {</span>
+<span class="nc" id="L395">			HP = Math.max(HP, HT - 300 * phase);</span>
+<span class="nc bnc" id="L396" title="All 2 branches missed.">		} else if (phase == 4) {</span>
+<span class="nc" id="L397">			HP = Math.max(HP, 100);</span>
+		}
+<span class="nc" id="L399">		int dmgTaken = preHP - HP;</span>
+
+<span class="nc bnc" id="L401" title="All 2 branches missed.">		if (dmgTaken &gt; 0) {</span>
+<span class="nc" id="L402">			abilityCooldown -= dmgTaken / 10f;</span>
+<span class="nc" id="L403">			summonCooldown -= dmgTaken / 10f;</span>
+		}
+
+<span class="nc bnc" id="L406" title="All 4 branches missed.">		if (phase &lt; 4 &amp;&amp; HP &lt;= HT - 300*phase){</span>
+
+<span class="nc" id="L408">			phase++;</span>
+
+<span class="nc" id="L410">			updateVisibility(Dungeon.level);</span>
+<span class="nc" id="L411">			GLog.n(Messages.get(this, &quot;darkness&quot;));</span>
+<span class="nc" id="L412">			sprite.showStatus(CharSprite.POSITIVE, Messages.get(this, &quot;invulnerable&quot;));</span>
+
+<span class="nc" id="L414">			addFist((YogFist)Reflection.newInstance(fistSummons.remove(0)));</span>
+
+<span class="nc bnc" id="L416" title="All 2 branches missed.">			if (Dungeon.isChallenged(Challenges.STRONGER_BOSSES)){</span>
+<span class="nc" id="L417">				addFist((YogFist)Reflection.newInstance(challengeSummons.remove(0)));</span>
+			}
+
+<span class="nc" id="L420">			CellEmitter.get(Dungeon.level.exit()-1).burst(ShadowParticle.UP, 25);</span>
+<span class="nc" id="L421">			CellEmitter.get(Dungeon.level.exit()).burst(ShadowParticle.UP, 100);</span>
+<span class="nc" id="L422">			CellEmitter.get(Dungeon.level.exit()+1).burst(ShadowParticle.UP, 25);</span>
+
+<span class="nc bnc" id="L424" title="All 2 branches missed.">			if (abilityCooldown &lt; 5) abilityCooldown = 5;</span>
+<span class="nc bnc" id="L425" title="All 2 branches missed.">			if (summonCooldown &lt; 5) summonCooldown = 5;</span>
+
+		}
+
+<span class="nc" id="L429">		LockedFloor lock = Dungeon.hero.buff(LockedFloor.class);</span>
+<span class="nc bnc" id="L430" title="All 6 branches missed.">		if (lock != null &amp;&amp; !isImmune(src.getClass()) &amp;&amp; !isInvulnerable(src.getClass())){</span>
+<span class="nc bnc" id="L431" title="All 2 branches missed.">			if (Dungeon.isChallenged(Challenges.STRONGER_BOSSES))   lock.addTime(dmgTaken/3f);</span>
+<span class="nc" id="L432">			else                                                    lock.addTime(dmgTaken/2f);</span>
+		}
+
+<span class="nc" id="L435">	}</span>
+
+	public void addFist(YogFist fist){
+<span class="nc" id="L438">		fist.pos = Dungeon.level.exit();</span>
+
+<span class="nc" id="L440">		CellEmitter.get(Dungeon.level.exit()-1).burst(ShadowParticle.UP, 25);</span>
+<span class="nc" id="L441">		CellEmitter.get(Dungeon.level.exit()).burst(ShadowParticle.UP, 100);</span>
+<span class="nc" id="L442">		CellEmitter.get(Dungeon.level.exit()+1).burst(ShadowParticle.UP, 25);</span>
+
+<span class="nc bnc" id="L444" title="All 2 branches missed.">		if (abilityCooldown &lt; 5) abilityCooldown = 5;</span>
+<span class="nc bnc" id="L445" title="All 2 branches missed.">		if (summonCooldown &lt; 5) summonCooldown = 5;</span>
+
+<span class="nc" id="L447">		int targetPos = Dungeon.level.exit() + Dungeon.level.width();</span>
+
+<span class="nc bnc" id="L449" title="All 2 branches missed.">		if (!Dungeon.isChallenged(Challenges.STRONGER_BOSSES)</span>
+<span class="nc bnc" id="L450" title="All 4 branches missed.">				&amp;&amp; (Actor.findChar(targetPos) == null || Actor.findChar(targetPos) instanceof Sheep)){</span>
+<span class="nc" id="L451">			fist.pos = targetPos;</span>
+<span class="nc bnc" id="L452" title="All 4 branches missed.">		} else if (Actor.findChar(targetPos-1) == null || Actor.findChar(targetPos-1) instanceof Sheep){</span>
+<span class="nc" id="L453">			fist.pos = targetPos-1;</span>
+<span class="nc bnc" id="L454" title="All 4 branches missed.">		} else if (Actor.findChar(targetPos+1) == null || Actor.findChar(targetPos+1) instanceof Sheep){</span>
+<span class="nc" id="L455">			fist.pos = targetPos+1;</span>
+<span class="nc bnc" id="L456" title="All 4 branches missed.">		} else if (Actor.findChar(targetPos) == null || Actor.findChar(targetPos) instanceof Sheep){</span>
+<span class="nc" id="L457">			fist.pos = targetPos;</span>
+		}
+
+<span class="nc bnc" id="L460" title="All 2 branches missed.">		if (Actor.findChar(fist.pos) instanceof Sheep){</span>
+<span class="nc" id="L461">			Actor.findChar(fist.pos).die(null);</span>
+		}
+
+<span class="nc" id="L464">		GameScene.add(fist, 4);</span>
+<span class="nc" id="L465">		Actor.add( new Pushing( fist, Dungeon.level.exit(), fist.pos ) );</span>
+<span class="nc" id="L466">		Dungeon.level.occupyCell(fist);</span>
+<span class="nc" id="L467">	}</span>
+
+	public void updateVisibility( Level level ){
+<span class="nc" id="L470">		int viewDistance = 4;</span>
+<span class="nc bnc" id="L471" title="All 4 branches missed.">		if (phase &gt; 1 &amp;&amp; isAlive()){</span>
+<span class="nc" id="L472">			viewDistance = Math.max(4 - (phase-1), 1);</span>
+		}
+<span class="nc bnc" id="L474" title="All 2 branches missed.">		if (Dungeon.isChallenged(Challenges.DARKNESS)) {</span>
+<span class="nc" id="L475">			viewDistance = Math.min(viewDistance, 2);</span>
+		}
+<span class="nc" id="L477">		level.viewDistance = viewDistance;</span>
+<span class="nc bnc" id="L478" title="All 2 branches missed.">		if (Dungeon.hero != null) {</span>
+<span class="nc bnc" id="L479" title="All 2 branches missed.">			if (Dungeon.hero.buff(Light.class) == null) {</span>
+<span class="nc" id="L480">				Dungeon.hero.viewDistance = level.viewDistance;</span>
+			}
+<span class="nc" id="L482">			Dungeon.observe();</span>
+		}
+<span class="nc" id="L484">	}</span>
+
+	private YogFist findFist(){
+<span class="nc bnc" id="L487" title="All 2 branches missed.">		for ( Char c : Actor.chars() ){</span>
+<span class="nc bnc" id="L488" title="All 2 branches missed.">			if (c instanceof YogFist){</span>
+<span class="nc" id="L489">				return (YogFist) c;</span>
+			}
+<span class="nc" id="L491">		}</span>
+<span class="nc" id="L492">		return null;</span>
+	}
+
+	@Override
+	public void beckon( int cell ) {
+<span class="nc" id="L497">	}</span>
+
+	@Override
+	public void clearEnemy() {
+		//do nothing
+<span class="nc" id="L502">	}</span>
+
+	@Override
+	public void aggro(Char ch) {
+<span class="nc bnc" id="L506" title="All 12 branches missed.">		if (ch != null &amp;&amp; ch.alignment != alignment || !(ch instanceof Larva || ch instanceof YogRipper || ch instanceof YogEye || ch instanceof YogScorpio)) {</span>
+<span class="nc bnc" id="L507" title="All 2 branches missed.">			for (Mob mob : (Iterable&lt;Mob&gt;) Dungeon.level.mobs.clone()) {</span>
+<span class="nc bnc" id="L508" title="All 14 branches missed.">				if (mob != ch &amp;&amp; Dungeon.level.distance(pos, mob.pos) &lt;= 4 &amp;&amp; mob.alignment == alignment &amp;&amp;</span>
+						(mob instanceof Larva || mob instanceof YogRipper || mob instanceof YogEye || mob instanceof YogScorpio)) {
+<span class="nc" id="L510">					mob.aggro(ch);</span>
+				}
+<span class="nc" id="L512">			}</span>
+		}
+<span class="nc" id="L514">	}</span>
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+	@Override
+	public void die( Object cause ) {
+
+<span class="nc" id="L520">		Bestiary.skipCountingEncounters = true;</span>
+<span class="nc bnc" id="L521" title="All 2 branches missed.">		for (Mob mob : (Iterable&lt;Mob&gt;)Dungeon.level.mobs.clone()) {</span>
+<span class="nc bnc" id="L522" title="All 8 branches missed.">			if (mob instanceof Larva || mob instanceof YogRipper || mob instanceof YogEye || mob instanceof YogScorpio) {</span>
+<span class="nc" id="L523">				mob.die( cause );</span>
+			}
+<span class="nc" id="L525">		}</span>
+<span class="nc" id="L526">		Bestiary.skipCountingEncounters = false;</span>
+
+<span class="nc" id="L528">		updateVisibility(Dungeon.level);</span>
+
+<span class="nc" id="L530">		GameScene.bossSlain();</span>
+
+<span class="nc bnc" id="L532" title="All 4 branches missed.">		if (Dungeon.isChallenged(Challenges.STRONGER_BOSSES) &amp;&amp; Statistics.spawnersAlive == 4){</span>
+<span class="nc" id="L533">			Badges.validateBossChallengeCompleted();</span>
+		} else {
+<span class="nc" id="L535">			Statistics.qualifiedForBossChallengeBadge = false;</span>
+		}
+<span class="nc" id="L537">		Statistics.bossScores[4] += 5000 + 1250*Statistics.spawnersAlive;</span>
+
+<span class="nc" id="L539">		Dungeon.level.unseal();</span>
+<span class="nc" id="L540">		super.die( cause );</span>
+
+<span class="nc" id="L542">		yell( Messages.get(this, &quot;defeated&quot;) );</span>
+<span class="nc" id="L543">	}</span>
+
+	@Override
+	public void notice() {
+<span class="nc bnc" id="L547" title="All 2 branches missed.">		if (!BossHealthBar.isAssigned()) {</span>
+<span class="nc" id="L548">			BossHealthBar.assignBoss(this);</span>
+<span class="nc" id="L549">			yell(Messages.get(this, &quot;notice&quot;));</span>
+<span class="nc bnc" id="L550" title="All 2 branches missed.">			for (Char ch : Actor.chars()){</span>
+<span class="nc bnc" id="L551" title="All 2 branches missed.">				if (ch instanceof DriedRose.GhostHero){</span>
+<span class="nc" id="L552">					((DriedRose.GhostHero) ch).sayBoss();</span>
+				}
+<span class="nc" id="L554">			}</span>
+<span class="nc" id="L555">			Game.runOnRenderThread(new Callback() {</span>
+				@Override
+				public void call() {
+<span class="nc" id="L558">					Music.INSTANCE.play(Assets.Music.HALLS_BOSS, true);</span>
+<span class="nc" id="L559">				}</span>
+			});
+<span class="nc bnc" id="L561" title="All 2 branches missed.">			if (phase == 0) {</span>
+<span class="nc" id="L562">				phase = 1;</span>
+<span class="nc" id="L563">				summonCooldown = Random.NormalFloat(MIN_SUMMON_CD, MAX_SUMMON_CD);</span>
+<span class="nc" id="L564">				abilityCooldown = Random.NormalFloat(MIN_ABILITY_CD, MAX_ABILITY_CD);</span>
+			}
+		}
+<span class="nc" id="L567">	}</span>
+
+	@Override
+	public String description() {
+<span class="nc" id="L571">		String desc = super.description();</span>
+
+<span class="nc bnc" id="L573" title="All 2 branches missed.">		if (Statistics.spawnersAlive &gt; 0){</span>
+<span class="nc" id="L574">			desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_spawners&quot;);</span>
+		}
+
+<span class="nc" id="L577">		return desc;</span>
+	}
+
+	private static final String PHASE = &quot;phase&quot;;
+
+	private static final String ABILITY_CD = &quot;ability_cd&quot;;
+	private static final String SUMMON_CD = &quot;summon_cd&quot;;
+
+	private static final String FIST_SUMMONS = &quot;fist_summons&quot;;
+	private static final String REGULAR_SUMMONS = &quot;regular_summons&quot;;
+	private static final String CHALLENGE_SUMMONS = &quot;challenges_summons&quot;;
+
+	private static final String TARGETED_CELLS = &quot;targeted_cells&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L593">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L594">		bundle.put(PHASE, phase);</span>
+
+<span class="nc" id="L596">		bundle.put(ABILITY_CD, abilityCooldown);</span>
+<span class="nc" id="L597">		bundle.put(SUMMON_CD, summonCooldown);</span>
+
+<span class="nc" id="L599">		bundle.put(FIST_SUMMONS, fistSummons.toArray(new Class[0]));</span>
+<span class="nc" id="L600">		bundle.put(CHALLENGE_SUMMONS, challengeSummons.toArray(new Class[0]));</span>
+<span class="nc" id="L601">		bundle.put(REGULAR_SUMMONS, regularSummons.toArray(new Class[0]));</span>
+
+<span class="nc" id="L603">		int[] bundleArr = new int[targetedCells.size()];</span>
+<span class="nc bnc" id="L604" title="All 2 branches missed.">		for (int i = 0; i &lt; targetedCells.size(); i++){</span>
+<span class="nc" id="L605">			bundleArr[i] = targetedCells.get(i);</span>
+		}
+<span class="nc" id="L607">		bundle.put(TARGETED_CELLS, bundleArr);</span>
+<span class="nc" id="L608">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L612">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L613">		phase = bundle.getInt(PHASE);</span>
+<span class="nc bnc" id="L614" title="All 2 branches missed.">		if (phase != 0) {</span>
+<span class="nc" id="L615">			BossHealthBar.assignBoss(this);</span>
+<span class="nc bnc" id="L616" title="All 2 branches missed.">			if (phase == 5) BossHealthBar.bleed(true);</span>
+		}
+
+<span class="nc" id="L619">		abilityCooldown = bundle.getFloat(ABILITY_CD);</span>
+<span class="nc" id="L620">		summonCooldown = bundle.getFloat(SUMMON_CD);</span>
+
+<span class="nc" id="L622">		fistSummons.clear();</span>
+<span class="nc" id="L623">		Collections.addAll(fistSummons, bundle.getClassArray(FIST_SUMMONS));</span>
+<span class="nc" id="L624">		challengeSummons.clear();</span>
+<span class="nc" id="L625">		Collections.addAll(challengeSummons, bundle.getClassArray(CHALLENGE_SUMMONS));</span>
+<span class="nc" id="L626">		regularSummons.clear();</span>
+<span class="nc" id="L627">		Collections.addAll(regularSummons, bundle.getClassArray(REGULAR_SUMMONS));</span>
+
+<span class="nc bnc" id="L629" title="All 2 branches missed.">		for (int i : bundle.getIntArray(TARGETED_CELLS)){</span>
+<span class="nc" id="L630">			targetedCells.add(i);</span>
+		}
+<span class="nc" id="L632">	}</span>
+
+<span class="nc" id="L634">	public static class Larva extends Mob {</span>
+
+		{
+<span class="nc" id="L637">			spriteClass = LarvaSprite.class;</span>
+
+<span class="nc" id="L639">			HP = HT = 20;</span>
+<span class="nc" id="L640">			defenseSkill = 12;</span>
+<span class="nc" id="L641">			viewDistance = Light.DISTANCE;</span>
+
+<span class="nc" id="L643">			EXP = 5;</span>
+<span class="nc" id="L644">			maxLvl = -2;</span>
+
+<span class="nc" id="L646">			properties.add(Property.DEMONIC);</span>
+<span class="nc" id="L647">			properties.add(Property.BOSS_MINION);</span>
+<span class="nc" id="L648">		}</span>
+
+		@Override
+		public int attackSkill( Char target ) {
+<span class="nc" id="L652">			return 30;</span>
+		}
+
+		@Override
+		public int damageRoll() {
+<span class="nc" id="L657">			return Random.NormalIntRange( 15, 25 );</span>
+		}
+
+		@Override
+		public int drRoll() {
+<span class="nc" id="L662">			return super.drRoll() + Random.NormalIntRange(0, 4);</span>
+		}
+
+	}
+
+	//used so death to yog's ripper demons have their own rankings description
+<span class="nc" id="L668">	public static class YogRipper extends RipperDemon {</span>
+		{
+<span class="nc" id="L670">			maxLvl = -2;</span>
+<span class="nc" id="L671">			properties.add(Property.BOSS_MINION);</span>
+<span class="nc" id="L672">		}</span>
+	}
+<span class="nc" id="L674">	public static class YogEye extends Eye {</span>
+		{
+<span class="nc" id="L676">			maxLvl = -2;</span>
+<span class="nc" id="L677">			properties.add(Property.BOSS_MINION);</span>
+<span class="nc" id="L678">		}</span>
+	}
+<span class="nc" id="L680">	public static class YogScorpio extends Scorpio {</span>
+		{
+<span class="nc" id="L682">			maxLvl = -2;</span>
+<span class="nc" id="L683">			properties.add(Property.BOSS_MINION);</span>
+<span class="nc" id="L684">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

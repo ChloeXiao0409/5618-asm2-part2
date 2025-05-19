@@ -1,0 +1,579 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MeleeWeapon.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee</a> &gt; <span class="el_source">MeleeWeapon.java</span></div><h1>MeleeWeapon.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ArtifactRecharge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.GreaterHaste;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MonkEnergy;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Recharging;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.HolyWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRecharging;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ActionIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.AttackIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.Visual;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L62">public class MeleeWeapon extends Weapon {</span>
+
+<span class="nc" id="L64">	public static String AC_ABILITY = &quot;ABILITY&quot;;</span>
+
+	@Override
+	public void activate(Char ch) {
+<span class="nc" id="L68">		super.activate(ch);</span>
+<span class="nc bnc" id="L69" title="All 4 branches missed.">		if (ch instanceof Hero &amp;&amp; ((Hero) ch).heroClass == HeroClass.DUELIST){</span>
+<span class="nc" id="L70">			Buff.affect(ch, Charger.class);</span>
+		}
+<span class="nc" id="L72">	}</span>
+
+	@Override
+	public String defaultAction() {
+<span class="nc bnc" id="L76" title="All 4 branches missed.">		if (Dungeon.hero != null &amp;&amp; (Dungeon.hero.heroClass == HeroClass.DUELIST</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">			|| Dungeon.hero.hasTalent(Talent.SWIFT_EQUIP))){</span>
+<span class="nc" id="L78">			return AC_ABILITY;</span>
+		} else {
+<span class="nc" id="L80">			return super.defaultAction();</span>
+		}
+	}
+
+	@Override
+	public ArrayList&lt;String&gt; actions(Hero hero) {
+<span class="nc" id="L86">		ArrayList&lt;String&gt; actions = super.actions(hero);</span>
+<span class="nc bnc" id="L87" title="All 4 branches missed.">		if (isEquipped(hero) &amp;&amp; hero.heroClass == HeroClass.DUELIST){</span>
+<span class="nc" id="L88">			actions.add(AC_ABILITY);</span>
+		}
+<span class="nc" id="L90">		return actions;</span>
+	}
+
+	@Override
+	public String actionName(String action, Hero hero) {
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		if (action.equals(AC_ABILITY)){</span>
+<span class="nc" id="L96">			return Messages.upperCase(Messages.get(this, &quot;ability_name&quot;));</span>
+		} else {
+<span class="nc" id="L98">			return super.actionName(action, hero);</span>
+		}
+	}
+
+	@Override
+	public void execute(Hero hero, String action) {
+<span class="nc" id="L104">		super.execute(hero, action);</span>
+
+<span class="nc bnc" id="L106" title="All 2 branches missed.">		if (action.equals(AC_ABILITY)){</span>
+<span class="nc" id="L107">			usesTargeting = false;</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">			if (!isEquipped(hero)) {</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">				if (hero.hasTalent(Talent.SWIFT_EQUIP)){</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">					if (hero.buff(Talent.SwiftEquipCooldown.class) == null</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">						|| hero.buff(Talent.SwiftEquipCooldown.class).hasSecondUse()){</span>
+<span class="nc" id="L112">						execute(hero, AC_EQUIP);</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">					} else if (hero.heroClass == HeroClass.DUELIST) {</span>
+<span class="nc" id="L114">						GLog.w(Messages.get(this, &quot;ability_need_equip&quot;));</span>
+					}
+<span class="nc bnc" id="L116" title="All 2 branches missed.">				} else if (hero.heroClass == HeroClass.DUELIST) {</span>
+<span class="nc" id="L117">					GLog.w(Messages.get(this, &quot;ability_need_equip&quot;));</span>
+				}
+<span class="nc bnc" id="L119" title="All 2 branches missed.">			} else if (hero.heroClass != HeroClass.DUELIST){</span>
+				//do nothing
+<span class="nc bnc" id="L121" title="All 2 branches missed.">			} else if (STRReq() &gt; hero.STR()){</span>
+<span class="nc" id="L122">				GLog.w(Messages.get(this, &quot;ability_low_str&quot;));</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">			} else if ((Buff.affect(hero, Charger.class).charges + Buff.affect(hero, Charger.class).partialCharge) &lt; abilityChargeUse(hero, null)) {</span>
+<span class="nc" id="L124">				GLog.w(Messages.get(this, &quot;ability_no_charge&quot;));</span>
+			} else {
+
+<span class="nc bnc" id="L127" title="All 2 branches missed.">				if (targetingPrompt() == null){</span>
+<span class="nc" id="L128">					duelistAbility(hero, hero.pos);</span>
+<span class="nc" id="L129">					updateQuickslot();</span>
+				} else {
+<span class="nc" id="L131">					usesTargeting = useTargeting();</span>
+<span class="nc" id="L132">					GameScene.selectCell(new CellSelector.Listener() {</span>
+						@Override
+						public void onSelect(Integer cell) {
+<span class="nc bnc" id="L135" title="All 2 branches missed.">							if (cell != null) {</span>
+<span class="nc" id="L136">								duelistAbility(hero, cell);</span>
+<span class="nc" id="L137">								updateQuickslot();</span>
+							}
+<span class="nc" id="L139">						}</span>
+
+						@Override
+						public String prompt() {
+<span class="nc" id="L143">							return targetingPrompt();</span>
+						}
+					});
+				}
+			}
+		}
+<span class="nc" id="L149">	}</span>
+
+	//leave null for no targeting
+	public String targetingPrompt(){
+<span class="nc" id="L153">		return null;</span>
+	}
+
+	public boolean useTargeting(){
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		return targetingPrompt() != null;</span>
+	}
+
+	@Override
+	public int targetingPos(Hero user, int dst) {
+<span class="nc" id="L162">		return dst; //weapon abilities do not use projectile logic, no autoaim</span>
+	}
+
+	protected void duelistAbility( Hero hero, Integer target ){
+		//do nothing by default
+<span class="nc" id="L167">	}</span>
+
+	protected void beforeAbilityUsed(Hero hero, Char target){
+<span class="nc" id="L170">		hero.belongings.abilityWeapon = this;</span>
+<span class="nc" id="L171">		Charger charger = Buff.affect(hero, Charger.class);</span>
+
+<span class="nc" id="L173">		charger.partialCharge -= abilityChargeUse(hero, target);</span>
+<span class="nc bnc" id="L174" title="All 4 branches missed.">		while (charger.partialCharge &lt; 0 &amp;&amp; charger.charges &gt; 0) {</span>
+<span class="nc" id="L175">			charger.charges--;</span>
+<span class="nc" id="L176">			charger.partialCharge++;</span>
+		}
+
+<span class="nc bnc" id="L179" title="All 2 branches missed.">		if (hero.heroClass == HeroClass.DUELIST</span>
+<span class="nc bnc" id="L180" title="All 4 branches missed.">				&amp;&amp; hero.hasTalent(Talent.AGGRESSIVE_BARRIER)</span>
+				&amp;&amp; (hero.HP / (float)hero.HT) &lt;= 0.5f){
+<span class="nc" id="L182">			int shieldAmt = 1 + 2*hero.pointsInTalent(Talent.AGGRESSIVE_BARRIER);</span>
+<span class="nc" id="L183">			Buff.affect(hero, Barrier.class).setShield(shieldAmt);</span>
+<span class="nc" id="L184">			hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shieldAmt), FloatingText.SHIELDING);</span>
+		}
+
+<span class="nc" id="L187">		updateQuickslot();</span>
+<span class="nc" id="L188">	}</span>
+
+	protected void afterAbilityUsed( Hero hero ){
+<span class="nc" id="L191">		hero.belongings.abilityWeapon = null;</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">		if (hero.hasTalent(Talent.PRECISE_ASSAULT)){</span>
+<span class="nc" id="L193">			Buff.prolong(hero, Talent.PreciseAssaultTracker.class, hero.cooldown()+4f);</span>
+		}
+<span class="nc bnc" id="L195" title="All 2 branches missed.">		if (hero.hasTalent(Talent.VARIED_CHARGE)){</span>
+<span class="nc" id="L196">			Talent.VariedChargeTracker tracker = hero.buff(Talent.VariedChargeTracker.class);</span>
+<span class="nc bnc" id="L197" title="All 6 branches missed.">			if (tracker == null || tracker.weapon == getClass() || tracker.weapon == null){</span>
+<span class="nc" id="L198">				Buff.affect(hero, Talent.VariedChargeTracker.class).weapon = getClass();</span>
+			} else {
+<span class="nc" id="L200">				tracker.detach();</span>
+<span class="nc" id="L201">				Charger charger = Buff.affect(hero, Charger.class);</span>
+<span class="nc" id="L202">				charger.gainCharge(hero.pointsInTalent(Talent.VARIED_CHARGE) / 6f);</span>
+<span class="nc" id="L203">				ScrollOfRecharging.charge(hero);</span>
+			}
+		}
+<span class="nc bnc" id="L206" title="All 2 branches missed.">		if (hero.hasTalent(Talent.COMBINED_LETHALITY)) {</span>
+<span class="nc" id="L207">			Talent.CombinedLethalityAbilityTracker tracker = hero.buff(Talent.CombinedLethalityAbilityTracker.class);</span>
+<span class="nc bnc" id="L208" title="All 6 branches missed.">			if (tracker == null || tracker.weapon == this || tracker.weapon == null){</span>
+<span class="nc" id="L209">				Buff.affect(hero, Talent.CombinedLethalityAbilityTracker.class, hero.cooldown()).weapon = this;</span>
+			} else {
+				//we triggered the talent, so remove the tracker
+<span class="nc" id="L212">				tracker.detach();</span>
+			}
+		}
+<span class="nc bnc" id="L215" title="All 2 branches missed.">		if (hero.hasTalent(Talent.COMBINED_ENERGY)){</span>
+<span class="nc" id="L216">			Talent.CombinedEnergyAbilityTracker tracker = hero.buff(Talent.CombinedEnergyAbilityTracker.class);</span>
+<span class="nc bnc" id="L217" title="All 4 branches missed.">			if (tracker == null || !tracker.monkAbilused){</span>
+<span class="nc" id="L218">				Buff.prolong(hero, Talent.CombinedEnergyAbilityTracker.class, 5f).wepAbilUsed = true;</span>
+			} else {
+<span class="nc" id="L220">				tracker.wepAbilUsed = true;</span>
+<span class="nc" id="L221">				Buff.affect(hero, MonkEnergy.class).processCombinedEnergy(tracker);</span>
+			}
+		}
+<span class="nc bnc" id="L224" title="All 2 branches missed.">		if (hero.buff(Talent.CounterAbilityTacker.class) != null){</span>
+<span class="nc" id="L225">			Charger charger = Buff.affect(hero, Charger.class);</span>
+<span class="nc" id="L226">			charger.gainCharge(hero.pointsInTalent(Talent.COUNTER_ABILITY)*0.375f);</span>
+<span class="nc" id="L227">			hero.buff(Talent.CounterAbilityTacker.class).detach();</span>
+		}
+<span class="nc" id="L229">	}</span>
+
+	public static void onAbilityKill( Hero hero, Char killed ){
+<span class="nc bnc" id="L232" title="All 4 branches missed.">		if (killed.alignment == Char.Alignment.ENEMY &amp;&amp; hero.hasTalent(Talent.LETHAL_HASTE)){</span>
+			//effectively 3/5 turns of greater haste
+<span class="nc" id="L234">			Buff.affect(hero, GreaterHaste.class).set(2 + 2*hero.pointsInTalent(Talent.LETHAL_HASTE));</span>
+		}
+<span class="nc" id="L236">	}</span>
+
+	protected int baseChargeUse(Hero hero, Char target){
+<span class="nc" id="L239">		return 1; //abilities use 1 charge by default</span>
+	}
+
+	public final float abilityChargeUse(Hero hero, Char target){
+<span class="nc" id="L243">		return baseChargeUse(hero, target);</span>
+	}
+
+	public int tier;
+
+	@Override
+	public int min(int lvl) {
+<span class="nc" id="L250">		return  tier +  //base</span>
+				lvl;    //level scaling
+	}
+
+	@Override
+	public int max(int lvl) {
+<span class="nc" id="L256">		return  5*(tier+1) +    //base</span>
+				lvl*(tier+1);   //level scaling
+	}
+
+	public int STRReq(int lvl){
+<span class="nc" id="L261">		int req = STRReq(tier, lvl);</span>
+<span class="nc bnc" id="L262" title="All 2 branches missed.">		if (masteryPotionBonus){</span>
+<span class="nc" id="L263">			req -= 2;</span>
+		}
+<span class="nc" id="L265">		return req;</span>
+	}
+
+<span class="nc" id="L268">	private static boolean evaluatingTwinUpgrades = false;</span>
+	@Override
+	public int buffedLvl() {
+<span class="nc bnc" id="L271" title="All 8 branches missed.">		if (!evaluatingTwinUpgrades &amp;&amp; Dungeon.hero != null &amp;&amp; isEquipped(Dungeon.hero) &amp;&amp; Dungeon.hero.hasTalent(Talent.TWIN_UPGRADES)){</span>
+<span class="nc" id="L272">			KindOfWeapon other = null;</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">			if (Dungeon.hero.belongings.weapon() != this) other = Dungeon.hero.belongings.weapon();</span>
+<span class="nc bnc" id="L274" title="All 2 branches missed.">			if (Dungeon.hero.belongings.secondWep() != this) other = Dungeon.hero.belongings.secondWep();</span>
+
+<span class="nc bnc" id="L276" title="All 2 branches missed.">			if (other instanceof MeleeWeapon) {</span>
+<span class="nc" id="L277">				evaluatingTwinUpgrades = true;</span>
+<span class="nc" id="L278">				int otherLevel = other.buffedLvl();</span>
+<span class="nc" id="L279">				evaluatingTwinUpgrades = false;</span>
+
+				//weaker weapon needs to be 2/1/0 tiers lower, based on talent level
+<span class="nc bnc" id="L282" title="All 2 branches missed.">				if ((tier + (3 - Dungeon.hero.pointsInTalent(Talent.TWIN_UPGRADES))) &lt;= ((MeleeWeapon) other).tier</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">						&amp;&amp; otherLevel &gt; super.buffedLvl()) {</span>
+<span class="nc" id="L284">					return otherLevel;</span>
+				}
+
+			}
+		}
+<span class="nc" id="L289">		return super.buffedLvl();</span>
+	}
+
+	@Override
+	public int damageRoll(Char owner) {
+<span class="nc" id="L294">		int damage = augment.damageFactor(super.damageRoll( owner ));</span>
+
+<span class="nc bnc" id="L296" title="All 2 branches missed.">		if (owner instanceof Hero) {</span>
+<span class="nc" id="L297">			int exStr = ((Hero)owner).STR() - STRReq();</span>
+<span class="nc bnc" id="L298" title="All 2 branches missed.">			if (exStr &gt; 0) {</span>
+<span class="nc" id="L299">				damage += Hero.heroDamageIntRange( 0, exStr );</span>
+			}
+		}
+<span class="nc" id="L302">		return damage;</span>
+	}
+	
+	@Override
+	public String info() {
+
+<span class="nc" id="L308">		String info = super.info();</span>
+
+<span class="nc bnc" id="L310" title="All 2 branches missed.">		if (levelKnown) {</span>
+<span class="nc" id="L311">			info += &quot;\n\n&quot; + Messages.get(MeleeWeapon.class, &quot;stats_known&quot;, tier, augment.damageFactor(min()), augment.damageFactor(max()), STRReq());</span>
+<span class="nc bnc" id="L312" title="All 2 branches missed.">			if (Dungeon.hero != null) {</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">				if (STRReq() &gt; Dungeon.hero.STR()) {</span>
+<span class="nc" id="L314">					info += &quot; &quot; + Messages.get(Weapon.class, &quot;too_heavy&quot;);</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">				} else if (Dungeon.hero.STR() &gt; STRReq()) {</span>
+<span class="nc" id="L316">					info += &quot; &quot; + Messages.get(Weapon.class, &quot;excess_str&quot;, Dungeon.hero.STR() - STRReq());</span>
+				}
+			}
+		} else {
+<span class="nc" id="L320">			info += &quot;\n\n&quot; + Messages.get(MeleeWeapon.class, &quot;stats_unknown&quot;, tier, min(0), max(0), STRReq(0));</span>
+<span class="nc bnc" id="L321" title="All 4 branches missed.">			if (Dungeon.hero != null &amp;&amp; STRReq(0) &gt; Dungeon.hero.STR()) {</span>
+<span class="nc" id="L322">				info += &quot; &quot; + Messages.get(MeleeWeapon.class, &quot;probably_too_heavy&quot;);</span>
+			}
+		}
+
+<span class="nc" id="L326">		String statsInfo = statsInfo();</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">		if (!statsInfo.equals(&quot;&quot;)) info += &quot;\n\n&quot; + statsInfo;</span>
+
+<span class="nc bnc" id="L329" title="All 3 branches missed.">		switch (augment) {</span>
+			case SPEED:
+<span class="nc" id="L331">				info += &quot; &quot; + Messages.get(Weapon.class, &quot;faster&quot;);</span>
+<span class="nc" id="L332">				break;</span>
+			case DAMAGE:
+<span class="nc" id="L334">				info += &quot; &quot; + Messages.get(Weapon.class, &quot;stronger&quot;);</span>
+<span class="nc" id="L335">				break;</span>
+			case NONE:
+		}
+
+<span class="nc bnc" id="L339" title="All 10 branches missed.">		if (isEquipped(Dungeon.hero) &amp;&amp; !hasCurseEnchant() &amp;&amp; Dungeon.hero.buff(HolyWeapon.HolyWepBuff.class) != null</span>
+				&amp;&amp; (Dungeon.hero.subClass != HeroSubClass.PALADIN || enchantment == null)){
+<span class="nc" id="L341">			info += &quot;\n\n&quot; + Messages.capitalize(Messages.get(Weapon.class, &quot;enchanted&quot;, Messages.get(HolyWeapon.class, &quot;ench_name&quot;, Messages.get(Enchantment.class, &quot;enchant&quot;))));</span>
+<span class="nc" id="L342">			info += &quot; &quot; + Messages.get(HolyWeapon.class, &quot;ench_desc&quot;);</span>
+<span class="nc bnc" id="L343" title="All 6 branches missed.">		} else if (enchantment != null &amp;&amp; (cursedKnown || !enchantment.curse())){</span>
+<span class="nc" id="L344">			info += &quot;\n\n&quot; + Messages.capitalize(Messages.get(Weapon.class, &quot;enchanted&quot;, enchantment.name()));</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">			if (enchantHardened) info += &quot; &quot; + Messages.get(Weapon.class, &quot;enchant_hardened&quot;);</span>
+<span class="nc" id="L346">			info += &quot; &quot; + enchantment.desc();</span>
+<span class="nc bnc" id="L347" title="All 2 branches missed.">		} else if (enchantHardened){</span>
+<span class="nc" id="L348">			info += &quot;\n\n&quot; + Messages.get(Weapon.class, &quot;hardened_no_enchant&quot;);</span>
+		}
+
+<span class="nc bnc" id="L351" title="All 4 branches missed.">		if (cursed &amp;&amp; isEquipped( Dungeon.hero )) {</span>
+<span class="nc" id="L352">			info += &quot;\n\n&quot; + Messages.get(Weapon.class, &quot;cursed_worn&quot;);</span>
+<span class="nc bnc" id="L353" title="All 4 branches missed.">		} else if (cursedKnown &amp;&amp; cursed) {</span>
+<span class="nc" id="L354">			info += &quot;\n\n&quot; + Messages.get(Weapon.class, &quot;cursed&quot;);</span>
+<span class="nc bnc" id="L355" title="All 4 branches missed.">		} else if (!isIdentified() &amp;&amp; cursedKnown){</span>
+<span class="nc bnc" id="L356" title="All 4 branches missed.">			if (enchantment != null &amp;&amp; enchantment.curse()) {</span>
+<span class="nc" id="L357">				info += &quot;\n\n&quot; + Messages.get(Weapon.class, &quot;weak_cursed&quot;);</span>
+			} else {
+<span class="nc" id="L359">				info += &quot;\n\n&quot; + Messages.get(Weapon.class, &quot;not_cursed&quot;);</span>
+			}
+		}
+
+		//the mage's staff has no ability as it can only be gained by the mage
+<span class="nc bnc" id="L364" title="All 6 branches missed.">		if (Dungeon.hero != null &amp;&amp; Dungeon.hero.heroClass == HeroClass.DUELIST &amp;&amp; !(this instanceof MagesStaff)){</span>
+<span class="nc" id="L365">			info += &quot;\n\n&quot; + abilityInfo();</span>
+		}
+		
+<span class="nc" id="L368">		return info;</span>
+	}
+	
+	public String statsInfo(){
+<span class="nc" id="L372">		return Messages.get(this, &quot;stats_desc&quot;);</span>
+	}
+
+	public String abilityInfo() {
+<span class="nc" id="L376">		return Messages.get(this, &quot;ability_desc&quot;);</span>
+	}
+
+	public String upgradeAbilityStat(int level){
+<span class="nc" id="L380">		return null;</span>
+	}
+
+	@Override
+	public String status() {
+<span class="nc bnc" id="L385" title="All 2 branches missed.">		if (isEquipped(Dungeon.hero)</span>
+<span class="nc bnc" id="L386" title="All 2 branches missed.">				&amp;&amp; Dungeon.hero.buff(Charger.class) != null) {</span>
+<span class="nc" id="L387">			Charger buff = Dungeon.hero.buff(Charger.class);</span>
+<span class="nc" id="L388">			return buff.charges + &quot;/&quot; + buff.chargeCap();</span>
+		} else {
+<span class="nc" id="L390">			return super.status();</span>
+		}
+	}
+
+	@Override
+	public int value() {
+<span class="nc" id="L396">		int price = 20 * tier;</span>
+<span class="nc bnc" id="L397" title="All 2 branches missed.">		if (hasGoodEnchant()) {</span>
+<span class="nc" id="L398">			price *= 1.5;</span>
+		}
+<span class="nc bnc" id="L400" title="All 6 branches missed.">		if (cursedKnown &amp;&amp; (cursed || hasCurseEnchant())) {</span>
+<span class="nc" id="L401">			price /= 2;</span>
+		}
+<span class="nc bnc" id="L403" title="All 4 branches missed.">		if (levelKnown &amp;&amp; level() &gt; 0) {</span>
+<span class="nc" id="L404">			price *= (level() + 1);</span>
+		}
+<span class="nc bnc" id="L406" title="All 2 branches missed.">		if (price &lt; 1) {</span>
+<span class="nc" id="L407">			price = 1;</span>
+		}
+<span class="nc" id="L409">		return price;</span>
+	}
+
+<span class="nc" id="L412">	public static class Charger extends Buff implements ActionIndicator.Action {</span>
+
+<span class="nc" id="L414">		public int charges = 2;</span>
+		public float partialCharge;
+
+		@Override
+		public boolean act() {
+<span class="nc bnc" id="L419" title="All 2 branches missed.">			if (charges &lt; chargeCap()){</span>
+<span class="nc bnc" id="L420" title="All 2 branches missed.">				if (Regeneration.regenOn()){</span>
+					//60 to 45 turns per charge
+<span class="nc" id="L422">					float chargeToGain = 1/(60f-1.5f*(chargeCap()-charges));</span>
+
+					//40 to 30 turns per charge for champion
+<span class="nc bnc" id="L425" title="All 2 branches missed.">					if (Dungeon.hero.subClass == HeroSubClass.CHAMPION){</span>
+<span class="nc" id="L426">						chargeToGain *= 1.5f;</span>
+					}
+
+					//50% slower charge gain with brawler's stance enabled, even if buff is inactive
+<span class="nc bnc" id="L430" title="All 2 branches missed.">					if (Dungeon.hero.buff(RingOfForce.BrawlersStance.class) != null){</span>
+<span class="nc" id="L431">						chargeToGain *= 0.50f;</span>
+					}
+
+<span class="nc" id="L434">					partialCharge += chargeToGain;</span>
+				}
+
+<span class="nc" id="L437">				int points = ((Hero)target).pointsInTalent(Talent.WEAPON_RECHARGING);</span>
+<span class="nc bnc" id="L438" title="All 6 branches missed.">				if (points &gt; 0 &amp;&amp; target.buff(Recharging.class) != null || target.buff(ArtifactRecharge.class) != null){</span>
+					//1 every 15 turns at +1, 10 turns at +2
+<span class="nc" id="L440">					partialCharge += 1/(20f - 5f*points);</span>
+				}
+
+<span class="nc bnc" id="L443" title="All 2 branches missed.">				if (partialCharge &gt;= 1){</span>
+<span class="nc" id="L444">					charges++;</span>
+<span class="nc" id="L445">					partialCharge--;</span>
+<span class="nc" id="L446">					updateQuickslot();</span>
+				}
+<span class="nc" id="L448">			} else {</span>
+<span class="nc" id="L449">				partialCharge = 0;</span>
+			}
+
+<span class="nc bnc" id="L452" title="All 4 branches missed.">			if (ActionIndicator.action != this &amp;&amp; Dungeon.hero.subClass == HeroSubClass.CHAMPION) {</span>
+<span class="nc" id="L453">				ActionIndicator.setAction(this);</span>
+			}
+
+<span class="nc" id="L456">			spend(TICK);</span>
+<span class="nc" id="L457">			return true;</span>
+		}
+
+		@Override
+		public void fx(boolean on) {
+<span class="nc bnc" id="L462" title="All 4 branches missed.">			if (on &amp;&amp; Dungeon.hero.subClass == HeroSubClass.CHAMPION) {</span>
+<span class="nc" id="L463">				ActionIndicator.setAction(this);</span>
+			}
+<span class="nc" id="L465">		}</span>
+
+		@Override
+		public void detach() {
+<span class="nc" id="L469">			super.detach();</span>
+<span class="nc" id="L470">			ActionIndicator.clearAction(this);</span>
+<span class="nc" id="L471">		}</span>
+
+		public int chargeCap(){
+			//caps at level 19 with 8 or 10 charges
+<span class="nc bnc" id="L475" title="All 2 branches missed.">			if (Dungeon.hero.subClass == HeroSubClass.CHAMPION){</span>
+<span class="nc" id="L476">				return Math.min(10, 4 + (Dungeon.hero.lvl - 1) / 3);</span>
+			} else {
+<span class="nc" id="L478">				return Math.min(8, 2 + (Dungeon.hero.lvl - 1) / 3);</span>
+			}
+		}
+
+		public void gainCharge( float charge ){
+<span class="nc bnc" id="L483" title="All 2 branches missed.">			if (charges &lt; chargeCap()) {</span>
+<span class="nc" id="L484">				partialCharge += charge;</span>
+<span class="nc bnc" id="L485" title="All 2 branches missed.">				while (partialCharge &gt;= 1f) {</span>
+<span class="nc" id="L486">					charges++;</span>
+<span class="nc" id="L487">					partialCharge--;</span>
+				}
+<span class="nc bnc" id="L489" title="All 2 branches missed.">				if (charges &gt;= chargeCap()){</span>
+<span class="nc" id="L490">					partialCharge = 0;</span>
+<span class="nc" id="L491">					charges = chargeCap();</span>
+				}
+<span class="nc" id="L493">				updateQuickslot();</span>
+			}
+<span class="nc" id="L495">		}</span>
+
+		public static final String CHARGES          = &quot;charges&quot;;
+		private static final String PARTIALCHARGE   = &quot;partialCharge&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L502">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L503">			bundle.put(CHARGES, charges);</span>
+<span class="nc" id="L504">			bundle.put(PARTIALCHARGE, partialCharge);</span>
+<span class="nc" id="L505">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L509">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L510">			charges = bundle.getInt(CHARGES);</span>
+<span class="nc" id="L511">			partialCharge = bundle.getFloat(PARTIALCHARGE);</span>
+<span class="nc" id="L512">		}</span>
+
+		@Override
+		public String actionName() {
+<span class="nc" id="L516">			return Messages.get(MeleeWeapon.class, &quot;swap&quot;);</span>
+		}
+
+		@Override
+		public int actionIcon() {
+<span class="nc" id="L521">			return HeroIcon.WEAPON_SWAP;</span>
+		}
+
+		@Override
+		public Visual primaryVisual() {
+			Image ico;
+<span class="nc bnc" id="L527" title="All 2 branches missed.">			if (Dungeon.hero.belongings.weapon == null){</span>
+<span class="nc" id="L528">				ico = new HeroIcon(this);</span>
+ 			} else {
+<span class="nc" id="L530">				ico = new ItemSprite(Dungeon.hero.belongings.weapon);</span>
+			}
+<span class="nc" id="L532">			ico.width += 4; //shift slightly to the left to separate from smaller icon</span>
+<span class="nc" id="L533">			return ico;</span>
+		}
+
+		@Override
+		public Visual secondaryVisual() {
+			Image ico;
+<span class="nc bnc" id="L539" title="All 2 branches missed.">			if (Dungeon.hero.belongings.secondWep == null){</span>
+<span class="nc" id="L540">				ico = new HeroIcon(this);</span>
+			} else {
+<span class="nc" id="L542">				ico = new ItemSprite(Dungeon.hero.belongings.secondWep);</span>
+			}
+<span class="nc" id="L544">			ico.scale.set(PixelScene.align(0.51f));</span>
+<span class="nc" id="L545">			ico.brightness(0.6f);</span>
+<span class="nc" id="L546">			return ico;</span>
+		}
+
+		@Override
+		public int indicatorColor() {
+<span class="nc" id="L551">			return 0x5500BB;</span>
+		}
+
+		@Override
+		public void doAction() {
+<span class="nc bnc" id="L556" title="All 2 branches missed.">			if (Dungeon.hero.subClass != HeroSubClass.CHAMPION){</span>
+<span class="nc" id="L557">				return;</span>
+			}
+
+<span class="nc bnc" id="L560" title="All 4 branches missed.">			if (Dungeon.hero.belongings.secondWep == null &amp;&amp; Dungeon.hero.belongings.backpack.items.size() &gt;= Dungeon.hero.belongings.backpack.capacity()){</span>
+<span class="nc" id="L561">				GLog.w(Messages.get(MeleeWeapon.class, &quot;swap_full&quot;));</span>
+<span class="nc" id="L562">				return;</span>
+			}
+
+<span class="nc" id="L565">			KindOfWeapon temp = Dungeon.hero.belongings.weapon;</span>
+<span class="nc" id="L566">			Dungeon.hero.belongings.weapon = Dungeon.hero.belongings.secondWep;</span>
+<span class="nc" id="L567">			Dungeon.hero.belongings.secondWep = temp;</span>
+
+<span class="nc" id="L569">			Dungeon.hero.sprite.operate(Dungeon.hero.pos);</span>
+<span class="nc" id="L570">			Sample.INSTANCE.play(Assets.Sounds.UNLOCK);</span>
+
+<span class="nc" id="L572">			ActionIndicator.setAction(this);</span>
+<span class="nc" id="L573">			Item.updateQuickslot();</span>
+<span class="nc" id="L574">			AttackIndicator.updateState();</span>
+<span class="nc" id="L575">		}</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

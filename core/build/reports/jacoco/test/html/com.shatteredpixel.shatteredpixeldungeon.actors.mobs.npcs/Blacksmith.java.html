@@ -1,0 +1,466 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Blacksmith.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs</a> &gt; <span class="el_source">Blacksmith.java</span></div><h1>Blacksmith.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AscensionChallenge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.DarkGold;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.Pickaxe;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.ParchmentScrap;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest.BlacksmithRoom;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.BlacksmithSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBlacksmith;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndQuest;
+import com.watabou.noosa.Game;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+<span class="nc" id="L53">public class Blacksmith extends NPC {</span>
+	
+	{
+<span class="nc" id="L56">		spriteClass = BlacksmithSprite.class;</span>
+
+<span class="nc" id="L58">		properties.add(Property.IMMOVABLE);</span>
+<span class="nc" id="L59">	}</span>
+
+	@Override
+	public Notes.Landmark landmark() {
+<span class="nc bnc" id="L63" title="All 4 branches missed.">		return (!Quest.completed() || Quest.rewardsAvailable()) ? Notes.Landmark.TROLL : null;</span>
+	}
+
+	@Override
+	protected boolean act() {
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		if (Dungeon.hero.buff(AscensionChallenge.class) != null){</span>
+<span class="nc" id="L69">			die(null);</span>
+<span class="nc" id="L70">			Notes.remove( landmark() );</span>
+<span class="nc" id="L71">			return true;</span>
+<span class="nc bnc" id="L72" title="All 4 branches missed.">		} else if (!Quest.rewardsAvailable() &amp;&amp; Quest.completed()){</span>
+<span class="nc" id="L73">			Notes.remove( landmark() );</span>
+		}
+<span class="nc" id="L75">		return super.act();</span>
+	}
+	
+	@Override
+	public boolean interact(Char c) {
+		
+<span class="nc" id="L81">		sprite.turnTo( pos, c.pos );</span>
+
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if (c != Dungeon.hero){</span>
+<span class="nc" id="L84">			return true;</span>
+		}
+		
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		if (!Quest.given) {</span>
+
+<span class="nc" id="L89">			String msg1 = &quot;&quot;;</span>
+<span class="nc" id="L90">			String msg2 = &quot;&quot;;</span>
+
+<span class="nc bnc" id="L92" title="All 7 branches missed.">			switch (Dungeon.hero.heroClass){</span>
+<span class="nc" id="L93">				case WARRIOR:   msg1 += Messages.get(Blacksmith.this, &quot;intro_quest_warrior&quot;); break;</span>
+<span class="nc" id="L94">				case MAGE:      msg1 += Messages.get(Blacksmith.this, &quot;intro_quest_mage&quot;); break;</span>
+<span class="nc" id="L95">				case ROGUE:     msg1 += Messages.get(Blacksmith.this, &quot;intro_quest_rogue&quot;); break;</span>
+<span class="nc" id="L96">				case HUNTRESS:  msg1 += Messages.get(Blacksmith.this, &quot;intro_quest_huntress&quot;); break;</span>
+<span class="nc" id="L97">				case DUELIST:   msg1 += Messages.get(Blacksmith.this, &quot;intro_quest_duelist&quot;); break;</span>
+<span class="nc" id="L98">				case CLERIC:    msg1 += Messages.get(Blacksmith.this, &quot;intro_quest_cleric&quot;); break;</span>
+			}
+
+<span class="nc" id="L101">			msg1 += &quot;\n\n&quot; + Messages.get(Blacksmith.this, &quot;intro_quest_start&quot;);</span>
+
+<span class="nc bnc" id="L103" title="All 4 branches missed.">			switch (Quest.type){</span>
+<span class="nc" id="L104">				case Quest.CRYSTAL: msg2 += Messages.get(Blacksmith.this, &quot;intro_quest_crystal&quot;); break;</span>
+<span class="nc" id="L105">				case Quest.GNOLL:   msg2 += Messages.get(Blacksmith.this, &quot;intro_quest_gnoll&quot;); break;</span>
+<span class="nc" id="L106">				case Quest.FUNGI:   msg2 += Messages.get(Blacksmith.this, &quot;intro_quest_fungi&quot;); break;</span>
+			}
+
+<span class="nc" id="L109">			final String msg1Final = msg1;</span>
+<span class="nc" id="L110">			final String msg2Final = msg2;</span>
+<span class="nc" id="L111">			Game.runOnRenderThread(new Callback() {</span>
+				@Override
+				public void call() {
+<span class="nc" id="L114">					GameScene.show(new WndQuest(Blacksmith.this, msg1Final) {</span>
+						@Override
+						public void hide() {
+<span class="nc" id="L117">							super.hide();</span>
+
+<span class="nc" id="L119">							Quest.given = true;</span>
+<span class="nc" id="L120">							Quest.completed = false;</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">							Item pick = Quest.pickaxe != null ? Quest.pickaxe : new Pickaxe();</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">							if (pick.doPickUp( Dungeon.hero )) {</span>
+<span class="nc" id="L123">								GLog.i( Messages.capitalize(Messages.get(Dungeon.hero, &quot;you_now_have&quot;, pick.name()) ));</span>
+							} else {
+<span class="nc" id="L125">								Dungeon.level.drop( pick, Dungeon.hero.pos ).sprite.drop();</span>
+							}
+<span class="nc" id="L127">							Quest.pickaxe = null;</span>
+
+<span class="nc bnc" id="L129" title="All 2 branches missed.">							if (msg2Final != &quot;&quot;){</span>
+<span class="nc" id="L130">								GameScene.show(new WndQuest(Blacksmith.this, msg2Final));</span>
+							}
+
+<span class="nc" id="L133">						}</span>
+					} );
+<span class="nc" id="L135">				}</span>
+			});
+			
+<span class="nc bnc" id="L138" title="All 2 branches missed.">		} else if (!Quest.completed) {</span>
+
+<span class="nc" id="L140">			String msg = Messages.get(this, &quot;reminder&quot;) + &quot;\n\n&quot;;</span>
+<span class="nc bnc" id="L141" title="All 4 branches missed.">			switch (Quest.type){</span>
+<span class="nc" id="L142">				case Quest.CRYSTAL: msg += Messages.get(Blacksmith.this, &quot;reminder_crystal&quot;); break;</span>
+<span class="nc" id="L143">				case Quest.GNOLL:   msg += Messages.get(Blacksmith.this, &quot;reminder_gnoll&quot;); break;</span>
+<span class="nc" id="L144">				case Quest.FUNGI:   msg += Messages.get(Blacksmith.this, &quot;reminder_fungi&quot;); break;</span>
+			}
+<span class="nc" id="L146">			tell(msg);</span>
+
+<span class="nc bnc" id="L148" title="All 2 branches missed.">		} else if (Quest.rewardsAvailable()) {</span>
+
+<span class="nc" id="L150">			Game.runOnRenderThread(new Callback() {</span>
+				@Override
+				public void call() {
+					//in case game was closed during smith reward selection
+<span class="nc bnc" id="L154" title="All 4 branches missed.">					if (Quest.smithRewards != null &amp;&amp; Quest.smiths &gt; 0){</span>
+<span class="nc" id="L155">						GameScene.show( new WndBlacksmith.WndSmith( Blacksmith.this, Dungeon.hero ) );</span>
+					} else {
+<span class="nc" id="L157">						GameScene.show(new WndBlacksmith(Blacksmith.this, Dungeon.hero));</span>
+					}
+<span class="nc" id="L159">				}</span>
+			});
+
+		} else {
+			
+<span class="nc" id="L164">			tell( Messages.get(this, &quot;get_lost&quot;) );</span>
+			
+		}
+
+<span class="nc" id="L168">		return true;</span>
+	}
+	
+	private void tell( String text ) {
+<span class="nc" id="L172">		Game.runOnRenderThread(new Callback() {</span>
+			@Override
+			public void call() {
+<span class="nc" id="L175">				GameScene.show( new WndQuest( Blacksmith.this, text ) );</span>
+<span class="nc" id="L176">			}</span>
+		});
+<span class="nc" id="L178">	}</span>
+
+	@Override
+	public int defenseSkill( Char enemy ) {
+<span class="nc" id="L182">		return INFINITE_EVASION;</span>
+	}
+	
+	@Override
+	public void damage( int dmg, Object src ) {
+		//do nothing
+<span class="nc" id="L188">	}</span>
+
+	@Override
+	public boolean add( Buff buff ) {
+<span class="nc" id="L192">		return false;</span>
+	}
+	
+	@Override
+	public boolean reset() {
+<span class="nc" id="L197">		return true;</span>
+	}
+
+<span class="nc" id="L200">	public static class Quest {</span>
+
+<span class="nc" id="L202">		private static int type = 0;</span>
+		public static final int CRYSTAL = 1;
+		public static final int GNOLL = 2;
+		public static final int FUNGI = 3; //The fungi quest is not implemented, only exists partially in code
+
+		//quest state information
+		private static boolean spawned;
+		private static boolean given;
+		private static boolean started;
+		private static boolean bossBeaten;
+		private static boolean completed;
+
+		//reward tracking. Stores remaining favor, the pickaxe, and how many of each reward has been chosen
+		public static int favor;
+		public static Item pickaxe;
+		public static int reforges;
+		public static int hardens;
+		public static int upgrades;
+		public static int smiths;
+
+		//pre-generate these so they are consistent between seeds
+		public static ArrayList&lt;Item&gt; smithRewards;
+		public static Weapon.Enchantment smithEnchant;
+		public static Armor.Glyph smithGlyph;
+		
+		public static void reset() {
+<span class="nc" id="L228">			type        = 0;</span>
+
+<span class="nc" id="L230">			spawned		= false;</span>
+<span class="nc" id="L231">			given		= false;</span>
+<span class="nc" id="L232">			started     = false;</span>
+<span class="nc" id="L233">			bossBeaten  = false;</span>
+<span class="nc" id="L234">			completed	= false;</span>
+
+<span class="nc" id="L236">			favor       = 0;</span>
+<span class="nc" id="L237">			pickaxe     = new Pickaxe().identify();</span>
+<span class="nc" id="L238">			reforges    = 0;</span>
+<span class="nc" id="L239">			hardens     = 0;</span>
+<span class="nc" id="L240">			upgrades    = 0;</span>
+<span class="nc" id="L241">			smiths      = 0;</span>
+
+<span class="nc" id="L243">			smithRewards = null;</span>
+<span class="nc" id="L244">			smithEnchant = null;</span>
+<span class="nc" id="L245">			smithGlyph = null;</span>
+<span class="nc" id="L246">		}</span>
+		
+		private static final String NODE	= &quot;blacksmith&quot;;
+
+		private static final String TYPE    	= &quot;type&quot;;
+		private static final String ALTERNATIVE	= &quot;alternative&quot;;
+
+		private static final String SPAWNED		= &quot;spawned&quot;;
+		private static final String GIVEN		= &quot;given&quot;;
+		private static final String STARTED		= &quot;started&quot;;
+		private static final String BOSS_BEATEN	= &quot;boss_beaten&quot;;
+		private static final String COMPLETED	= &quot;completed&quot;;
+
+		private static final String FAVOR	    = &quot;favor&quot;;
+		private static final String PICKAXE	    = &quot;pickaxe&quot;;
+		private static final String REFORGES	= &quot;reforges&quot;;
+		private static final String HARDENS	    = &quot;hardens&quot;;
+		private static final String UPGRADES	= &quot;upgrades&quot;;
+		private static final String SMITHS	    = &quot;smiths&quot;;
+		private static final String SMITH_REWARDS = &quot;smith_rewards&quot;;
+		private static final String ENCHANT		= &quot;enchant&quot;;
+		private static final String GLYPH		= &quot;glyph&quot;;
+		
+		public static void storeInBundle( Bundle bundle ) {
+			
+<span class="nc" id="L271">			Bundle node = new Bundle();</span>
+			
+<span class="nc" id="L273">			node.put( SPAWNED, spawned );</span>
+			
+<span class="nc bnc" id="L275" title="All 2 branches missed.">			if (spawned) {</span>
+<span class="nc" id="L276">				node.put( TYPE, type );</span>
+
+<span class="nc" id="L278">				node.put( GIVEN, given );</span>
+<span class="nc" id="L279">				node.put( STARTED, started );</span>
+<span class="nc" id="L280">				node.put( BOSS_BEATEN, bossBeaten );</span>
+<span class="nc" id="L281">				node.put( COMPLETED, completed );</span>
+
+<span class="nc" id="L283">				node.put( FAVOR, favor );</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">				if (pickaxe != null) node.put( PICKAXE, pickaxe );</span>
+<span class="nc" id="L285">				node.put( REFORGES, reforges );</span>
+<span class="nc" id="L286">				node.put( HARDENS, hardens );</span>
+<span class="nc" id="L287">				node.put( UPGRADES, upgrades );</span>
+<span class="nc" id="L288">				node.put( SMITHS, smiths );</span>
+
+<span class="nc bnc" id="L290" title="All 2 branches missed.">				if (smithRewards != null) {</span>
+<span class="nc" id="L291">					node.put( SMITH_REWARDS, smithRewards );</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">					if (smithEnchant != null) {</span>
+<span class="nc" id="L293">						node.put(ENCHANT, smithEnchant);</span>
+<span class="nc" id="L294">						node.put(GLYPH, smithGlyph);</span>
+					}
+				}
+			}
+			
+<span class="nc" id="L299">			bundle.put( NODE, node );</span>
+<span class="nc" id="L300">		}</span>
+		
+		public static void restoreFromBundle( Bundle bundle ) {
+
+<span class="nc" id="L304">			Bundle node = bundle.getBundle( NODE );</span>
+			
+<span class="nc bnc" id="L306" title="All 4 branches missed.">			if (!node.isNull() &amp;&amp; (spawned = node.getBoolean( SPAWNED ))) {</span>
+<span class="nc" id="L307">				type = node.getInt(TYPE);</span>
+
+<span class="nc" id="L309">				given = node.getBoolean( GIVEN );</span>
+<span class="nc" id="L310">				started = node.getBoolean( STARTED );</span>
+<span class="nc" id="L311">				bossBeaten = node.getBoolean( BOSS_BEATEN );</span>
+<span class="nc" id="L312">				completed = node.getBoolean( COMPLETED );</span>
+
+<span class="nc" id="L314">				favor = node.getInt( FAVOR );</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">				if (node.contains(PICKAXE)) {</span>
+<span class="nc" id="L316">					pickaxe = (Item) node.get(PICKAXE);</span>
+				} else {
+<span class="nc" id="L318">					pickaxe = null;</span>
+				}
+<span class="nc" id="L320">				reforges = node.getInt( REFORGES );</span>
+<span class="nc" id="L321">				hardens = node.getInt( HARDENS );</span>
+<span class="nc" id="L322">				upgrades = node.getInt( UPGRADES );</span>
+<span class="nc" id="L323">				smiths = node.getInt( SMITHS );</span>
+
+<span class="nc bnc" id="L325" title="All 2 branches missed.">				if (node.contains( SMITH_REWARDS )){</span>
+<span class="nc" id="L326">					smithRewards = new ArrayList&lt;&gt;((Collection&lt;Item&gt;) ((Collection&lt;?&gt;) node.getCollection( SMITH_REWARDS )));</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">					if (node.contains(ENCHANT)) {</span>
+<span class="nc" id="L328">						smithEnchant = (Weapon.Enchantment) node.get(ENCHANT);</span>
+<span class="nc" id="L329">						smithGlyph   = (Armor.Glyph) node.get(GLYPH);</span>
+					}
+				}
+
+			} else {
+<span class="nc" id="L334">				reset();</span>
+			}
+<span class="nc" id="L336">		}</span>
+		
+		public static ArrayList&lt;Room&gt; spawn( ArrayList&lt;Room&gt; rooms ) {
+<span class="nc bnc" id="L339" title="All 6 branches missed.">			if (!spawned &amp;&amp; Dungeon.depth &gt; 11 &amp;&amp; Random.Int( 15 - Dungeon.depth ) == 0) {</span>
+				
+<span class="nc" id="L341">				rooms.add(new BlacksmithRoom());</span>
+<span class="nc" id="L342">				spawned = true;</span>
+
+				//Currently cannot roll the fungi quest, as it is not fully implemented
+<span class="nc" id="L345">				type = Random.IntRange(1, 2);</span>
+				
+<span class="nc" id="L347">				given = false;</span>
+<span class="nc" id="L348">				generateRewards( true );</span>
+				
+			}
+<span class="nc" id="L351">			return rooms;</span>
+		}
+
+		public static void generateRewards( boolean useDecks ){
+<span class="nc" id="L355">			smithRewards = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L356">			smithRewards.add(Generator.randomWeapon(3, useDecks));</span>
+<span class="nc" id="L357">			smithRewards.add(Generator.randomWeapon(3, useDecks));</span>
+<span class="nc" id="L358">			ArrayList&lt;Item&gt; toUndo = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">			while (smithRewards.get(0).getClass() == smithRewards.get(1).getClass()) {</span>
+<span class="nc bnc" id="L360" title="All 2 branches missed.">				if (useDecks)   toUndo.add(smithRewards.get(1));</span>
+<span class="nc" id="L361">				smithRewards.remove(1);</span>
+<span class="nc" id="L362">				smithRewards.add(Generator.randomWeapon(3, useDecks));</span>
+			}
+<span class="nc bnc" id="L364" title="All 2 branches missed.">			for (Item i : toUndo){</span>
+<span class="nc" id="L365">				Generator.undoDrop(i);</span>
+<span class="nc" id="L366">			}</span>
+<span class="nc" id="L367">			smithRewards.add(Generator.randomArmor(3));</span>
+
+			//30%:+0, 45%:+1, 20%:+2, 5%:+3
+			int rewardLevel;
+<span class="nc" id="L371">			float itemLevelRoll = Random.Float();</span>
+<span class="nc bnc" id="L372" title="All 2 branches missed.">			if (itemLevelRoll &lt; 0.3f){</span>
+<span class="nc" id="L373">				rewardLevel = 0;</span>
+<span class="nc bnc" id="L374" title="All 2 branches missed.">			} else if (itemLevelRoll &lt; 0.75f){</span>
+<span class="nc" id="L375">				rewardLevel = 1;</span>
+<span class="nc bnc" id="L376" title="All 2 branches missed.">			} else if (itemLevelRoll &lt; 0.95f){</span>
+<span class="nc" id="L377">				rewardLevel = 2;</span>
+			} else {
+<span class="nc" id="L379">				rewardLevel = 3;</span>
+			}
+
+<span class="nc bnc" id="L382" title="All 2 branches missed.">			for (Item i : smithRewards){</span>
+<span class="nc" id="L383">				i.level(rewardLevel);</span>
+<span class="nc bnc" id="L384" title="All 2 branches missed.">				if (i instanceof Weapon) {</span>
+<span class="nc" id="L385">					((Weapon) i).enchant(null);</span>
+<span class="nc bnc" id="L386" title="All 2 branches missed.">				} else if (i instanceof Armor){</span>
+<span class="nc" id="L387">					((Armor) i).inscribe(null);</span>
+				}
+<span class="nc" id="L389">				i.cursed = false;</span>
+<span class="nc" id="L390">			}</span>
+
+			// 30% base chance to be enchanted, stored separately so status isn't revealed early
+			//we generate first so that the outcome doesn't affect the number of RNG rolls
+<span class="nc" id="L394">			smithEnchant = Weapon.Enchantment.random();</span>
+<span class="nc" id="L395">			smithGlyph = Armor.Glyph.random();</span>
+
+<span class="nc" id="L397">			float enchantRoll = Random.Float();</span>
+<span class="nc bnc" id="L398" title="All 2 branches missed.">			if (enchantRoll &gt; 0.3f * ParchmentScrap.enchantChanceMultiplier()){</span>
+<span class="nc" id="L399">				smithEnchant = null;</span>
+<span class="nc" id="L400">				smithGlyph = null;</span>
+			}
+
+<span class="nc" id="L403">		}</span>
+
+		public static int Type(){
+<span class="nc" id="L406">			return type;</span>
+		}
+
+		public static boolean given(){
+<span class="nc" id="L410">			return given;</span>
+		}
+
+		public static boolean started(){
+<span class="nc" id="L414">			return started;</span>
+		}
+
+		public static void start(){
+<span class="nc" id="L418">			started = true;</span>
+<span class="nc" id="L419">		}</span>
+
+		public static boolean beatBoss(){
+<span class="nc" id="L422">			return bossBeaten = true;</span>
+		}
+
+		public static boolean bossBeaten(){
+<span class="nc" id="L426">			return bossBeaten;</span>
+		}
+
+		public static boolean completed(){
+<span class="nc bnc" id="L430" title="All 4 branches missed.">			return given &amp;&amp; completed;</span>
+		}
+
+		public static void complete(){
+<span class="nc" id="L434">			completed = true;</span>
+
+<span class="nc" id="L436">			favor = 0;</span>
+<span class="nc" id="L437">			DarkGold gold = Dungeon.hero.belongings.getItem(DarkGold.class);</span>
+<span class="nc bnc" id="L438" title="All 2 branches missed.">			if (gold != null){</span>
+<span class="nc" id="L439">				favor += Math.min(2000, gold.quantity()*50);</span>
+<span class="nc" id="L440">				gold.detachAll(Dungeon.hero.belongings.backpack);</span>
+			}
+
+<span class="nc" id="L443">			Pickaxe pick = Dungeon.hero.belongings.getItem(Pickaxe.class);</span>
+<span class="nc bnc" id="L444" title="All 2 branches missed.">			if (pick.isEquipped(Dungeon.hero)) {</span>
+<span class="nc" id="L445">				boolean wasCursed = pick.cursed;</span>
+<span class="nc" id="L446">				pick.cursed = false; //so that it can always be removed</span>
+<span class="nc" id="L447">				pick.doUnequip(Dungeon.hero, false);</span>
+<span class="nc" id="L448">				pick.cursed = wasCursed;</span>
+			}
+<span class="nc" id="L450">			pick.detach(Dungeon.hero.belongings.backpack);</span>
+<span class="nc" id="L451">			Quest.pickaxe = pick;</span>
+
+<span class="nc bnc" id="L453" title="All 2 branches missed.">			if (bossBeaten) favor += 1000;</span>
+
+<span class="nc" id="L455">			Statistics.questScores[2] = favor;</span>
+<span class="nc" id="L456">		}</span>
+
+		public static boolean rewardsAvailable(){
+<span class="nc bnc" id="L459" title="All 10 branches missed.">			return favor &gt; 0</span>
+					|| (Quest.smithRewards != null &amp;&amp; Quest.smiths &gt; 0)
+					|| (pickaxe != null &amp;&amp; Statistics.questScores[2] &gt;= 2500);
+		}
+
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

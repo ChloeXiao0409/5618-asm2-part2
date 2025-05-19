@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CleansingDart.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts</a> &gt; <span class="el_source">CleansingDart.java</span></div><h1>CleansingDart.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ChampionEnemy;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfCleansing;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Crossbow;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+
+<span class="nc" id="L34">public class CleansingDart extends TippedDart {</span>
+	
+	{
+<span class="nc" id="L37">		image = ItemSpriteSheet.CLEANSING_DART;</span>
+<span class="nc" id="L38">	}</span>
+	
+	@Override
+	public int proc(Char attacker, final Char defender, int damage) {
+
+<span class="nc bnc" id="L43" title="All 4 branches missed.">		if (processingChargedShot &amp;&amp; defender == attacker) {</span>
+			//do nothing to the hero when processing charged shot
+<span class="nc bnc" id="L45" title="All 2 branches missed.">		} else if (attacker.alignment == defender.alignment){</span>
+<span class="nc" id="L46">			PotionOfCleansing.cleanse(defender, PotionOfCleansing.Cleanse.DURATION*2f);</span>
+<span class="nc" id="L47">			return 0;</span>
+		} else {
+<span class="nc bnc" id="L49" title="All 2 branches missed.">			for (Buff b : defender.buffs()){</span>
+<span class="nc bnc" id="L50" title="All 6 branches missed.">				if (!(b instanceof ChampionEnemy)</span>
+						&amp;&amp; b.type == Buff.buffType.POSITIVE
+						&amp;&amp; !(b instanceof Crossbow.ChargedShot)){
+<span class="nc" id="L53">					b.detach();</span>
+				}
+<span class="nc" id="L55">			}</span>
+			//for when cleansed effects were keeping defender alive (e.g. raging brutes)
+<span class="nc bnc" id="L57" title="All 2 branches missed.">			if (!defender.isAlive()){</span>
+<span class="nc" id="L58">				defender.die(attacker);</span>
+<span class="nc" id="L59">				return super.proc(attacker, defender, damage);</span>
+			}
+<span class="nc bnc" id="L61" title="All 2 branches missed.">			if (defender instanceof Mob) {</span>
+				//need to delay this so damage from the dart doesn't break wandering
+<span class="nc" id="L63">				new FlavourBuff(){</span>
+<span class="nc" id="L64">					{actPriority = VFX_PRIO;}</span>
+					public boolean act() {
+<span class="nc bnc" id="L66" title="All 4 branches missed.">						if (((Mob) defender).state == ((Mob) defender).HUNTING || ((Mob) defender).state == ((Mob) defender).FLEEING){</span>
+<span class="nc" id="L67">							((Mob) defender).state = ((Mob) defender).WANDERING;</span>
+						}
+<span class="nc" id="L69">						((Mob) defender).beckon(Dungeon.level.randomDestination(defender));</span>
+<span class="nc" id="L70">						defender.sprite.showLost();</span>
+<span class="nc" id="L71">						return super.act();</span>
+					}
+<span class="nc" id="L73">				}.attachTo(defender);</span>
+			}
+		}
+
+<span class="nc" id="L77">		return super.proc(attacker, defender, damage);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

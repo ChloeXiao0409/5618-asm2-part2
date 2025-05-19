@@ -1,0 +1,386 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AscensionChallenge.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.buffs</a> &gt; <span class="el_source">AscensionChallenge.java</span></div><h1>AscensionChallenge.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.buffs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.Ratmogrify;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Bat;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Brute;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Crab;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DM100;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DM200;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Elemental;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Eye;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Ghoul;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Gnoll;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Golem;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Guard;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Monk;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Necromancer;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.RipperDemon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Scorpio;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Shaman;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Skeleton;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Slime;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Snake;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Spinner;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Succubus;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Swarm;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Thief;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Warlock;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Shopkeeper;
+import com.shatteredpixel.shatteredpixeldungeon.items.Amulet;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.Image;
+import com.watabou.utils.Bundle;
+
+import java.util.HashMap;
+
+<span class="nc" id="L68">public class AscensionChallenge extends Buff {</span>
+
+<span class="nc" id="L70">	private static HashMap&lt;Class&lt;?extends Mob&gt;, Float&gt; modifiers = new HashMap&lt;&gt;();</span>
+	static {
+<span class="nc" id="L72">		modifiers.put(Rat.class,            10f);</span>
+<span class="nc" id="L73">		modifiers.put(Snake.class,          9f);</span>
+<span class="nc" id="L74">		modifiers.put(Gnoll.class,          9f);</span>
+<span class="nc" id="L75">		modifiers.put(Swarm.class,          8.5f);</span>
+<span class="nc" id="L76">		modifiers.put(Crab.class,           8f);</span>
+<span class="nc" id="L77">		modifiers.put(Slime.class,          8f);</span>
+
+<span class="nc" id="L79">		modifiers.put(Skeleton.class,       5f);</span>
+<span class="nc" id="L80">		modifiers.put(Thief.class,          5f);</span>
+<span class="nc" id="L81">		modifiers.put(DM100.class,          4.5f);</span>
+<span class="nc" id="L82">		modifiers.put(Guard.class,          4f);</span>
+<span class="nc" id="L83">		modifiers.put(Necromancer.class,    4f);</span>
+
+<span class="nc" id="L85">		modifiers.put(Bat.class,            2.5f);</span>
+<span class="nc" id="L86">		modifiers.put(Brute.class,          2.25f);</span>
+<span class="nc" id="L87">		modifiers.put(Shaman.class,         2.25f);</span>
+<span class="nc" id="L88">		modifiers.put(Spinner.class,        2f);</span>
+<span class="nc" id="L89">		modifiers.put(DM200.class,          2f);</span>
+
+<span class="nc" id="L91">		modifiers.put(Ghoul.class,          1.67f);</span>
+<span class="nc" id="L92">		modifiers.put(Elemental.class,      1.67f);</span>
+<span class="nc" id="L93">		modifiers.put(Warlock.class,        1.5f);</span>
+<span class="nc" id="L94">		modifiers.put(Monk.class,           1.5f);</span>
+<span class="nc" id="L95">		modifiers.put(Golem.class,          1.33f);</span>
+
+<span class="nc" id="L97">		modifiers.put(RipperDemon.class,    1.2f);</span>
+<span class="nc" id="L98">		modifiers.put(Succubus.class,       1.2f);</span>
+<span class="nc" id="L99">		modifiers.put(Eye.class,            1.1f);</span>
+<span class="nc" id="L100">		modifiers.put(Scorpio.class,        1.1f);</span>
+<span class="nc" id="L101">	}</span>
+
+	public static float statModifier(Char ch){
+<span class="nc bnc" id="L104" title="All 4 branches missed.">		if (Dungeon.hero == null || Dungeon.hero.buff(AscensionChallenge.class) == null){</span>
+<span class="nc" id="L105">			return 1;</span>
+		}
+
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		if (ch instanceof Ratmogrify.TransmogRat){</span>
+<span class="nc" id="L109">			ch = ((Ratmogrify.TransmogRat) ch).getOriginal();</span>
+		}
+
+<span class="nc bnc" id="L112" title="All 2 branches missed.">		if (ch.buff(AscensionBuffBlocker.class) != null){</span>
+<span class="nc" id="L113">			return 1f;</span>
+		}
+
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		for (Class&lt;?extends Mob&gt; cls : modifiers.keySet()){</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">			if (cls.isAssignableFrom(ch.getClass())){</span>
+<span class="nc" id="L118">				return modifiers.get(cls);</span>
+			}
+<span class="nc" id="L120">		}</span>
+
+<span class="nc" id="L122">		return 1;</span>
+	}
+
+	//distant mobs get constantly beckoned to the hero at 2+ stacks
+	public static void beckonEnemies(){
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		if (Dungeon.hero.buff(AscensionChallenge.class) != null</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">				&amp;&amp; Dungeon.hero.buff(AscensionChallenge.class).stacks &gt;= 2f){</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">			for (Mob m : Dungeon.level.mobs){</span>
+<span class="nc bnc" id="L130" title="All 4 branches missed.">				if (m.alignment == Char.Alignment.ENEMY &amp;&amp; m.distance(Dungeon.hero) &gt; 8) {</span>
+<span class="nc" id="L131">					m.beckon(Dungeon.hero.pos);</span>
+				}
+<span class="nc" id="L133">			}</span>
+		}
+<span class="nc" id="L135">	}</span>
+
+	//mobs move at 2x speed when not hunting/fleeing at 4 stacks or higher
+	public static float enemySpeedModifier(Mob m){
+<span class="nc bnc" id="L139" title="All 4 branches missed.">		if (Dungeon.hero.buff(AscensionChallenge.class) != null</span>
+				&amp;&amp; m.alignment == Char.Alignment.ENEMY
+<span class="nc bnc" id="L141" title="All 6 branches missed.">				&amp;&amp; Dungeon.hero.buff(AscensionChallenge.class).stacks &gt;= 4f</span>
+				&amp;&amp; m.state != m.HUNTING &amp;&amp; m.state != m.FLEEING){
+<span class="nc" id="L143">			return 2;</span>
+		}
+
+<span class="nc" id="L146">		return 1;</span>
+	}
+
+	//hero speed is halved and capped at 1x at 6+ stacks
+	public static float modifyHeroSpeed(float speed){
+<span class="nc bnc" id="L151" title="All 2 branches missed.">		if (Dungeon.hero.buff(AscensionChallenge.class) != null</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">				&amp;&amp; Dungeon.hero.buff(AscensionChallenge.class).stacks &gt;= 6f){</span>
+<span class="nc" id="L153">			return Math.min(speed/2f, 1f);</span>
+		}
+
+<span class="nc" id="L156">		return speed;</span>
+	}
+
+	public static void processEnemyKill(Char enemy){
+<span class="nc" id="L160">		AscensionChallenge chal = Dungeon.hero.buff(AscensionChallenge.class);</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">		if (chal == null) return;</span>
+
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		if (enemy instanceof Ratmogrify.TransmogRat){</span>
+<span class="nc" id="L164">			enemy = ((Ratmogrify.TransmogRat) enemy).getOriginal();</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">			if (enemy == null) return;</span>
+		}
+
+		//only enemies that are boosted count
+<span class="nc bnc" id="L169" title="All 2 branches missed.">		if (enemy.buff(AscensionBuffBlocker.class) != null){</span>
+<span class="nc" id="L170">			return;</span>
+		}
+
+<span class="nc" id="L173">		boolean found = false;</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">		for (Class&lt;?extends Mob&gt; cls : modifiers.keySet()){</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">			if (cls.isAssignableFrom(enemy.getClass())){</span>
+<span class="nc" id="L176">				found = true;</span>
+<span class="nc" id="L177">				break;</span>
+			}
+<span class="nc" id="L179">		}</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">		if (!found) return;</span>
+
+<span class="nc" id="L182">		float oldStacks = chal.stacks;</span>
+<span class="nc bnc" id="L183" title="All 4 branches missed.">		if (enemy instanceof Ghoul || enemy instanceof RipperDemon){</span>
+<span class="nc" id="L184">			chal.stacks -= 0.5f;</span>
+		} else {
+<span class="nc" id="L186">			chal.stacks -= 1;</span>
+		}
+<span class="nc" id="L188">		chal.stacks = Math.max(0, chal.stacks);</span>
+<span class="nc bnc" id="L189" title="All 4 branches missed.">		if (chal.stacks &lt; 8f &amp;&amp; (int)(chal.stacks/2) != (int)(oldStacks/2f)){</span>
+<span class="nc" id="L190">			GLog.p(Messages.get(AscensionChallenge.class, &quot;weaken&quot;));</span>
+		}
+
+		//if the hero is at the max level, grant them 10 effective xp per stack cleared
+		// for the purposes of on-xp gain effects
+<span class="nc bnc" id="L195" title="All 4 branches missed.">		if (oldStacks &gt; chal.stacks &amp;&amp; Dungeon.hero.lvl == Hero.MAX_LEVEL){</span>
+<span class="nc" id="L196">			Dungeon.hero.earnExp(Math.round(10*(oldStacks - chal.stacks)), chal.getClass());</span>
+		}
+
+<span class="nc" id="L199">		BuffIndicator.refreshHero();</span>
+<span class="nc" id="L200">	}</span>
+
+	public static int AscensionCorruptResist(Mob m){
+		//default to just using their EXP value if no ascent challenge is happening
+<span class="nc bnc" id="L204" title="All 2 branches missed.">		if (Dungeon.hero.buff(AscensionChallenge.class) == null){</span>
+<span class="nc" id="L205">			return m.EXP;</span>
+		}
+
+<span class="nc bnc" id="L208" title="All 2 branches missed.">		if (m instanceof Ratmogrify.TransmogRat){</span>
+<span class="nc" id="L209">			m = ((Ratmogrify.TransmogRat) m).getOriginal();</span>
+		}
+
+<span class="nc bnc" id="L212" title="All 2 branches missed.">		if (m.buff(AscensionBuffBlocker.class) != null){</span>
+<span class="nc" id="L213">			return m.EXP;</span>
+		}
+
+<span class="nc bnc" id="L216" title="All 2 branches missed.">		if (m instanceof RipperDemon){</span>
+<span class="nc" id="L217">			return 10; //reduced due to their numbers</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">		} else if (m instanceof Ghoul){</span>
+<span class="nc" id="L219">			return 7; //half of 13, rounded up</span>
+		} else {
+<span class="nc bnc" id="L221" title="All 2 branches missed.">			for (Class&lt;?extends Mob&gt; cls : modifiers.keySet()){</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">				if (cls.isAssignableFrom(m.getClass())){</span>
+<span class="nc" id="L223">					return Math.max(13, m.EXP); //same exp as an eye</span>
+				}
+<span class="nc" id="L225">			}</span>
+		}
+<span class="nc" id="L227">		return m.EXP;</span>
+	}
+
+	{
+<span class="nc" id="L231">		revivePersists = true;</span>
+	}
+
+<span class="nc" id="L234">	private float stacks = 0;</span>
+<span class="nc" id="L235">	private float damageInc = 0;</span>
+
+	public void onLevelSwitch(){
+<span class="nc bnc" id="L238" title="All 2 branches missed.">		if (Dungeon.depth &lt; Statistics.highestAscent){</span>
+<span class="nc" id="L239">			Statistics.highestAscent = Dungeon.depth;</span>
+<span class="nc" id="L240">			justAscended = true;</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">			if (Dungeon.bossLevel()){</span>
+<span class="nc" id="L242">				Dungeon.hero.buff(Hunger.class).satisfy(Hunger.STARVING);</span>
+<span class="nc" id="L243">				Buff.affect(Dungeon.hero, Healing.class).setHeal(Dungeon.hero.HT, 0, 20);</span>
+			} else {
+<span class="nc" id="L245">				stacks += 2f;</span>
+
+				//clears any existing mobs from the level and adds one initial one
+				//this helps balance difficulty between levels with lots of mobs left, and ones with few
+<span class="nc bnc" id="L249" title="All 2 branches missed.">				for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">					if (!mob.reset()) {</span>
+<span class="nc" id="L251">						Dungeon.level.mobs.remove( mob );</span>
+					}
+				}
+<span class="nc" id="L254">				Dungeon.level.spawnMob(12);</span>
+
+			}
+		}
+<span class="nc bnc" id="L258" title="All 2 branches missed.">		if (Statistics.highestAscent &lt; 20){</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">			for (Mob m : Dungeon.level.mobs.toArray(new Mob[0])){</span>
+<span class="nc bnc" id="L260" title="All 2 branches missed.">				if (m instanceof Shopkeeper){</span>
+<span class="nc" id="L261">					((Shopkeeper) m).flee();</span>
+				}
+			}
+		}
+
+<span class="nc" id="L266">	}</span>
+
+	//messages at boss levels only trigger on first ascent
+<span class="nc" id="L269">	private boolean justAscended = false;</span>
+
+	public void saySwitch(){
+<span class="nc bnc" id="L272" title="All 2 branches missed.">		if (Dungeon.bossLevel()){</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">			if (justAscended) {</span>
+<span class="nc" id="L274">				GLog.p(Messages.get(this, &quot;break&quot;));</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">				for (Char ch : Actor.chars()){</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">					if (ch instanceof DriedRose.GhostHero){</span>
+<span class="nc" id="L277">						((DriedRose.GhostHero) ch).sayAppeared();</span>
+					}
+<span class="nc" id="L279">				}</span>
+			}
+		} else {
+<span class="nc bnc" id="L282" title="All 2 branches missed.">			if (Dungeon.depth == 1){</span>
+<span class="nc" id="L283">				GLog.n(Messages.get(this, &quot;almost&quot;));</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">			} else if (stacks &gt;= 8f){</span>
+<span class="nc" id="L285">				GLog.n(Messages.get(this, &quot;damage&quot;));</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">			} else if (stacks &gt;= 6f){</span>
+<span class="nc" id="L287">				GLog.n(Messages.get(this, &quot;slow&quot;));</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">			} else if (stacks &gt;= 4f){</span>
+<span class="nc" id="L289">				GLog.n(Messages.get(this, &quot;haste&quot;));</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">			} else if (stacks &gt;= 2f){</span>
+<span class="nc" id="L291">				GLog.n(Messages.get(this, &quot;beckon&quot;));</span>
+			}
+<span class="nc bnc" id="L293" title="All 6 branches missed.">			if (stacks &gt; 8 || stacks &gt; 4 &amp;&amp; Dungeon.depth &gt; 20){</span>
+<span class="nc" id="L294">				GLog.h(Messages.get(this, &quot;weaken_info&quot;));</span>
+			}
+		}
+<span class="nc" id="L297">		justAscended = false;</span>
+<span class="nc" id="L298">	}</span>
+
+	@Override
+	public boolean act() {
+
+<span class="nc" id="L303">		beckonEnemies();</span>
+
+		//hero starts progressively taking damage over time at 8+ stacks
+<span class="nc bnc" id="L306" title="All 4 branches missed.">		if (stacks &gt;= 8 &amp;&amp; !Dungeon.bossLevel()){</span>
+<span class="nc" id="L307">			damageInc += (stacks-4)/4f;</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">			if (damageInc &gt;= 1){</span>
+<span class="nc" id="L309">				target.damage((int)damageInc, this);</span>
+<span class="nc" id="L310">				damageInc -= (int)damageInc;</span>
+
+<span class="nc bnc" id="L312" title="All 4 branches missed.">				if (target == Dungeon.hero &amp;&amp; !target.isAlive()){</span>
+<span class="nc" id="L313">					Badges.validateDeathFromFriendlyMagic();</span>
+<span class="nc" id="L314">					GLog.n(Messages.get(this, &quot;on_kill&quot;));</span>
+<span class="nc" id="L315">					Dungeon.fail(Amulet.class);</span>
+				}
+			}
+		} else {
+<span class="nc" id="L319">			damageInc = 0;</span>
+		}
+
+<span class="nc" id="L322">		spend(TICK);</span>
+<span class="nc" id="L323">		return true;</span>
+	}
+
+	@Override
+	public int icon() {
+<span class="nc" id="L328">		return BuffIndicator.AMULET;</span>
+	}
+
+	@Override
+	public void tintIcon(Image icon) {
+<span class="nc bnc" id="L333" title="All 2 branches missed.">		if (stacks &lt; 2){</span>
+<span class="nc" id="L334">			icon.hardlight(0.5f, 1, 0);</span>
+<span class="nc bnc" id="L335" title="All 2 branches missed.">		} else if (stacks &lt; 4) {</span>
+<span class="nc" id="L336">			icon.hardlight(1, 1, 0);</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">		} else if (stacks &lt; 6){</span>
+<span class="nc" id="L338">			icon.hardlight(1, 0.67f, 0);</span>
+<span class="nc bnc" id="L339" title="All 2 branches missed.">		} else if (stacks &lt; 8){</span>
+<span class="nc" id="L340">			icon.hardlight(1, 0.33f, 0);</span>
+		} else {
+<span class="nc" id="L342">			icon.hardlight(1, 0, 0);</span>
+		}
+<span class="nc" id="L344">	}</span>
+
+	@Override
+	public String desc() {
+<span class="nc" id="L348">		String desc = Messages.get(this, &quot;desc&quot;);</span>
+<span class="nc" id="L349">		desc += &quot;\n&quot;;</span>
+<span class="nc bnc" id="L350" title="All 2 branches missed.">		if (stacks &lt; 2){</span>
+
+<span class="nc" id="L352">			desc += &quot;\n&quot; + Messages.get(this, &quot;desc_clear&quot;);</span>
+
+		} else {
+
+<span class="nc bnc" id="L356" title="All 2 branches missed.">			if (stacks &gt;= 2)    desc += &quot;\n&quot; + Messages.get(this, &quot;desc_beckon&quot;);</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">			if (stacks &gt;= 4)    desc += &quot;\n&quot; + Messages.get(this, &quot;desc_haste&quot;);</span>
+<span class="nc bnc" id="L358" title="All 2 branches missed.">			if (stacks &gt;= 6)    desc += &quot;\n&quot; + Messages.get(this, &quot;desc_slow&quot;);</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">			if (stacks &gt;= 8)    desc += &quot;\n&quot; + Messages.get(this, &quot;desc_damage&quot;);</span>
+
+		}
+
+<span class="nc" id="L363">		return desc;</span>
+	}
+
+	public static final String STACKS = &quot;enemy_stacks&quot;;
+	public static final String DAMAGE = &quot;damage_inc&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L371">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L372">		bundle.put(STACKS, stacks);</span>
+<span class="nc" id="L373">		bundle.put(DAMAGE, damageInc);</span>
+<span class="nc" id="L374">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L378">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L379">		stacks = bundle.getFloat(STACKS);</span>
+<span class="nc" id="L380">		damageInc = bundle.getFloat(DAMAGE);</span>
+<span class="nc" id="L381">	}</span>
+
+	//chars with this buff are not boosted by the ascension challenge
+<span class="nc" id="L384">	public static class AscensionBuffBlocker extends Buff{};</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

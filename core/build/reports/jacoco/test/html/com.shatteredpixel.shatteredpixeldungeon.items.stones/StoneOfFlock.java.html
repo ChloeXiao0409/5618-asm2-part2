@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StoneOfFlock.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.stones</a> &gt; <span class="el_source">StoneOfFlock.java</span></div><h1>StoneOfFlock.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.stones;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Sheep;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.watabou.utils.BArray;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.PathFinder;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L38">public class StoneOfFlock extends Runestone {</span>
+	
+	{
+<span class="nc" id="L41">		image = ItemSpriteSheet.STONE_FLOCK;</span>
+<span class="nc" id="L42">	}</span>
+	
+	@Override
+	protected void activate(int cell) {
+
+<span class="nc" id="L47">		PathFinder.buildDistanceMap( cell, BArray.not( Dungeon.level.solid, null ), 2 );</span>
+<span class="nc" id="L48">		ArrayList&lt;Integer&gt; spawnPoints = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">		for (int i = 0; i &lt; PathFinder.distance.length; i++) {</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">			if (PathFinder.distance[i] &lt; Integer.MAX_VALUE) {</span>
+<span class="nc" id="L51">				spawnPoints.add(i);</span>
+			}
+		}
+
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		for (int i : spawnPoints){</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">			if (Dungeon.level.insideMap(i)</span>
+<span class="nc bnc" id="L57" title="All 4 branches missed.">					&amp;&amp; Actor.findChar(i) == null</span>
+					&amp;&amp; !(Dungeon.level.pit[i])) {
+<span class="nc" id="L59">				Sheep sheep = new Sheep();</span>
+<span class="nc" id="L60">				sheep.lifespan = 8;</span>
+<span class="nc" id="L61">				sheep.pos = i;</span>
+<span class="nc" id="L62">				GameScene.add(sheep);</span>
+<span class="nc" id="L63">				Dungeon.level.occupyCell(sheep);</span>
+<span class="nc" id="L64">				CellEmitter.get(i).burst(Speck.factory(Speck.WOOL), 4);</span>
+			}
+<span class="nc" id="L66">		}</span>
+
+<span class="nc" id="L68">		CellEmitter.get(cell).burst(Speck.factory(Speck.WOOL), 4);</span>
+<span class="nc" id="L69">		Sample.INSTANCE.play(Assets.Sounds.PUFF);</span>
+<span class="nc" id="L70">		Sample.INSTANCE.play(Assets.Sounds.SHEEP);</span>
+		
+<span class="nc" id="L72">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

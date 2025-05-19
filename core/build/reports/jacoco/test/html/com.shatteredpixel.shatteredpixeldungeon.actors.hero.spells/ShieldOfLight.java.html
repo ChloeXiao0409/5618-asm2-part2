@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ShieldOfLight.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells</a> &gt; <span class="el_source">ShieldOfLight.java</span></div><h1>ShieldOfLight.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.PowerOfMany;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+
+<span class="nc" id="L44">public class ShieldOfLight extends TargetedClericSpell {</span>
+
+<span class="nc" id="L46">	public static ShieldOfLight INSTANCE = new ShieldOfLight();</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L50">		return HeroIcon.SHIELD_OF_LIGHT;</span>
+	}
+
+	@Override
+	public int targetingFlags() {
+<span class="nc" id="L55">		return Ballistica.STOP_TARGET;</span>
+	}
+
+	@Override
+	public boolean canCast(Hero hero) {
+<span class="nc bnc" id="L60" title="All 4 branches missed.">		return super.canCast(hero) &amp;&amp; hero.hasTalent(Talent.SHIELD_OF_LIGHT);</span>
+	}
+
+	@Override
+	protected void onTargetSelected(HolyTome tome, Hero hero, Integer target) {
+
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (target == null){</span>
+<span class="nc" id="L67">			return;</span>
+		}
+
+<span class="nc" id="L70">		Char ch = Actor.findChar(target);</span>
+<span class="nc bnc" id="L71" title="All 6 branches missed.">		if (ch == null || ch.alignment == Char.Alignment.ALLY || !Dungeon.level.heroFOV[target]){</span>
+<span class="nc" id="L72">			GLog.w(Messages.get(this, &quot;no_target&quot;));</span>
+<span class="nc" id="L73">			return;</span>
+		}
+
+<span class="nc" id="L76">		QuickSlotButton.target(ch);</span>
+
+<span class="nc" id="L78">		Sample.INSTANCE.play(Assets.Sounds.READ);</span>
+<span class="nc" id="L79">		hero.sprite.operate(hero.pos);</span>
+
+		//1 turn less as the casting is instant
+<span class="nc" id="L82">		Buff.prolong( hero, ShieldOfLightTracker.class, 3f).object = ch.id();</span>
+
+<span class="nc" id="L84">		hero.busy();</span>
+<span class="nc" id="L85">		hero.sprite.operate(hero.pos);</span>
+<span class="nc" id="L86">		hero.sprite.emitter().start(Speck.factory(Speck.LIGHT), 0.15f, 6);</span>
+
+<span class="nc" id="L88">		Char ally = PowerOfMany.getPoweredAlly();</span>
+<span class="nc bnc" id="L89" title="All 4 branches missed.">		if (ally != null &amp;&amp; ally.buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null){</span>
+<span class="nc" id="L90">			Buff.prolong( ally, ShieldOfLightTracker.class, 3f).object = ch.id();</span>
+<span class="nc" id="L91">			ally.sprite.emitter().start(Speck.factory(Speck.LIGHT), 0.15f, 6);</span>
+		}
+
+<span class="nc" id="L94">		onSpellCast(tome, hero);</span>
+
+<span class="nc" id="L96">	}</span>
+
+	@Override
+	public String desc() {
+<span class="nc" id="L100">		int min = 1 + Dungeon.hero.pointsInTalent(Talent.SHIELD_OF_LIGHT);</span>
+<span class="nc" id="L101">		int max = 2*min;</span>
+<span class="nc" id="L102">		return Messages.get(this, &quot;desc&quot;, min, max) + &quot;\n\n&quot; + Messages.get(this, &quot;charge_cost&quot;, (int)chargeUse(Dungeon.hero));</span>
+	}
+
+<span class="nc" id="L105">	public static class ShieldOfLightTracker extends FlavourBuff {</span>
+
+<span class="nc" id="L107">		public int object = 0;</span>
+
+		private static final float DURATION = 4;
+
+		{
+<span class="nc" id="L112">			type = buffType.POSITIVE;</span>
+<span class="nc" id="L113">		}</span>
+
+		@Override
+		public int icon() {
+<span class="nc" id="L117">			return BuffIndicator.LIGHT_SHIELD;</span>
+		}
+
+		@Override
+		public float iconFadePercent() {
+<span class="nc" id="L122">			return Math.max(0, (DURATION - visualcooldown()) / DURATION);</span>
+		}
+
+		private static final String OBJECT  = &quot;object&quot;;
+
+		@Override
+		public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L129">			super.storeInBundle( bundle );</span>
+<span class="nc" id="L130">			bundle.put( OBJECT, object );</span>
+<span class="nc" id="L131">		}</span>
+
+		@Override
+		public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L135">			super.restoreFromBundle( bundle );</span>
+<span class="nc" id="L136">			object = bundle.getInt( OBJECT );</span>
+<span class="nc" id="L137">		}</span>
+
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

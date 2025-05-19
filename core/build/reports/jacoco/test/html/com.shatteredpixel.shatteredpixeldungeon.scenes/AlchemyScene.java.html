@@ -1,0 +1,1204 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AlchemyScene.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.scenes</a> &gt; <span class="el_source">AlchemyScene.java</span></div><h1>AlchemyScene.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.scenes;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SparkParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.EnergyCrystal;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.LiquidMetal;
+import com.shatteredpixel.shatteredpixeldungeon.items.Recipe;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.AlchemistsToolkit;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.TrinketCatalyst;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Document;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Journal;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Button;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ExitButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.IconButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ItemSlot;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RadialMenu;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.StatusPane;
+import com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Toolbar;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.windows.IconTitle;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndEnergizeItem;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoItem;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndJournal;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndKeyBindings;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndMessage;
+import com.watabou.gltextures.TextureCache;
+import com.watabou.glwrap.Blending;
+import com.watabou.input.ControllerHandler;
+import com.watabou.input.GameAction;
+import com.watabou.input.KeyBindings;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.NinePatch;
+import com.watabou.noosa.NoosaScript;
+import com.watabou.noosa.NoosaScriptNoLighting;
+import com.watabou.noosa.SkinnedBlock;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.noosa.ui.Component;
+
+import java.io.IOException;
+import java.util.ArrayList;
+
+<span class="nc" id="L85">public class AlchemyScene extends PixelScene {</span>
+
+	//max of 3 inputs, and 3 potential recipe outputs
+<span class="nc" id="L88">	private static final InputButton[] inputs = new InputButton[3];</span>
+<span class="nc" id="L89">	private static final CombineButton[] combines = new CombineButton[3];</span>
+<span class="nc" id="L90">	private static final OutputSlot[] outputs = new OutputSlot[3];</span>
+
+	private IconButton cancel;
+	private IconButton repeat;
+<span class="nc" id="L94">	private static ArrayList&lt;Item&gt; lastIngredients = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L95">	private static Recipe lastRecipe = null;</span>
+
+	private Emitter smokeEmitter;
+	private Emitter bubbleEmitter;
+	private Emitter sparkEmitter;
+	
+	private Emitter lowerBubbles;
+	private SkinnedBlock water;
+
+	private Image energyIcon;
+	private RenderedTextBlock energyLeft;
+	private IconButton energyAdd;
+<span class="nc" id="L107">	private boolean energyAddBlinking = false;</span>
+
+<span class="nc" id="L109">	private static boolean splitAlchGuide = false;</span>
+<span class="nc" id="L110">	private WndJournal.AlchemyTab alchGuide = null;</span>
+	private static int centerW;
+
+	private static final int BTN_SIZE	= 28;
+
+	{
+<span class="nc" id="L116">		inGameScene = true;</span>
+	}
+	
+	@Override
+	public void create() {
+<span class="nc" id="L121">		super.create();</span>
+		
+<span class="nc" id="L123">		water = new SkinnedBlock(</span>
+				Camera.main.width, Camera.main.height,
+<span class="nc" id="L125">				Dungeon.level.waterTex() ){</span>
+			
+			@Override
+			protected NoosaScript script() {
+<span class="nc" id="L129">				return NoosaScriptNoLighting.get();</span>
+			}
+			
+			@Override
+			public void draw() {
+				//water has no alpha component, this improves performance
+<span class="nc" id="L135">				Blending.disable();</span>
+<span class="nc" id="L136">				super.draw();</span>
+<span class="nc" id="L137">				Blending.enable();</span>
+<span class="nc" id="L138">			}</span>
+		};
+<span class="nc" id="L140">		water.autoAdjust = true;</span>
+<span class="nc" id="L141">		add(water);</span>
+		
+<span class="nc" id="L143">		Image im = new Image(TextureCache.createGradient(0x66000000, 0x88000000, 0xAA000000, 0xCC000000, 0xFF000000));</span>
+<span class="nc" id="L144">		im.angle = 90;</span>
+<span class="nc" id="L145">		im.x = Camera.main.width;</span>
+<span class="nc" id="L146">		im.scale.x = Camera.main.height/5f;</span>
+<span class="nc" id="L147">		im.scale.y = Camera.main.width;</span>
+<span class="nc" id="L148">		add(im);</span>
+
+<span class="nc" id="L150">		ExitButton btnExit = new ExitButton(){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L153">				Game.switchScene(GameScene.class);</span>
+<span class="nc" id="L154">			}</span>
+		};
+<span class="nc" id="L156">		btnExit.setPos( Camera.main.width - btnExit.width(), 0 );</span>
+<span class="nc" id="L157">		add( btnExit );</span>
+
+<span class="nc" id="L159">		bubbleEmitter = new Emitter();</span>
+<span class="nc" id="L160">		add(bubbleEmitter);</span>
+
+<span class="nc" id="L162">		lowerBubbles = new Emitter();</span>
+<span class="nc" id="L163">		add(lowerBubbles);</span>
+		
+<span class="nc" id="L165">		IconTitle title = new IconTitle(Icons.ALCHEMY.get(), Messages.get(this, &quot;title&quot;) );</span>
+<span class="nc" id="L166">		title.setSize(200, 0);</span>
+<span class="nc" id="L167">		title.setPos(</span>
+<span class="nc" id="L168">				(Camera.main.width - title.reqWidth()) / 2f,</span>
+<span class="nc" id="L169">				(20 - title.height()) / 2f</span>
+		);
+<span class="nc" id="L171">		align(title);</span>
+<span class="nc" id="L172">		add(title);</span>
+		
+<span class="nc" id="L174">		int w = Math.min(50 + Camera.main.width/2, 150);</span>
+<span class="nc" id="L175">		int left = (Camera.main.width - w)/2;</span>
+
+<span class="nc" id="L177">		centerW = left + w/2;</span>
+
+<span class="nc" id="L179">		int pos = (Camera.main.height - 120)/2;</span>
+
+<span class="nc bnc" id="L181" title="All 6 branches missed.">		if (splitAlchGuide &amp;&amp;</span>
+				Camera.main.width &gt;= 300 &amp;&amp;
+				Camera.main.height &gt;= PixelScene.MIN_HEIGHT_FULL){
+<span class="nc" id="L184">			w = Math.min(150, Camera.main.width/2);</span>
+<span class="nc" id="L185">			left = (Camera.main.width/2 - w);</span>
+<span class="nc" id="L186">			centerW = left + w/2;</span>
+
+<span class="nc" id="L188">			NinePatch guideBG = Chrome.get(Chrome.Type.TOAST);</span>
+<span class="nc" id="L189">			guideBG.size(126 + guideBG.marginHor(), Math.min(Camera.main.height - 18, 191 + guideBG.marginVer()));</span>
+<span class="nc" id="L190">			guideBG.y = Math.max(17, (Camera.main.height - guideBG.height())/2f);</span>
+<span class="nc" id="L191">			guideBG.x = Camera.main.width - left - guideBG.width();</span>
+<span class="nc" id="L192">			add(guideBG);</span>
+
+<span class="nc" id="L194">			alchGuide = new WndJournal.AlchemyTab();</span>
+<span class="nc" id="L195">			add(alchGuide);</span>
+<span class="nc" id="L196">			alchGuide.setRect(guideBG.x + guideBG.marginLeft(),</span>
+<span class="nc" id="L197">					guideBG.y + guideBG.marginTop(),</span>
+<span class="nc" id="L198">					guideBG.width() - guideBG.marginHor(),</span>
+<span class="nc" id="L199">					guideBG.height() - guideBG.marginVer());</span>
+
+<span class="nc" id="L201">		} else {</span>
+<span class="nc" id="L202">			splitAlchGuide = false;</span>
+		}
+		
+<span class="nc" id="L205">		RenderedTextBlock desc = PixelScene.renderTextBlock(6);</span>
+<span class="nc" id="L206">		desc.maxWidth(w);</span>
+<span class="nc" id="L207">		desc.text( Messages.get(AlchemyScene.class, &quot;text&quot;) );</span>
+<span class="nc" id="L208">		desc.setPos(left + (w - desc.width())/2, pos);</span>
+<span class="nc" id="L209">		add(desc);</span>
+		
+<span class="nc" id="L211">		pos += desc.height() + 6;</span>
+
+<span class="nc" id="L213">		NinePatch inputBG = Chrome.get(Chrome.Type.TOAST_TR);</span>
+<span class="nc" id="L214">		inputBG.x = left + 6;</span>
+<span class="nc" id="L215">		inputBG.y = pos;</span>
+<span class="nc" id="L216">		inputBG.size(BTN_SIZE+8, 3*BTN_SIZE + 4 + 8);</span>
+<span class="nc" id="L217">		add(inputBG);</span>
+
+<span class="nc" id="L219">		pos += 4;</span>
+
+<span class="nc" id="L221">		synchronized (inputs) {</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">			for (int i = 0; i &lt; inputs.length; i++) {</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">				if (inputs[i] == null) {</span>
+<span class="nc" id="L224">					inputs[i] = new InputButton();</span>
+				} else {
+					//in case the scene was reset without calling destroy() for some reason
+<span class="nc" id="L227">					Item item = inputs[i].item();</span>
+<span class="nc" id="L228">					inputs[i] = new InputButton();</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">					if (item != null){</span>
+<span class="nc" id="L230">						inputs[i].item(item);</span>
+					}
+				}
+<span class="nc" id="L233">				inputs[i].setRect(left + 10, pos, BTN_SIZE, BTN_SIZE);</span>
+<span class="nc" id="L234">				add(inputs[i]);</span>
+<span class="nc" id="L235">				pos += BTN_SIZE + 2;</span>
+			}
+<span class="nc" id="L237">		}</span>
+
+<span class="nc" id="L239">		Button invSelector = new Button(){</span>
+			@Override
+			protected void onClick() {
+<span class="nc bnc" id="L242" title="All 2 branches missed.">						if (Dungeon.hero != null) {</span>
+<span class="nc" id="L243">							ArrayList&lt;Bag&gt; bags = Dungeon.hero.belongings.getBags();</span>
+
+<span class="nc" id="L245">							String[] names = new String[bags.size()];</span>
+<span class="nc" id="L246">							Image[] images = new Image[bags.size()];</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">							for (int i = 0; i &lt; bags.size(); i++){</span>
+<span class="nc" id="L248">								names[i] = Messages.titleCase(bags.get(i).name());</span>
+<span class="nc" id="L249">								images[i] = new ItemSprite(bags.get(i));</span>
+							}
+<span class="nc" id="L251">							String info = &quot;&quot;;</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">							if (ControllerHandler.controllerActive){</span>
+<span class="nc" id="L253">								info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.LEFT_CLICK, true)) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;container_select&quot;) + &quot;\n&quot;;</span>
+<span class="nc" id="L254">								info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, true)) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;container_cancel&quot;);</span>
+							} else {
+<span class="nc" id="L256">								info += Messages.get(WndKeyBindings.class, SPDAction.LEFT_CLICK.name()) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;container_select&quot;) + &quot;\n&quot;;</span>
+<span class="nc" id="L257">								info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, false)) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;container_cancel&quot;);</span>
+							}
+
+<span class="nc" id="L260">							Game.scene().addToFront(new RadialMenu(Messages.get(Toolbar.class, &quot;container_prompt&quot;), info, names, images){</span>
+								@Override
+								public void onSelect(int idx, boolean alt) {
+<span class="nc" id="L263">									super.onSelect(idx, alt);</span>
+<span class="nc" id="L264">									Bag bag = bags.get(idx);</span>
+<span class="nc" id="L265">									ArrayList&lt;Item&gt; items = (ArrayList&lt;Item&gt;) bag.items.clone();</span>
+
+<span class="nc bnc" id="L267" title="All 2 branches missed.">									for(Item i : bag.items){</span>
+<span class="nc bnc" id="L268" title="All 4 branches missed.">										if (Dungeon.hero.belongings.lostInventory() &amp;&amp; !i.keptThroughLostInventory()) items.remove(i);</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">										if (!Recipe.usableInRecipe(i)) items.remove(i);</span>
+<span class="nc" id="L270">									}</span>
+
+<span class="nc bnc" id="L272" title="All 2 branches missed.">									if (items.size() == 0){</span>
+<span class="nc" id="L273">										ShatteredPixelDungeon.scene().addToFront(new WndMessage(Messages.get(AlchemyScene.class, &quot;no_items&quot;)));</span>
+<span class="nc" id="L274">										return;</span>
+									}
+
+<span class="nc" id="L277">									String[] itemNames = new String[items.size()];</span>
+<span class="nc" id="L278">									Image[] itemIcons = new Image[items.size()];</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">									for (int i = 0; i &lt; items.size(); i++){</span>
+<span class="nc" id="L280">										itemNames[i] = Messages.titleCase(items.get(i).name());</span>
+<span class="nc" id="L281">										itemIcons[i] = new ItemSprite(items.get(i));</span>
+									}
+
+<span class="nc" id="L284">									String info = &quot;&quot;;</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">									if (ControllerHandler.controllerActive){</span>
+<span class="nc" id="L286">										info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.LEFT_CLICK, true)) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;item_select&quot;) + &quot;\n&quot;;</span>
+<span class="nc" id="L287">										info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, true)) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;item_cancel&quot;);</span>
+									} else {
+<span class="nc" id="L289">										info += Messages.get(WndKeyBindings.class, SPDAction.LEFT_CLICK.name()) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;item_select&quot;) + &quot;\n&quot;;</span>
+<span class="nc" id="L290">										info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, false)) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;item_cancel&quot;);</span>
+									}
+
+<span class="nc" id="L293">									Game.scene().addToFront(new RadialMenu(Messages.get(Toolbar.class, &quot;item_prompt&quot;), info, itemNames, itemIcons){</span>
+										@Override
+										public void onSelect(int idx, boolean alt) {
+<span class="nc" id="L296">											super.onSelect(idx, alt);</span>
+<span class="nc" id="L297">											Item item = items.get(idx);</span>
+<span class="nc" id="L298">											synchronized (inputs) {</span>
+<span class="nc bnc" id="L299" title="All 4 branches missed.">												if (item != null &amp;&amp; inputs[0] != null) {</span>
+<span class="nc bnc" id="L300" title="All 2 branches missed.">													for (int i = 0; i &lt; inputs.length; i++) {</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">														if (inputs[i].item() == null) {</span>
+<span class="nc bnc" id="L302" title="All 2 branches missed.">															if (item instanceof LiquidMetal){</span>
+<span class="nc" id="L303">																inputs[i].item(item.detachAll(Dungeon.hero.belongings.backpack));</span>
+															} else {
+<span class="nc" id="L305">																inputs[i].item(item.detach(Dungeon.hero.belongings.backpack));</span>
+															}
+<span class="nc" id="L307">															break;</span>
+														}
+													}
+<span class="nc" id="L310">													updateState();</span>
+												}
+<span class="nc" id="L312">											}</span>
+
+<span class="nc" id="L314">										}</span>
+									});
+<span class="nc" id="L316">								}</span>
+							});
+						}
+<span class="nc" id="L319">			}</span>
+
+			@Override
+			public GameAction keyAction() {
+<span class="nc" id="L323">				return SPDAction.INVENTORY_SELECTOR;</span>
+			}
+		};
+<span class="nc" id="L326">		add(invSelector);</span>
+
+<span class="nc" id="L328">		cancel = new IconButton(Icons.CLOSE.get()){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L331">				super.onClick();</span>
+<span class="nc" id="L332">				clearSlots();</span>
+<span class="nc" id="L333">				updateState();</span>
+<span class="nc" id="L334">			}</span>
+
+			@Override
+			public GameAction keyAction() {
+<span class="nc" id="L338">				return SPDAction.BACK;</span>
+			}
+
+			@Override
+			protected String hoverText() {
+<span class="nc" id="L343">				return Messages.get(AlchemyScene.class, &quot;cancel&quot;);</span>
+			}
+		};
+<span class="nc" id="L346">		cancel.setRect(left + 8, pos + 2, 16, 16);</span>
+<span class="nc" id="L347">		cancel.enable(false);</span>
+<span class="nc" id="L348">		add(cancel);</span>
+
+<span class="nc" id="L350">		repeat = new IconButton(Icons.REPEAT.get()){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L353">				super.onClick();</span>
+<span class="nc bnc" id="L354" title="All 2 branches missed.">				if (lastRecipe != null){</span>
+<span class="nc" id="L355">					populate(lastIngredients, Dungeon.hero.belongings);</span>
+				}
+<span class="nc" id="L357">			}</span>
+
+			@Override
+			public GameAction keyAction() {
+<span class="nc" id="L361">				return SPDAction.TAG_RESUME;</span>
+			}
+
+			@Override
+			protected String hoverText() {
+<span class="nc" id="L366">				return Messages.get(AlchemyScene.class, &quot;repeat&quot;);</span>
+			}
+		};
+<span class="nc" id="L369">		repeat.setRect(left + 24, pos + 2, 16, 16);</span>
+<span class="nc" id="L370">		repeat.enable(false);</span>
+<span class="nc" id="L371">		add(repeat);</span>
+
+<span class="nc" id="L373">		lastIngredients.clear();</span>
+<span class="nc" id="L374">		lastRecipe = null;</span>
+
+<span class="nc bnc" id="L376" title="All 2 branches missed.">		for (int i = 0; i &lt; inputs.length; i++){</span>
+<span class="nc" id="L377">			combines[i] = new CombineButton(i);</span>
+<span class="nc" id="L378">			combines[i].enable(false);</span>
+
+<span class="nc" id="L380">			outputs[i] = new OutputSlot();</span>
+<span class="nc" id="L381">			outputs[i].item(null);</span>
+
+<span class="nc bnc" id="L383" title="All 2 branches missed.">			if (i == 0){</span>
+				//first ones are always visible
+<span class="nc" id="L385">				combines[i].setRect(left + (w-30)/2f, inputs[1].top()+5, 30, inputs[1].height()-10);</span>
+<span class="nc" id="L386">				outputs[i].setRect(left + w - BTN_SIZE - 10, inputs[1].top(), BTN_SIZE, BTN_SIZE);</span>
+			} else {
+<span class="nc" id="L388">				combines[i].visible = false;</span>
+<span class="nc" id="L389">				outputs[i].visible = false;</span>
+			}
+
+<span class="nc" id="L392">			add(combines[i]);</span>
+<span class="nc" id="L393">			add(outputs[i]);</span>
+		}
+
+<span class="nc" id="L396">		smokeEmitter = new Emitter();</span>
+<span class="nc" id="L397">		smokeEmitter.pos(outputs[0].left() + (BTN_SIZE-16)/2f, outputs[0].top() + (BTN_SIZE-16)/2f, 16, 16);</span>
+<span class="nc" id="L398">		smokeEmitter.autoKill = false;</span>
+<span class="nc" id="L399">		add(smokeEmitter);</span>
+		
+<span class="nc" id="L401">		pos += 10;</span>
+
+<span class="nc bnc" id="L403" title="All 2 branches missed.">		if (Camera.main.height &gt;= 280){</span>
+			//last elements get centered even with a split alch guide UI, as long as there's enough height
+<span class="nc" id="L405">			centerW = Camera.main.width/2;</span>
+		}
+
+<span class="nc" id="L408">		bubbleEmitter.pos(0,</span>
+				0,
+				2*centerW,
+				Camera.main.height);
+<span class="nc" id="L412">		bubbleEmitter.autoKill = false;</span>
+
+<span class="nc" id="L414">		lowerBubbles.pos(0,</span>
+				pos,
+				2*centerW,
+<span class="nc" id="L417">				Math.max(0, Camera.main.height-pos));</span>
+<span class="nc" id="L418">		lowerBubbles.pour(Speck.factory( Speck.BUBBLE ), 0.1f );</span>
+
+<span class="nc" id="L420">		String energyText = Messages.get(AlchemyScene.class, &quot;energy&quot;) + &quot; &quot; + Dungeon.energy;</span>
+<span class="nc bnc" id="L421" title="All 2 branches missed.">		if (toolkit != null){</span>
+<span class="nc" id="L422">			energyText += &quot;+&quot; + toolkit.availableEnergy();</span>
+		}
+
+<span class="nc" id="L425">		energyLeft = PixelScene.renderTextBlock(energyText, 9);</span>
+<span class="nc" id="L426">		energyLeft.setPos(</span>
+<span class="nc" id="L427">				centerW - energyLeft.width()/2,</span>
+<span class="nc" id="L428">				Camera.main.height - 8 - energyLeft.height()</span>
+		);
+<span class="nc" id="L430">		energyLeft.hardlight(0x44CCFF);</span>
+<span class="nc" id="L431">		add(energyLeft);</span>
+
+<span class="nc bnc" id="L433" title="All 2 branches missed.">		energyIcon = new ItemSprite( toolkit != null ? ItemSpriteSheet.ARTIFACT_TOOLKIT : ItemSpriteSheet.ENERGY);</span>
+<span class="nc" id="L434">		energyIcon.x = energyLeft.left() - energyIcon.width();</span>
+<span class="nc" id="L435">		energyIcon.y = energyLeft.top() - (energyIcon.height() - energyLeft.height())/2;</span>
+<span class="nc" id="L436">		align(energyIcon);</span>
+<span class="nc" id="L437">		add(energyIcon);</span>
+
+<span class="nc" id="L439">		energyAdd = new IconButton(Icons.get(Icons.PLUS)){</span>
+
+<span class="nc" id="L441">			private float time = 0;</span>
+
+			@Override
+			public void update() {
+<span class="nc" id="L445">				super.update();</span>
+<span class="nc bnc" id="L446" title="All 2 branches missed.">				if (energyAddBlinking){</span>
+<span class="nc" id="L447">					icon.brightness( 0.5f + (float)Math.abs(Math.cos( StatusPane.FLASH_RATE * (time += Game.elapsed) )));</span>
+				} else {
+<span class="nc bnc" id="L449" title="All 2 branches missed.">					if (time &gt; 0){</span>
+<span class="nc" id="L450">						icon.resetColor();</span>
+					}
+<span class="nc" id="L452">					time = 0;</span>
+				}
+<span class="nc" id="L454">			}</span>
+
+			@Override
+			protected void onClick() {
+<span class="nc" id="L458">				WndEnergizeItem.openItemSelector();</span>
+<span class="nc" id="L459">			}</span>
+
+			@Override
+			public GameAction keyAction() {
+<span class="nc" id="L463">				return SPDAction.TAG_ACTION;</span>
+			}
+
+			@Override
+			protected String hoverText() {
+<span class="nc" id="L468">				return Messages.get(AlchemyScene.class, &quot;energize&quot;);</span>
+			}
+		};
+<span class="nc" id="L471">		energyAdd.setRect(energyLeft.right(), energyLeft.top() - (16 - energyLeft.height())/2, 16, 16);</span>
+<span class="nc" id="L472">		align(energyAdd);</span>
+<span class="nc" id="L473">		add(energyAdd);</span>
+
+<span class="nc" id="L475">		sparkEmitter = new Emitter();</span>
+<span class="nc" id="L476">		sparkEmitter.pos(energyLeft.left(), energyLeft.top(), energyLeft.width(), energyLeft.height());</span>
+<span class="nc" id="L477">		sparkEmitter.autoKill = false;</span>
+<span class="nc" id="L478">		add(sparkEmitter);</span>
+
+<span class="nc" id="L480">		StyledButton btnGuide = new StyledButton( Chrome.Type.TOAST_TR, Messages.get(AlchemyScene.class, &quot;guide&quot;)){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L483">				super.onClick();</span>
+<span class="nc bnc" id="L484" title="All 4 branches missed.">				if (Camera.main.width &gt;= 300 &amp;&amp; Camera.main.height &gt;= PixelScene.MIN_HEIGHT_FULL){</span>
+<span class="nc bnc" id="L485" title="All 2 branches missed.">					splitAlchGuide = !splitAlchGuide;</span>
+<span class="nc" id="L486">					ShatteredPixelDungeon.seamlessResetScene();</span>
+				} else {
+<span class="nc" id="L488">					clearSlots();</span>
+<span class="nc" id="L489">					updateState();</span>
+<span class="nc" id="L490">					AlchemyScene.this.addToFront(new Window() {</span>
+
+						{
+<span class="nc" id="L493">							WndJournal.AlchemyTab t = new WndJournal.AlchemyTab();</span>
+							int w, h;
+<span class="nc bnc" id="L495" title="All 2 branches missed.">							if (landscape()) {</span>
+<span class="nc" id="L496">								w = WndJournal.WIDTH_L;</span>
+<span class="nc" id="L497">								h = WndJournal.HEIGHT_L+8;</span>
+							} else {
+<span class="nc" id="L499">								w = WndJournal.WIDTH_P;</span>
+<span class="nc" id="L500">								h = WndJournal.HEIGHT_P+10;</span>
+							}
+<span class="nc" id="L502">							resize(w, h);</span>
+<span class="nc" id="L503">							add(t);</span>
+<span class="nc" id="L504">							t.setRect(0, 0, w, h);</span>
+<span class="nc" id="L505">						}</span>
+
+					});
+				}
+<span class="nc" id="L509">			}</span>
+
+			@Override
+			public GameAction keyAction() {
+<span class="nc" id="L513">				return SPDAction.JOURNAL;</span>
+			}
+
+			@Override
+			protected String hoverText() {
+<span class="nc" id="L518">				return Messages.titleCase(Document.ALCHEMY_GUIDE.title());</span>
+			}
+		};
+<span class="nc" id="L521">		btnGuide.icon(new ItemSprite(ItemSpriteSheet.ALCH_PAGE));</span>
+<span class="nc" id="L522">		btnGuide.setSize(btnGuide.reqWidth()+4, 18);</span>
+<span class="nc" id="L523">		btnGuide.setPos(centerW - btnGuide.width()/2f, energyAdd.top()- btnGuide.height()-2);</span>
+<span class="nc" id="L524">		align(btnGuide);</span>
+<span class="nc" id="L525">		add(btnGuide);</span>
+
+<span class="nc" id="L527">		TrinketCatalyst cata = Dungeon.hero.belongings.getItem(TrinketCatalyst.class);</span>
+<span class="nc bnc" id="L528" title="All 4 branches missed.">		if (cata != null &amp;&amp; cata.hasRolledTrinkets()){</span>
+<span class="nc" id="L529">			addToFront(new TrinketCatalyst.WndTrinket(cata));</span>
+		}
+
+<span class="nc" id="L532">		fadeIn();</span>
+
+<span class="nc" id="L534">		saveNeeded = false;</span>
+		try {
+<span class="nc" id="L536">			Dungeon.saveAll();</span>
+<span class="nc" id="L537">			Badges.saveGlobal();</span>
+<span class="nc" id="L538">			Journal.saveGlobal();</span>
+<span class="nc" id="L539">		} catch (IOException e) {</span>
+<span class="nc" id="L540">			ShatteredPixelDungeon.reportException(e);</span>
+<span class="nc" id="L541">		}</span>
+<span class="nc" id="L542">	}</span>
+	
+	@Override
+	public void update() {
+<span class="nc" id="L546">		super.update();</span>
+<span class="nc" id="L547">		water.offset( 0, -5 * Game.elapsed );</span>
+<span class="nc" id="L548">	}</span>
+	
+	@Override
+	protected void onBackPressed() {
+<span class="nc" id="L552">		Game.switchScene(GameScene.class);</span>
+<span class="nc" id="L553">	}</span>
+	
+<span class="nc" id="L555">	protected WndBag.ItemSelector itemSelector = new WndBag.ItemSelector() {</span>
+
+		@Override
+		public String textPrompt() {
+<span class="nc" id="L559">			return Messages.get(AlchemyScene.class, &quot;select&quot;);</span>
+		}
+
+		@Override
+		public boolean itemSelectable(Item item) {
+<span class="nc" id="L564">			return Recipe.usableInRecipe(item);</span>
+		}
+
+		@Override
+		public void onSelect( Item item ) {
+<span class="nc" id="L569">			synchronized (inputs) {</span>
+<span class="nc bnc" id="L570" title="All 4 branches missed.">				if (item != null &amp;&amp; inputs[0] != null) {</span>
+<span class="nc bnc" id="L571" title="All 2 branches missed.">					for (int i = 0; i &lt; inputs.length; i++) {</span>
+<span class="nc bnc" id="L572" title="All 2 branches missed.">						if (inputs[i].item() == null) {</span>
+<span class="nc bnc" id="L573" title="All 2 branches missed.">							if (item instanceof LiquidMetal){</span>
+<span class="nc" id="L574">								inputs[i].item(item.detachAll(Dungeon.hero.belongings.backpack));</span>
+							} else {
+<span class="nc" id="L576">								inputs[i].item(item.detach(Dungeon.hero.belongings.backpack));</span>
+							}
+<span class="nc" id="L578">							break;</span>
+						}
+					}
+<span class="nc" id="L581">					updateState();</span>
+				}
+<span class="nc" id="L583">			}</span>
+<span class="nc" id="L584">		}</span>
+	};
+	
+	private&lt;T extends Item&gt; ArrayList&lt;T&gt; filterInput(Class&lt;? extends T&gt; itemClass){
+<span class="nc" id="L588">		ArrayList&lt;T&gt; filtered = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L589" title="All 2 branches missed.">		for (int i = 0; i &lt; inputs.length; i++){</span>
+<span class="nc" id="L590">			Item item = inputs[i].item();</span>
+<span class="nc bnc" id="L591" title="All 4 branches missed.">			if (item != null &amp;&amp; itemClass.isInstance(item)){</span>
+<span class="nc" id="L592">				filtered.add((T)item);</span>
+			}
+		}
+<span class="nc" id="L595">		return filtered;</span>
+	}
+	
+	private void updateState(){
+
+<span class="nc" id="L600">		repeat.enable(false);</span>
+
+<span class="nc" id="L602">		ArrayList&lt;Item&gt; ingredients = filterInput(Item.class);</span>
+<span class="nc" id="L603">		ArrayList&lt;Recipe&gt; recipes = Recipe.findRecipes(ingredients);</span>
+
+		//disables / hides unneeded buttons
+<span class="nc bnc" id="L606" title="All 2 branches missed.">		for (int i = recipes.size(); i &lt; combines.length; i++){</span>
+<span class="nc" id="L607">			combines[i].enable(false);</span>
+<span class="nc" id="L608">			outputs[i].item(null);</span>
+
+<span class="nc bnc" id="L610" title="All 2 branches missed.">			if (i != 0){</span>
+<span class="nc" id="L611">				combines[i].visible = false;</span>
+<span class="nc" id="L612">				outputs[i].visible = false;</span>
+			}
+		}
+
+<span class="nc bnc" id="L616" title="All 2 branches missed.">		cancel.enable(!ingredients.isEmpty());</span>
+
+<span class="nc bnc" id="L618" title="All 2 branches missed.">		if (recipes.isEmpty()){</span>
+<span class="nc" id="L619">			combines[0].setPos(combines[0].left(), inputs[1].top()+5);</span>
+<span class="nc" id="L620">			outputs[0].setPos(outputs[0].left(), inputs[1].top());</span>
+<span class="nc" id="L621">			energyAddBlinking = false;</span>
+<span class="nc" id="L622">			return;</span>
+		}
+
+		//positions active buttons
+<span class="nc bnc" id="L626" title="All 2 branches missed.">		float gap = recipes.size() == 2 ? 6 : 2;</span>
+
+<span class="nc" id="L628">		float height = inputs[2].bottom() - inputs[0].top();</span>
+<span class="nc" id="L629">		height -= recipes.size()*BTN_SIZE + (recipes.size()-1)*gap;</span>
+<span class="nc" id="L630">		float top = inputs[0].top() + height/2;</span>
+
+		//positions and enables active buttons
+<span class="nc" id="L633">		boolean promptToAddEnergy = false;</span>
+<span class="nc bnc" id="L634" title="All 2 branches missed.">		for (int i = 0; i &lt; recipes.size(); i++){</span>
+
+<span class="nc" id="L636">			Recipe recipe = recipes.get(i);</span>
+
+<span class="nc" id="L638">			int cost = recipe.cost(ingredients);</span>
+
+<span class="nc" id="L640">			outputs[i].visible = true;</span>
+<span class="nc" id="L641">			outputs[i].setRect(outputs[0].left(), top, BTN_SIZE, BTN_SIZE);</span>
+<span class="nc" id="L642">			outputs[i].item(recipe.sampleOutput(ingredients));</span>
+<span class="nc" id="L643">			top += BTN_SIZE+gap;</span>
+
+<span class="nc" id="L645">			int availableEnergy = Dungeon.energy;</span>
+<span class="nc bnc" id="L646" title="All 2 branches missed.">			if (toolkit != null){</span>
+<span class="nc" id="L647">				availableEnergy += toolkit.availableEnergy();</span>
+			}
+
+<span class="nc" id="L650">			combines[i].visible = true;</span>
+<span class="nc" id="L651">			combines[i].setRect(combines[0].left(), outputs[i].top()+5, 30, 20);</span>
+<span class="nc bnc" id="L652" title="All 2 branches missed.">			combines[i].enable(cost &lt;= availableEnergy, cost);</span>
+
+<span class="nc bnc" id="L654" title="All 4 branches missed.">			if (cost &gt; availableEnergy &amp;&amp; recipe instanceof TrinketCatalyst.Recipe){</span>
+<span class="nc" id="L655">				promptToAddEnergy = true;</span>
+			}
+
+		}
+
+<span class="nc" id="L660">		energyAddBlinking = promptToAddEnergy;</span>
+
+<span class="nc bnc" id="L662" title="All 2 branches missed.">		if (alchGuide != null){</span>
+<span class="nc" id="L663">			alchGuide.updateList();</span>
+		}
+
+<span class="nc" id="L666">	}</span>
+	
+	private void combine( int slot ){
+		
+<span class="nc" id="L670">		ArrayList&lt;Item&gt; ingredients = filterInput(Item.class);</span>
+<span class="nc bnc" id="L671" title="All 2 branches missed.">		if (ingredients.isEmpty()) return;</span>
+
+<span class="nc" id="L673">		lastIngredients.clear();</span>
+<span class="nc bnc" id="L674" title="All 2 branches missed.">		for (Item i : ingredients){</span>
+<span class="nc" id="L675">			lastIngredients.add(i.duplicate());</span>
+<span class="nc" id="L676">		}</span>
+
+<span class="nc" id="L678">		ArrayList&lt;Recipe&gt; recipes = Recipe.findRecipes(ingredients);</span>
+<span class="nc bnc" id="L679" title="All 2 branches missed.">		if (recipes.size() &lt;= slot) return;</span>
+
+<span class="nc" id="L681">		Recipe recipe = recipes.get(slot);</span>
+		
+<span class="nc" id="L683">		Item result = null;</span>
+		
+<span class="nc bnc" id="L685" title="All 2 branches missed.">		if (recipe != null){</span>
+<span class="nc" id="L686">			int cost = recipe.cost(ingredients);</span>
+<span class="nc bnc" id="L687" title="All 2 branches missed.">			if (toolkit != null){</span>
+<span class="nc" id="L688">				cost = toolkit.consumeEnergy(cost);</span>
+			}
+<span class="nc" id="L690">			Catalog.countUses(EnergyCrystal.class, cost);</span>
+<span class="nc" id="L691">			Dungeon.energy -= cost;</span>
+
+<span class="nc" id="L693">			String energyText = Messages.get(AlchemyScene.class, &quot;energy&quot;) + &quot; &quot; + Dungeon.energy;</span>
+<span class="nc bnc" id="L694" title="All 2 branches missed.">			if (toolkit != null){</span>
+<span class="nc" id="L695">				energyText += &quot;+&quot; + toolkit.availableEnergy();</span>
+			}
+<span class="nc" id="L697">			energyLeft.text(energyText);</span>
+<span class="nc" id="L698">			energyLeft.setPos(</span>
+<span class="nc" id="L699">					centerW - energyLeft.width()/2,</span>
+<span class="nc" id="L700">					Camera.main.height - 8 - energyLeft.height()</span>
+			);
+
+<span class="nc" id="L703">			energyIcon.x = energyLeft.left() - energyIcon.width();</span>
+<span class="nc" id="L704">			align(energyIcon);</span>
+
+<span class="nc" id="L706">			energyAdd.setPos(energyLeft.right(), energyAdd.top());</span>
+<span class="nc" id="L707">			align(energyAdd);</span>
+			
+<span class="nc" id="L709">			result = recipe.brew(ingredients);</span>
+		}
+		
+<span class="nc bnc" id="L712" title="All 2 branches missed.">		if (result != null){</span>
+
+<span class="nc" id="L714">			craftItem(ingredients, result);</span>
+
+		}
+
+<span class="nc" id="L718">		boolean foundItems = true;</span>
+<span class="nc bnc" id="L719" title="All 2 branches missed.">		for (Item i : lastIngredients){</span>
+<span class="nc" id="L720">			Item found = Dungeon.hero.belongings.getSimilar(i);</span>
+<span class="nc bnc" id="L721" title="All 2 branches missed.">			if (found == null){ //atm no quantity check as items are always loaded individually</span>
+				//currently found can be true if we need, say, 3x of an item but only have 2x of it
+<span class="nc" id="L723">				foundItems = false;</span>
+			}
+<span class="nc" id="L725">		}</span>
+
+<span class="nc" id="L727">		lastRecipe = recipe;</span>
+<span class="nc" id="L728">		repeat.enable(foundItems);</span>
+
+<span class="nc" id="L730">		cancel.enable(false);</span>
+<span class="nc" id="L731">		synchronized (inputs) {</span>
+<span class="nc bnc" id="L732" title="All 2 branches missed.">			for (int i = 0; i &lt; inputs.length; i++) {</span>
+<span class="nc bnc" id="L733" title="All 4 branches missed.">				if (inputs[i] != null &amp;&amp; inputs[i].item() != null) {</span>
+<span class="nc" id="L734">					cancel.enable(true);</span>
+<span class="nc" id="L735">					break;</span>
+				}
+			}
+<span class="nc" id="L738">		}</span>
+
+<span class="nc bnc" id="L740" title="All 2 branches missed.">		if (alchGuide != null){</span>
+<span class="nc" id="L741">			alchGuide.updateList();</span>
+		}
+<span class="nc" id="L743">	}</span>
+
+	public void craftItem( ArrayList&lt;Item&gt; ingredients, Item result ){
+<span class="nc" id="L746">		bubbleEmitter.start(Speck.factory( Speck.BUBBLE ), 0.01f, 100 );</span>
+<span class="nc" id="L747">		smokeEmitter.burst(Speck.factory( Speck.WOOL ), 10 );</span>
+<span class="nc" id="L748">		Sample.INSTANCE.play( Assets.Sounds.PUFF );</span>
+
+<span class="nc" id="L750">		int resultQuantity = result.quantity();</span>
+<span class="nc bnc" id="L751" title="All 2 branches missed.">		if (!result.collect()){</span>
+<span class="nc" id="L752">			Dungeon.level.drop(result, Dungeon.hero.pos);</span>
+		}
+
+<span class="nc" id="L755">		Statistics.itemsCrafted++;</span>
+<span class="nc" id="L756">		Badges.validateItemsCrafted();</span>
+
+<span class="nc" id="L758">		saveNeeded = false;</span>
+		try {
+<span class="nc" id="L760">			Dungeon.saveAll();</span>
+<span class="nc" id="L761">			Badges.saveGlobal();</span>
+<span class="nc" id="L762">			Journal.saveGlobal();</span>
+<span class="nc" id="L763">		} catch (IOException e) {</span>
+<span class="nc" id="L764">			ShatteredPixelDungeon.reportException(e);</span>
+<span class="nc" id="L765">		}</span>
+
+<span class="nc" id="L767">		synchronized (inputs) {</span>
+<span class="nc bnc" id="L768" title="All 2 branches missed.">			for (int i = 0; i &lt; inputs.length; i++) {</span>
+<span class="nc bnc" id="L769" title="All 4 branches missed.">				if (inputs[i] != null &amp;&amp; inputs[i].item() != null) {</span>
+<span class="nc" id="L770">					Item item = inputs[i].item();</span>
+<span class="nc bnc" id="L771" title="All 2 branches missed.">					if (item.quantity() &lt;= 0) {</span>
+<span class="nc" id="L772">						inputs[i].item(null);</span>
+					} else {
+<span class="nc" id="L774">						inputs[i].slot.updateText();</span>
+					}
+				}
+			}
+<span class="nc" id="L778">		}</span>
+
+<span class="nc" id="L780">		updateState();</span>
+		//we reset the quantity in case the result was merged into another stack in the backpack
+<span class="nc" id="L782">		result.quantity(resultQuantity);</span>
+<span class="nc" id="L783">		outputs[0].item(result);</span>
+<span class="nc" id="L784">	}</span>
+	
+	public void populate(ArrayList&lt;Item&gt; toFind, Belongings inventory){
+<span class="nc" id="L787">		clearSlots();</span>
+		
+<span class="nc" id="L789">		int curslot = 0;</span>
+<span class="nc bnc" id="L790" title="All 2 branches missed.">		for (Item finding : toFind){</span>
+<span class="nc" id="L791">			int needed = finding.quantity();</span>
+<span class="nc" id="L792">			ArrayList&lt;Item&gt; found = inventory.getAllSimilar(finding);</span>
+<span class="nc bnc" id="L793" title="All 4 branches missed.">			while (!found.isEmpty() &amp;&amp; needed &gt; 0){</span>
+				Item detached;
+<span class="nc bnc" id="L795" title="All 2 branches missed.">				if (finding instanceof LiquidMetal) {</span>
+<span class="nc" id="L796">					detached = found.get(0).detachAll(inventory.backpack);</span>
+				} else {
+<span class="nc" id="L798">					detached = found.get(0).detach(inventory.backpack);</span>
+				}
+<span class="nc" id="L800">				inputs[curslot].item(detached);</span>
+<span class="nc" id="L801">				curslot++;</span>
+<span class="nc" id="L802">				needed -= detached.quantity();</span>
+<span class="nc bnc" id="L803" title="All 2 branches missed.">				if (detached == found.get(0)) {</span>
+<span class="nc" id="L804">					found.remove(0);</span>
+				}
+<span class="nc" id="L806">			}</span>
+<span class="nc" id="L807">		}</span>
+<span class="nc" id="L808">		updateState();</span>
+<span class="nc" id="L809">	}</span>
+
+<span class="nc" id="L811">	private boolean saveNeeded = false;</span>
+
+	@Override
+	public void onPause() {
+<span class="nc bnc" id="L815" title="All 2 branches missed.">		if (saveNeeded) {</span>
+<span class="nc" id="L816">			saveNeeded = false;</span>
+<span class="nc" id="L817">			clearSlots();</span>
+			try {
+<span class="nc" id="L819">				Dungeon.saveAll();</span>
+<span class="nc" id="L820">				Badges.saveGlobal();</span>
+<span class="nc" id="L821">				Journal.saveGlobal();</span>
+<span class="nc" id="L822">			} catch (IOException e) {</span>
+<span class="nc" id="L823">				ShatteredPixelDungeon.reportException(e);</span>
+<span class="nc" id="L824">			}</span>
+		}
+<span class="nc" id="L826">	}</span>
+
+	@Override
+	public void destroy() {
+<span class="nc" id="L830">		synchronized ( inputs ) {</span>
+<span class="nc" id="L831">			clearSlots();</span>
+<span class="nc bnc" id="L832" title="All 2 branches missed.">			for (int i = 0; i &lt; inputs.length; i++) {</span>
+<span class="nc" id="L833">				inputs[i] = null;</span>
+			}
+<span class="nc" id="L835">		}</span>
+
+<span class="nc" id="L837">		saveNeeded = false;</span>
+		try {
+<span class="nc" id="L839">			Dungeon.saveAll();</span>
+<span class="nc" id="L840">			Badges.saveGlobal();</span>
+<span class="nc" id="L841">			Journal.saveGlobal();</span>
+<span class="nc" id="L842">		} catch (IOException e) {</span>
+<span class="nc" id="L843">			ShatteredPixelDungeon.reportException(e);</span>
+<span class="nc" id="L844">		}</span>
+<span class="nc" id="L845">		super.destroy();</span>
+<span class="nc" id="L846">	}</span>
+	
+	public void clearSlots(){
+<span class="nc" id="L849">		synchronized ( inputs ) {</span>
+<span class="nc bnc" id="L850" title="All 2 branches missed.">			for (int i = 0; i &lt; inputs.length; i++) {</span>
+<span class="nc bnc" id="L851" title="All 4 branches missed.">				if (inputs[i] != null &amp;&amp; inputs[i].item() != null) {</span>
+<span class="nc" id="L852">					Item item = inputs[i].item();</span>
+<span class="nc bnc" id="L853" title="All 2 branches missed.">					if (!item.collect()) {</span>
+<span class="nc" id="L854">						Dungeon.level.drop(item, Dungeon.hero.pos);</span>
+					}
+<span class="nc" id="L856">					inputs[i].item(null);</span>
+				}
+			}
+<span class="nc" id="L859">		}</span>
+<span class="nc" id="L860">		cancel.enable(false);</span>
+<span class="nc bnc" id="L861" title="All 2 branches missed.">		repeat.enable(lastRecipe != null);</span>
+<span class="nc bnc" id="L862" title="All 2 branches missed.">		if (alchGuide != null){</span>
+<span class="nc" id="L863">			alchGuide.updateList();</span>
+		}
+<span class="nc" id="L865">	}</span>
+
+	public void createEnergy(){
+<span class="nc" id="L868">		String energyText = Messages.get(AlchemyScene.class, &quot;energy&quot;) + &quot; &quot; + Dungeon.energy;</span>
+<span class="nc bnc" id="L869" title="All 2 branches missed.">		if (toolkit != null){</span>
+<span class="nc" id="L870">			energyText += &quot;+&quot; + toolkit.availableEnergy();</span>
+		}
+<span class="nc" id="L872">		energyLeft.text(energyText);</span>
+<span class="nc" id="L873">		energyLeft.setPos(</span>
+<span class="nc" id="L874">				centerW - energyLeft.width()/2,</span>
+<span class="nc" id="L875">				Camera.main.height - 8 - energyLeft.height()</span>
+		);
+
+<span class="nc" id="L878">		energyIcon.x = energyLeft.left() - energyIcon.width();</span>
+<span class="nc" id="L879">		align(energyIcon);</span>
+
+<span class="nc" id="L881">		energyAdd.setPos(energyLeft.right(), energyAdd.top());</span>
+<span class="nc" id="L882">		align(energyAdd);</span>
+
+<span class="nc" id="L884">		bubbleEmitter.start(Speck.factory( Speck.BUBBLE ), 0.01f, 100 );</span>
+<span class="nc" id="L885">		sparkEmitter.burst(SparkParticle.FACTORY, 20);</span>
+<span class="nc" id="L886">		Sample.INSTANCE.play( Assets.Sounds.LIGHTNING );</span>
+
+		//queue a save here, as items may be in the input windows and we don't want to clear them
+		// but if the game becomes paused we do this to prevent exploits
+<span class="nc" id="L890">		saveNeeded = true;</span>
+<span class="nc" id="L891">		updateState();</span>
+<span class="nc" id="L892">	}</span>
+
+	public void showIdentify(Item item){
+<span class="nc bnc" id="L895" title="All 2 branches missed.">		if (item.isIdentified()) return;</span>
+
+<span class="nc" id="L897">		NinePatch BG = Chrome.get(Chrome.Type.TOAST);</span>
+
+<span class="nc" id="L899">		IconTitle oldName = new IconTitle(item){</span>
+			@Override
+			public synchronized void update() {
+<span class="nc" id="L902">				super.update();</span>
+<span class="nc" id="L903">				alpha(this.alpha()-Game.elapsed);</span>
+<span class="nc bnc" id="L904" title="All 2 branches missed.">				if (this.alpha() &lt;= 0){</span>
+<span class="nc" id="L905">					killAndErase();</span>
+				}
+<span class="nc" id="L907">			}</span>
+		};
+<span class="nc" id="L909">		item.identify();</span>
+<span class="nc" id="L910">		IconTitle newName = new IconTitle(item){</span>
+
+			boolean fading;
+
+			@Override
+			public synchronized void update() {
+<span class="nc" id="L916">				super.update();</span>
+<span class="nc bnc" id="L917" title="All 2 branches missed.">				if (!fading) {</span>
+<span class="nc" id="L918">					alpha(this.alpha() + Game.elapsed);</span>
+<span class="nc bnc" id="L919" title="All 2 branches missed.">					if (this.alpha() &gt;= 1) {</span>
+<span class="nc" id="L920">						fading = true;</span>
+					}
+				} else {
+<span class="nc" id="L923">					alpha(this.alpha() - Game.elapsed);</span>
+<span class="nc" id="L924">					BG.alpha(this.alpha());</span>
+<span class="nc bnc" id="L925" title="All 2 branches missed.">					if (this.alpha() &lt;= 0){</span>
+<span class="nc" id="L926">						killAndErase();</span>
+<span class="nc" id="L927">						BG.killAndErase();</span>
+					}
+				}
+<span class="nc" id="L930">			}</span>
+		};
+<span class="nc" id="L932">		newName.alpha(-0.5f);</span>
+
+<span class="nc" id="L934">		oldName.setSize(200, oldName.height());</span>
+<span class="nc" id="L935">		newName.setSize(200, newName.height());</span>
+
+<span class="nc" id="L937">		int w = (int)Math.ceil(Math.max(oldName.reqWidth(), newName.reqWidth())+5);</span>
+
+<span class="nc" id="L939">		oldName.setSize(w, oldName.height());</span>
+<span class="nc" id="L940">		oldName.setPos(</span>
+<span class="nc" id="L941">				centerW - oldName.width()/2,</span>
+<span class="nc" id="L942">				energyAdd.top()</span>
+		);
+<span class="nc" id="L944">		align(oldName);</span>
+
+<span class="nc" id="L946">		newName.setSize(w, oldName.height());</span>
+<span class="nc" id="L947">		newName.setPos(</span>
+<span class="nc" id="L948">				centerW - newName.width()/2,</span>
+<span class="nc" id="L949">				energyAdd.top()</span>
+		);
+<span class="nc" id="L951">		align(newName);</span>
+
+<span class="nc" id="L953">		BG.x = oldName.left()-2;</span>
+<span class="nc" id="L954">		BG.y = oldName.top()-2;</span>
+<span class="nc" id="L955">		BG.size(oldName.width()+4, oldName.height()+4);</span>
+
+<span class="nc" id="L957">		add(BG);</span>
+<span class="nc" id="L958">		add(oldName);</span>
+<span class="nc" id="L959">		add(newName);</span>
+
+<span class="nc" id="L961">	}</span>
+	
+<span class="nc" id="L963">	private class InputButton extends Component {</span>
+		
+		protected NinePatch bg;
+		protected ItemSlot slot;
+		
+<span class="nc" id="L968">		private Item item = null;</span>
+		
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L972">			super.createChildren();</span>
+			
+<span class="nc" id="L974">			bg = Chrome.get( Chrome.Type.RED_BUTTON);</span>
+<span class="nc" id="L975">			add( bg );</span>
+			
+<span class="nc" id="L977">			slot = new ItemSlot() {</span>
+				@Override
+				protected void onPointerDown() {
+<span class="nc" id="L980">					bg.brightness( 1.2f );</span>
+<span class="nc" id="L981">					Sample.INSTANCE.play( Assets.Sounds.CLICK );</span>
+<span class="nc" id="L982">				}</span>
+				@Override
+				protected void onPointerUp() {
+<span class="nc" id="L985">					bg.resetColor();</span>
+<span class="nc" id="L986">				}</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L989">					super.onClick();</span>
+<span class="nc" id="L990">					Item item = InputButton.this.item;</span>
+<span class="nc bnc" id="L991" title="All 2 branches missed.">					if (item != null) {</span>
+<span class="nc bnc" id="L992" title="All 2 branches missed.">						if (!item.collect()) {</span>
+<span class="nc" id="L993">							Dungeon.level.drop(item, Dungeon.hero.pos);</span>
+						}
+<span class="nc" id="L995">						InputButton.this.item(null);</span>
+<span class="nc" id="L996">						updateState();</span>
+					}
+<span class="nc" id="L998">					AlchemyScene.this.addToFront(WndBag.getBag( itemSelector ));</span>
+<span class="nc" id="L999">				}</span>
+
+				@Override
+				protected boolean onLongClick() {
+<span class="nc" id="L1003">					Item item = InputButton.this.item;</span>
+<span class="nc bnc" id="L1004" title="All 2 branches missed.">					if (item != null){</span>
+<span class="nc" id="L1005">						AlchemyScene.this.addToFront(new WndInfoItem(item));</span>
+<span class="nc" id="L1006">						return true;</span>
+					}
+<span class="nc" id="L1008">					return false;</span>
+				}
+
+				@Override
+				//only the first empty button accepts key input
+				public GameAction keyAction() {
+<span class="nc bnc" id="L1014" title="All 2 branches missed.">					for (InputButton i : inputs){</span>
+<span class="nc bnc" id="L1015" title="All 4 branches missed.">						if (i.item == null || i.item instanceof WndBag.Placeholder) {</span>
+<span class="nc bnc" id="L1016" title="All 2 branches missed.">							if (i == InputButton.this) {</span>
+<span class="nc" id="L1017">								return SPDAction.INVENTORY;</span>
+							} else {
+<span class="nc" id="L1019">								return super.keyAction();</span>
+							}
+						}
+					}
+<span class="nc" id="L1023">					return super.keyAction();</span>
+				}
+
+				@Override
+				protected String hoverText() {
+<span class="nc bnc" id="L1028" title="All 4 branches missed.">					if (item == null || item instanceof WndBag.Placeholder){</span>
+<span class="nc" id="L1029">						return Messages.get(AlchemyScene.class, &quot;add&quot;);</span>
+					}
+<span class="nc" id="L1031">					return super.hoverText();</span>
+				}
+
+				@Override
+				public GameAction secondaryTooltipAction() {
+<span class="nc" id="L1036">					return SPDAction.INVENTORY_SELECTOR;</span>
+				}
+			};
+<span class="nc" id="L1039">			slot.enable(true);</span>
+<span class="nc" id="L1040">			add( slot );</span>
+<span class="nc" id="L1041">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L1045">			super.layout();</span>
+			
+<span class="nc" id="L1047">			bg.x = x;</span>
+<span class="nc" id="L1048">			bg.y = y;</span>
+<span class="nc" id="L1049">			bg.size( width, height );</span>
+			
+<span class="nc" id="L1051">			slot.setRect( x + 2, y + 2, width - 4, height - 4 );</span>
+<span class="nc" id="L1052">		}</span>
+
+		public Item item(){
+<span class="nc" id="L1055">			return item;</span>
+		}
+
+		public void item( Item item ) {
+<span class="nc bnc" id="L1059" title="All 2 branches missed.">			if (item == null){</span>
+<span class="nc" id="L1060">				this.item = null;</span>
+<span class="nc" id="L1061">				slot.item(new WndBag.Placeholder(ItemSpriteSheet.SOMETHING));</span>
+			} else {
+<span class="nc" id="L1063">				slot.item(this.item = item);</span>
+			}
+<span class="nc" id="L1065">		}</span>
+	}
+
+	private class CombineButton extends Component {
+
+		protected int slot;
+
+		protected RedButton button;
+		protected RenderedTextBlock costText;
+
+<span class="nc" id="L1075">		private CombineButton(int slot){</span>
+<span class="nc" id="L1076">			super();</span>
+
+<span class="nc" id="L1078">			this.slot = slot;</span>
+<span class="nc" id="L1079">		}</span>
+
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L1083">			super.createChildren();</span>
+
+<span class="nc" id="L1085">			button = new RedButton(&quot;&quot;){</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L1088">					super.onClick();</span>
+<span class="nc" id="L1089">					combine(slot);</span>
+<span class="nc" id="L1090">				}</span>
+
+				@Override
+				protected String hoverText() {
+<span class="nc" id="L1094">					return Messages.get(AlchemyScene.class, &quot;craft&quot;);</span>
+				}
+
+				@Override
+				public GameAction keyAction() {
+<span class="nc bnc" id="L1099" title="All 6 branches missed.">					if (slot == 0 &amp;&amp; !combines[1].active &amp;&amp; !combines[2].active){</span>
+<span class="nc" id="L1100">						return SPDAction.TAG_LOOT;</span>
+					}
+<span class="nc" id="L1102">					return super.keyAction();</span>
+				}
+			};
+<span class="nc" id="L1105">			button.icon(Icons.get(Icons.ARROW));</span>
+<span class="nc" id="L1106">			add(button);</span>
+
+<span class="nc" id="L1108">			costText = PixelScene.renderTextBlock(6);</span>
+<span class="nc" id="L1109">			add(costText);</span>
+<span class="nc" id="L1110">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L1114">			super.layout();</span>
+
+<span class="nc" id="L1116">			button.setRect(x, y, width(), height());</span>
+
+<span class="nc" id="L1118">			costText.setPos(</span>
+<span class="nc" id="L1119">					left() + (width() - costText.width())/2,</span>
+<span class="nc" id="L1120">					top() - costText.height()</span>
+			);
+<span class="nc" id="L1122">		}</span>
+
+		public void enable( boolean enabled ){
+<span class="nc" id="L1125">			enable(enabled, 0);</span>
+<span class="nc" id="L1126">		}</span>
+
+		public void enable( boolean enabled, int cost ){
+<span class="nc" id="L1129">			button.enable(enabled);</span>
+<span class="nc bnc" id="L1130" title="All 2 branches missed.">			if (enabled) {</span>
+<span class="nc" id="L1131">				button.icon().tint(1, 1, 0, 1);</span>
+<span class="nc" id="L1132">				button.alpha(1f);</span>
+<span class="nc" id="L1133">				costText.hardlight(0x44CCFF);</span>
+			} else {
+<span class="nc" id="L1135">				button.icon().color(0, 0, 0);</span>
+<span class="nc" id="L1136">				button.alpha(0.6f);</span>
+<span class="nc" id="L1137">				costText.hardlight(0xFF0000);</span>
+			}
+
+<span class="nc bnc" id="L1140" title="All 2 branches missed.">			if (cost == 0){</span>
+<span class="nc" id="L1141">				costText.visible = false;</span>
+			} else {
+<span class="nc" id="L1143">				costText.visible = true;</span>
+<span class="nc" id="L1144">				costText.text(Messages.get(AlchemyScene.class, &quot;energy&quot;) + &quot; &quot; + cost);</span>
+			}
+
+<span class="nc" id="L1147">			layout();</span>
+<span class="nc" id="L1148">			active = enabled;</span>
+<span class="nc" id="L1149">		}</span>
+
+	}
+
+<span class="nc" id="L1153">	private class OutputSlot extends Component {</span>
+
+		protected NinePatch bg;
+		protected ItemSlot slot;
+
+		@Override
+		protected void createChildren() {
+
+<span class="nc" id="L1161">			bg = Chrome.get(Chrome.Type.TOAST_TR);</span>
+<span class="nc" id="L1162">			add(bg);</span>
+
+<span class="nc" id="L1164">			slot = new ItemSlot() {</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L1167">					super.onClick();</span>
+<span class="nc bnc" id="L1168" title="All 6 branches missed.">					if (visible &amp;&amp; item != null &amp;&amp; item.trueName() != null){</span>
+<span class="nc" id="L1169">						AlchemyScene.this.addToFront(new WndInfoItem(item));</span>
+					}
+<span class="nc" id="L1171">				}</span>
+			};
+<span class="nc" id="L1173">			slot.item(null);</span>
+<span class="nc" id="L1174">			add( slot );</span>
+<span class="nc" id="L1175">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L1179">			super.layout();</span>
+
+<span class="nc" id="L1181">			bg.x = x;</span>
+<span class="nc" id="L1182">			bg.y = y;</span>
+<span class="nc" id="L1183">			bg.size(width(), height());</span>
+
+<span class="nc" id="L1185">			slot.setRect(x+2, y+2, width()-4, height()-4);</span>
+<span class="nc" id="L1186">		}</span>
+
+		public void item( Item item ) {
+<span class="nc" id="L1189">			slot.item(item);</span>
+<span class="nc" id="L1190">		}</span>
+	}
+
+	private static AlchemistsToolkit toolkit;
+
+	public static void assignToolkit( AlchemistsToolkit toolkit ){
+<span class="nc" id="L1196">		AlchemyScene.toolkit = toolkit;</span>
+<span class="nc" id="L1197">	}</span>
+
+	public static void clearToolkit(){
+<span class="nc" id="L1200">		AlchemyScene.toolkit = null;</span>
+<span class="nc" id="L1201">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

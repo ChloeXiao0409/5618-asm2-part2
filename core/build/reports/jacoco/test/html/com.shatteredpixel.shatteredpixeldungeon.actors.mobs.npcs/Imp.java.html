@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Imp.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs</a> &gt; <span class="el_source">Imp.java</span></div><h1>Imp.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AscensionChallenge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Golem;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Monk;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.DwarfToken;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
+import com.shatteredpixel.shatteredpixeldungeon.levels.CityLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ImpSprite;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndImp;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndQuest;
+import com.watabou.noosa.Game;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L50">public class Imp extends NPC {</span>
+
+	{
+<span class="nc" id="L53">		spriteClass = ImpSprite.class;</span>
+
+<span class="nc" id="L55">		properties.add(Property.IMMOVABLE);</span>
+	}
+	
+<span class="nc" id="L58">	private boolean seenBefore = false;</span>
+
+	@Override
+	public Notes.Landmark landmark() {
+<span class="nc" id="L62">		return Notes.Landmark.IMP;</span>
+	}
+
+	@Override
+	protected boolean act() {
+<span class="nc bnc" id="L67" title="All 2 branches missed.">		if (Dungeon.hero.buff(AscensionChallenge.class) != null){</span>
+<span class="nc" id="L68">			die(null);</span>
+<span class="nc" id="L69">			return true;</span>
+		}
+<span class="nc bnc" id="L71" title="All 4 branches missed.">		if (!Quest.given &amp;&amp; Dungeon.level.visited[pos]) {</span>
+<span class="nc bnc" id="L72" title="All 4 branches missed.">			if (!seenBefore &amp;&amp; Dungeon.level.heroFOV[pos]) {</span>
+<span class="nc" id="L73">				yell(Messages.get(this, &quot;hey&quot;, Messages.titleCase(Dungeon.hero.name())));</span>
+<span class="nc" id="L74">				seenBefore = true;</span>
+			}
+		} else {
+<span class="nc" id="L77">			seenBefore = false;</span>
+		}
+		
+<span class="nc" id="L80">		return super.act();</span>
+	}
+	
+	@Override
+	public int defenseSkill( Char enemy ) {
+<span class="nc" id="L85">		return INFINITE_EVASION;</span>
+	}
+
+	@Override
+	public void damage( int dmg, Object src ) {
+		//do nothing
+<span class="nc" id="L91">	}</span>
+
+	@Override
+	public boolean add( Buff buff ) {
+<span class="nc" id="L95">		return false;</span>
+	}
+	
+	@Override
+	public boolean reset() {
+<span class="nc" id="L100">		return true;</span>
+	}
+	
+	@Override
+	public boolean interact(Char c) {
+		
+<span class="nc" id="L106">		sprite.turnTo( pos, Dungeon.hero.pos );</span>
+
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		if (c != Dungeon.hero){</span>
+<span class="nc" id="L109">			return true;</span>
+		}
+
+<span class="nc bnc" id="L112" title="All 2 branches missed.">		if (Quest.given) {</span>
+			
+<span class="nc" id="L114">			DwarfToken tokens = Dungeon.hero.belongings.getItem( DwarfToken.class );</span>
+<span class="nc bnc" id="L115" title="All 8 branches missed.">			if (tokens != null &amp;&amp; (tokens.quantity() &gt;= 5 || (!Quest.alternative &amp;&amp; tokens.quantity() &gt;= 4))) {</span>
+<span class="nc" id="L116">				Game.runOnRenderThread(new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L119">						GameScene.show( new WndImp( Imp.this, tokens ) );</span>
+<span class="nc" id="L120">					}</span>
+				});
+			} else {
+<span class="nc bnc" id="L123" title="All 2 branches missed.">				tell( Quest.alternative ?</span>
+<span class="nc" id="L124">						Messages.get(this, &quot;monks_2&quot;, Messages.titleCase(Dungeon.hero.name()))</span>
+<span class="nc" id="L125">						: Messages.get(this, &quot;golems_2&quot;, Messages.titleCase(Dungeon.hero.name())) );</span>
+			}
+			
+<span class="nc" id="L128">		} else {</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">			tell( Messages.get(this, &quot;intro&quot;) + &quot;\n\n&quot; + (Quest.alternative ?</span>
+<span class="nc" id="L130">					Messages.get(this, &quot;monks_1&quot;, Messages.titleCase(Dungeon.hero.name()))</span>
+<span class="nc" id="L131">					: Messages.get(this, &quot;golems_1&quot;, Messages.titleCase(Dungeon.hero.name()))) );</span>
+<span class="nc" id="L132">			Quest.given = true;</span>
+<span class="nc" id="L133">			Quest.completed = false;</span>
+		}
+
+<span class="nc" id="L136">		return true;</span>
+	}
+	
+	private void tell( String text ) {
+<span class="nc" id="L140">		Game.runOnRenderThread(new Callback() {</span>
+			@Override
+			public void call() {
+<span class="nc" id="L143">				GameScene.show( new WndQuest( Imp.this, text ));</span>
+<span class="nc" id="L144">			}</span>
+		});
+<span class="nc" id="L146">	}</span>
+	
+	public void flee() {
+		
+<span class="nc" id="L150">		yell( Messages.get(this, &quot;cya&quot;, Messages.titleCase(Dungeon.hero.name())) );</span>
+		
+<span class="nc" id="L152">		destroy();</span>
+<span class="nc" id="L153">		sprite.die();</span>
+<span class="nc" id="L154">	}</span>
+
+<span class="nc" id="L156">	public static class Quest {</span>
+		
+		private static boolean alternative;
+		
+		private static boolean spawned;
+		private static boolean given;
+		private static boolean completed;
+		
+		public static Ring reward;
+		
+		public static void reset() {
+<span class="nc" id="L167">			spawned = false;</span>
+<span class="nc" id="L168">			given = false;</span>
+<span class="nc" id="L169">			completed = false;</span>
+
+<span class="nc" id="L171">			reward = null;</span>
+<span class="nc" id="L172">		}</span>
+		
+		private static final String NODE		= &quot;demon&quot;;
+		
+		private static final String ALTERNATIVE	= &quot;alternative&quot;;
+		private static final String SPAWNED		= &quot;spawned&quot;;
+		private static final String GIVEN		= &quot;given&quot;;
+		private static final String COMPLETED	= &quot;completed&quot;;
+		private static final String REWARD		= &quot;reward&quot;;
+		
+		public static void storeInBundle( Bundle bundle ) {
+			
+<span class="nc" id="L184">			Bundle node = new Bundle();</span>
+			
+<span class="nc" id="L186">			node.put( SPAWNED, spawned );</span>
+			
+<span class="nc bnc" id="L188" title="All 2 branches missed.">			if (spawned) {</span>
+<span class="nc" id="L189">				node.put( ALTERNATIVE, alternative );</span>
+				
+<span class="nc" id="L191">				node.put( GIVEN, given );</span>
+<span class="nc" id="L192">				node.put( COMPLETED, completed );</span>
+<span class="nc" id="L193">				node.put( REWARD, reward );</span>
+			}
+			
+<span class="nc" id="L196">			bundle.put( NODE, node );</span>
+<span class="nc" id="L197">		}</span>
+		
+		public static void restoreFromBundle( Bundle bundle ) {
+
+<span class="nc" id="L201">			Bundle node = bundle.getBundle( NODE );</span>
+			
+<span class="nc bnc" id="L203" title="All 4 branches missed.">			if (!node.isNull() &amp;&amp; (spawned = node.getBoolean( SPAWNED ))) {</span>
+<span class="nc" id="L204">				alternative	= node.getBoolean( ALTERNATIVE );</span>
+				
+<span class="nc" id="L206">				given = node.getBoolean( GIVEN );</span>
+<span class="nc" id="L207">				completed = node.getBoolean( COMPLETED );</span>
+<span class="nc" id="L208">				reward = (Ring)node.get( REWARD );</span>
+			}
+<span class="nc" id="L210">		}</span>
+		
+		public static void spawn( CityLevel level ) {
+<span class="nc bnc" id="L213" title="All 6 branches missed.">			if (!spawned &amp;&amp; Dungeon.depth &gt; 16 &amp;&amp; Random.Int( 20 - Dungeon.depth ) == 0) {</span>
+
+<span class="nc" id="L215">				Imp npc = new Imp();</span>
+<span class="nc" id="L216">				int tries = 30;</span>
+				do {
+<span class="nc" id="L218">					npc.pos = level.randomRespawnCell( npc );</span>
+<span class="nc" id="L219">					tries--;</span>
+<span class="nc bnc" id="L220" title="All 6 branches missed.">				} while (</span>
+						npc.pos == -1 ||
+						//visibility issues on these tiles, try to avoid them
+						(tries &gt; 0 &amp;&amp; level.map[ npc.pos ] == Terrain.EMPTY_SP) ||
+<span class="nc bnc" id="L224" title="All 2 branches missed.">						level.heaps.get( npc.pos ) != null ||</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">						level.traps.get( npc.pos) != null ||</span>
+<span class="nc bnc" id="L226" title="All 10 branches missed.">						level.findMob( npc.pos ) != null ||</span>
+						//don't place the imp against solid terrain
+						!level.passable[npc.pos + PathFinder.CIRCLE4[0]] || !level.passable[npc.pos + PathFinder.CIRCLE4[1]] ||
+						!level.passable[npc.pos + PathFinder.CIRCLE4[2]] || !level.passable[npc.pos + PathFinder.CIRCLE4[3]]);
+<span class="nc" id="L230">				level.mobs.add( npc );</span>
+				
+<span class="nc" id="L232">				spawned = true;</span>
+
+				//imp always spawns on an empty tile, for better visibility
+<span class="nc" id="L235">				Level.set( npc.pos, Terrain.EMPTY, level);</span>
+
+				//always assigns monks on floor 17, golems on floor 19, and 50/50 between either on 18
+<span class="nc bnc" id="L238" title="All 3 branches missed.">				switch (Dungeon.depth){</span>
+					case 17: default:
+<span class="nc" id="L240">						alternative = true;</span>
+<span class="nc" id="L241">						break;</span>
+					case 18:
+<span class="nc bnc" id="L243" title="All 2 branches missed.">						alternative = Random.Int(2) == 0;</span>
+<span class="nc" id="L244">						break;</span>
+					case 19:
+<span class="nc" id="L246">						alternative = false;</span>
+						break;
+				}
+				
+<span class="nc" id="L250">				given = false;</span>
+				
+				do {
+<span class="nc" id="L253">					reward = (Ring)Generator.random( Generator.Category.RING );</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">				} while (reward.cursed);</span>
+<span class="nc" id="L255">				reward.upgrade( 2 );</span>
+<span class="nc" id="L256">				reward.cursed = true;</span>
+			}
+<span class="nc" id="L258">		}</span>
+		
+		public static void process( Mob mob ) {
+<span class="nc bnc" id="L261" title="All 8 branches missed.">			if (spawned &amp;&amp; given &amp;&amp; !completed &amp;&amp; Dungeon.depth != 20) {</span>
+<span class="nc bnc" id="L262" title="All 8 branches missed.">				if ((alternative &amp;&amp; mob instanceof Monk) ||</span>
+					(!alternative &amp;&amp; mob instanceof Golem)) {
+					
+<span class="nc" id="L265">					Dungeon.level.drop( new DwarfToken(), mob.pos ).sprite.drop();</span>
+				}
+			}
+<span class="nc" id="L268">		}</span>
+		
+		public static void complete() {
+<span class="nc" id="L271">			reward = null;</span>
+<span class="nc" id="L272">			completed = true;</span>
+
+<span class="nc" id="L274">			Statistics.questScores[3] = 4000;</span>
+<span class="nc" id="L275">			Notes.remove( Notes.Landmark.IMP );</span>
+<span class="nc" id="L276">		}</span>
+		
+		public static boolean isCompleted() {
+<span class="nc" id="L279">			return completed;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,1087 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Dungeon.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon</a> &gt; <span class="el_source">Dungeon.java</span></div><h1>Dungeon.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon;
+
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Amok;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AscensionChallenge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Awareness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Dread;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Light;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicalSight;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MindVision;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.RevealedArea;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Terror;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.PowerOfMany;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.huntress.SpiritHawk;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.DivineSense;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Blacksmith;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Ghost;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Imp;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Wandmaker;
+import com.shatteredpixel.shatteredpixeldungeon.items.Amulet;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.TalismanOfForesight;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfRegrowth;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfWarding;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
+import com.shatteredpixel.shatteredpixeldungeon.levels.CavesBossLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.CavesLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.CityLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.DeadEndLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.HallsBossLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.HallsLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.LastLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.MiningLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.PrisonBossLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.PrisonLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.RegularLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.SewerBossLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret.SecretRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.SpecialRoom;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Toolbar;
+import com.shatteredpixel.shatteredpixeldungeon.utils.DungeonSeed;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndResurrect;
+import com.watabou.noosa.Game;
+import com.watabou.utils.BArray;
+import com.watabou.utils.Bundlable;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.FileUtils;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+import com.watabou.utils.SparseArray;
+
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.TimeZone;
+
+<span class="nc" id="L99">public class Dungeon {</span>
+
+	//enum of items which have limited spawns, records how many have spawned
+	//could all be their own separate numbers, but this allows iterating, much nicer for bundling/initializing.
+<span class="nc" id="L103">	public static enum LimitedDrops {</span>
+		//limited world drops
+<span class="nc" id="L105">		STRENGTH_POTIONS,</span>
+<span class="nc" id="L106">		UPGRADE_SCROLLS,</span>
+<span class="nc" id="L107">		ARCANE_STYLI,</span>
+<span class="nc" id="L108">		ENCH_STONE,</span>
+<span class="nc" id="L109">		INT_STONE,</span>
+<span class="nc" id="L110">		TRINKET_CATA,</span>
+<span class="nc" id="L111">		LAB_ROOM, //actually a room, but logic is the same</span>
+
+		//Health potion sources
+		//enemies
+<span class="nc" id="L115">		SWARM_HP,</span>
+<span class="nc" id="L116">		NECRO_HP,</span>
+<span class="nc" id="L117">		BAT_HP,</span>
+<span class="nc" id="L118">		WARLOCK_HP,</span>
+		//Demon spawners are already limited in their spawnrate, no need to limit their health drops
+		//alchemy
+<span class="nc" id="L121">		COOKING_HP,</span>
+<span class="nc" id="L122">		BLANDFRUIT_SEED,</span>
+
+		//Other limited enemy drops
+<span class="nc" id="L125">		SLIME_WEP,</span>
+<span class="nc" id="L126">		SKELE_WEP,</span>
+<span class="nc" id="L127">		THEIF_MISC,</span>
+<span class="nc" id="L128">		GUARD_ARM,</span>
+<span class="nc" id="L129">		SHAMAN_WAND,</span>
+<span class="nc" id="L130">		DM200_EQUIP,</span>
+<span class="nc" id="L131">		GOLEM_EQUIP,</span>
+
+		//containers
+<span class="nc" id="L134">		VELVET_POUCH,</span>
+<span class="nc" id="L135">		SCROLL_HOLDER,</span>
+<span class="nc" id="L136">		POTION_BANDOLIER,</span>
+<span class="nc" id="L137">		MAGICAL_HOLSTER,</span>
+
+		//lore documents
+<span class="nc" id="L140">		LORE_SEWERS,</span>
+<span class="nc" id="L141">		LORE_PRISON,</span>
+<span class="nc" id="L142">		LORE_CAVES,</span>
+<span class="nc" id="L143">		LORE_CITY,</span>
+<span class="nc" id="L144">		LORE_HALLS;</span>
+
+<span class="nc" id="L146">		public int count = 0;</span>
+
+		//for items which can only be dropped once, should directly access count otherwise.
+		public boolean dropped(){
+<span class="nc bnc" id="L150" title="All 2 branches missed.">			return count != 0;</span>
+		}
+		public void drop(){
+<span class="nc" id="L153">			count = 1;</span>
+<span class="nc" id="L154">		}</span>
+
+		public static void reset(){
+<span class="nc bnc" id="L157" title="All 2 branches missed.">			for (LimitedDrops lim : values()){</span>
+<span class="nc" id="L158">				lim.count = 0;</span>
+			}
+<span class="nc" id="L160">		}</span>
+
+		public static void store( Bundle bundle ){
+<span class="nc bnc" id="L163" title="All 2 branches missed.">			for (LimitedDrops lim : values()){</span>
+<span class="nc" id="L164">				bundle.put(lim.name(), lim.count);</span>
+			}
+<span class="nc" id="L166">		}</span>
+
+		public static void restore( Bundle bundle ){
+<span class="nc bnc" id="L169" title="All 2 branches missed.">			for (LimitedDrops lim : values()){</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">				if (bundle.contains(lim.name())){</span>
+<span class="nc" id="L171">					lim.count = bundle.getInt(lim.name());</span>
+				} else {
+<span class="nc" id="L173">					lim.count = 0;</span>
+				}
+				
+			}
+<span class="nc" id="L177">		}</span>
+
+	}
+
+	public static int challenges;
+	public static int mobsToChampion;
+
+	public static Hero hero;
+	public static Level level;
+
+<span class="nc" id="L187">	public static QuickSlot quickslot = new QuickSlot();</span>
+	
+	public static int depth;
+	//determines path the hero is on. Current uses:
+	// 0 is the default path
+	// 1 is for quest sub-floors
+	public static int branch;
+
+	//keeps track of what levels the game should try to load instead of creating fresh
+<span class="nc" id="L196">	public static ArrayList&lt;Integer&gt; generatedLevels = new ArrayList&lt;&gt;();</span>
+
+	public static int gold;
+	public static int energy;
+	
+	public static HashSet&lt;Integer&gt; chapters;
+
+	public static SparseArray&lt;ArrayList&lt;Item&gt;&gt; droppedItems;
+
+	//first variable is only assigned when game is started, second is updated every time game is saved
+	public static int initialVersion;
+	public static int version;
+
+	public static boolean daily;
+	public static boolean dailyReplay;
+<span class="nc" id="L211">	public static String customSeedText = &quot;&quot;;</span>
+	public static long seed;
+	public static long lastPlayed;
+
+	//we initialize the seed separately so that things like interlevelscene can access it early
+	public static void initSeed(){
+<span class="nc bnc" id="L217" title="All 2 branches missed.">		if (daily) {</span>
+			//Ensures that daily seeds are not in the range of user-enterable seeds
+<span class="nc" id="L219">			seed = SPDSettings.lastDaily() + DungeonSeed.TOTAL_SEEDS;</span>
+<span class="nc" id="L220">			DateFormat format = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;, Locale.ROOT);</span>
+<span class="nc" id="L221">			format.setTimeZone(TimeZone.getTimeZone(&quot;UTC&quot;));</span>
+<span class="nc" id="L222">			customSeedText = format.format(new Date(SPDSettings.lastDaily()));</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">		} else if (!SPDSettings.customSeed().isEmpty()){</span>
+<span class="nc" id="L224">			customSeedText = SPDSettings.customSeed();</span>
+<span class="nc" id="L225">			seed = DungeonSeed.convertFromText(customSeedText);</span>
+		} else {
+<span class="nc" id="L227">			customSeedText = &quot;&quot;;</span>
+<span class="nc" id="L228">			seed = DungeonSeed.randomSeed();</span>
+		}
+<span class="nc" id="L230">	}</span>
+	
+	public static void init() {
+
+<span class="nc" id="L234">		initialVersion = version = Game.versionCode;</span>
+<span class="nc" id="L235">		challenges = SPDSettings.challenges();</span>
+<span class="nc" id="L236">		mobsToChampion = -1;</span>
+
+<span class="nc" id="L238">		Actor.clear();</span>
+<span class="nc" id="L239">		Actor.resetNextID();</span>
+
+		//offset seed slightly to avoid output patterns
+<span class="nc" id="L242">		Random.pushGenerator( seed+1 );</span>
+
+<span class="nc" id="L244">			Scroll.initLabels();</span>
+<span class="nc" id="L245">			Potion.initColors();</span>
+<span class="nc" id="L246">			Ring.initGems();</span>
+
+<span class="nc" id="L248">			SpecialRoom.initForRun();</span>
+<span class="nc" id="L249">			SecretRoom.initForRun();</span>
+
+<span class="nc" id="L251">			Generator.fullReset();</span>
+
+<span class="nc" id="L253">		Random.resetGenerators();</span>
+		
+<span class="nc" id="L255">		Statistics.reset();</span>
+<span class="nc" id="L256">		Notes.reset();</span>
+
+<span class="nc" id="L258">		quickslot.reset();</span>
+<span class="nc" id="L259">		QuickSlotButton.reset();</span>
+<span class="nc" id="L260">		Toolbar.swappedQuickslots = false;</span>
+		
+<span class="nc" id="L262">		depth = 1;</span>
+<span class="nc" id="L263">		branch = 0;</span>
+<span class="nc" id="L264">		generatedLevels.clear();</span>
+
+<span class="nc" id="L266">		gold = 0;</span>
+<span class="nc" id="L267">		energy = 0;</span>
+
+<span class="nc" id="L269">		droppedItems = new SparseArray&lt;&gt;();</span>
+
+<span class="nc" id="L271">		LimitedDrops.reset();</span>
+		
+<span class="nc" id="L273">		chapters = new HashSet&lt;&gt;();</span>
+		
+<span class="nc" id="L275">		Ghost.Quest.reset();</span>
+<span class="nc" id="L276">		Wandmaker.Quest.reset();</span>
+<span class="nc" id="L277">		Blacksmith.Quest.reset();</span>
+<span class="nc" id="L278">		Imp.Quest.reset();</span>
+
+<span class="nc" id="L280">		hero = new Hero();</span>
+<span class="nc" id="L281">		hero.live();</span>
+		
+<span class="nc" id="L283">		Badges.reset();</span>
+		
+<span class="nc" id="L285">		GamesInProgress.selectedClass.initHero( hero );</span>
+<span class="nc" id="L286">	}</span>
+
+	public static boolean isChallenged( int mask ) {
+<span class="nc bnc" id="L289" title="All 2 branches missed.">		return (challenges &amp; mask) != 0;</span>
+	}
+
+	public static boolean levelHasBeenGenerated(int depth, int branch){
+<span class="nc" id="L293">		return generatedLevels.contains(depth + 1000*branch);</span>
+	}
+	
+	public static Level newLevel() {
+		
+<span class="nc" id="L298">		Dungeon.level = null;</span>
+<span class="nc" id="L299">		Actor.clear();</span>
+		
+		Level level;
+<span class="nc bnc" id="L302" title="All 2 branches missed.">		if (branch == 0) {</span>
+<span class="nc bnc" id="L303" title="All 12 branches missed.">			switch (depth) {</span>
+				case 1:
+				case 2:
+				case 3:
+				case 4:
+<span class="nc" id="L308">					level = new SewerLevel();</span>
+<span class="nc" id="L309">					break;</span>
+				case 5:
+<span class="nc" id="L311">					level = new SewerBossLevel();</span>
+<span class="nc" id="L312">					break;</span>
+				case 6:
+				case 7:
+				case 8:
+				case 9:
+<span class="nc" id="L317">					level = new PrisonLevel();</span>
+<span class="nc" id="L318">					break;</span>
+				case 10:
+<span class="nc" id="L320">					level = new PrisonBossLevel();</span>
+<span class="nc" id="L321">					break;</span>
+				case 11:
+				case 12:
+				case 13:
+				case 14:
+<span class="nc" id="L326">					level = new CavesLevel();</span>
+<span class="nc" id="L327">					break;</span>
+				case 15:
+<span class="nc" id="L329">					level = new CavesBossLevel();</span>
+<span class="nc" id="L330">					break;</span>
+				case 16:
+				case 17:
+				case 18:
+				case 19:
+<span class="nc" id="L335">					level = new CityLevel();</span>
+<span class="nc" id="L336">					break;</span>
+				case 20:
+<span class="nc" id="L338">					level = new CityBossLevel();</span>
+<span class="nc" id="L339">					break;</span>
+				case 21:
+				case 22:
+				case 23:
+				case 24:
+<span class="nc" id="L344">					level = new HallsLevel();</span>
+<span class="nc" id="L345">					break;</span>
+				case 25:
+<span class="nc" id="L347">					level = new HallsBossLevel();</span>
+<span class="nc" id="L348">					break;</span>
+				case 26:
+<span class="nc" id="L350">					level = new LastLevel();</span>
+<span class="nc" id="L351">					break;</span>
+				default:
+<span class="nc" id="L353">					level = new DeadEndLevel();</span>
+			}
+<span class="nc bnc" id="L355" title="All 2 branches missed.">		} else if (branch == 1) {</span>
+<span class="nc bnc" id="L356" title="All 2 branches missed.">			switch (depth) {</span>
+				case 11:
+				case 12:
+				case 13:
+				case 14:
+<span class="nc" id="L361">					level = new MiningLevel();</span>
+<span class="nc" id="L362">					break;</span>
+				default:
+<span class="nc" id="L364">					level = new DeadEndLevel();</span>
+			}
+		} else {
+<span class="nc" id="L367">			level = new DeadEndLevel();</span>
+		}
+
+		//dead end levels get cleared, don't count as generated
+<span class="nc bnc" id="L371" title="All 2 branches missed.">		if (!(level instanceof DeadEndLevel)){</span>
+			//this assumes that we will never have a depth value outside the range 0 to 999
+			// or -500 to 499, etc.
+<span class="nc bnc" id="L374" title="All 2 branches missed.">			if (!generatedLevels.contains(depth + 1000*branch)) {</span>
+<span class="nc" id="L375">				generatedLevels.add(depth + 1000 * branch);</span>
+			}
+
+<span class="nc bnc" id="L378" title="All 4 branches missed.">			if (depth &gt; Statistics.deepestFloor &amp;&amp; branch == 0) {</span>
+<span class="nc" id="L379">				Statistics.deepestFloor = depth;</span>
+
+<span class="nc bnc" id="L381" title="All 2 branches missed.">				if (Statistics.qualifiedForNoKilling) {</span>
+<span class="nc" id="L382">					Statistics.completedWithNoKilling = true;</span>
+				} else {
+<span class="nc" id="L384">					Statistics.completedWithNoKilling = false;</span>
+				}
+			}
+		}
+
+<span class="nc" id="L389">		Statistics.qualifiedForBossRemainsBadge = false;</span>
+		
+<span class="nc" id="L391">		level.create();</span>
+		
+<span class="nc bnc" id="L393" title="All 4 branches missed.">		if (branch == 0) Statistics.qualifiedForNoKilling = !bossLevel();</span>
+<span class="nc" id="L394">		Statistics.qualifiedForBossChallengeBadge = false;</span>
+		
+<span class="nc" id="L396">		return level;</span>
+	}
+	
+	public static void resetLevel() {
+		
+<span class="nc" id="L401">		Actor.clear();</span>
+		
+<span class="nc" id="L403">		level.reset();</span>
+<span class="nc" id="L404">		switchLevel( level, level.entrance() );</span>
+<span class="nc" id="L405">	}</span>
+
+	public static long seedCurDepth(){
+<span class="nc" id="L408">		return seedForDepth(depth, branch);</span>
+	}
+
+	public static long seedForDepth(int depth, int branch){
+<span class="nc" id="L412">		int lookAhead = depth;</span>
+<span class="nc" id="L413">		lookAhead += 30*branch; //Assumes depth is always 1-30, and branch is always 0 or higher</span>
+
+<span class="nc" id="L415">		Random.pushGenerator( seed );</span>
+
+<span class="nc bnc" id="L417" title="All 2 branches missed.">			for (int i = 0; i &lt; lookAhead; i ++) {</span>
+<span class="nc" id="L418">				Random.Long(); //we don't care about these values, just need to go through them</span>
+			}
+<span class="nc" id="L420">			long result = Random.Long();</span>
+
+<span class="nc" id="L422">		Random.popGenerator();</span>
+<span class="nc" id="L423">		return result;</span>
+	}
+	
+	public static boolean shopOnLevel() {
+<span class="nc bnc" id="L427" title="All 6 branches missed.">		return depth == 6 || depth == 11 || depth == 16;</span>
+	}
+	
+	public static boolean bossLevel() {
+<span class="nc" id="L431">		return bossLevel( depth );</span>
+	}
+	
+	public static boolean bossLevel( int depth ) {
+<span class="nc bnc" id="L435" title="All 10 branches missed.">		return depth == 5 || depth == 10 || depth == 15 || depth == 20 || depth == 25;</span>
+	}
+
+	//value used for scaling of damage values and other effects.
+	//is usually the dungeon depth, but can be set to 26 when ascending
+	public static int scalingDepth(){
+<span class="nc bnc" id="L441" title="All 4 branches missed.">		if (Dungeon.hero != null &amp;&amp; Dungeon.hero.buff(AscensionChallenge.class) != null){</span>
+<span class="nc" id="L442">			return 26;</span>
+		} else {
+<span class="nc" id="L444">			return depth;</span>
+		}
+	}
+
+	public static boolean interfloorTeleportAllowed(){
+<span class="nc bnc" id="L449" title="All 6 branches missed.">		if (Dungeon.level.locked</span>
+				|| Dungeon.level instanceof MiningLevel
+<span class="nc bnc" id="L451" title="All 2 branches missed.">				|| (Dungeon.hero != null &amp;&amp; Dungeon.hero.belongings.getItem(Amulet.class) != null)){</span>
+<span class="nc" id="L452">			return false;</span>
+		}
+<span class="nc" id="L454">		return true;</span>
+	}
+	
+	public static void switchLevel( final Level level, int pos ) {
+
+		//Position of -2 specifically means trying to place the hero the exit
+<span class="nc bnc" id="L460" title="All 2 branches missed.">		if (pos == -2){</span>
+<span class="nc" id="L461">			LevelTransition t = level.getTransition(LevelTransition.Type.REGULAR_EXIT);</span>
+<span class="nc bnc" id="L462" title="All 2 branches missed.">			if (t != null) pos = t.cell();</span>
+		}
+
+		//Place hero at the entrance if they are out of the map (often used for pos = -1)
+		// or if they are in invalid terrain terrain (except in the mining level, where that happens normally)
+<span class="nc bnc" id="L467" title="All 6 branches missed.">		if (pos &lt; 0 || pos &gt;= level.length() || level.invalidHeroPos(pos)){</span>
+<span class="nc" id="L468">			pos = level.getTransition(null).cell();</span>
+		}
+		
+<span class="nc" id="L471">		PathFinder.setMapSize(level.width(), level.height());</span>
+		
+<span class="nc" id="L473">		Dungeon.level = level;</span>
+<span class="nc" id="L474">		hero.pos = pos;</span>
+
+<span class="nc bnc" id="L476" title="All 2 branches missed.">		if (hero.buff(AscensionChallenge.class) != null){</span>
+<span class="nc" id="L477">			hero.buff(AscensionChallenge.class).onLevelSwitch();</span>
+		}
+
+<span class="nc" id="L480">		Mob.restoreAllies( level, pos );</span>
+
+<span class="nc" id="L482">		Actor.init();</span>
+
+<span class="nc" id="L484">		level.addRespawner();</span>
+		
+<span class="nc bnc" id="L486" title="All 2 branches missed.">		for(Mob m : level.mobs){</span>
+<span class="nc bnc" id="L487" title="All 4 branches missed.">			if (m.pos == hero.pos &amp;&amp; !Char.hasProp(m, Char.Property.IMMOVABLE)){</span>
+				//displace mob
+<span class="nc bnc" id="L489" title="All 2 branches missed.">				for(int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L490" title="All 4 branches missed.">					if (Actor.findChar(m.pos+i) == null &amp;&amp; level.passable[m.pos + i]){</span>
+<span class="nc" id="L491">						m.pos += i;</span>
+<span class="nc" id="L492">						break;</span>
+					}
+				}
+			}
+<span class="nc" id="L496">		}</span>
+		
+<span class="nc" id="L498">		Light light = hero.buff( Light.class );</span>
+<span class="nc bnc" id="L499" title="All 2 branches missed.">		hero.viewDistance = light == null ? level.viewDistance : Math.max( Light.DISTANCE, level.viewDistance );</span>
+		
+<span class="nc" id="L501">		hero.curAction = hero.lastAction = null;</span>
+
+<span class="nc" id="L503">		observe();</span>
+		try {
+<span class="nc" id="L505">			saveAll();</span>
+<span class="nc" id="L506">		} catch (IOException e) {</span>
+<span class="nc" id="L507">			ShatteredPixelDungeon.reportException(e);</span>
+			/*This only catches IO errors. Yes, this means things can go wrong, and they can go wrong catastrophically.
+			But when they do the user will get a nice 'report this issue' dialogue, and I can fix the bug.*/
+<span class="nc" id="L510">		}</span>
+<span class="nc" id="L511">	}</span>
+
+	public static void dropToChasm( Item item ) {
+<span class="nc" id="L514">		int depth = Dungeon.depth + 1;</span>
+<span class="nc" id="L515">		ArrayList&lt;Item&gt; dropped = Dungeon.droppedItems.get( depth );</span>
+<span class="nc bnc" id="L516" title="All 2 branches missed.">		if (dropped == null) {</span>
+<span class="nc" id="L517">			Dungeon.droppedItems.put( depth, dropped = new ArrayList&lt;&gt;() );</span>
+		}
+<span class="nc" id="L519">		dropped.add( item );</span>
+<span class="nc" id="L520">	}</span>
+
+	public static boolean posNeeded() {
+		//2 POS each floor set
+<span class="nc" id="L524">		int posLeftThisSet = 2 - (LimitedDrops.STRENGTH_POTIONS.count - (depth / 5) * 2);</span>
+<span class="nc bnc" id="L525" title="All 2 branches missed.">		if (posLeftThisSet &lt;= 0) return false;</span>
+
+<span class="nc" id="L527">		int floorThisSet = (depth % 5);</span>
+
+		//pos drops every two floors, (numbers 1-2, and 3-4) with a 50% chance for the earlier one each time.
+<span class="nc" id="L530">		int targetPOSLeft = 2 - floorThisSet/2;</span>
+<span class="nc bnc" id="L531" title="All 4 branches missed.">		if (floorThisSet % 2 == 1 &amp;&amp; Random.Int(2) == 0) targetPOSLeft --;</span>
+
+<span class="nc bnc" id="L533" title="All 2 branches missed.">		if (targetPOSLeft &lt; posLeftThisSet) return true;</span>
+<span class="nc" id="L534">		else return false;</span>
+
+	}
+	
+	public static boolean souNeeded() {
+		int souLeftThisSet;
+		//3 SOU each floor set
+<span class="nc" id="L541">		souLeftThisSet = 3 - (LimitedDrops.UPGRADE_SCROLLS.count - (depth / 5) * 3);</span>
+<span class="nc bnc" id="L542" title="All 2 branches missed.">		if (souLeftThisSet &lt;= 0) return false;</span>
+
+<span class="nc" id="L544">		int floorThisSet = (depth % 5);</span>
+		//chance is floors left / scrolls left
+<span class="nc bnc" id="L546" title="All 2 branches missed.">		return Random.Int(5 - floorThisSet) &lt; souLeftThisSet;</span>
+	}
+	
+	public static boolean asNeeded() {
+		//1 AS each floor set
+<span class="nc" id="L551">		int asLeftThisSet = 1 - (LimitedDrops.ARCANE_STYLI.count - (depth / 5));</span>
+<span class="nc bnc" id="L552" title="All 2 branches missed.">		if (asLeftThisSet &lt;= 0) return false;</span>
+
+<span class="nc" id="L554">		int floorThisSet = (depth % 5);</span>
+		//chance is floors left / scrolls left
+<span class="nc bnc" id="L556" title="All 2 branches missed.">		return Random.Int(5 - floorThisSet) &lt; asLeftThisSet;</span>
+	}
+
+	public static boolean enchStoneNeeded(){
+		//1 enchantment stone, spawns on chapter 2 or 3
+<span class="nc bnc" id="L561" title="All 2 branches missed.">		if (!LimitedDrops.ENCH_STONE.dropped()){</span>
+<span class="nc" id="L562">			int region = 1+depth/5;</span>
+<span class="nc bnc" id="L563" title="All 2 branches missed.">			if (region &gt; 1){</span>
+<span class="nc" id="L564">				int floorsVisited = depth - 5;</span>
+<span class="nc bnc" id="L565" title="All 2 branches missed.">				if (floorsVisited &gt; 4) floorsVisited--; //skip floor 10</span>
+<span class="nc bnc" id="L566" title="All 2 branches missed.">				return Random.Int(9-floorsVisited) == 0; //1/8 chance each floor</span>
+			}
+		}
+<span class="nc" id="L569">		return false;</span>
+	}
+
+	public static boolean intStoneNeeded(){
+		//one stone on floors 1-3
+<span class="nc bnc" id="L574" title="All 6 branches missed.">		return depth &lt; 5 &amp;&amp; !LimitedDrops.INT_STONE.dropped() &amp;&amp; Random.Int(4-depth) == 0;</span>
+	}
+
+	public static boolean trinketCataNeeded(){
+		//one trinket catalyst on floors 1-3
+<span class="nc bnc" id="L579" title="All 6 branches missed.">		return depth &lt; 5 &amp;&amp; !LimitedDrops.TRINKET_CATA.dropped() &amp;&amp; Random.Int(4-depth) == 0;</span>
+	}
+
+	public static boolean labRoomNeeded(){
+		//one laboratory each floor set, in floor 3 or 4, 1/2 chance each floor
+<span class="nc" id="L584">		int region = 1+depth/5;</span>
+<span class="nc bnc" id="L585" title="All 2 branches missed.">		if (region &gt; LimitedDrops.LAB_ROOM.count){</span>
+<span class="nc" id="L586">			int floorThisRegion = depth%5;</span>
+<span class="nc bnc" id="L587" title="All 6 branches missed.">			if (floorThisRegion &gt;= 4 || (floorThisRegion == 3 &amp;&amp; Random.Int(2) == 0)){</span>
+<span class="nc" id="L588">				return true;</span>
+			}
+		}
+<span class="nc" id="L591">		return false;</span>
+	}
+
+	private static final String INIT_VER	= &quot;init_ver&quot;;
+	public  static final String VERSION		= &quot;version&quot;;
+	private static final String SEED		= &quot;seed&quot;;
+	private static final String CUSTOM_SEED	= &quot;custom_seed&quot;;
+	private static final String DAILY	    = &quot;daily&quot;;
+	private static final String DAILY_REPLAY= &quot;daily_replay&quot;;
+	private static final String LAST_PLAYED = &quot;last_played&quot;;
+	private static final String CHALLENGES	= &quot;challenges&quot;;
+	private static final String MOBS_TO_CHAMPION	= &quot;mobs_to_champion&quot;;
+	private static final String HERO		= &quot;hero&quot;;
+	private static final String DEPTH		= &quot;depth&quot;;
+	private static final String BRANCH		= &quot;branch&quot;;
+	private static final String GENERATED_LEVELS    = &quot;generated_levels&quot;;
+	private static final String GOLD		= &quot;gold&quot;;
+	private static final String ENERGY		= &quot;energy&quot;;
+	private static final String DROPPED     = &quot;dropped%d&quot;;
+	private static final String PORTED      = &quot;ported%d&quot;;
+	private static final String LEVEL		= &quot;level&quot;;
+	private static final String LIMDROPS    = &quot;limited_drops&quot;;
+	private static final String CHAPTERS	= &quot;chapters&quot;;
+	private static final String QUESTS		= &quot;quests&quot;;
+	private static final String BADGES		= &quot;badges&quot;;
+	
+	public static void saveGame( int save ) {
+		try {
+<span class="nc" id="L619">			Bundle bundle = new Bundle();</span>
+
+<span class="nc" id="L621">			bundle.put( INIT_VER, initialVersion );</span>
+<span class="nc" id="L622">			bundle.put( VERSION, version = Game.versionCode );</span>
+<span class="nc" id="L623">			bundle.put( SEED, seed );</span>
+<span class="nc" id="L624">			bundle.put( CUSTOM_SEED, customSeedText );</span>
+<span class="nc" id="L625">			bundle.put( DAILY, daily );</span>
+<span class="nc" id="L626">			bundle.put( DAILY_REPLAY, dailyReplay );</span>
+<span class="nc" id="L627">			bundle.put( LAST_PLAYED, lastPlayed = Game.realTime);</span>
+<span class="nc" id="L628">			bundle.put( CHALLENGES, challenges );</span>
+<span class="nc" id="L629">			bundle.put( MOBS_TO_CHAMPION, mobsToChampion );</span>
+<span class="nc" id="L630">			bundle.put( HERO, hero );</span>
+<span class="nc" id="L631">			bundle.put( DEPTH, depth );</span>
+<span class="nc" id="L632">			bundle.put( BRANCH, branch );</span>
+
+<span class="nc" id="L634">			bundle.put( GOLD, gold );</span>
+<span class="nc" id="L635">			bundle.put( ENERGY, energy );</span>
+
+<span class="nc bnc" id="L637" title="All 2 branches missed.">			for (int d : droppedItems.keyArray()) {</span>
+<span class="nc" id="L638">				bundle.put(Messages.format(DROPPED, d), droppedItems.get(d));</span>
+			}
+
+<span class="nc" id="L641">			quickslot.storePlaceholders( bundle );</span>
+
+<span class="nc" id="L643">			Bundle limDrops = new Bundle();</span>
+<span class="nc" id="L644">			LimitedDrops.store( limDrops );</span>
+<span class="nc" id="L645">			bundle.put ( LIMDROPS, limDrops );</span>
+			
+<span class="nc" id="L647">			int count = 0;</span>
+<span class="nc" id="L648">			int ids[] = new int[chapters.size()];</span>
+<span class="nc bnc" id="L649" title="All 2 branches missed.">			for (Integer id : chapters) {</span>
+<span class="nc" id="L650">				ids[count++] = id;</span>
+<span class="nc" id="L651">			}</span>
+<span class="nc" id="L652">			bundle.put( CHAPTERS, ids );</span>
+			
+<span class="nc" id="L654">			Bundle quests = new Bundle();</span>
+<span class="nc" id="L655">			Ghost		.Quest.storeInBundle( quests );</span>
+<span class="nc" id="L656">			Wandmaker	.Quest.storeInBundle( quests );</span>
+<span class="nc" id="L657">			Blacksmith	.Quest.storeInBundle( quests );</span>
+<span class="nc" id="L658">			Imp			.Quest.storeInBundle( quests );</span>
+<span class="nc" id="L659">			bundle.put( QUESTS, quests );</span>
+			
+<span class="nc" id="L661">			SpecialRoom.storeRoomsInBundle( bundle );</span>
+<span class="nc" id="L662">			SecretRoom.storeRoomsInBundle( bundle );</span>
+			
+<span class="nc" id="L664">			Statistics.storeInBundle( bundle );</span>
+<span class="nc" id="L665">			Notes.storeInBundle( bundle );</span>
+<span class="nc" id="L666">			Generator.storeInBundle( bundle );</span>
+
+<span class="nc" id="L668">			int[] bundleArr = new int[generatedLevels.size()];</span>
+<span class="nc bnc" id="L669" title="All 2 branches missed.">			for (int i = 0; i &lt; generatedLevels.size(); i++){</span>
+<span class="nc" id="L670">				bundleArr[i] = generatedLevels.get(i);</span>
+			}
+<span class="nc" id="L672">			bundle.put( GENERATED_LEVELS, bundleArr);</span>
+			
+<span class="nc" id="L674">			Scroll.save( bundle );</span>
+<span class="nc" id="L675">			Potion.save( bundle );</span>
+<span class="nc" id="L676">			Ring.save( bundle );</span>
+
+<span class="nc" id="L678">			Actor.storeNextID( bundle );</span>
+			
+<span class="nc" id="L680">			Bundle badges = new Bundle();</span>
+<span class="nc" id="L681">			Badges.saveLocal( badges );</span>
+<span class="nc" id="L682">			bundle.put( BADGES, badges );</span>
+			
+<span class="nc" id="L684">			FileUtils.bundleToFile( GamesInProgress.gameFile(save), bundle);</span>
+			
+<span class="nc" id="L686">		} catch (IOException e) {</span>
+<span class="nc" id="L687">			GamesInProgress.setUnknown( save );</span>
+<span class="nc" id="L688">			ShatteredPixelDungeon.reportException(e);</span>
+<span class="nc" id="L689">		}</span>
+<span class="nc" id="L690">	}</span>
+	
+	public static void saveLevel( int save ) throws IOException {
+<span class="nc" id="L693">		Bundle bundle = new Bundle();</span>
+<span class="nc" id="L694">		bundle.put( LEVEL, level );</span>
+		
+<span class="nc" id="L696">		FileUtils.bundleToFile(GamesInProgress.depthFile( save, depth, branch ), bundle);</span>
+<span class="nc" id="L697">	}</span>
+	
+	public static void saveAll() throws IOException {
+<span class="nc bnc" id="L700" title="All 6 branches missed.">		if (hero != null &amp;&amp; (hero.isAlive() || WndResurrect.instance != null)) {</span>
+			
+<span class="nc" id="L702">			Actor.fixTime();</span>
+<span class="nc" id="L703">			updateLevelExplored();</span>
+<span class="nc" id="L704">			saveGame( GamesInProgress.curSlot );</span>
+<span class="nc" id="L705">			saveLevel( GamesInProgress.curSlot );</span>
+
+<span class="nc" id="L707">			GamesInProgress.set( GamesInProgress.curSlot );</span>
+
+		}
+<span class="nc" id="L710">	}</span>
+	
+	public static void loadGame( int save ) throws IOException {
+<span class="nc" id="L713">		loadGame( save, true );</span>
+<span class="nc" id="L714">	}</span>
+	
+	public static void loadGame( int save, boolean fullLoad ) throws IOException {
+		
+<span class="nc" id="L718">		Bundle bundle = FileUtils.bundleFromFile( GamesInProgress.gameFile( save ) );</span>
+
+<span class="nc" id="L720">		initialVersion = bundle.getInt( INIT_VER );</span>
+<span class="nc" id="L721">		version = bundle.getInt( VERSION );</span>
+
+<span class="nc bnc" id="L723" title="All 2 branches missed.">		seed = bundle.contains( SEED ) ? bundle.getLong( SEED ) : DungeonSeed.randomSeed();</span>
+<span class="nc" id="L724">		customSeedText = bundle.getString( CUSTOM_SEED );</span>
+<span class="nc" id="L725">		daily = bundle.getBoolean( DAILY );</span>
+<span class="nc" id="L726">		dailyReplay = bundle.getBoolean( DAILY_REPLAY );</span>
+
+<span class="nc" id="L728">		Actor.clear();</span>
+<span class="nc" id="L729">		Actor.restoreNextID( bundle );</span>
+
+<span class="nc" id="L731">		quickslot.reset();</span>
+<span class="nc" id="L732">		QuickSlotButton.reset();</span>
+<span class="nc" id="L733">		Toolbar.swappedQuickslots = false;</span>
+
+<span class="nc" id="L735">		Dungeon.challenges = bundle.getInt( CHALLENGES );</span>
+<span class="nc" id="L736">		Dungeon.mobsToChampion = bundle.getInt( MOBS_TO_CHAMPION );</span>
+		
+<span class="nc" id="L738">		Dungeon.level = null;</span>
+<span class="nc" id="L739">		Dungeon.depth = -1;</span>
+		
+<span class="nc" id="L741">		Scroll.restore( bundle );</span>
+<span class="nc" id="L742">		Potion.restore( bundle );</span>
+<span class="nc" id="L743">		Ring.restore( bundle );</span>
+
+<span class="nc" id="L745">		quickslot.restorePlaceholders( bundle );</span>
+		
+<span class="nc bnc" id="L747" title="All 2 branches missed.">		if (fullLoad) {</span>
+			
+<span class="nc" id="L749">			LimitedDrops.restore( bundle.getBundle(LIMDROPS) );</span>
+
+<span class="nc" id="L751">			chapters = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L752">			int ids[] = bundle.getIntArray( CHAPTERS );</span>
+<span class="nc bnc" id="L753" title="All 2 branches missed.">			if (ids != null) {</span>
+<span class="nc bnc" id="L754" title="All 2 branches missed.">				for (int id : ids) {</span>
+<span class="nc" id="L755">					chapters.add( id );</span>
+				}
+			}
+			
+<span class="nc" id="L759">			Bundle quests = bundle.getBundle( QUESTS );</span>
+<span class="nc bnc" id="L760" title="All 2 branches missed.">			if (!quests.isNull()) {</span>
+<span class="nc" id="L761">				Ghost.Quest.restoreFromBundle( quests );</span>
+<span class="nc" id="L762">				Wandmaker.Quest.restoreFromBundle( quests );</span>
+<span class="nc" id="L763">				Blacksmith.Quest.restoreFromBundle( quests );</span>
+<span class="nc" id="L764">				Imp.Quest.restoreFromBundle( quests );</span>
+			} else {
+<span class="nc" id="L766">				Ghost.Quest.reset();</span>
+<span class="nc" id="L767">				Wandmaker.Quest.reset();</span>
+<span class="nc" id="L768">				Blacksmith.Quest.reset();</span>
+<span class="nc" id="L769">				Imp.Quest.reset();</span>
+			}
+			
+<span class="nc" id="L772">			SpecialRoom.restoreRoomsFromBundle(bundle);</span>
+<span class="nc" id="L773">			SecretRoom.restoreRoomsFromBundle(bundle);</span>
+
+<span class="nc" id="L775">			generatedLevels.clear();</span>
+<span class="nc bnc" id="L776" title="All 2 branches missed.">			for (int i : bundle.getIntArray(GENERATED_LEVELS)){</span>
+<span class="nc" id="L777">				generatedLevels.add(i);</span>
+			}
+
+<span class="nc" id="L780">			droppedItems = new SparseArray&lt;&gt;();</span>
+<span class="nc bnc" id="L781" title="All 2 branches missed.">			for (int i=1; i &lt;= 26; i++) {</span>
+
+				//dropped items
+<span class="nc" id="L784">				ArrayList&lt;Item&gt; items = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L785" title="All 2 branches missed.">				if (bundle.contains(Messages.format( DROPPED, i )))</span>
+<span class="nc bnc" id="L786" title="All 2 branches missed.">					for (Bundlable b : bundle.getCollection( Messages.format( DROPPED, i ) ) ) {</span>
+<span class="nc" id="L787">						items.add( (Item)b );</span>
+<span class="nc" id="L788">					}</span>
+<span class="nc bnc" id="L789" title="All 2 branches missed.">				if (!items.isEmpty()) {</span>
+<span class="nc" id="L790">					droppedItems.put( i, items );</span>
+				}
+
+			}
+		}
+		
+<span class="nc" id="L796">		Bundle badges = bundle.getBundle(BADGES);</span>
+<span class="nc bnc" id="L797" title="All 2 branches missed.">		if (!badges.isNull()) {</span>
+<span class="nc" id="L798">			Badges.loadLocal( badges );</span>
+		} else {
+<span class="nc" id="L800">			Badges.reset();</span>
+		}
+		
+<span class="nc" id="L803">		Notes.restoreFromBundle( bundle );</span>
+		
+<span class="nc" id="L805">		hero = null;</span>
+<span class="nc" id="L806">		hero = (Hero)bundle.get( HERO );</span>
+		
+<span class="nc" id="L808">		depth = bundle.getInt( DEPTH );</span>
+<span class="nc" id="L809">		branch = bundle.getInt( BRANCH );</span>
+
+<span class="nc" id="L811">		gold = bundle.getInt( GOLD );</span>
+<span class="nc" id="L812">		energy = bundle.getInt( ENERGY );</span>
+
+<span class="nc" id="L814">		Statistics.restoreFromBundle( bundle );</span>
+<span class="nc" id="L815">		Generator.restoreFromBundle( bundle );</span>
+
+<span class="nc" id="L817">	}</span>
+	
+	public static Level loadLevel( int save ) throws IOException {
+		
+<span class="nc" id="L821">		Dungeon.level = null;</span>
+<span class="nc" id="L822">		Actor.clear();</span>
+
+<span class="nc" id="L824">		Bundle bundle = FileUtils.bundleFromFile( GamesInProgress.depthFile( save, depth, branch ));</span>
+
+<span class="nc" id="L826">		Level level = (Level)bundle.get( LEVEL );</span>
+
+<span class="nc bnc" id="L828" title="All 2 branches missed.">		if (level == null){</span>
+<span class="nc" id="L829">			throw new IOException();</span>
+		} else {
+<span class="nc" id="L831">			return level;</span>
+		}
+	}
+	
+	public static void deleteGame( int save, boolean deleteLevels ) {
+
+<span class="nc bnc" id="L837" title="All 2 branches missed.">		if (deleteLevels) {</span>
+<span class="nc" id="L838">			String folder = GamesInProgress.gameFolder(save);</span>
+<span class="nc bnc" id="L839" title="All 2 branches missed.">			for (String file : FileUtils.filesInDir(folder)){</span>
+<span class="nc bnc" id="L840" title="All 2 branches missed.">				if (file.contains(&quot;depth&quot;)){</span>
+<span class="nc" id="L841">					FileUtils.deleteFile(folder + &quot;/&quot; + file);</span>
+				}
+<span class="nc" id="L843">			}</span>
+		}
+
+<span class="nc" id="L846">		FileUtils.overwriteFile(GamesInProgress.gameFile(save), 1);</span>
+		
+<span class="nc" id="L848">		GamesInProgress.delete( save );</span>
+<span class="nc" id="L849">	}</span>
+	
+	public static void preview( GamesInProgress.Info info, Bundle bundle ) {
+<span class="nc" id="L852">		info.depth = bundle.getInt( DEPTH );</span>
+<span class="nc" id="L853">		info.version = bundle.getInt( VERSION );</span>
+<span class="nc" id="L854">		info.challenges = bundle.getInt( CHALLENGES );</span>
+<span class="nc" id="L855">		info.seed = bundle.getLong( SEED );</span>
+<span class="nc" id="L856">		info.customSeed = bundle.getString( CUSTOM_SEED );</span>
+<span class="nc" id="L857">		info.daily = bundle.getBoolean( DAILY );</span>
+<span class="nc" id="L858">		info.dailyReplay = bundle.getBoolean( DAILY_REPLAY );</span>
+<span class="nc" id="L859">		info.lastPlayed = bundle.getLong( LAST_PLAYED );</span>
+
+<span class="nc" id="L861">		Hero.preview( info, bundle.getBundle( HERO ) );</span>
+<span class="nc" id="L862">		Statistics.preview( info, bundle );</span>
+<span class="nc" id="L863">	}</span>
+	
+	public static void fail( Object cause ) {
+<span class="nc bnc" id="L866" title="All 2 branches missed.">		if (WndResurrect.instance == null) {</span>
+<span class="nc" id="L867">			updateLevelExplored();</span>
+<span class="nc" id="L868">			Statistics.gameWon = false;</span>
+<span class="nc" id="L869">			Rankings.INSTANCE.submit( false, cause );</span>
+		}
+<span class="nc" id="L871">	}</span>
+	
+	public static void win( Object cause ) {
+
+<span class="nc" id="L875">		updateLevelExplored();</span>
+<span class="nc" id="L876">		Statistics.gameWon = true;</span>
+
+<span class="nc" id="L878">		hero.belongings.identify();</span>
+
+<span class="nc" id="L880">		Rankings.INSTANCE.submit( true, cause );</span>
+<span class="nc" id="L881">	}</span>
+
+	public static void updateLevelExplored(){
+<span class="nc bnc" id="L884" title="All 6 branches missed.">		if (branch == 0 &amp;&amp; level instanceof RegularLevel &amp;&amp; !Dungeon.bossLevel()){</span>
+<span class="nc" id="L885">			Statistics.floorsExplored.put( depth, level.isLevelExplored(depth));</span>
+		}
+<span class="nc" id="L887">	}</span>
+
+	//default to recomputing based on max hero vision, in case vision just shrank/grew
+	public static void observe(){
+<span class="nc" id="L891">		int dist = Math.max(Dungeon.hero.viewDistance, 8);</span>
+<span class="nc" id="L892">		dist *= 1f + 0.25f*Dungeon.hero.pointsInTalent(Talent.FARSIGHT);</span>
+
+<span class="nc bnc" id="L894" title="All 2 branches missed.">		if (Dungeon.hero.buff(MagicalSight.class) != null){</span>
+<span class="nc" id="L895">			dist = Math.max( dist, MagicalSight.DISTANCE );</span>
+		}
+
+<span class="nc" id="L898">		observe( dist+1 );</span>
+<span class="nc" id="L899">	}</span>
+	
+	public static void observe( int dist ) {
+
+<span class="nc bnc" id="L903" title="All 2 branches missed.">		if (level == null) {</span>
+<span class="nc" id="L904">			return;</span>
+		}
+		
+<span class="nc" id="L907">		level.updateFieldOfView(hero, level.heroFOV);</span>
+
+<span class="nc" id="L909">		int x = hero.pos % level.width();</span>
+<span class="nc" id="L910">		int y = hero.pos / level.width();</span>
+	
+		//left, right, top, bottom
+<span class="nc" id="L913">		int l = Math.max( 0, x - dist );</span>
+<span class="nc" id="L914">		int r = Math.min( x + dist, level.width() - 1 );</span>
+<span class="nc" id="L915">		int t = Math.max( 0, y - dist );</span>
+<span class="nc" id="L916">		int b = Math.min( y + dist, level.height() - 1 );</span>
+	
+<span class="nc" id="L918">		int width = r - l + 1;</span>
+<span class="nc" id="L919">		int height = b - t + 1;</span>
+		
+<span class="nc" id="L921">		int pos = l + t * level.width();</span>
+	
+<span class="nc bnc" id="L923" title="All 2 branches missed.">		for (int i = t; i &lt;= b; i++) {</span>
+<span class="nc" id="L924">			BArray.or( level.visited, level.heroFOV, pos, width, level.visited );</span>
+<span class="nc" id="L925">			pos+=level.width();</span>
+		}
+
+		//always visit adjacent tiles, even if they aren't seen
+<span class="nc bnc" id="L929" title="All 2 branches missed.">		for (int i : PathFinder.NEIGHBOURS9){</span>
+<span class="nc" id="L930">			level.visited[hero.pos+i] = true;</span>
+		}
+	
+<span class="nc" id="L933">		GameScene.updateFog(l, t, width, height);</span>
+
+<span class="nc bnc" id="L935" title="All 4 branches missed.">		if (hero.buff(MindVision.class) != null || hero.buff(DivineSense.DivineSenseTracker.class) != null){</span>
+<span class="nc bnc" id="L936" title="All 2 branches missed.">			for (Mob m : level.mobs.toArray(new Mob[0])){</span>
+<span class="nc bnc" id="L937" title="All 6 branches missed.">				if (m instanceof Mimic &amp;&amp; m.alignment == Char.Alignment.NEUTRAL &amp;&amp; ((Mimic) m).stealthy()){</span>
+<span class="nc" id="L938">					continue;</span>
+				}
+
+<span class="nc" id="L941">				BArray.or( level.visited, level.heroFOV, m.pos - 1 - level.width(), 3, level.visited );</span>
+<span class="nc" id="L942">				BArray.or( level.visited, level.heroFOV, m.pos - 1, 3, level.visited );</span>
+<span class="nc" id="L943">				BArray.or( level.visited, level.heroFOV, m.pos - 1 + level.width(), 3, level.visited );</span>
+				//updates adjacent cells too
+<span class="nc" id="L945">				GameScene.updateFog(m.pos, 2);</span>
+			}
+		}
+
+<span class="nc bnc" id="L949" title="All 2 branches missed.">		if (hero.buff(Awareness.class) != null){</span>
+<span class="nc bnc" id="L950" title="All 2 branches missed.">			for (Heap h : level.heaps.valueList()){</span>
+<span class="nc" id="L951">				BArray.or( level.visited, level.heroFOV, h.pos - 1 - level.width(), 3, level.visited );</span>
+<span class="nc" id="L952">				BArray.or( level.visited, level.heroFOV, h.pos - 1, 3, level.visited );</span>
+<span class="nc" id="L953">				BArray.or( level.visited, level.heroFOV, h.pos - 1 + level.width(), 3, level.visited );</span>
+<span class="nc" id="L954">				GameScene.updateFog(h.pos, 2);</span>
+<span class="nc" id="L955">			}</span>
+		}
+
+<span class="nc bnc" id="L958" title="All 2 branches missed.">		for (TalismanOfForesight.CharAwareness c : hero.buffs(TalismanOfForesight.CharAwareness.class)){</span>
+<span class="nc" id="L959">			Char ch = (Char) Actor.findById(c.charID);</span>
+<span class="nc bnc" id="L960" title="All 4 branches missed.">			if (ch == null || !ch.isAlive()) continue;</span>
+<span class="nc" id="L961">			BArray.or( level.visited, level.heroFOV, ch.pos - 1 - level.width(), 3, level.visited );</span>
+<span class="nc" id="L962">			BArray.or( level.visited, level.heroFOV, ch.pos - 1, 3, level.visited );</span>
+<span class="nc" id="L963">			BArray.or( level.visited, level.heroFOV, ch.pos - 1 + level.width(), 3, level.visited );</span>
+<span class="nc" id="L964">			GameScene.updateFog(ch.pos, 2);</span>
+<span class="nc" id="L965">		}</span>
+
+<span class="nc bnc" id="L967" title="All 2 branches missed.">		for (TalismanOfForesight.HeapAwareness h : hero.buffs(TalismanOfForesight.HeapAwareness.class)){</span>
+<span class="nc bnc" id="L968" title="All 4 branches missed.">			if (Dungeon.depth != h.depth || Dungeon.branch != h.branch) continue;</span>
+<span class="nc" id="L969">			BArray.or( level.visited, level.heroFOV, h.pos - 1 - level.width(), 3, level.visited );</span>
+<span class="nc" id="L970">			BArray.or( level.visited, level.heroFOV, h.pos - 1, 3, level.visited );</span>
+<span class="nc" id="L971">			BArray.or( level.visited, level.heroFOV, h.pos - 1 + level.width(), 3, level.visited );</span>
+<span class="nc" id="L972">			GameScene.updateFog(h.pos, 2);</span>
+<span class="nc" id="L973">		}</span>
+
+<span class="nc bnc" id="L975" title="All 2 branches missed.">		for (RevealedArea a : hero.buffs(RevealedArea.class)){</span>
+<span class="nc bnc" id="L976" title="All 4 branches missed.">			if (Dungeon.depth != a.depth || Dungeon.branch != a.branch) continue;</span>
+<span class="nc" id="L977">			BArray.or( level.visited, level.heroFOV, a.pos - 1 - level.width(), 3, level.visited );</span>
+<span class="nc" id="L978">			BArray.or( level.visited, level.heroFOV, a.pos - 1, 3, level.visited );</span>
+<span class="nc" id="L979">			BArray.or( level.visited, level.heroFOV, a.pos - 1 + level.width(), 3, level.visited );</span>
+<span class="nc" id="L980">			GameScene.updateFog(a.pos, 2);</span>
+<span class="nc" id="L981">		}</span>
+
+<span class="nc bnc" id="L983" title="All 2 branches missed.">		for (Char ch : Actor.chars()){</span>
+<span class="nc bnc" id="L984" title="All 6 branches missed.">			if (ch instanceof WandOfWarding.Ward</span>
+					|| ch instanceof WandOfRegrowth.Lotus
+					|| ch instanceof SpiritHawk.HawkAlly
+<span class="nc bnc" id="L987" title="All 2 branches missed.">					|| ch.buff(PowerOfMany.PowerBuff.class) != null){</span>
+<span class="nc" id="L988">				x = ch.pos % level.width();</span>
+<span class="nc" id="L989">				y = ch.pos / level.width();</span>
+
+				//left, right, top, bottom
+<span class="nc" id="L992">				dist = ch.viewDistance+1;</span>
+<span class="nc" id="L993">				l = Math.max( 0, x - dist );</span>
+<span class="nc" id="L994">				r = Math.min( x + dist, level.width() - 1 );</span>
+<span class="nc" id="L995">				t = Math.max( 0, y - dist );</span>
+<span class="nc" id="L996">				b = Math.min( y + dist, level.height() - 1 );</span>
+
+<span class="nc" id="L998">				width = r - l + 1;</span>
+<span class="nc" id="L999">				height = b - t + 1;</span>
+
+<span class="nc" id="L1001">				pos = l + t * level.width();</span>
+
+<span class="nc bnc" id="L1003" title="All 2 branches missed.">				for (int i = t; i &lt;= b; i++) {</span>
+<span class="nc" id="L1004">					BArray.or( level.visited, level.heroFOV, pos, width, level.visited );</span>
+<span class="nc" id="L1005">					pos+=level.width();</span>
+				}
+<span class="nc" id="L1007">				GameScene.updateFog(ch.pos, dist);</span>
+			}
+<span class="nc" id="L1009">		}</span>
+
+<span class="nc" id="L1011">		GameScene.afterObserve();</span>
+<span class="nc" id="L1012">	}</span>
+
+	//we store this to avoid having to re-allocate the array with each pathfind
+	private static boolean[] passable;
+
+	private static void setupPassable(){
+<span class="nc bnc" id="L1018" title="All 4 branches missed.">		if (passable == null || passable.length != Dungeon.level.length())</span>
+<span class="nc" id="L1019">			passable = new boolean[Dungeon.level.length()];</span>
+		else
+<span class="nc" id="L1021">			BArray.setFalse(passable);</span>
+<span class="nc" id="L1022">	}</span>
+
+	public static boolean[] findPassable(Char ch, boolean[] pass, boolean[] vis, boolean chars){
+<span class="nc" id="L1025">		return findPassable(ch, pass, vis, chars, chars);</span>
+	}
+
+	public static boolean[] findPassable(Char ch, boolean[] pass, boolean[] vis, boolean chars, boolean considerLarge){
+<span class="nc" id="L1029">		setupPassable();</span>
+<span class="nc bnc" id="L1030" title="All 4 branches missed.">		if (ch.flying || ch.buff( Amok.class ) != null) {</span>
+<span class="nc" id="L1031">			BArray.or( pass, Dungeon.level.avoid, passable );</span>
+		} else {
+<span class="nc" id="L1033">			System.arraycopy( pass, 0, passable, 0, Dungeon.level.length() );</span>
+		}
+
+<span class="nc bnc" id="L1036" title="All 4 branches missed.">		if (considerLarge &amp;&amp; Char.hasProp(ch, Char.Property.LARGE)){</span>
+<span class="nc" id="L1037">			BArray.and( passable, Dungeon.level.openSpace, passable );</span>
+		}
+
+<span class="nc" id="L1040">		ch.modifyPassable(passable);</span>
+
+<span class="nc bnc" id="L1042" title="All 2 branches missed.">		if (chars) {</span>
+<span class="nc bnc" id="L1043" title="All 2 branches missed.">			for (Char c : Actor.chars()) {</span>
+<span class="nc bnc" id="L1044" title="All 2 branches missed.">				if (vis[c.pos]) {</span>
+<span class="nc" id="L1045">					passable[c.pos] = false;</span>
+				}
+<span class="nc" id="L1047">			}</span>
+		}
+
+<span class="nc" id="L1050">		return passable;</span>
+	}
+
+	public static PathFinder.Path findPath(Char ch, int to, boolean[] pass, boolean[] vis, boolean chars) {
+
+<span class="nc" id="L1055">		return PathFinder.find( ch.pos, to, findPassable(ch, pass, vis, chars) );</span>
+
+	}
+	
+	public static int findStep(Char ch, int to, boolean[] pass, boolean[] visible, boolean chars ) {
+
+<span class="nc bnc" id="L1061" title="All 2 branches missed.">		if (Dungeon.level.adjacent( ch.pos, to )) {</span>
+<span class="nc bnc" id="L1062" title="All 4 branches missed.">			return Actor.findChar( to ) == null &amp;&amp; pass[to] ? to : -1;</span>
+		}
+
+<span class="nc" id="L1065">		return PathFinder.getStep( ch.pos, to, findPassable(ch, pass, visible, chars) );</span>
+
+	}
+
+	public static int flee( Char ch, int from, boolean[] pass, boolean[] visible, boolean chars ) {
+<span class="nc" id="L1070">		boolean[] passable = findPassable(ch, pass, visible, false, true);</span>
+<span class="nc" id="L1071">		passable[ch.pos] = true;</span>
+
+		//chars affected by terror have a shorter lookahead and can't approach the fear source
+<span class="nc bnc" id="L1074" title="All 4 branches missed.">		boolean canApproachFromPos = ch.buff(Terror.class) == null &amp;&amp; ch.buff(Dread.class) == null;</span>
+<span class="nc bnc" id="L1075" title="All 2 branches missed.">		int step = PathFinder.getStepBack( ch.pos, from, canApproachFromPos ? 8 : 4, passable, canApproachFromPos );</span>
+
+		//only consider chars impassable if our retreat step runs into them
+<span class="nc bnc" id="L1078" title="All 6 branches missed.">		while (step != -1 &amp;&amp; Actor.findChar(step) != null &amp;&amp; chars){</span>
+<span class="nc" id="L1079">			passable[step] = false;</span>
+<span class="nc bnc" id="L1080" title="All 2 branches missed.">			step = PathFinder.getStepBack( ch.pos, from, canApproachFromPos ? 8 : 4, passable, canApproachFromPos );</span>
+		}
+<span class="nc" id="L1082">		return step;</span>
+
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

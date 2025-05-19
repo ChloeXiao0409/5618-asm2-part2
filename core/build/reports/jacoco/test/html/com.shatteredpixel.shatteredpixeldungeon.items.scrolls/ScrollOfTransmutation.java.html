@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScrollOfTransmutation.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.scrolls</a> &gt; <span class="el_source">ScrollOfTransmutation.java</span></div><h1>ScrollOfTransmutation.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.scrolls;
+
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Transmuting;
+import com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.brews.Brew;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs.Elixir;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.ExoticPotion;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.Pickaxe;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ExoticScroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.Runestone;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.Trinket;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.Dart;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.TippedDart;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.levels.MiningLevel;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.Reflection;
+
+<span class="nc" id="L59">public class ScrollOfTransmutation extends InventoryScroll {</span>
+	
+	{
+<span class="nc" id="L62">		icon = ItemSpriteSheet.Icons.SCROLL_TRANSMUTE;</span>
+		
+<span class="nc" id="L64">		bones = true;</span>
+
+<span class="nc" id="L66">		talentFactor = 2f;</span>
+<span class="nc" id="L67">	}</span>
+
+	@Override
+	protected boolean usableOnItem(Item item) {
+		//all melee weapons, except pickaxe when in a mining level
+<span class="nc bnc" id="L72" title="All 2 branches missed.">		if (item instanceof MeleeWeapon){</span>
+<span class="nc bnc" id="L73" title="All 4 branches missed.">			return !(item instanceof Pickaxe &amp;&amp; Dungeon.level instanceof MiningLevel);</span>
+
+		//all missile weapons except untipped darts
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		} else if (item instanceof MissileWeapon){</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">			return item.getClass() != Dart.class;</span>
+
+		//all regular or exotic potions. No brews or elixirs
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		} else if (item instanceof Potion){</span>
+<span class="nc bnc" id="L81" title="All 4 branches missed.">			return !(item instanceof Elixir || item instanceof Brew);</span>
+
+		//all regular or exotic scrolls, except itself (unless un-ided, in which case it was already consumed)
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		} else if (item instanceof Scroll) {</span>
+<span class="nc bnc" id="L85" title="All 6 branches missed.">			return item != this || item.quantity() &gt; 1 || identifiedByUse;</span>
+
+		//all non-unique artifacts (no holy tome or cloak of shadows, basically)
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		} else if (item instanceof Artifact) {</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">			return !item.unique;</span>
+
+		//all rings, wands, trinkets, seeds, and runestones
+		} else {
+<span class="nc bnc" id="L93" title="All 10 branches missed.">			return item instanceof Ring || item instanceof Wand || item instanceof Trinket</span>
+					|| item instanceof Plant.Seed || item instanceof Runestone;
+		}
+	}
+	
+	@Override
+	protected void onItemSelected(Item item) {
+		
+<span class="nc" id="L101">		Item result = changeItem(item);</span>
+		
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		if (result == null){</span>
+			//This shouldn't ever trigger
+<span class="nc" id="L105">			GLog.n( Messages.get(this, &quot;nothing&quot;) );</span>
+<span class="nc" id="L106">			curItem.collect( curUser.belongings.backpack );</span>
+		} else {
+<span class="nc bnc" id="L108" title="All 2 branches missed.">			if (result != item) {</span>
+<span class="nc" id="L109">				int slot = Dungeon.quickslot.getSlot(item);</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">				if (item.isEquipped(Dungeon.hero)) {</span>
+<span class="nc" id="L111">					item.cursed = false; //to allow it to be unequipped</span>
+<span class="nc bnc" id="L112" title="All 4 branches missed.">					if (item instanceof Artifact &amp;&amp; result instanceof Ring){</span>
+						//if we turned an equipped artifact into a ring, ring goes into inventory
+<span class="nc" id="L114">						((EquipableItem) item).doUnequip(Dungeon.hero, false);</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">						if (!result.collect()){</span>
+<span class="nc" id="L116">							Dungeon.level.drop(result, curUser.pos).sprite.drop();</span>
+						}
+<span class="nc bnc" id="L118" title="All 4 branches missed.">					} else if (item instanceof KindOfWeapon &amp;&amp; Dungeon.hero.belongings.secondWep() == item){</span>
+<span class="nc" id="L119">						((EquipableItem) item).doUnequip(Dungeon.hero, false);</span>
+<span class="nc" id="L120">						((KindOfWeapon) result).equipSecondary(Dungeon.hero);</span>
+					} else {
+<span class="nc" id="L122">						((EquipableItem) item).doUnequip(Dungeon.hero, false);</span>
+<span class="nc" id="L123">						((EquipableItem) result).doEquip(Dungeon.hero);</span>
+					}
+<span class="nc" id="L125">					Dungeon.hero.spend(-Dungeon.hero.cooldown()); //cancel equip/unequip time</span>
+				} else {
+<span class="nc" id="L127">					item.detach(Dungeon.hero.belongings.backpack);</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">					if (!result.collect()) {</span>
+<span class="nc" id="L129">						Dungeon.level.drop(result, curUser.pos).sprite.drop();</span>
+<span class="nc bnc" id="L130" title="All 4 branches missed.">					} else if (result.stackable &amp;&amp; Dungeon.hero.belongings.getSimilar(result) != null){</span>
+<span class="nc" id="L131">						result = Dungeon.hero.belongings.getSimilar(result);</span>
+					}
+				}
+<span class="nc bnc" id="L134" title="All 2 branches missed.">				if (slot != -1</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">						&amp;&amp; result.defaultAction() != null</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">						&amp;&amp; !Dungeon.quickslot.isNonePlaceholder(slot)</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">						&amp;&amp; Dungeon.hero.belongings.contains(result)){</span>
+<span class="nc" id="L138">					Dungeon.quickslot.setSlot(slot, result);</span>
+				}
+			}
+<span class="nc bnc" id="L141" title="All 2 branches missed.">			if (result.isIdentified()){</span>
+<span class="nc" id="L142">				Catalog.setSeen(result.getClass());</span>
+<span class="nc" id="L143">				Statistics.itemTypesDiscovered.add(result.getClass());</span>
+			}
+<span class="nc" id="L145">			Transmuting.show(curUser, item, result);</span>
+<span class="nc" id="L146">			curUser.sprite.emitter().start(Speck.factory(Speck.CHANGE), 0.2f, 10);</span>
+<span class="nc" id="L147">			GLog.p( Messages.get(this, &quot;morph&quot;) );</span>
+		}
+		
+<span class="nc" id="L150">	}</span>
+
+	public static Item changeItem( Item item ){
+<span class="nc bnc" id="L153" title="All 2 branches missed.">		if (item instanceof MagesStaff) {</span>
+<span class="nc" id="L154">			return changeStaff((MagesStaff) item);</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		}else if (item instanceof TippedDart){</span>
+<span class="nc" id="L156">			return changeTippedDart( (TippedDart)item );</span>
+<span class="nc bnc" id="L157" title="All 4 branches missed.">		} else if (item instanceof MeleeWeapon || item instanceof MissileWeapon) {</span>
+<span class="nc" id="L158">			return changeWeapon( (Weapon)item );</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">		} else if (item instanceof Scroll) {</span>
+<span class="nc" id="L160">			return changeScroll( (Scroll)item );</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">		} else if (item instanceof Potion) {</span>
+<span class="nc" id="L162">			return changePotion( (Potion)item );</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		} else if (item instanceof Ring) {</span>
+<span class="nc" id="L164">			return changeRing( (Ring)item );</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">		} else if (item instanceof Wand) {</span>
+<span class="nc" id="L166">			return changeWand( (Wand)item );</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">		} else if (item instanceof Plant.Seed) {</span>
+<span class="nc" id="L168">			return changeSeed((Plant.Seed) item);</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">		} else if (item instanceof Runestone) {</span>
+<span class="nc" id="L170">			return changeStone((Runestone) item);</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">		} else if (item instanceof Artifact) {</span>
+<span class="nc" id="L172">			Artifact a = changeArtifact( (Artifact)item );</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">			if (a == null){</span>
+				//if no artifacts are left, generate a random ring with shared ID/curse state
+				//artifact and ring levels are not exactly equivalent, give the ring up to +2
+<span class="nc" id="L176">				Item result = Generator.randomUsingDefaults(Generator.Category.RING);</span>
+<span class="nc" id="L177">				result.levelKnown = item.levelKnown;</span>
+<span class="nc" id="L178">				result.cursed = item.cursed;</span>
+<span class="nc" id="L179">				result.cursedKnown = item.cursedKnown;</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">				if (item.visiblyUpgraded() == 10){</span>
+<span class="nc" id="L181">					result.level(2);</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">				} else if (item.visiblyUpgraded() &gt;= 5){</span>
+<span class="nc" id="L183">					result.level(1);</span>
+				} else {
+<span class="nc" id="L185">					result.level(0);</span>
+				}
+<span class="nc" id="L187">				return result;</span>
+			} else {
+<span class="nc" id="L189">				return a;</span>
+			}
+<span class="nc bnc" id="L191" title="All 2 branches missed.">		} else if (item instanceof Trinket) {</span>
+<span class="nc" id="L192">			return changeTrinket( (Trinket)item );</span>
+		} else {
+<span class="nc" id="L194">			return null;</span>
+		}
+	}
+	
+	private static MagesStaff changeStaff( MagesStaff staff ){
+<span class="nc" id="L199">		Class&lt;?extends Wand&gt; wandClass = staff.wandClass();</span>
+		
+<span class="nc bnc" id="L201" title="All 2 branches missed.">		if (wandClass == null){</span>
+<span class="nc" id="L202">			return null;</span>
+		} else {
+			Wand n;
+			do {
+<span class="nc" id="L206">				n = (Wand) Generator.randomUsingDefaults(Generator.Category.WAND);</span>
+<span class="nc bnc" id="L207" title="All 4 branches missed.">			} while (Challenges.isItemBlocked(n) || n.getClass() == wandClass);</span>
+<span class="nc" id="L208">			n.level(0);</span>
+<span class="nc" id="L209">			n.identify();</span>
+<span class="nc" id="L210">			staff.imbueWand(n, null);</span>
+		}
+		
+<span class="nc" id="L213">		return staff;</span>
+	}
+
+	private static TippedDart changeTippedDart( TippedDart dart ){
+		TippedDart n;
+		do {
+<span class="nc" id="L219">			n = TippedDart.randomTipped(1);</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">		} while (n.getClass() == dart.getClass());</span>
+
+<span class="nc" id="L222">		return n;</span>
+	}
+	
+	private static Weapon changeWeapon( Weapon w ) {
+		Weapon n;
+		Generator.Category c;
+<span class="nc bnc" id="L228" title="All 2 branches missed.">		if (w instanceof MeleeWeapon) {</span>
+<span class="nc" id="L229">			c = Generator.wepTiers[((MeleeWeapon)w).tier - 1];</span>
+		} else {
+<span class="nc" id="L231">			c = Generator.misTiers[((MissileWeapon)w).tier - 1];</span>
+		}
+		
+		do {
+<span class="nc" id="L235">			n = (Weapon)Generator.randomUsingDefaults(c);</span>
+<span class="nc bnc" id="L236" title="All 4 branches missed.">		} while (Challenges.isItemBlocked(n) || n.getClass() == w.getClass());</span>
+
+<span class="nc" id="L238">		n.level(0);</span>
+<span class="nc" id="L239">		n.quantity(1);</span>
+<span class="nc" id="L240">		int level = w.trueLevel();</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">		if (level &gt; 0) {</span>
+<span class="nc" id="L242">			n.upgrade( level );</span>
+<span class="nc bnc" id="L243" title="All 2 branches missed.">		} else if (level &lt; 0) {</span>
+<span class="nc" id="L244">			n.degrade( -level );</span>
+		}
+		
+<span class="nc" id="L247">		n.enchantment = w.enchantment;</span>
+<span class="nc" id="L248">		n.curseInfusionBonus = w.curseInfusionBonus;</span>
+<span class="nc" id="L249">		n.masteryPotionBonus = w.masteryPotionBonus;</span>
+<span class="nc" id="L250">		n.levelKnown = w.levelKnown;</span>
+<span class="nc" id="L251">		n.cursedKnown = w.cursedKnown;</span>
+<span class="nc" id="L252">		n.cursed = w.cursed;</span>
+<span class="nc" id="L253">		n.augment = w.augment;</span>
+<span class="nc" id="L254">		n.enchantHardened = w.enchantHardened;</span>
+		
+<span class="nc" id="L256">		return n;</span>
+		
+	}
+	
+	private static Ring changeRing( Ring r ) {
+		Ring n;
+		do {
+<span class="nc" id="L263">			n = (Ring)Generator.randomUsingDefaults( Generator.Category.RING );</span>
+<span class="nc bnc" id="L264" title="All 4 branches missed.">		} while (Challenges.isItemBlocked(n) || n.getClass() == r.getClass());</span>
+		
+<span class="nc" id="L266">		n.level(0);</span>
+		
+<span class="nc" id="L268">		int level = r.level();</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">		if (level &gt; 0) {</span>
+<span class="nc" id="L270">			n.upgrade( level );</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">		} else if (level &lt; 0) {</span>
+<span class="nc" id="L272">			n.degrade( -level );</span>
+		}
+		
+<span class="nc" id="L275">		n.levelKnown = r.levelKnown;</span>
+<span class="nc" id="L276">		n.cursedKnown = r.cursedKnown;</span>
+<span class="nc" id="L277">		n.cursed = r.cursed;</span>
+		
+<span class="nc" id="L279">		return n;</span>
+	}
+	
+	private static Artifact changeArtifact( Artifact a ) {
+		Artifact n;
+		do {
+<span class="nc" id="L285">			n = Generator.randomArtifact();</span>
+<span class="nc bnc" id="L286" title="All 6 branches missed.">		} while ( n != null &amp;&amp; (Challenges.isItemBlocked(n) || n.getClass() == a.getClass()));</span>
+		
+<span class="nc bnc" id="L288" title="All 2 branches missed.">		if (n != null){</span>
+
+<span class="nc bnc" id="L290" title="All 2 branches missed.">			if (a instanceof DriedRose){</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">				if (((DriedRose) a).ghostWeapon() != null){</span>
+<span class="nc" id="L292">					Dungeon.level.drop(((DriedRose) a).ghostWeapon(), Dungeon.hero.pos);</span>
+				}
+<span class="nc bnc" id="L294" title="All 2 branches missed.">				if (((DriedRose) a).ghostArmor() != null){</span>
+<span class="nc" id="L295">					Dungeon.level.drop(((DriedRose) a).ghostArmor(), Dungeon.hero.pos);</span>
+				}
+			}
+
+<span class="nc" id="L299">			n.cursedKnown = a.cursedKnown;</span>
+<span class="nc" id="L300">			n.cursed = a.cursed;</span>
+<span class="nc" id="L301">			n.levelKnown = a.levelKnown;</span>
+<span class="nc" id="L302">			n.transferUpgrade(a.visiblyUpgraded());</span>
+<span class="nc" id="L303">			return n;</span>
+		}
+		
+<span class="nc" id="L306">		return null;</span>
+	}
+
+	private static Trinket changeTrinket( Trinket t ){
+		Trinket n;
+		do {
+<span class="nc" id="L312">			n = (Trinket)Generator.random(Generator.Category.TRINKET);</span>
+<span class="nc bnc" id="L313" title="All 4 branches missed.">		} while ( Challenges.isItemBlocked(n) || n.getClass() == t.getClass());</span>
+
+<span class="nc" id="L315">		n.level(t.trueLevel());</span>
+<span class="nc" id="L316">		n.levelKnown = t.levelKnown;</span>
+<span class="nc" id="L317">		n.cursedKnown = t.cursedKnown;</span>
+<span class="nc" id="L318">		n.cursed = t.cursed;</span>
+
+<span class="nc" id="L320">		return n;</span>
+	}
+	
+	private static Wand changeWand( Wand w ) {
+		Wand n;
+		do {
+<span class="nc" id="L326">			n = (Wand)Generator.randomUsingDefaults( Generator.Category.WAND );</span>
+<span class="nc bnc" id="L327" title="All 4 branches missed.">		} while ( Challenges.isItemBlocked(n) || n.getClass() == w.getClass());</span>
+		
+<span class="nc" id="L329">		n.level( 0 );</span>
+<span class="nc" id="L330">		int level = w.trueLevel();</span>
+<span class="nc" id="L331">		n.upgrade( level );</span>
+
+<span class="nc" id="L333">		n.levelKnown = w.levelKnown;</span>
+<span class="nc" id="L334">		n.curChargeKnown = w.curChargeKnown;</span>
+<span class="nc" id="L335">		n.cursedKnown = w.cursedKnown;</span>
+<span class="nc" id="L336">		n.cursed = w.cursed;</span>
+<span class="nc" id="L337">		n.curseInfusionBonus = w.curseInfusionBonus;</span>
+<span class="nc" id="L338">		n.resinBonus = w.resinBonus;</span>
+
+<span class="nc" id="L340">		n.curCharges =  w.curCharges;</span>
+<span class="nc" id="L341">		n.updateLevel();</span>
+		
+<span class="nc" id="L343">		return n;</span>
+	}
+	
+	private static Plant.Seed changeSeed( Plant.Seed s ) {
+		Plant.Seed n;
+		
+		do {
+<span class="nc" id="L350">			n = (Plant.Seed)Generator.randomUsingDefaults( Generator.Category.SEED );</span>
+<span class="nc bnc" id="L351" title="All 2 branches missed.">		} while (n.getClass() == s.getClass());</span>
+		
+<span class="nc" id="L353">		return n;</span>
+	}
+	
+	private static Runestone changeStone( Runestone r ) {
+		Runestone n;
+		
+		do {
+<span class="nc" id="L360">			n = (Runestone) Generator.randomUsingDefaults( Generator.Category.STONE );</span>
+<span class="nc bnc" id="L361" title="All 2 branches missed.">		} while (n.getClass() == r.getClass());</span>
+		
+<span class="nc" id="L363">		return n;</span>
+	}
+
+	private static Scroll changeScroll( Scroll s ) {
+<span class="nc bnc" id="L367" title="All 2 branches missed.">		if (s instanceof ExoticScroll) {</span>
+<span class="nc" id="L368">			return Reflection.newInstance(ExoticScroll.exoToReg.get(s.getClass()));</span>
+		} else {
+<span class="nc" id="L370">			return Reflection.newInstance(ExoticScroll.regToExo.get(s.getClass()));</span>
+		}
+	}
+
+	private static Potion changePotion( Potion p ) {
+<span class="nc bnc" id="L375" title="All 2 branches missed.">		if	(p instanceof ExoticPotion) {</span>
+<span class="nc" id="L376">			return Reflection.newInstance(ExoticPotion.exoToReg.get(p.getClass()));</span>
+		} else {
+<span class="nc" id="L378">			return Reflection.newInstance(ExoticPotion.regToExo.get(p.getClass()));</span>
+		}
+	}
+	
+	@Override
+	public int value() {
+<span class="nc bnc" id="L384" title="All 2 branches missed.">		return isKnown() ? 50 * quantity : super.value();</span>
+	}
+
+	@Override
+	public int energyVal() {
+<span class="nc bnc" id="L389" title="All 2 branches missed.">		return isKnown() ? 10 * quantity : super.energyVal();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

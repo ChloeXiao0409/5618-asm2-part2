@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>KindOfWeapon.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items</a> &gt; <span class="el_source">KindOfWeapon.java</span></div><h1>KindOfWeapon.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.BArray;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+<span class="fc" id="L44">abstract public class KindOfWeapon extends EquipableItem {</span>
+
+<span class="fc" id="L46">	protected String hitSound = Assets.Sounds.HIT;</span>
+<span class="fc" id="L47">	protected float hitSoundPitch = 1f;</span>
+	
+	@Override
+	public void execute(Hero hero, String action) {
+<span class="nc bnc" id="L51" title="All 4 branches missed.">		if (hero.subClass == HeroSubClass.CHAMPION &amp;&amp; action.equals(AC_EQUIP)){</span>
+<span class="nc" id="L52">			usesTargeting = false;</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">			String primaryName = Messages.titleCase(hero.belongings.weapon != null ? hero.belongings.weapon.trueName() : Messages.get(KindOfWeapon.class, &quot;empty&quot;));</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">			String secondaryName = Messages.titleCase(hero.belongings.secondWep != null ? hero.belongings.secondWep.trueName() : Messages.get(KindOfWeapon.class, &quot;empty&quot;));</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">			if (primaryName.length() &gt; 18) primaryName = primaryName.substring(0, 15) + &quot;...&quot;;</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">			if (secondaryName.length() &gt; 18) secondaryName = secondaryName.substring(0, 15) + &quot;...&quot;;</span>
+<span class="nc" id="L57">			GameScene.show(new WndOptions(</span>
+					new ItemSprite(this),
+<span class="nc" id="L59">					Messages.titleCase(name()),</span>
+<span class="nc" id="L60">					Messages.get(KindOfWeapon.class, &quot;which_equip_msg&quot;),</span>
+<span class="nc" id="L61">					Messages.get(KindOfWeapon.class, &quot;which_equip_primary&quot;, primaryName),</span>
+<span class="nc" id="L62">					Messages.get(KindOfWeapon.class, &quot;which_equip_secondary&quot;, secondaryName)</span>
+<span class="nc" id="L63">			){</span>
+				@Override
+				protected void onSelect(int index) {
+<span class="nc" id="L66">					super.onSelect(index);</span>
+<span class="nc bnc" id="L67" title="All 4 branches missed.">					if (index == 0 || index == 1){</span>
+						//In addition to equipping itself, item reassigns itself to the quickslot
+						//This is a special case as the item is being removed from inventory, but is staying with the hero.
+<span class="nc" id="L70">						int slot = Dungeon.quickslot.getSlot( KindOfWeapon.this );</span>
+<span class="nc" id="L71">						slotOfUnequipped = -1;</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">						if (index == 0) {</span>
+<span class="nc" id="L73">							doEquip(hero);</span>
+						} else {
+<span class="nc" id="L75">							equipSecondary(hero);</span>
+						}
+<span class="nc bnc" id="L77" title="All 2 branches missed.">						if (slot != -1) {</span>
+<span class="nc" id="L78">							Dungeon.quickslot.setSlot( slot, KindOfWeapon.this );</span>
+<span class="nc" id="L79">							updateQuickslot();</span>
+						//if this item wasn't quickslotted, but the item it is replacing as equipped was
+						//then also have the item occupy the unequipped item's quickslot
+<span class="nc bnc" id="L82" title="All 4 branches missed.">						} else if (slotOfUnequipped != -1 &amp;&amp; defaultAction() != null) {</span>
+<span class="nc" id="L83">							Dungeon.quickslot.setSlot( slotOfUnequipped, KindOfWeapon.this );</span>
+<span class="nc" id="L84">							updateQuickslot();</span>
+						}
+					}
+<span class="nc" id="L87">				}</span>
+			});
+<span class="nc" id="L89">		} else {</span>
+<span class="nc" id="L90">			super.execute(hero, action);</span>
+		}
+<span class="nc" id="L92">	}</span>
+
+	@Override
+	public boolean isEquipped( Hero hero ) {
+<span class="nc bnc" id="L96" title="All 6 branches missed.">		return hero != null &amp;&amp; (hero.belongings.weapon() == this || hero.belongings.secondWep() == this);</span>
+	}
+
+<span class="fc" id="L99">	private static boolean isSwiftEquipping = false;</span>
+
+	protected float timeToEquip( Hero hero ) {
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		return isSwiftEquipping ? 0f : super.timeToEquip(hero);</span>
+	}
+	
+	@Override
+	public boolean doEquip( Hero hero ) {
+
+<span class="nc" id="L108">		isSwiftEquipping = false;</span>
+<span class="nc bnc" id="L109" title="All 4 branches missed.">		if (hero.belongings.contains(this) &amp;&amp; hero.hasTalent(Talent.SWIFT_EQUIP)){</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">			if (hero.buff(Talent.SwiftEquipCooldown.class) == null</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">					|| hero.buff(Talent.SwiftEquipCooldown.class).hasSecondUse()){</span>
+<span class="nc" id="L112">				isSwiftEquipping = true;</span>
+			}
+		}
+
+		// 15/25% chance
+<span class="nc bnc" id="L117" title="All 8 branches missed.">		if (hero.heroClass != HeroClass.CLERIC &amp;&amp; hero.hasTalent(Talent.HOLY_INTUITION)</span>
+				&amp;&amp; cursed &amp;&amp; !cursedKnown
+<span class="nc bnc" id="L119" title="All 2 branches missed.">				&amp;&amp; Random.Int(20) &lt; 1 + 2*hero.pointsInTalent(Talent.HOLY_INTUITION)){</span>
+<span class="nc" id="L120">			cursedKnown = true;</span>
+<span class="nc" id="L121">			GLog.p(Messages.get(this, &quot;curse_detected&quot;));</span>
+<span class="nc" id="L122">			return false;</span>
+		}
+
+<span class="nc" id="L125">		detachAll( hero.belongings.backpack );</span>
+		
+<span class="nc bnc" id="L127" title="All 4 branches missed.">		if (hero.belongings.weapon == null || hero.belongings.weapon.doUnequip( hero, true )) {</span>
+			
+<span class="nc" id="L129">			hero.belongings.weapon = this;</span>
+<span class="nc" id="L130">			activate( hero );</span>
+<span class="nc" id="L131">			Talent.onItemEquipped(hero, this);</span>
+<span class="nc" id="L132">			Badges.validateDuelistUnlock();</span>
+<span class="nc" id="L133">			updateQuickslot();</span>
+
+<span class="nc" id="L135">			cursedKnown = true;</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">			if (cursed) {</span>
+<span class="nc" id="L137">				equipCursed( hero );</span>
+<span class="nc" id="L138">				GLog.n( Messages.get(KindOfWeapon.class, &quot;equip_cursed&quot;) );</span>
+			}
+
+<span class="nc" id="L141">			hero.spendAndNext( timeToEquip(hero) );</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">			if (isSwiftEquipping) {</span>
+<span class="nc" id="L143">				GLog.i(Messages.get(this, &quot;swift_equip&quot;));</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">				if (hero.buff(Talent.SwiftEquipCooldown.class) == null){</span>
+<span class="nc" id="L145">					Buff.affect(hero, Talent.SwiftEquipCooldown.class, 19f)</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">							.secondUse = hero.pointsInTalent(Talent.SWIFT_EQUIP) == 2;</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">				} else if (hero.buff(Talent.SwiftEquipCooldown.class).hasSecondUse()) {</span>
+<span class="nc" id="L148">					hero.buff(Talent.SwiftEquipCooldown.class).secondUse = false;</span>
+				}
+<span class="nc" id="L150">				isSwiftEquipping = false;</span>
+			}
+<span class="nc" id="L152">			return true;</span>
+			
+		} else {
+<span class="nc" id="L155">			isSwiftEquipping = false;</span>
+<span class="nc" id="L156">			collect( hero.belongings.backpack );</span>
+<span class="nc" id="L157">			return false;</span>
+		}
+	}
+
+	public boolean equipSecondary( Hero hero ){
+
+<span class="nc" id="L163">		isSwiftEquipping = false;</span>
+<span class="nc bnc" id="L164" title="All 4 branches missed.">		if (hero.belongings.contains(this) &amp;&amp; hero.hasTalent(Talent.SWIFT_EQUIP)){</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">			if (hero.buff(Talent.SwiftEquipCooldown.class) == null</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">					|| hero.buff(Talent.SwiftEquipCooldown.class).hasSecondUse()){</span>
+<span class="nc" id="L167">				isSwiftEquipping = true;</span>
+			}
+		}
+
+<span class="nc" id="L171">		boolean wasInInv = hero.belongings.contains(this);</span>
+<span class="nc" id="L172">		detachAll( hero.belongings.backpack );</span>
+
+<span class="nc bnc" id="L174" title="All 4 branches missed.">		if (hero.belongings.secondWep == null || hero.belongings.secondWep.doUnequip( hero, true )) {</span>
+
+<span class="nc" id="L176">			hero.belongings.secondWep = this;</span>
+<span class="nc" id="L177">			activate( hero );</span>
+<span class="nc" id="L178">			Talent.onItemEquipped(hero, this);</span>
+<span class="nc" id="L179">			Badges.validateDuelistUnlock();</span>
+<span class="nc" id="L180">			updateQuickslot();</span>
+
+<span class="nc" id="L182">			cursedKnown = true;</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">			if (cursed) {</span>
+<span class="nc" id="L184">				equipCursed( hero );</span>
+<span class="nc" id="L185">				GLog.n( Messages.get(KindOfWeapon.class, &quot;equip_cursed&quot;) );</span>
+			}
+
+<span class="nc" id="L188">			hero.spendAndNext( timeToEquip(hero) );</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">			if (isSwiftEquipping) {</span>
+<span class="nc" id="L190">				GLog.i(Messages.get(this, &quot;swift_equip&quot;));</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">				if (hero.buff(Talent.SwiftEquipCooldown.class) == null){</span>
+<span class="nc" id="L192">					Buff.affect(hero, Talent.SwiftEquipCooldown.class, 19f)</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">							.secondUse = hero.pointsInTalent(Talent.SWIFT_EQUIP) == 2;</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">				} else if (hero.buff(Talent.SwiftEquipCooldown.class).hasSecondUse()) {</span>
+<span class="nc" id="L195">					hero.buff(Talent.SwiftEquipCooldown.class).secondUse = false;</span>
+				}
+<span class="nc" id="L197">				isSwiftEquipping = false;</span>
+			}
+<span class="nc" id="L199">			return true;</span>
+
+		} else {
+<span class="nc" id="L202">			isSwiftEquipping = false;</span>
+<span class="nc" id="L203">			collect( hero.belongings.backpack );</span>
+<span class="nc" id="L204">			return false;</span>
+		}
+	}
+
+	@Override
+	public boolean doUnequip( Hero hero, boolean collect, boolean single ) {
+<span class="nc bnc" id="L210" title="All 2 branches missed.">		boolean second = hero.belongings.secondWep == this;</span>
+
+<span class="nc bnc" id="L212" title="All 2 branches missed.">		if (second){</span>
+			//do this first so that the item can go to a full inventory
+<span class="nc" id="L214">			hero.belongings.secondWep = null;</span>
+		}
+
+<span class="nc bnc" id="L217" title="All 2 branches missed.">		if (super.doUnequip( hero, collect, single )) {</span>
+
+<span class="nc bnc" id="L219" title="All 2 branches missed.">			if (!second){</span>
+<span class="nc" id="L220">				hero.belongings.weapon = null;</span>
+			}
+<span class="nc" id="L222">			return true;</span>
+
+		} else {
+
+<span class="nc bnc" id="L226" title="All 2 branches missed.">			if (second){</span>
+<span class="nc" id="L227">				hero.belongings.secondWep = this;</span>
+			}
+<span class="nc" id="L229">			return false;</span>
+
+		}
+	}
+
+	public int min(){
+<span class="nc" id="L235">		return min(buffedLvl());</span>
+	}
+
+	public int max(){
+<span class="nc" id="L239">		return max(buffedLvl());</span>
+	}
+
+	abstract public int min(int lvl);
+	abstract public int max(int lvl);
+
+	public int damageRoll( Char owner ) {
+<span class="nc bnc" id="L246" title="All 2 branches missed.">		if (owner instanceof Hero){</span>
+<span class="nc" id="L247">			return Hero.heroDamageIntRange(min(), max());</span>
+		} else {
+<span class="nc" id="L249">			return Random.NormalIntRange(min(), max());</span>
+		}
+	}
+	
+	public float accuracyFactor( Char owner, Char target ) {
+<span class="nc" id="L254">		return 1f;</span>
+	}
+	
+	public float delayFactor( Char owner ) {
+<span class="nc" id="L258">		return 1f;</span>
+	}
+
+	public int reachFactor( Char owner ){
+<span class="nc" id="L262">		return 1;</span>
+	}
+	
+	public boolean canReach( Char owner, int target){
+<span class="nc" id="L266">		int reach = reachFactor(owner);</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">		if (Dungeon.level.distance( owner.pos, target ) &gt; reach){</span>
+<span class="nc" id="L268">			return false;</span>
+		} else {
+<span class="nc" id="L270">			boolean[] passable = BArray.not(Dungeon.level.solid, null);</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">			for (Char ch : Actor.chars()) {</span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">				if (ch != owner) passable[ch.pos] = false;</span>
+<span class="nc" id="L273">			}</span>
+			
+<span class="nc" id="L275">			PathFinder.buildDistanceMap(target, passable, reach);</span>
+			
+<span class="nc bnc" id="L277" title="All 2 branches missed.">			return PathFinder.distance[owner.pos] &lt;= reach;</span>
+		}
+	}
+
+	public int defenseFactor( Char owner ) {
+<span class="nc" id="L282">		return 0;</span>
+	}
+	
+	public int proc( Char attacker, Char defender, int damage ) {
+<span class="nc" id="L286">		return damage;</span>
+	}
+
+	public void hitSound( float pitch ){
+<span class="nc" id="L290">		Sample.INSTANCE.play(hitSound, 1, pitch * hitSoundPitch);</span>
+<span class="nc" id="L291">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

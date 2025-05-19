@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GnollTricksterSprite.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.sprites</a> &gt; <span class="el_source">GnollTricksterSprite.java</span></div><h1>GnollTricksterSprite.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.sprites;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.ParalyticDart;
+import com.watabou.noosa.MovieClip;
+import com.watabou.noosa.TextureFilm;
+import com.watabou.utils.Callback;
+
+public class GnollTricksterSprite extends MobSprite {
+
+	private Animation cast;
+
+	public GnollTricksterSprite() {
+<span class="nc" id="L36">		super();</span>
+
+<span class="nc" id="L38">		texture( Assets.Sprites.GNOLL );</span>
+
+<span class="nc" id="L40">		TextureFilm frames = new TextureFilm( texture, 12, 15 );</span>
+
+<span class="nc" id="L42">		idle = new MovieClip.Animation( 2, true );</span>
+<span class="nc" id="L43">		idle.frames( frames, 21, 21, 21, 22, 21, 21, 22, 22 );</span>
+
+<span class="nc" id="L45">		run = new MovieClip.Animation( 12, true );</span>
+<span class="nc" id="L46">		run.frames( frames, 25, 26, 27, 28 );</span>
+
+<span class="nc" id="L48">		attack = new MovieClip.Animation( 12, false );</span>
+<span class="nc" id="L49">		attack.frames( frames, 23, 24, 21 );</span>
+
+<span class="nc" id="L51">		cast = attack.clone();</span>
+
+<span class="nc" id="L53">		die = new MovieClip.Animation( 12, false );</span>
+<span class="nc" id="L54">		die.frames( frames, 29, 30, 31 );</span>
+
+<span class="nc" id="L56">		play( idle );</span>
+<span class="nc" id="L57">	}</span>
+
+	@Override
+	public void attack( int cell ) {
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if (!Dungeon.level.adjacent(cell, ch.pos)) {</span>
+
+<span class="nc" id="L63">			((MissileSprite)parent.recycle( MissileSprite.class )).</span>
+<span class="nc" id="L64">					reset( this, cell, new ParalyticDart(), new Callback() {</span>
+						@Override
+						public void call() {
+<span class="nc" id="L67">							ch.onAttackComplete();</span>
+<span class="nc" id="L68">						}</span>
+					} );
+
+<span class="nc" id="L71">			play( cast );</span>
+<span class="nc" id="L72">			turnTo( ch.pos , cell );</span>
+
+		} else {
+
+<span class="nc" id="L76">			super.attack( cell );</span>
+
+		}
+<span class="nc" id="L79">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,1624 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Level.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels</a> &gt; <span class="el_source">Level.java</span></div><h1>Level.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SmokeScreen;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Web;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.WellWater;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Awareness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Blindness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ChampionEnemy;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.LockedFloor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicalSight;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MindVision;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Ooze;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.PinCushion;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.RevealedArea;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Shadows;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.PowerOfMany;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.huntress.SpiritHawk;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.DivineSense;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.Stasis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GnollGeomancer;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.MobSpawner;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Piranha;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.YogFist;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Blacksmith;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Sheep;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.FlowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.WindParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.Stylus;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.TalismanOfForesight;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.TimekeepersHourglass;
+import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfChallenge;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfEnchantment;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfIntuition;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.DimensionalSundial;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.EyeOfNewt;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.MossyClump;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.TrapMechanism;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.TrinketCatalyst;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfRegrowth;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfWarding;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.HeavyBoomerang;
+import com.shatteredpixel.shatteredpixeldungeon.levels.features.Chasm;
+import com.shatteredpixel.shatteredpixeldungeon.levels.features.Door;
+import com.shatteredpixel.shatteredpixeldungeon.levels.features.HighGrass;
+import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.ShadowCaster;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Swiftthistle;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Group;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.BArray;
+import com.watabou.utils.Bundlable;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+import com.watabou.utils.SparseArray;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+
+<span class="nc" id="L120">public abstract class Level implements Bundlable {</span>
+	
+<span class="nc" id="L122">	public static enum Feeling {</span>
+<span class="nc" id="L123">		NONE,</span>
+<span class="nc" id="L124">		CHASM,</span>
+<span class="nc" id="L125">		WATER,</span>
+<span class="nc" id="L126">		GRASS,</span>
+<span class="nc" id="L127">		DARK,</span>
+<span class="nc" id="L128">		LARGE,</span>
+<span class="nc" id="L129">		TRAPS,</span>
+<span class="nc" id="L130">		SECRETS;</span>
+
+		public String title(){
+<span class="nc" id="L133">			return Messages.get(this, name()+&quot;_title&quot;);</span>
+		}
+
+		public String desc() {
+<span class="nc" id="L137">			return Messages.get(this, name()+&quot;_desc&quot;);</span>
+		}
+	}
+
+	protected int width;
+	protected int height;
+	protected int length;
+	
+	protected static final float TIME_TO_RESPAWN	= 50;
+
+	public int version;
+	
+	public int[] map;
+	public boolean[] visited;
+	public boolean[] mapped;
+	public boolean[] discoverable;
+
+<span class="nc bnc" id="L154" title="All 2 branches missed.">	public int viewDistance = Dungeon.isChallenged( Challenges.DARKNESS ) ? 2 : 8;</span>
+	
+	public boolean[] heroFOV;
+	
+	public boolean[] passable;
+	public boolean[] losBlocking;
+	public boolean[] flamable;
+	public boolean[] secret;
+	public boolean[] solid;
+	public boolean[] avoid;
+	public boolean[] water;
+	public boolean[] pit;
+
+	public boolean[] openSpace;
+	
+<span class="nc" id="L169">	public Feeling feeling = Feeling.NONE;</span>
+	
+	public int entrance;
+	public int exit;
+
+	public ArrayList&lt;LevelTransition&gt; transitions;
+
+	//when a boss level has become locked.
+<span class="nc" id="L177">	public boolean locked = false;</span>
+	
+	public HashSet&lt;Mob&gt; mobs;
+	public SparseArray&lt;Heap&gt; heaps;
+	public HashMap&lt;Class&lt;? extends Blob&gt;,Blob&gt; blobs;
+	public SparseArray&lt;Plant&gt; plants;
+	public SparseArray&lt;Trap&gt; traps;
+	public HashSet&lt;CustomTilemap&gt; customTiles;
+	public HashSet&lt;CustomTilemap&gt; customWalls;
+	
+<span class="nc" id="L187">	protected ArrayList&lt;Item&gt; itemsToSpawn = new ArrayList&lt;&gt;();</span>
+
+	protected Group visuals;
+	protected Group wallVisuals;
+	
+<span class="nc" id="L192">	public int color1 = 0x004400;</span>
+<span class="nc" id="L193">	public int color2 = 0x88CC44;</span>
+
+	private static final String VERSION     = &quot;version&quot;;
+	private static final String WIDTH       = &quot;width&quot;;
+	private static final String HEIGHT      = &quot;height&quot;;
+	private static final String MAP			= &quot;map&quot;;
+	private static final String VISITED		= &quot;visited&quot;;
+	private static final String MAPPED		= &quot;mapped&quot;;
+	private static final String TRANSITIONS	= &quot;transitions&quot;;
+	private static final String LOCKED      = &quot;locked&quot;;
+	private static final String HEAPS		= &quot;heaps&quot;;
+	private static final String PLANTS		= &quot;plants&quot;;
+	private static final String TRAPS       = &quot;traps&quot;;
+	private static final String CUSTOM_TILES= &quot;customTiles&quot;;
+	private static final String CUSTOM_WALLS= &quot;customWalls&quot;;
+	private static final String MOBS		= &quot;mobs&quot;;
+	private static final String BLOBS		= &quot;blobs&quot;;
+	private static final String FEELING		= &quot;feeling&quot;;
+
+	public void create() {
+
+<span class="nc" id="L214">		Random.pushGenerator( Dungeon.seedCurDepth() );</span>
+
+		//TODO maybe just make this part of RegularLevel?
+<span class="nc bnc" id="L217" title="All 4 branches missed.">		if (!Dungeon.bossLevel() &amp;&amp; Dungeon.branch == 0) {</span>
+
+<span class="nc" id="L219">			addItemToSpawn(Generator.random(Generator.Category.FOOD));</span>
+
+<span class="nc bnc" id="L221" title="All 2 branches missed.">			if (Dungeon.posNeeded()) {</span>
+<span class="nc" id="L222">				Dungeon.LimitedDrops.STRENGTH_POTIONS.count++;</span>
+<span class="nc" id="L223">				addItemToSpawn( new PotionOfStrength() );</span>
+			}
+<span class="nc bnc" id="L225" title="All 2 branches missed.">			if (Dungeon.souNeeded()) {</span>
+<span class="nc" id="L226">				Dungeon.LimitedDrops.UPGRADE_SCROLLS.count++;</span>
+				//every 2nd scroll of upgrade is removed with forbidden runes challenge on
+				//TODO while this does significantly reduce this challenge's levelgen impact, it doesn't quite remove it
+				//for 0 levelgen impact, we need to do something like give the player all SOU, but nerf them
+				//or give a random scroll (from a separate RNG) instead of every 2nd SOU
+<span class="nc bnc" id="L231" title="All 4 branches missed.">				if (!Dungeon.isChallenged(Challenges.NO_SCROLLS) || Dungeon.LimitedDrops.UPGRADE_SCROLLS.count%2 != 0){</span>
+<span class="nc" id="L232">					addItemToSpawn(new ScrollOfUpgrade());</span>
+				}
+			}
+<span class="nc bnc" id="L235" title="All 2 branches missed.">			if (Dungeon.asNeeded()) {</span>
+<span class="nc" id="L236">				Dungeon.LimitedDrops.ARCANE_STYLI.count++;</span>
+<span class="nc" id="L237">				addItemToSpawn( new Stylus() );</span>
+			}
+<span class="nc bnc" id="L239" title="All 2 branches missed.">			if ( Dungeon.enchStoneNeeded() ){</span>
+<span class="nc" id="L240">				Dungeon.LimitedDrops.ENCH_STONE.drop();</span>
+<span class="nc" id="L241">				addItemToSpawn( new StoneOfEnchantment() );</span>
+			}
+<span class="nc bnc" id="L243" title="All 2 branches missed.">			if ( Dungeon.intStoneNeeded() ){</span>
+<span class="nc" id="L244">				Dungeon.LimitedDrops.INT_STONE.drop();</span>
+<span class="nc" id="L245">				addItemToSpawn( new StoneOfIntuition() );</span>
+			}
+<span class="nc bnc" id="L247" title="All 2 branches missed.">			if ( Dungeon.trinketCataNeeded() ){</span>
+<span class="nc" id="L248">				Dungeon.LimitedDrops.TRINKET_CATA.drop();</span>
+<span class="nc" id="L249">				addItemToSpawn( new TrinketCatalyst());</span>
+			}
+			
+<span class="nc bnc" id="L252" title="All 2 branches missed.">			if (Dungeon.depth &gt; 1) {</span>
+				//50% chance of getting a level feeling
+				//~7.15% chance for each feeling
+<span class="nc bnc" id="L255" title="All 8 branches missed.">				switch (Random.Int( 14 )) {</span>
+					case 0:
+<span class="nc" id="L257">						feeling = Feeling.CHASM;</span>
+<span class="nc" id="L258">						break;</span>
+					case 1:
+<span class="nc" id="L260">						feeling = Feeling.WATER;</span>
+<span class="nc" id="L261">						break;</span>
+					case 2:
+<span class="nc" id="L263">						feeling = Feeling.GRASS;</span>
+<span class="nc" id="L264">						break;</span>
+					case 3:
+<span class="nc" id="L266">						feeling = Feeling.DARK;</span>
+<span class="nc" id="L267">						viewDistance = Math.round(5*viewDistance/8f);</span>
+<span class="nc" id="L268">						break;</span>
+					case 4:
+<span class="nc" id="L270">						feeling = Feeling.LARGE;</span>
+<span class="nc" id="L271">						addItemToSpawn(Generator.random(Generator.Category.FOOD));</span>
+<span class="nc" id="L272">						break;</span>
+					case 5:
+<span class="nc" id="L274">						feeling = Feeling.TRAPS;</span>
+<span class="nc" id="L275">						break;</span>
+					case 6:
+<span class="nc" id="L277">						feeling = Feeling.SECRETS;</span>
+<span class="nc" id="L278">						break;</span>
+					default:
+						//if-else statements are fine here as only one chance can be above 0 at a time
+<span class="nc bnc" id="L281" title="All 2 branches missed.">						if (Random.Float() &lt; MossyClump.overrideNormalLevelChance()){</span>
+<span class="nc" id="L282">							feeling = MossyClump.getNextFeeling();</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">						} else if (Random.Float() &lt; TrapMechanism.overrideNormalLevelChance()) {</span>
+<span class="nc" id="L284">							feeling = TrapMechanism.getNextFeeling();</span>
+						} else {
+<span class="nc" id="L286">							feeling = Feeling.NONE;</span>
+						}
+				}
+			}
+		}
+		
+		do {
+<span class="nc" id="L293">			width = height = length = 0;</span>
+
+<span class="nc" id="L295">			transitions = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L297">			mobs = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L298">			heaps = new SparseArray&lt;&gt;();</span>
+<span class="nc" id="L299">			blobs = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L300">			plants = new SparseArray&lt;&gt;();</span>
+<span class="nc" id="L301">			traps = new SparseArray&lt;&gt;();</span>
+<span class="nc" id="L302">			customTiles = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L303">			customWalls = new HashSet&lt;&gt;();</span>
+			
+<span class="nc bnc" id="L305" title="All 2 branches missed.">		} while (!build());</span>
+		
+<span class="nc" id="L307">		buildFlagMaps();</span>
+<span class="nc" id="L308">		cleanWalls();</span>
+		
+<span class="nc" id="L310">		createMobs();</span>
+<span class="nc" id="L311">		createItems();</span>
+
+<span class="nc" id="L313">		Random.popGenerator();</span>
+<span class="nc" id="L314">	}</span>
+	
+	public void setSize(int w, int h){
+		
+<span class="nc" id="L318">		width = w;</span>
+<span class="nc" id="L319">		height = h;</span>
+<span class="nc" id="L320">		length = w * h;</span>
+		
+<span class="nc" id="L322">		map = new int[length];</span>
+<span class="nc bnc" id="L323" title="All 2 branches missed.">		Arrays.fill( map, feeling == Level.Feeling.CHASM ? Terrain.CHASM : Terrain.WALL );</span>
+		
+<span class="nc" id="L325">		visited     = new boolean[length];</span>
+<span class="nc" id="L326">		mapped      = new boolean[length];</span>
+		
+<span class="nc" id="L328">		heroFOV     = new boolean[length];</span>
+		
+<span class="nc" id="L330">		passable	= new boolean[length];</span>
+<span class="nc" id="L331">		losBlocking	= new boolean[length];</span>
+<span class="nc" id="L332">		flamable	= new boolean[length];</span>
+<span class="nc" id="L333">		secret		= new boolean[length];</span>
+<span class="nc" id="L334">		solid		= new boolean[length];</span>
+<span class="nc" id="L335">		avoid		= new boolean[length];</span>
+<span class="nc" id="L336">		water		= new boolean[length];</span>
+<span class="nc" id="L337">		pit			= new boolean[length];</span>
+
+<span class="nc" id="L339">		openSpace   = new boolean[length];</span>
+		
+<span class="nc" id="L341">		PathFinder.setMapSize(w, h);</span>
+<span class="nc" id="L342">	}</span>
+	
+	public void reset() {
+		
+<span class="nc bnc" id="L346" title="All 2 branches missed.">		for (Mob mob : mobs.toArray( new Mob[0] )) {</span>
+<span class="nc bnc" id="L347" title="All 2 branches missed.">			if (!mob.reset()) {</span>
+<span class="nc" id="L348">				mobs.remove( mob );</span>
+			}
+		}
+<span class="nc" id="L351">		createMobs();</span>
+<span class="nc" id="L352">	}</span>
+
+	public void playLevelMusic(){
+		//do nothing by default
+<span class="nc" id="L356">	}</span>
+	
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+
+<span class="nc" id="L361">		version = bundle.getInt( VERSION );</span>
+		
+		//saves from before v2.3.2 are not supported
+<span class="nc bnc" id="L364" title="All 2 branches missed.">		if (version &lt; ShatteredPixelDungeon.v2_3_2){</span>
+<span class="nc" id="L365">			throw new RuntimeException(&quot;old save&quot;);</span>
+		}
+
+<span class="nc" id="L368">		setSize( bundle.getInt(WIDTH), bundle.getInt(HEIGHT));</span>
+		
+<span class="nc" id="L370">		mobs = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L371">		heaps = new SparseArray&lt;&gt;();</span>
+<span class="nc" id="L372">		blobs = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L373">		plants = new SparseArray&lt;&gt;();</span>
+<span class="nc" id="L374">		traps = new SparseArray&lt;&gt;();</span>
+<span class="nc" id="L375">		customTiles = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L376">		customWalls = new HashSet&lt;&gt;();</span>
+		
+<span class="nc" id="L378">		map		= bundle.getIntArray( MAP );</span>
+
+<span class="nc" id="L380">		visited	= bundle.getBooleanArray( VISITED );</span>
+<span class="nc" id="L381">		mapped	= bundle.getBooleanArray( MAPPED );</span>
+
+<span class="nc" id="L383">		transitions = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L384" title="All 2 branches missed.">		for (Bundlable b : bundle.getCollection( TRANSITIONS )){</span>
+<span class="nc" id="L385">			transitions.add((LevelTransition) b);</span>
+<span class="nc" id="L386">		}</span>
+
+<span class="nc" id="L388">		locked      = bundle.getBoolean( LOCKED );</span>
+		
+<span class="nc" id="L390">		Collection&lt;Bundlable&gt; collection = bundle.getCollection( HEAPS );</span>
+<span class="nc bnc" id="L391" title="All 2 branches missed.">		for (Bundlable h : collection) {</span>
+<span class="nc" id="L392">			Heap heap = (Heap)h;</span>
+<span class="nc bnc" id="L393" title="All 2 branches missed.">			if (!heap.isEmpty())</span>
+<span class="nc" id="L394">				heaps.put( heap.pos, heap );</span>
+<span class="nc" id="L395">		}</span>
+		
+<span class="nc" id="L397">		collection = bundle.getCollection( PLANTS );</span>
+<span class="nc bnc" id="L398" title="All 2 branches missed.">		for (Bundlable p : collection) {</span>
+<span class="nc" id="L399">			Plant plant = (Plant)p;</span>
+<span class="nc" id="L400">			plants.put( plant.pos, plant );</span>
+<span class="nc" id="L401">		}</span>
+
+<span class="nc" id="L403">		collection = bundle.getCollection( TRAPS );</span>
+<span class="nc bnc" id="L404" title="All 2 branches missed.">		for (Bundlable p : collection) {</span>
+<span class="nc" id="L405">			Trap trap = (Trap)p;</span>
+<span class="nc" id="L406">			traps.put( trap.pos, trap );</span>
+<span class="nc" id="L407">		}</span>
+
+<span class="nc" id="L409">		collection = bundle.getCollection( CUSTOM_TILES );</span>
+<span class="nc bnc" id="L410" title="All 2 branches missed.">		for (Bundlable p : collection) {</span>
+<span class="nc" id="L411">			CustomTilemap vis = (CustomTilemap)p;</span>
+<span class="nc" id="L412">			customTiles.add(vis);</span>
+<span class="nc" id="L413">		}</span>
+
+<span class="nc" id="L415">		collection = bundle.getCollection( CUSTOM_WALLS );</span>
+<span class="nc bnc" id="L416" title="All 2 branches missed.">		for (Bundlable p : collection) {</span>
+<span class="nc" id="L417">			CustomTilemap vis = (CustomTilemap)p;</span>
+<span class="nc" id="L418">			customWalls.add(vis);</span>
+<span class="nc" id="L419">		}</span>
+		
+<span class="nc" id="L421">		collection = bundle.getCollection( MOBS );</span>
+<span class="nc bnc" id="L422" title="All 2 branches missed.">		for (Bundlable m : collection) {</span>
+<span class="nc" id="L423">			Mob mob = (Mob)m;</span>
+<span class="nc bnc" id="L424" title="All 2 branches missed.">			if (mob != null) {</span>
+<span class="nc" id="L425">				mobs.add( mob );</span>
+			}
+<span class="nc" id="L427">		}</span>
+		
+<span class="nc" id="L429">		collection = bundle.getCollection( BLOBS );</span>
+<span class="nc bnc" id="L430" title="All 2 branches missed.">		for (Bundlable b : collection) {</span>
+<span class="nc" id="L431">			Blob blob = (Blob)b;</span>
+<span class="nc" id="L432">			blobs.put( blob.getClass(), blob );</span>
+<span class="nc" id="L433">		}</span>
+
+<span class="nc" id="L435">		feeling = bundle.getEnum( FEELING, Feeling.class );</span>
+<span class="nc bnc" id="L436" title="All 2 branches missed.">		if (feeling == Feeling.DARK) {</span>
+<span class="nc" id="L437">			viewDistance = Math.round(5 * viewDistance / 8f);</span>
+		}
+
+<span class="nc bnc" id="L440" title="All 2 branches missed.">		if (bundle.contains( &quot;mobs_to_spawn&quot; )) {</span>
+<span class="nc bnc" id="L441" title="All 2 branches missed.">			for (Class&lt;? extends Mob&gt; mob : bundle.getClassArray(&quot;mobs_to_spawn&quot;)) {</span>
+<span class="nc bnc" id="L442" title="All 2 branches missed.">				if (mob != null) mobsToSpawn.add(mob);</span>
+			}
+		}
+
+<span class="nc bnc" id="L446" title="All 2 branches missed.">		if (bundle.contains( &quot;respawner&quot; )){</span>
+<span class="nc" id="L447">			respawner = (MobSpawner) bundle.get(&quot;respawner&quot;);</span>
+		}
+
+<span class="nc" id="L450">		buildFlagMaps();</span>
+<span class="nc" id="L451">		cleanWalls();</span>
+
+<span class="nc" id="L453">	}</span>
+	
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L457">		bundle.put( VERSION, Game.versionCode );</span>
+<span class="nc" id="L458">		bundle.put( WIDTH, width );</span>
+<span class="nc" id="L459">		bundle.put( HEIGHT, height );</span>
+<span class="nc" id="L460">		bundle.put( MAP, map );</span>
+<span class="nc" id="L461">		bundle.put( VISITED, visited );</span>
+<span class="nc" id="L462">		bundle.put( MAPPED, mapped );</span>
+<span class="nc" id="L463">		bundle.put( TRANSITIONS, transitions );</span>
+<span class="nc" id="L464">		bundle.put( LOCKED, locked );</span>
+<span class="nc" id="L465">		bundle.put( HEAPS, heaps.valueList() );</span>
+<span class="nc" id="L466">		bundle.put( PLANTS, plants.valueList() );</span>
+<span class="nc" id="L467">		bundle.put( TRAPS, traps.valueList() );</span>
+<span class="nc" id="L468">		bundle.put( CUSTOM_TILES, customTiles );</span>
+<span class="nc" id="L469">		bundle.put( CUSTOM_WALLS, customWalls );</span>
+<span class="nc" id="L470">		bundle.put( MOBS, mobs );</span>
+<span class="nc" id="L471">		bundle.put( BLOBS, blobs.values() );</span>
+<span class="nc" id="L472">		bundle.put( FEELING, feeling );</span>
+<span class="nc" id="L473">		bundle.put( &quot;mobs_to_spawn&quot;, mobsToSpawn.toArray(new Class[0]));</span>
+<span class="nc" id="L474">		bundle.put( &quot;respawner&quot;, respawner );</span>
+<span class="nc" id="L475">	}</span>
+	
+	public int tunnelTile() {
+<span class="nc bnc" id="L478" title="All 2 branches missed.">		return feeling == Feeling.CHASM ? Terrain.EMPTY_SP : Terrain.EMPTY;</span>
+	}
+
+	public int width() {
+<span class="nc" id="L482">		return width;</span>
+	}
+
+	public int height() {
+<span class="nc" id="L486">		return height;</span>
+	}
+
+	public int length() {
+<span class="nc" id="L490">		return length;</span>
+	}
+	
+	public String tilesTex() {
+<span class="nc" id="L494">		return null;</span>
+	}
+	
+	public String waterTex() {
+<span class="nc" id="L498">		return null;</span>
+	}
+	
+	abstract protected boolean build();
+	
+<span class="nc" id="L503">	private ArrayList&lt;Class&lt;?extends Mob&gt;&gt; mobsToSpawn = new ArrayList&lt;&gt;();</span>
+	
+	public Mob createMob() {
+<span class="nc bnc" id="L506" title="All 4 branches missed.">		if (mobsToSpawn == null || mobsToSpawn.isEmpty()) {</span>
+<span class="nc" id="L507">			mobsToSpawn = MobSpawner.getMobRotation(Dungeon.depth);</span>
+		}
+
+<span class="nc" id="L510">		Mob m = Reflection.newInstance(mobsToSpawn.remove(0));</span>
+<span class="nc" id="L511">		ChampionEnemy.rollForChampion(m);</span>
+<span class="nc" id="L512">		return m;</span>
+	}
+
+	abstract protected void createMobs();
+
+	abstract protected void createItems();
+
+	public int entrance(){
+<span class="nc" id="L520">		LevelTransition l = getTransition(null);</span>
+<span class="nc bnc" id="L521" title="All 2 branches missed.">		if (l != null){</span>
+<span class="nc" id="L522">			return l.cell();</span>
+		}
+<span class="nc" id="L524">		return 0;</span>
+	}
+
+	public int exit(){
+<span class="nc" id="L528">		LevelTransition l = getTransition(LevelTransition.Type.REGULAR_EXIT);</span>
+<span class="nc bnc" id="L529" title="All 2 branches missed.">		if (l != null){</span>
+<span class="nc" id="L530">			return l.cell();</span>
+		}
+<span class="nc" id="L532">		return 0;</span>
+	}
+
+	public LevelTransition getTransition(LevelTransition.Type type){
+<span class="nc bnc" id="L536" title="All 2 branches missed.">		if (transitions.isEmpty()){</span>
+<span class="nc" id="L537">			return null;</span>
+		}
+<span class="nc bnc" id="L539" title="All 2 branches missed.">		for (LevelTransition transition : transitions){</span>
+			//if we don't specify a type, prefer to return any entrance
+<span class="nc bnc" id="L541" title="All 8 branches missed.">			if (type == null &amp;&amp;</span>
+					(transition.type == LevelTransition.Type.REGULAR_ENTRANCE
+							|| transition.type == LevelTransition.Type.BRANCH_ENTRANCE
+							|| transition.type == LevelTransition.Type.SURFACE)){
+<span class="nc" id="L545">				return transition;</span>
+<span class="nc bnc" id="L546" title="All 2 branches missed.">			} else if (transition.type == type){</span>
+<span class="nc" id="L547">				return transition;</span>
+			}
+<span class="nc" id="L549">		}</span>
+<span class="nc bnc" id="L550" title="All 2 branches missed.">		return type != null ? getTransition(null) : transitions.get(0);</span>
+	}
+
+	public LevelTransition getTransition(int cell){
+<span class="nc bnc" id="L554" title="All 2 branches missed.">		for (LevelTransition transition : transitions){</span>
+<span class="nc bnc" id="L555" title="All 2 branches missed.">			if (transition.inside(cell)){</span>
+<span class="nc" id="L556">				return transition;</span>
+			}
+<span class="nc" id="L558">		}</span>
+<span class="nc" id="L559">		return null;</span>
+	}
+
+	//returns true if we immediately transition, false otherwise
+	public boolean activateTransition(Hero hero, LevelTransition transition){
+<span class="nc bnc" id="L564" title="All 2 branches missed.">		if (locked){</span>
+<span class="nc" id="L565">			return false;</span>
+		}
+
+<span class="nc" id="L568">		beforeTransition();</span>
+<span class="nc" id="L569">		InterlevelScene.curTransition = transition;</span>
+<span class="nc bnc" id="L570" title="All 4 branches missed.">		if (transition.type == LevelTransition.Type.REGULAR_EXIT</span>
+				|| transition.type == LevelTransition.Type.BRANCH_EXIT) {
+<span class="nc" id="L572">			InterlevelScene.mode = InterlevelScene.Mode.DESCEND;</span>
+		} else {
+<span class="nc" id="L574">			InterlevelScene.mode = InterlevelScene.Mode.ASCEND;</span>
+		}
+<span class="nc" id="L576">		Game.switchScene(InterlevelScene.class);</span>
+<span class="nc" id="L577">		return true;</span>
+	}
+
+	//some buff effects have special logic or are cancelled from the hero before transitioning levels
+	public static void beforeTransition(){
+
+		//time freeze effects need to resolve their pressed cells before transitioning
+<span class="nc" id="L584">		TimekeepersHourglass.timeFreeze timeFreeze = Dungeon.hero.buff(TimekeepersHourglass.timeFreeze.class);</span>
+<span class="nc bnc" id="L585" title="All 2 branches missed.">		if (timeFreeze != null) timeFreeze.disarmPresses();</span>
+<span class="nc" id="L586">		Swiftthistle.TimeBubble timeBubble = Dungeon.hero.buff(Swiftthistle.TimeBubble.class);</span>
+<span class="nc bnc" id="L587" title="All 2 branches missed.">		if (timeBubble != null) timeBubble.disarmPresses();</span>
+
+		//iron stomach and challenge arena do not persist between floors
+<span class="nc" id="L590">		Talent.WarriorFoodImmunity foodImmune = Dungeon.hero.buff(Talent.WarriorFoodImmunity.class);</span>
+<span class="nc bnc" id="L591" title="All 2 branches missed.">		if (foodImmune != null) foodImmune.detach();</span>
+<span class="nc" id="L592">		ScrollOfChallenge.ChallengeArena arena = Dungeon.hero.buff(ScrollOfChallenge.ChallengeArena.class);</span>
+<span class="nc bnc" id="L593" title="All 2 branches missed.">		if (arena != null) arena.detach();</span>
+		//awareness also doesn't, honestly it's weird that it's a buff
+<span class="nc" id="L595">		Awareness awareness = Dungeon.hero.buff(Awareness.class);</span>
+<span class="nc bnc" id="L596" title="All 2 branches missed.">		if (awareness != null) awareness.detach();</span>
+
+<span class="nc" id="L598">		Char ally = Stasis.getStasisAlly();</span>
+<span class="nc bnc" id="L599" title="All 2 branches missed.">		if (Char.hasProp(ally, Char.Property.IMMOVABLE)){</span>
+<span class="nc" id="L600">			Dungeon.hero.buff(Stasis.StasisBuff.class).act();</span>
+<span class="nc" id="L601">			GLog.w(Messages.get(Stasis.StasisBuff.class, &quot;left_behind&quot;));</span>
+		}
+
+		//spend the hero's partial turns,  so the hero cannot take partial turns between floors
+<span class="nc" id="L605">		Dungeon.hero.spendToWhole();</span>
+<span class="nc bnc" id="L606" title="All 2 branches missed.">		for (Actor a : Actor.all()){</span>
+			//also adjust any other actors that are now ahead of the hero due to this
+<span class="nc bnc" id="L608" title="All 2 branches missed.">			if (a.cooldown() &lt; Dungeon.hero.cooldown()){</span>
+<span class="nc" id="L609">				a.spendToWhole();</span>
+			}
+<span class="nc" id="L611">		}</span>
+<span class="nc" id="L612">	}</span>
+
+	public void seal(){
+<span class="nc bnc" id="L615" title="All 2 branches missed.">		if (!locked) {</span>
+<span class="nc" id="L616">			locked = true;</span>
+<span class="nc" id="L617">			Buff.affect(Dungeon.hero, LockedFloor.class);</span>
+		}
+<span class="nc" id="L619">	}</span>
+
+	public void unseal(){
+<span class="nc bnc" id="L622" title="All 2 branches missed.">		if (locked) {</span>
+<span class="nc" id="L623">			locked = false;</span>
+<span class="nc bnc" id="L624" title="All 2 branches missed.">			if (Dungeon.hero.buff(LockedFloor.class) != null){</span>
+<span class="nc" id="L625">				Dungeon.hero.buff(LockedFloor.class).detach();</span>
+			}
+		}
+<span class="nc" id="L628">	}</span>
+
+	public ArrayList&lt;Item&gt; getItemsToPreserveFromSealedResurrect(){
+<span class="nc" id="L631">		ArrayList&lt;Item&gt; items = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L632" title="All 2 branches missed.">		for (Heap h : heaps.valueList()){</span>
+<span class="nc bnc" id="L633" title="All 2 branches missed.">			if (h.type == Heap.Type.HEAP) {</span>
+<span class="nc bnc" id="L634" title="All 2 branches missed.">				for (Item i : h.items){</span>
+<span class="nc bnc" id="L635" title="All 2 branches missed.">					if (i instanceof Bomb){</span>
+<span class="nc" id="L636">						((Bomb) i).fuse = null;</span>
+					}
+<span class="nc" id="L638">					items.add(i);</span>
+<span class="nc" id="L639">				}</span>
+			}
+<span class="nc" id="L641">		}</span>
+<span class="nc bnc" id="L642" title="All 2 branches missed.">		for (Mob m : mobs){</span>
+<span class="nc bnc" id="L643" title="All 2 branches missed.">			for (PinCushion b : m.buffs(PinCushion.class)){</span>
+<span class="nc" id="L644">				items.addAll(b.getStuckItems());</span>
+<span class="nc" id="L645">			}</span>
+<span class="nc" id="L646">		}</span>
+<span class="nc bnc" id="L647" title="All 2 branches missed.">		for (HeavyBoomerang.CircleBack b : Dungeon.hero.buffs(HeavyBoomerang.CircleBack.class)){</span>
+<span class="nc bnc" id="L648" title="All 2 branches missed.">			if (b.activeDepth() == Dungeon.depth) items.add(b.cancel());</span>
+<span class="nc" id="L649">		}</span>
+<span class="nc" id="L650">		return items;</span>
+	}
+
+	public Group addVisuals() {
+<span class="nc bnc" id="L654" title="All 4 branches missed.">		if (visuals == null || visuals.parent == null){</span>
+<span class="nc" id="L655">			visuals = new Group();</span>
+		} else {
+<span class="nc" id="L657">			visuals.clear();</span>
+<span class="nc" id="L658">			visuals.camera = null;</span>
+		}
+<span class="nc bnc" id="L660" title="All 2 branches missed.">		for (int i=0; i &lt; length(); i++) {</span>
+<span class="nc bnc" id="L661" title="All 2 branches missed.">			if (pit[i]) {</span>
+<span class="nc" id="L662">				visuals.add( new WindParticle.Wind( i ) );</span>
+<span class="nc bnc" id="L663" title="All 4 branches missed.">				if (i &gt;= width() &amp;&amp; water[i-width()]) {</span>
+<span class="nc" id="L664">					visuals.add( new FlowParticle.Flow( i - width() ) );</span>
+				}
+			}
+		}
+<span class="nc" id="L668">		return visuals;</span>
+	}
+
+	//for visual effects that should render above wall overhang tiles
+	public Group addWallVisuals(){
+<span class="nc bnc" id="L673" title="All 4 branches missed.">		if (wallVisuals == null || wallVisuals.parent == null){</span>
+<span class="nc" id="L674">			wallVisuals = new Group();</span>
+		} else {
+<span class="nc" id="L676">			wallVisuals.clear();</span>
+<span class="nc" id="L677">			wallVisuals.camera = null;</span>
+		}
+<span class="nc" id="L679">		return wallVisuals;</span>
+	}
+
+	
+	public int mobLimit() {
+<span class="nc" id="L684">		return 0;</span>
+	}
+
+	public int mobCount(){
+<span class="nc" id="L688">		float count = 0;</span>
+<span class="nc bnc" id="L689" title="All 2 branches missed.">		for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])){</span>
+<span class="nc bnc" id="L690" title="All 4 branches missed.">			if (mob.alignment == Char.Alignment.ENEMY &amp;&amp; !mob.properties().contains(Char.Property.MINIBOSS)) {</span>
+<span class="nc" id="L691">				count += mob.spawningWeight();</span>
+			}
+		}
+<span class="nc" id="L694">		return Math.round(count);</span>
+	}
+
+	public Mob findMob( int pos ){
+<span class="nc bnc" id="L698" title="All 2 branches missed.">		for (Mob mob : mobs){</span>
+<span class="nc bnc" id="L699" title="All 2 branches missed.">			if (mob.pos == pos){</span>
+<span class="nc" id="L700">				return mob;</span>
+			}
+<span class="nc" id="L702">		}</span>
+<span class="nc" id="L703">		return null;</span>
+	}
+
+	private MobSpawner respawner;
+
+	public Actor addRespawner() {
+<span class="nc bnc" id="L709" title="All 2 branches missed.">		if (respawner == null){</span>
+<span class="nc" id="L710">			respawner = new MobSpawner();</span>
+<span class="nc" id="L711">			Actor.addDelayed(respawner, respawnCooldown());</span>
+		} else {
+<span class="nc" id="L713">			Actor.add(respawner);</span>
+<span class="nc bnc" id="L714" title="All 2 branches missed.">			if (respawner.cooldown() &gt; respawnCooldown()){</span>
+<span class="nc" id="L715">				respawner.resetCooldown();</span>
+			}
+		}
+<span class="nc" id="L718">		return respawner;</span>
+	}
+
+	public float respawnCooldown(){
+		float cooldown;
+<span class="nc bnc" id="L723" title="All 2 branches missed.">		if (Statistics.amuletObtained){</span>
+<span class="nc bnc" id="L724" title="All 2 branches missed.">			if (Dungeon.depth == 1){</span>
+				//very fast spawns on floor 1! 0/2/4/6/8/10/12, etc.
+<span class="nc" id="L726">				cooldown = (Dungeon.level.mobCount()) * (TIME_TO_RESPAWN / 25f);</span>
+			} else {
+				//respawn time is 5/5/10/15/20/25/25, etc.
+<span class="nc" id="L729">				cooldown = Math.round(GameMath.gate( TIME_TO_RESPAWN/10f, Dungeon.level.mobCount() * (TIME_TO_RESPAWN / 10f), TIME_TO_RESPAWN / 2f));</span>
+			}
+<span class="nc bnc" id="L731" title="All 2 branches missed.">		} else if (Dungeon.level.feeling == Feeling.DARK){</span>
+<span class="nc" id="L732">			cooldown = 2*TIME_TO_RESPAWN/3f;</span>
+		} else {
+<span class="nc" id="L734">			cooldown = TIME_TO_RESPAWN;</span>
+		}
+<span class="nc" id="L736">		return cooldown / DimensionalSundial.spawnMultiplierAtCurrentTime();</span>
+	}
+
+	public boolean spawnMob(int disLimit){
+<span class="nc" id="L740">		PathFinder.buildDistanceMap(Dungeon.hero.pos, BArray.or(passable, avoid, null));</span>
+
+<span class="nc" id="L742">		Mob mob = createMob();</span>
+<span class="nc" id="L743">		mob.state = mob.WANDERING;</span>
+<span class="nc" id="L744">		int tries = 30;</span>
+		do {
+<span class="nc" id="L746">			mob.pos = randomRespawnCell(mob);</span>
+<span class="nc" id="L747">			tries--;</span>
+<span class="nc bnc" id="L748" title="All 6 branches missed.">		} while ((mob.pos == -1 || PathFinder.distance[mob.pos] &lt; disLimit) &amp;&amp; tries &gt; 0);</span>
+
+<span class="nc bnc" id="L750" title="All 6 branches missed.">		if (Dungeon.hero.isAlive() &amp;&amp; mob.pos != -1 &amp;&amp; PathFinder.distance[mob.pos] &gt;= disLimit) {</span>
+<span class="nc" id="L751">			GameScene.add( mob );</span>
+<span class="nc bnc" id="L752" title="All 2 branches missed.">			if (!mob.buffs(ChampionEnemy.class).isEmpty()){</span>
+<span class="nc" id="L753">				GLog.w(Messages.get(ChampionEnemy.class, &quot;warn&quot;));</span>
+			}
+<span class="nc" id="L755">			return true;</span>
+		} else {
+<span class="nc" id="L757">			return false;</span>
+		}
+	}
+	
+	public int randomRespawnCell( Char ch ) {
+		int cell;
+<span class="nc" id="L763">		int count = 0;</span>
+		do {
+
+<span class="nc bnc" id="L766" title="All 2 branches missed.">			if (++count &gt; 30) {</span>
+<span class="nc" id="L767">				return -1;</span>
+			}
+
+<span class="nc" id="L770">			cell = Random.Int( length() );</span>
+
+<span class="nc bnc" id="L772" title="All 6 branches missed.">		} while ((Dungeon.level == this &amp;&amp; heroFOV[cell])</span>
+				|| !passable[cell]
+<span class="nc bnc" id="L774" title="All 4 branches missed.">				|| (Char.hasProp(ch, Char.Property.LARGE) &amp;&amp; !openSpace[cell])</span>
+<span class="nc bnc" id="L775" title="All 2 branches missed.">				|| Actor.findChar( cell ) != null);</span>
+<span class="nc" id="L776">		return cell;</span>
+	}
+	
+	public int randomDestination( Char ch ) {
+		int cell;
+		do {
+<span class="nc" id="L782">			cell = Random.Int( length() );</span>
+<span class="nc bnc" id="L783" title="All 2 branches missed.">		} while (!passable[cell]</span>
+<span class="nc bnc" id="L784" title="All 4 branches missed.">				|| (Char.hasProp(ch, Char.Property.LARGE) &amp;&amp; !openSpace[cell]));</span>
+<span class="nc" id="L785">		return cell;</span>
+	}
+	
+	public void addItemToSpawn( Item item ) {
+<span class="nc bnc" id="L789" title="All 2 branches missed.">		if (item != null) {</span>
+<span class="nc" id="L790">			itemsToSpawn.add( item );</span>
+		}
+<span class="nc" id="L792">	}</span>
+
+<span class="nc" id="L794">	public Item findPrizeItem(){ return findPrizeItem(null); }</span>
+
+	public Item findPrizeItem(Class&lt;?extends Item&gt; match){
+<span class="nc bnc" id="L797" title="All 2 branches missed.">		if (itemsToSpawn.size() == 0)</span>
+<span class="nc" id="L798">			return null;</span>
+
+<span class="nc bnc" id="L800" title="All 2 branches missed.">		if (match == null){</span>
+			//if we have a trinket catalyst, always return that first
+<span class="nc bnc" id="L802" title="All 2 branches missed.">			for (Item item : itemsToSpawn){</span>
+<span class="nc bnc" id="L803" title="All 2 branches missed.">				if (item instanceof TrinketCatalyst){</span>
+<span class="nc" id="L804">					itemsToSpawn.remove(item);</span>
+<span class="nc" id="L805">					return item;</span>
+				}
+<span class="nc" id="L807">			}</span>
+
+<span class="nc" id="L809">			Item item = Random.element(itemsToSpawn);</span>
+<span class="nc" id="L810">			itemsToSpawn.remove(item);</span>
+<span class="nc" id="L811">			return item;</span>
+		}
+
+<span class="nc bnc" id="L814" title="All 2 branches missed.">		for (Item item : itemsToSpawn){</span>
+<span class="nc bnc" id="L815" title="All 2 branches missed.">			if (match.isInstance(item)){</span>
+<span class="nc" id="L816">				itemsToSpawn.remove( item );</span>
+<span class="nc" id="L817">				return item;</span>
+			}
+<span class="nc" id="L819">		}</span>
+
+<span class="nc" id="L821">		return null;</span>
+	}
+
+	public void buildFlagMaps() {
+		
+<span class="nc bnc" id="L826" title="All 2 branches missed.">		for (int i=0; i &lt; length(); i++) {</span>
+<span class="nc" id="L827">			int flags = Terrain.flags[map[i]];</span>
+<span class="nc bnc" id="L828" title="All 2 branches missed.">			passable[i]		= (flags &amp; Terrain.PASSABLE) != 0;</span>
+<span class="nc bnc" id="L829" title="All 2 branches missed.">			losBlocking[i]	= (flags &amp; Terrain.LOS_BLOCKING) != 0;</span>
+<span class="nc bnc" id="L830" title="All 2 branches missed.">			flamable[i]		= (flags &amp; Terrain.FLAMABLE) != 0;</span>
+<span class="nc bnc" id="L831" title="All 2 branches missed.">			secret[i]		= (flags &amp; Terrain.SECRET) != 0;</span>
+<span class="nc bnc" id="L832" title="All 2 branches missed.">			solid[i]		= (flags &amp; Terrain.SOLID) != 0;</span>
+<span class="nc bnc" id="L833" title="All 2 branches missed.">			avoid[i]		= (flags &amp; Terrain.AVOID) != 0;</span>
+<span class="nc bnc" id="L834" title="All 2 branches missed.">			water[i]		= (flags &amp; Terrain.LIQUID) != 0;</span>
+<span class="nc bnc" id="L835" title="All 2 branches missed.">			pit[i]			= (flags &amp; Terrain.PIT) != 0;</span>
+		}
+
+<span class="nc bnc" id="L838" title="All 2 branches missed.">		for (Blob b : blobs.values()){</span>
+<span class="nc" id="L839">			b.onBuildFlagMaps(this);</span>
+<span class="nc" id="L840">		}</span>
+		
+<span class="nc" id="L842">		int lastRow = length() - width();</span>
+<span class="nc bnc" id="L843" title="All 2 branches missed.">		for (int i=0; i &lt; width(); i++) {</span>
+<span class="nc" id="L844">			passable[i] = avoid[i] = false;</span>
+<span class="nc" id="L845">			losBlocking[i] = solid[i] = true;</span>
+<span class="nc" id="L846">			passable[lastRow + i] = avoid[lastRow + i] = false;</span>
+<span class="nc" id="L847">			losBlocking[lastRow + i] = solid[lastRow + i] = true;</span>
+		}
+<span class="nc bnc" id="L849" title="All 2 branches missed.">		for (int i=width(); i &lt; lastRow; i += width()) {</span>
+<span class="nc" id="L850">			passable[i] = avoid[i] = false;</span>
+<span class="nc" id="L851">			losBlocking[i] = solid[i] = true;</span>
+<span class="nc" id="L852">			passable[i + width()-1] = avoid[i + width()-1] = false;</span>
+<span class="nc" id="L853">			losBlocking[i + width()-1] = solid[i + width()-1] = true;</span>
+		}
+
+		//an open space is large enough to fit large mobs. A space is open when it is not solid
+		// and there is an open corner with both adjacent cells opens
+<span class="nc bnc" id="L858" title="All 2 branches missed.">		for (int i=0; i &lt; length(); i++) {</span>
+<span class="nc bnc" id="L859" title="All 2 branches missed.">			if (solid[i]){</span>
+<span class="nc" id="L860">				openSpace[i] = false;</span>
+			} else {
+<span class="nc bnc" id="L862" title="All 2 branches missed.">				for (int j = 1; j &lt; PathFinder.CIRCLE8.length; j += 2){</span>
+<span class="nc bnc" id="L863" title="All 2 branches missed.">					if (solid[i+PathFinder.CIRCLE8[j]]) {</span>
+<span class="nc" id="L864">						openSpace[i] = false;</span>
+<span class="nc bnc" id="L865" title="All 4 branches missed.">					} else if (!solid[i+PathFinder.CIRCLE8[(j+1)%8]]</span>
+							&amp;&amp; !solid[i+PathFinder.CIRCLE8[(j+2)%8]]){
+<span class="nc" id="L867">						openSpace[i] = true;</span>
+<span class="nc" id="L868">						break;</span>
+					}
+				}
+			}
+		}
+
+<span class="nc" id="L874">	}</span>
+
+	public void destroy( int pos ) {
+		//if raw tile type is flammable or empty
+<span class="nc" id="L878">		int terr = map[pos];</span>
+<span class="nc bnc" id="L879" title="All 6 branches missed.">		if (terr == Terrain.EMPTY || terr == Terrain.EMPTY_DECO</span>
+				|| (Terrain.flags[map[pos]] &amp; Terrain.FLAMABLE) != 0) {
+<span class="nc" id="L881">			set(pos, Terrain.EMBERS);</span>
+		}
+<span class="nc" id="L883">		Blob web = blobs.get(Web.class);</span>
+<span class="nc bnc" id="L884" title="All 2 branches missed.">		if (web != null){</span>
+<span class="nc" id="L885">			web.clear(pos);</span>
+		}
+<span class="nc" id="L887">	}</span>
+
+	public void cleanWalls() {
+<span class="nc bnc" id="L890" title="All 4 branches missed.">		if (discoverable == null || discoverable.length != length) {</span>
+<span class="nc" id="L891">			discoverable = new boolean[length()];</span>
+		}
+
+<span class="nc bnc" id="L894" title="All 2 branches missed.">		for (int i=0; i &lt; length(); i++) {</span>
+			
+<span class="nc" id="L896">			boolean d = false;</span>
+			
+<span class="nc bnc" id="L898" title="All 2 branches missed.">			for (int j=0; j &lt; PathFinder.NEIGHBOURS9.length; j++) {</span>
+<span class="nc" id="L899">				int n = i + PathFinder.NEIGHBOURS9[j];</span>
+<span class="nc bnc" id="L900" title="All 8 branches missed.">				if (n &gt;= 0 &amp;&amp; n &lt; length() &amp;&amp; map[n] != Terrain.WALL &amp;&amp; map[n] != Terrain.WALL_DECO) {</span>
+<span class="nc" id="L901">					d = true;</span>
+<span class="nc" id="L902">					break;</span>
+				}
+			}
+			
+<span class="nc" id="L906">			discoverable[i] = d;</span>
+		}
+<span class="nc" id="L908">	}</span>
+	
+	public static void set( int cell, int terrain ){
+<span class="nc" id="L911">		set( cell, terrain, Dungeon.level );</span>
+<span class="nc" id="L912">	}</span>
+	
+	public static void set( int cell, int terrain, Level level ) {
+<span class="nc" id="L915">		Painter.set( level, cell, terrain );</span>
+
+<span class="nc bnc" id="L917" title="All 6 branches missed.">		if (terrain != Terrain.TRAP &amp;&amp; terrain != Terrain.SECRET_TRAP &amp;&amp; terrain != Terrain.INACTIVE_TRAP){</span>
+<span class="nc" id="L918">			level.traps.remove( cell );</span>
+		}
+
+<span class="nc" id="L921">		int flags = Terrain.flags[terrain];</span>
+<span class="nc bnc" id="L922" title="All 2 branches missed.">		level.passable[cell]		= (flags &amp; Terrain.PASSABLE) != 0;</span>
+<span class="nc bnc" id="L923" title="All 2 branches missed.">		level.losBlocking[cell]	    = (flags &amp; Terrain.LOS_BLOCKING) != 0;</span>
+<span class="nc bnc" id="L924" title="All 2 branches missed.">		level.flamable[cell]		= (flags &amp; Terrain.FLAMABLE) != 0;</span>
+<span class="nc bnc" id="L925" title="All 2 branches missed.">		level.secret[cell]		    = (flags &amp; Terrain.SECRET) != 0;</span>
+<span class="nc bnc" id="L926" title="All 2 branches missed.">		level.solid[cell]			= (flags &amp; Terrain.SOLID) != 0;</span>
+<span class="nc bnc" id="L927" title="All 2 branches missed.">		level.avoid[cell]			= (flags &amp; Terrain.AVOID) != 0;</span>
+<span class="nc bnc" id="L928" title="All 2 branches missed.">		level.pit[cell]			    = (flags &amp; Terrain.PIT) != 0;</span>
+<span class="nc bnc" id="L929" title="All 2 branches missed.">		level.water[cell]			= terrain == Terrain.WATER;</span>
+
+<span class="nc bnc" id="L931" title="All 2 branches missed.">		for (int i : PathFinder.NEIGHBOURS9){</span>
+<span class="nc" id="L932">			i = cell + i;</span>
+<span class="nc bnc" id="L933" title="All 2 branches missed.">			if (level.solid[i]){</span>
+<span class="nc" id="L934">				level.openSpace[i] = false;</span>
+			} else {
+<span class="nc bnc" id="L936" title="All 2 branches missed.">				for (int j = 1; j &lt; PathFinder.CIRCLE8.length; j += 2){</span>
+<span class="nc bnc" id="L937" title="All 2 branches missed.">					if (level.solid[i+PathFinder.CIRCLE8[j]]) {</span>
+<span class="nc" id="L938">						level.openSpace[i] = false;</span>
+<span class="nc bnc" id="L939" title="All 4 branches missed.">					} else if (!level.solid[i+PathFinder.CIRCLE8[(j+1)%8]]</span>
+							&amp;&amp; !level.solid[i+PathFinder.CIRCLE8[(j+2)%8]]){
+<span class="nc" id="L941">						level.openSpace[i] = true;</span>
+<span class="nc" id="L942">						break;</span>
+					}
+				}
+			}
+		}
+<span class="nc" id="L947">	}</span>
+	
+	public Heap drop( Item item, int cell ) {
+
+<span class="nc bnc" id="L951" title="All 4 branches missed.">		if (item == null || Challenges.isItemBlocked(item)){</span>
+
+			//create a dummy heap, give it a dummy sprite, don't add it to the game, and return it.
+			//effectively nullifies whatever the logic calling this wants to do, including dropping items.
+<span class="nc" id="L955">			Heap heap = new Heap();</span>
+<span class="nc" id="L956">			ItemSprite sprite = heap.sprite = new ItemSprite();</span>
+<span class="nc" id="L957">			sprite.link(heap);</span>
+<span class="nc" id="L958">			return heap;</span>
+
+		}
+		
+<span class="nc" id="L962">		Heap heap = heaps.get( cell );</span>
+<span class="nc bnc" id="L963" title="All 2 branches missed.">		if (heap == null) {</span>
+			
+<span class="nc" id="L965">			heap = new Heap();</span>
+<span class="nc bnc" id="L966" title="All 4 branches missed.">			heap.seen = Dungeon.level == this &amp;&amp; heroFOV[cell];</span>
+<span class="nc" id="L967">			heap.pos = cell;</span>
+<span class="nc" id="L968">			heap.drop(item);</span>
+<span class="nc bnc" id="L969" title="All 6 branches missed.">			if (map[cell] == Terrain.CHASM || (Dungeon.level != null &amp;&amp; pit[cell])) {</span>
+<span class="nc" id="L970">				Dungeon.dropToChasm( item );</span>
+<span class="nc" id="L971">				GameScene.discard( heap );</span>
+			} else {
+<span class="nc" id="L973">				heaps.put( cell, heap );</span>
+<span class="nc" id="L974">				GameScene.add( heap );</span>
+			}
+			
+<span class="nc bnc" id="L977" title="All 4 branches missed.">		} else if (heap.type == Heap.Type.LOCKED_CHEST || heap.type == Heap.Type.CRYSTAL_CHEST) {</span>
+			
+			int n;
+			do {
+<span class="nc" id="L981">				n = cell + PathFinder.NEIGHBOURS8[Random.Int( 8 )];</span>
+<span class="nc bnc" id="L982" title="All 4 branches missed.">			} while (!passable[n] &amp;&amp; !avoid[n]);</span>
+<span class="nc" id="L983">			return drop( item, n );</span>
+			
+		} else {
+<span class="nc" id="L986">			heap.drop(item);</span>
+		}
+		
+<span class="nc bnc" id="L989" title="All 4 branches missed.">		if (Dungeon.level != null &amp;&amp; ShatteredPixelDungeon.scene() instanceof GameScene) {</span>
+<span class="nc" id="L990">			pressCell( cell );</span>
+		}
+		
+<span class="nc" id="L993">		return heap;</span>
+	}
+	
+	public Plant plant( Plant.Seed seed, int pos ) {
+
+<span class="nc" id="L998">		Plant plant = plants.get( pos );</span>
+<span class="nc bnc" id="L999" title="All 2 branches missed.">		if (plant != null) {</span>
+<span class="nc" id="L1000">			plant.wither();</span>
+		}
+
+<span class="nc bnc" id="L1003" title="All 10 branches missed.">		if (map[pos] == Terrain.HIGH_GRASS ||</span>
+				map[pos] == Terrain.FURROWED_GRASS ||
+				map[pos] == Terrain.EMPTY ||
+				map[pos] == Terrain.EMBERS ||
+				map[pos] == Terrain.EMPTY_DECO) {
+<span class="nc" id="L1008">			set(pos, Terrain.GRASS, this);</span>
+<span class="nc" id="L1009">			GameScene.updateMap(pos);</span>
+		}
+
+		//we have to get this far as grass placement has RNG implications in levelgen
+<span class="nc bnc" id="L1013" title="All 2 branches missed.">		if (Dungeon.isChallenged(Challenges.NO_HERBALISM)){</span>
+<span class="nc" id="L1014">			return null;</span>
+		}
+		
+<span class="nc" id="L1017">		plant = seed.couch( pos, this );</span>
+<span class="nc" id="L1018">		plants.put( pos, plant );</span>
+		
+<span class="nc" id="L1020">		GameScene.plantSeed( pos );</span>
+
+<span class="nc bnc" id="L1022" title="All 2 branches missed.">		for (Char ch : Actor.chars()){</span>
+<span class="nc bnc" id="L1023" title="All 2 branches missed.">			if (ch instanceof WandOfRegrowth.Lotus</span>
+<span class="nc bnc" id="L1024" title="All 2 branches missed.">					&amp;&amp; ((WandOfRegrowth.Lotus) ch).inRange(pos)</span>
+<span class="nc bnc" id="L1025" title="All 2 branches missed.">					&amp;&amp; Actor.findChar(pos) != null){</span>
+<span class="nc" id="L1026">				plant.trigger();</span>
+<span class="nc" id="L1027">				return null;</span>
+			}
+<span class="nc" id="L1029">		}</span>
+		
+<span class="nc" id="L1031">		return plant;</span>
+	}
+	
+	public void uproot( int pos ) {
+<span class="nc" id="L1035">		plants.remove(pos);</span>
+<span class="nc" id="L1036">		GameScene.updateMap( pos );</span>
+<span class="nc" id="L1037">	}</span>
+
+	public Trap setTrap( Trap trap, int pos ){
+<span class="nc" id="L1040">		Trap existingTrap = traps.get(pos);</span>
+<span class="nc bnc" id="L1041" title="All 2 branches missed.">		if (existingTrap != null){</span>
+<span class="nc" id="L1042">			traps.remove( pos );</span>
+		}
+<span class="nc" id="L1044">		trap.set( pos );</span>
+<span class="nc" id="L1045">		traps.put( pos, trap );</span>
+<span class="nc" id="L1046">		GameScene.updateMap( pos );</span>
+<span class="nc" id="L1047">		return trap;</span>
+	}
+
+	public void disarmTrap( int pos ) {
+<span class="nc" id="L1051">		set(pos, Terrain.INACTIVE_TRAP);</span>
+<span class="nc" id="L1052">		GameScene.updateMap(pos);</span>
+<span class="nc" id="L1053">	}</span>
+
+	public void discover( int cell ) {
+<span class="nc" id="L1056">		set( cell, Terrain.discover( map[cell] ) );</span>
+<span class="nc" id="L1057">		Trap trap = traps.get( cell );</span>
+<span class="nc bnc" id="L1058" title="All 2 branches missed.">		if (trap != null)</span>
+<span class="nc" id="L1059">			trap.reveal();</span>
+<span class="nc" id="L1060">		GameScene.updateMap( cell );</span>
+<span class="nc" id="L1061">	}</span>
+
+	public boolean setCellToWater( boolean includeTraps, int cell ){
+<span class="nc" id="L1064">		Point p = cellToPoint(cell);</span>
+
+		//if a custom tilemap is over that cell, don't put water there
+<span class="nc bnc" id="L1067" title="All 2 branches missed.">		for (CustomTilemap cust : customTiles){</span>
+<span class="nc" id="L1068">			Point custPoint = new Point(p);</span>
+<span class="nc" id="L1069">			custPoint.x -= cust.tileX;</span>
+<span class="nc" id="L1070">			custPoint.y -= cust.tileY;</span>
+<span class="nc bnc" id="L1071" title="All 8 branches missed.">			if (custPoint.x &gt;= 0 &amp;&amp; custPoint.y &gt;= 0</span>
+					&amp;&amp; custPoint.x &lt; cust.tileW &amp;&amp; custPoint.y &lt; cust.tileH){
+<span class="nc bnc" id="L1073" title="All 2 branches missed.">				if (cust.image(custPoint.x, custPoint.y) != null){</span>
+<span class="nc" id="L1074">					return false;</span>
+				}
+			}
+<span class="nc" id="L1077">		}</span>
+
+<span class="nc" id="L1079">		int terr = map[cell];</span>
+<span class="nc bnc" id="L1080" title="All 14 branches missed.">		if (terr == Terrain.EMPTY || terr == Terrain.GRASS ||</span>
+				terr == Terrain.EMBERS || terr == Terrain.EMPTY_SP ||
+				terr == Terrain.HIGH_GRASS || terr == Terrain.FURROWED_GRASS
+				|| terr == Terrain.EMPTY_DECO){
+<span class="nc" id="L1084">			set(cell, Terrain.WATER);</span>
+<span class="nc" id="L1085">			GameScene.updateMap(cell);</span>
+<span class="nc" id="L1086">			return true;</span>
+<span class="nc bnc" id="L1087" title="All 8 branches missed.">		} else if (includeTraps &amp;&amp; (terr == Terrain.SECRET_TRAP ||</span>
+				terr == Terrain.TRAP || terr == Terrain.INACTIVE_TRAP)){
+<span class="nc" id="L1089">			set(cell, Terrain.WATER);</span>
+<span class="nc" id="L1090">			Dungeon.level.traps.remove(cell);</span>
+<span class="nc" id="L1091">			GameScene.updateMap(cell);</span>
+<span class="nc" id="L1092">			return true;</span>
+		}
+
+<span class="nc" id="L1095">		return false;</span>
+	}
+	
+	public int fallCell( boolean fallIntoPit ) {
+		int result;
+		do {
+<span class="nc" id="L1101">			result = randomRespawnCell( null );</span>
+<span class="nc bnc" id="L1102" title="All 2 branches missed.">			if (result == -1) return -1;</span>
+<span class="nc bnc" id="L1103" title="All 2 branches missed.">		} while (traps.get(result) != null</span>
+<span class="nc bnc" id="L1104" title="All 2 branches missed.">				|| findMob(result) != null);</span>
+<span class="nc" id="L1105">		return result;</span>
+	}
+	
+	public void occupyCell( Char ch ){
+<span class="nc bnc" id="L1109" title="All 4 branches missed.">		if (!ch.isImmune(Web.class) &amp;&amp; Blob.volumeAt(ch.pos, Web.class) &gt; 0){</span>
+<span class="nc" id="L1110">			blobs.get(Web.class).clear(ch.pos);</span>
+<span class="nc" id="L1111">			Web.affectChar( ch );</span>
+		}
+
+<span class="nc bnc" id="L1114" title="All 2 branches missed.">		if (!ch.flying){</span>
+
+			//we call act here instead of detach in case the debuffs haven't managed to deal dmg once yet
+<span class="nc bnc" id="L1117" title="All 2 branches missed.">			if (map[ch.pos] == Terrain.WATER){</span>
+<span class="nc bnc" id="L1118" title="All 2 branches missed.">				if (ch.buff(Burning.class) != null){</span>
+<span class="nc" id="L1119">					ch.buff(Burning.class).act();</span>
+				}
+<span class="nc bnc" id="L1121" title="All 2 branches missed.">				if (ch.buff(Ooze.class) != null){</span>
+<span class="nc" id="L1122">					ch.buff(Ooze.class).act();</span>
+				}
+			}
+
+<span class="nc bnc" id="L1126" title="All 6 branches missed.">			if ( (map[ch.pos] == Terrain.GRASS || map[ch.pos] == Terrain.EMBERS)</span>
+<span class="nc bnc" id="L1127" title="All 2 branches missed.">					&amp;&amp; ch == Dungeon.hero &amp;&amp; Dungeon.hero.hasTalent(Talent.REJUVENATING_STEPS)</span>
+<span class="nc bnc" id="L1128" title="All 2 branches missed.">					&amp;&amp; ch.buff(Talent.RejuvenatingStepsCooldown.class) == null){</span>
+
+<span class="nc bnc" id="L1130" title="All 2 branches missed.">				if (!Regeneration.regenOn()){</span>
+<span class="nc" id="L1131">					set(ch.pos, Terrain.FURROWED_GRASS);</span>
+<span class="nc bnc" id="L1132" title="All 4 branches missed.">				} else if (ch.buff(Talent.RejuvenatingStepsFurrow.class) != null &amp;&amp; ch.buff(Talent.RejuvenatingStepsFurrow.class).count() &gt;= 200) {</span>
+<span class="nc" id="L1133">					set(ch.pos, Terrain.FURROWED_GRASS);</span>
+				} else {
+<span class="nc" id="L1135">					set(ch.pos, Terrain.HIGH_GRASS);</span>
+<span class="nc" id="L1136">					Buff.count(ch, Talent.RejuvenatingStepsFurrow.class, 3 - Dungeon.hero.pointsInTalent(Talent.REJUVENATING_STEPS));</span>
+				}
+<span class="nc" id="L1138">				GameScene.updateMap(ch.pos);</span>
+<span class="nc" id="L1139">				Buff.affect(ch, Talent.RejuvenatingStepsCooldown.class, 15f - 5f*Dungeon.hero.pointsInTalent(Talent.REJUVENATING_STEPS));</span>
+			}
+			
+<span class="nc bnc" id="L1142" title="All 2 branches missed.">			if (pit[ch.pos]){</span>
+<span class="nc bnc" id="L1143" title="All 2 branches missed.">				if (ch == Dungeon.hero) {</span>
+<span class="nc" id="L1144">					Chasm.heroFall(ch.pos);</span>
+<span class="nc bnc" id="L1145" title="All 2 branches missed.">				} else if (ch instanceof Mob) {</span>
+<span class="nc" id="L1146">					Chasm.mobFall( (Mob)ch );</span>
+				}
+<span class="nc" id="L1148">				return;</span>
+			}
+			
+			//characters which are not the hero or a sheep 'soft' press cells
+<span class="nc bnc" id="L1152" title="All 4 branches missed.">			pressCell( ch.pos, ch instanceof Hero || ch instanceof Sheep);</span>
+		} else {
+<span class="nc bnc" id="L1154" title="All 2 branches missed.">			if (map[ch.pos] == Terrain.DOOR){</span>
+<span class="nc" id="L1155">				Door.enter( ch.pos );</span>
+			}
+		}
+
+<span class="nc bnc" id="L1159" title="All 6 branches missed.">		if (ch.isAlive() &amp;&amp; ch instanceof Piranha &amp;&amp; !water[ch.pos]){</span>
+<span class="nc" id="L1160">			((Piranha) ch).dieOnLand();</span>
+		}
+<span class="nc" id="L1162">	}</span>
+	
+	//public method for forcing the hard press of a cell. e.g. when an item lands on it
+	public void pressCell( int cell ){
+<span class="nc" id="L1166">		pressCell( cell, true );</span>
+<span class="nc" id="L1167">	}</span>
+	
+	//a 'soft' press ignores hidden traps
+	//a 'hard' press triggers all things
+	private void pressCell( int cell, boolean hard ) {
+
+<span class="nc" id="L1173">		Trap trap = null;</span>
+		
+<span class="nc bnc" id="L1175" title="All 6 branches missed.">		switch (map[cell]) {</span>
+		
+		case Terrain.SECRET_TRAP:
+<span class="nc bnc" id="L1178" title="All 2 branches missed.">			if (hard) {</span>
+<span class="nc" id="L1179">				trap = traps.get( cell );</span>
+<span class="nc" id="L1180">				GLog.i(Messages.get(Level.class, &quot;hidden_trap&quot;, trap.name()));</span>
+			}
+			break;
+			
+		case Terrain.TRAP:
+<span class="nc" id="L1185">			trap = traps.get( cell );</span>
+<span class="nc" id="L1186">			break;</span>
+			
+		case Terrain.HIGH_GRASS:
+		case Terrain.FURROWED_GRASS:
+<span class="nc" id="L1190">			HighGrass.trample( this, cell);</span>
+<span class="nc" id="L1191">			break;</span>
+			
+		case Terrain.WELL:
+<span class="nc" id="L1194">			WellWater.affectCell( cell );</span>
+<span class="nc" id="L1195">			break;</span>
+			
+		case Terrain.DOOR:
+<span class="nc" id="L1198">			Door.enter( cell );</span>
+			break;
+		}
+
+<span class="nc" id="L1202">		TimekeepersHourglass.timeFreeze timeFreeze =</span>
+<span class="nc" id="L1203">				Dungeon.hero.buff(TimekeepersHourglass.timeFreeze.class);</span>
+
+<span class="nc" id="L1205">		Swiftthistle.TimeBubble bubble =</span>
+<span class="nc" id="L1206">				Dungeon.hero.buff(Swiftthistle.TimeBubble.class);</span>
+
+<span class="nc bnc" id="L1208" title="All 2 branches missed.">		if (trap != null) {</span>
+<span class="nc bnc" id="L1209" title="All 2 branches missed.">			if (bubble != null){</span>
+<span class="nc" id="L1210">				Sample.INSTANCE.play(Assets.Sounds.TRAP);</span>
+<span class="nc" id="L1211">				discover(cell);</span>
+<span class="nc" id="L1212">				bubble.setDelayedPress(cell);</span>
+				
+<span class="nc bnc" id="L1214" title="All 2 branches missed.">			} else if (timeFreeze != null){</span>
+<span class="nc" id="L1215">				Sample.INSTANCE.play(Assets.Sounds.TRAP);</span>
+<span class="nc" id="L1216">				discover(cell);</span>
+<span class="nc" id="L1217">				timeFreeze.setDelayedPress(cell);</span>
+				
+			} else {
+<span class="nc bnc" id="L1220" title="All 2 branches missed.">				if (Dungeon.hero.pos == cell) {</span>
+<span class="nc" id="L1221">					Dungeon.hero.interrupt();</span>
+				}
+<span class="nc" id="L1223">				trap.trigger();</span>
+
+			}
+		}
+		
+<span class="nc" id="L1228">		Plant plant = plants.get( cell );</span>
+<span class="nc bnc" id="L1229" title="All 2 branches missed.">		if (plant != null) {</span>
+<span class="nc bnc" id="L1230" title="All 2 branches missed.">			if (bubble != null){</span>
+<span class="nc" id="L1231">				Sample.INSTANCE.play(Assets.Sounds.TRAMPLE, 1, Random.Float( 0.96f, 1.05f ) );</span>
+<span class="nc" id="L1232">				bubble.setDelayedPress(cell);</span>
+
+<span class="nc bnc" id="L1234" title="All 2 branches missed.">			} else if (timeFreeze != null){</span>
+<span class="nc" id="L1235">				Sample.INSTANCE.play(Assets.Sounds.TRAMPLE, 1, Random.Float( 0.96f, 1.05f ) );</span>
+<span class="nc" id="L1236">				timeFreeze.setDelayedPress(cell);</span>
+
+			} else {
+<span class="nc" id="L1239">				plant.trigger();</span>
+
+			}
+		}
+
+<span class="nc bnc" id="L1244" title="All 4 branches missed.">		if (hard &amp;&amp; Blob.volumeAt(cell, Web.class) &gt; 0){</span>
+<span class="nc" id="L1245">			blobs.get(Web.class).clear(cell);</span>
+		}
+<span class="nc" id="L1247">	}</span>
+
+	private static boolean[] heroMindFov;
+
+	private static boolean[] modifiableBlocking;
+
+	public void updateFieldOfView( Char c, boolean[] fieldOfView ) {
+
+<span class="nc" id="L1255">		int cx = c.pos % width();</span>
+<span class="nc" id="L1256">		int cy = c.pos / width();</span>
+		
+<span class="nc bnc" id="L1258" title="All 4 branches missed.">		boolean sighted = c.buff( Blindness.class ) == null &amp;&amp; c.buff( Shadows.class ) == null</span>
+<span class="nc bnc" id="L1259" title="All 2 branches missed.">						&amp;&amp; c.isAlive();</span>
+<span class="nc bnc" id="L1260" title="All 2 branches missed.">		if (sighted) {</span>
+<span class="nc" id="L1261">			boolean[] blocking = null;</span>
+
+<span class="nc bnc" id="L1263" title="All 4 branches missed.">			if (modifiableBlocking == null || modifiableBlocking.length != Dungeon.level.losBlocking.length){</span>
+<span class="nc" id="L1264">				modifiableBlocking = new boolean[Dungeon.level.losBlocking.length];</span>
+			}
+
+			//grass is see-through by some specific entities, but not during the fungi quest
+<span class="nc bnc" id="L1268" title="All 4 branches missed.">			if (!(Dungeon.level instanceof  MiningLevel) || Blacksmith.Quest.Type() != Blacksmith.Quest.FUNGI){</span>
+<span class="nc bnc" id="L1269" title="All 8 branches missed.">				if ((c instanceof Hero &amp;&amp; ((Hero) c).subClass == HeroSubClass.WARDEN)</span>
+						|| c instanceof YogFist.SoiledFist || c instanceof GnollGeomancer) {
+<span class="nc bnc" id="L1271" title="All 2 branches missed.">					if (blocking == null) {</span>
+<span class="nc" id="L1272">						System.arraycopy(Dungeon.level.losBlocking, 0, modifiableBlocking, 0, modifiableBlocking.length);</span>
+<span class="nc" id="L1273">						blocking = modifiableBlocking;</span>
+					}
+<span class="nc bnc" id="L1275" title="All 2 branches missed.">					for (int i = 0; i &lt; blocking.length; i++) {</span>
+<span class="nc bnc" id="L1276" title="All 6 branches missed.">						if (blocking[i] &amp;&amp; (Dungeon.level.map[i] == Terrain.HIGH_GRASS || Dungeon.level.map[i] == Terrain.FURROWED_GRASS)) {</span>
+<span class="nc" id="L1277">							blocking[i] = false;</span>
+						}
+					}
+				}
+			}
+
+			//allies and specific enemies can see through shrouding fog
+<span class="nc bnc" id="L1284" title="All 4 branches missed.">			if ((c.alignment != Char.Alignment.ALLY &amp;&amp; !(c instanceof GnollGeomancer))</span>
+<span class="nc bnc" id="L1285" title="All 2 branches missed.">					&amp;&amp; Dungeon.level.blobs.containsKey(SmokeScreen.class)</span>
+<span class="nc bnc" id="L1286" title="All 2 branches missed.">					&amp;&amp; Dungeon.level.blobs.get(SmokeScreen.class).volume &gt; 0) {</span>
+<span class="nc bnc" id="L1287" title="All 2 branches missed.">				if (blocking == null) {</span>
+<span class="nc" id="L1288">					System.arraycopy(Dungeon.level.losBlocking, 0, modifiableBlocking, 0, modifiableBlocking.length);</span>
+<span class="nc" id="L1289">					blocking = modifiableBlocking;</span>
+				}
+<span class="nc" id="L1291">				Blob s = Dungeon.level.blobs.get(SmokeScreen.class);</span>
+<span class="nc bnc" id="L1292" title="All 2 branches missed.">				for (int i = 0; i &lt; blocking.length; i++){</span>
+<span class="nc bnc" id="L1293" title="All 4 branches missed.">					if (!blocking[i] &amp;&amp; s.cur[i] &gt; 0){</span>
+<span class="nc" id="L1294">						blocking[i] = true;</span>
+					}
+				}
+			}
+
+<span class="nc bnc" id="L1299" title="All 2 branches missed.">			if (blocking == null){</span>
+<span class="nc" id="L1300">				blocking = Dungeon.level.losBlocking;</span>
+			}
+
+<span class="nc" id="L1303">			float viewDist = c.viewDistance;</span>
+<span class="nc bnc" id="L1304" title="All 2 branches missed.">			if (c instanceof Hero){</span>
+<span class="nc" id="L1305">				viewDist *= 1f + 0.25f*((Hero) c).pointsInTalent(Talent.FARSIGHT);</span>
+<span class="nc" id="L1306">				viewDist *= EyeOfNewt.visionRangeMultiplier();</span>
+			}
+			
+<span class="nc" id="L1309">			ShadowCaster.castShadow( cx, cy, width(), fieldOfView, blocking, Math.round(viewDist) );</span>
+<span class="nc" id="L1310">		} else {</span>
+<span class="nc" id="L1311">			BArray.setFalse(fieldOfView);</span>
+		}
+		
+<span class="nc" id="L1314">		int sense = 1;</span>
+		//Currently only the hero can get mind vision
+<span class="nc bnc" id="L1316" title="All 4 branches missed.">		if (c.isAlive() &amp;&amp; c == Dungeon.hero) {</span>
+<span class="nc bnc" id="L1317" title="All 2 branches missed.">			for (Buff b : c.buffs( MindVision.class )) {</span>
+<span class="nc" id="L1318">				sense = Math.max( ((MindVision)b).distance, sense );</span>
+<span class="nc" id="L1319">			}</span>
+<span class="nc bnc" id="L1320" title="All 2 branches missed.">			if (c.buff(MagicalSight.class) != null){</span>
+<span class="nc" id="L1321">				sense = Math.max( MagicalSight.DISTANCE, sense );</span>
+			}
+		}
+		
+		//uses rounding
+<span class="nc bnc" id="L1326" title="All 4 branches missed.">		if (!sighted || sense &gt; 1) {</span>
+			
+<span class="nc" id="L1328">			int[][] rounding = ShadowCaster.rounding;</span>
+			
+			int left, right;
+			int pos;
+<span class="nc bnc" id="L1332" title="All 2 branches missed.">			for (int y = Math.max(0, cy - sense); y &lt;= Math.min(height()-1, cy + sense); y++) {</span>
+<span class="nc bnc" id="L1333" title="All 2 branches missed.">				if (rounding[sense][Math.abs(cy - y)] &lt; Math.abs(cy - y)) {</span>
+<span class="nc" id="L1334">					left = cx - rounding[sense][Math.abs(cy - y)];</span>
+				} else {
+<span class="nc" id="L1336">					left = sense;</span>
+<span class="nc bnc" id="L1337" title="All 2 branches missed.">					while (rounding[sense][left] &lt; rounding[sense][Math.abs(cy - y)]){</span>
+<span class="nc" id="L1338">						left--;</span>
+					}
+<span class="nc" id="L1340">					left = cx - left;</span>
+				}
+<span class="nc" id="L1342">				right = Math.min(width()-1, cx + cx - left);</span>
+<span class="nc" id="L1343">				left = Math.max(0, left);</span>
+<span class="nc" id="L1344">				pos = left + y * width();</span>
+<span class="nc" id="L1345">				System.arraycopy(discoverable, pos, fieldOfView, pos, right - left + 1);</span>
+			}
+		}
+
+<span class="nc bnc" id="L1349" title="All 4 branches missed.">		if (c instanceof SpiritHawk.HawkAlly &amp;&amp; Dungeon.hero.pointsInTalent(Talent.EAGLE_EYE) &gt;= 3){</span>
+<span class="nc" id="L1350">			int range = 1+(Dungeon.hero.pointsInTalent(Talent.EAGLE_EYE)-2);</span>
+<span class="nc bnc" id="L1351" title="All 2 branches missed.">			for (Mob mob : mobs) {</span>
+<span class="nc" id="L1352">				int p = mob.pos;</span>
+<span class="nc bnc" id="L1353" title="All 4 branches missed.">				if (!fieldOfView[p] &amp;&amp; distance(c.pos, p) &lt;= range) {</span>
+<span class="nc bnc" id="L1354" title="All 2 branches missed.">					for (int i : PathFinder.NEIGHBOURS9) {</span>
+<span class="nc" id="L1355">						fieldOfView[mob.pos + i] = true;</span>
+					}
+				}
+<span class="nc" id="L1358">			}</span>
+		}
+
+		//Currently only the hero can get mind vision or awareness
+<span class="nc bnc" id="L1362" title="All 4 branches missed.">		if (c.isAlive() &amp;&amp; c == Dungeon.hero) {</span>
+
+<span class="nc bnc" id="L1364" title="All 4 branches missed.">			if (heroMindFov == null || heroMindFov.length != length()){</span>
+<span class="nc" id="L1365">				heroMindFov = new boolean[length];</span>
+			} else {
+<span class="nc" id="L1367">				BArray.setFalse(heroMindFov);</span>
+			}
+
+<span class="nc" id="L1370">			Dungeon.hero.mindVisionEnemies.clear();</span>
+<span class="nc bnc" id="L1371" title="All 2 branches missed.">			if (c.buff( MindVision.class ) != null) {</span>
+<span class="nc bnc" id="L1372" title="All 2 branches missed.">				for (Mob mob : mobs) {</span>
+<span class="nc bnc" id="L1373" title="All 6 branches missed.">					if (mob instanceof Mimic &amp;&amp; mob.alignment == Char.Alignment.NEUTRAL&amp;&amp; ((Mimic) mob).stealthy()){</span>
+<span class="nc" id="L1374">						continue;</span>
+					}
+<span class="nc bnc" id="L1376" title="All 2 branches missed.">					for (int i : PathFinder.NEIGHBOURS9) {</span>
+<span class="nc" id="L1377">						heroMindFov[mob.pos + i] = true;</span>
+					}
+<span class="nc" id="L1379">				}</span>
+			} else {
+
+<span class="nc" id="L1382">				int mindVisRange = 0;</span>
+<span class="nc bnc" id="L1383" title="All 2 branches missed.">				if (((Hero) c).hasTalent(Talent.HEIGHTENED_SENSES)){</span>
+<span class="nc" id="L1384">					mindVisRange = 1+((Hero) c).pointsInTalent(Talent.HEIGHTENED_SENSES);</span>
+				}
+<span class="nc bnc" id="L1386" title="All 2 branches missed.">				if (c.buff(DivineSense.DivineSenseTracker.class) != null){</span>
+<span class="nc bnc" id="L1387" title="All 2 branches missed.">					if (((Hero) c).heroClass == HeroClass.CLERIC){</span>
+<span class="nc" id="L1388">						mindVisRange = 4+4*((Hero) c).pointsInTalent(Talent.DIVINE_SENSE);</span>
+					} else {
+<span class="nc" id="L1390">						mindVisRange = 1+2*((Hero) c).pointsInTalent(Talent.DIVINE_SENSE);</span>
+					}
+				}
+<span class="nc" id="L1393">				mindVisRange = Math.max(mindVisRange, EyeOfNewt.mindVisionRange());</span>
+
+				//power of many's life link spell allows allies to get divine sense
+<span class="nc" id="L1396">				Char ally = PowerOfMany.getPoweredAlly();</span>
+<span class="nc bnc" id="L1397" title="All 4 branches missed.">				if (ally != null &amp;&amp; ally.buff(DivineSense.DivineSenseTracker.class) == null){</span>
+<span class="nc" id="L1398">					ally = null;</span>
+				}
+
+<span class="nc bnc" id="L1401" title="All 2 branches missed.">				if (mindVisRange &gt;= 1) {</span>
+<span class="nc bnc" id="L1402" title="All 2 branches missed.">					for (Mob mob : mobs) {</span>
+<span class="nc bnc" id="L1403" title="All 6 branches missed.">						if (mob instanceof Mimic &amp;&amp; mob.alignment == Char.Alignment.NEUTRAL &amp;&amp; ((Mimic) mob).stealthy()){</span>
+<span class="nc" id="L1404">							continue;</span>
+						}
+<span class="nc" id="L1406">						int p = mob.pos;</span>
+<span class="nc bnc" id="L1407" title="All 8 branches missed.">						if (!fieldOfView[p] &amp;&amp; (distance(c.pos, p) &lt;= mindVisRange || (ally != null &amp;&amp; distance(ally.pos, p) &lt;= mindVisRange))) {</span>
+<span class="nc bnc" id="L1408" title="All 2 branches missed.">							for (int i : PathFinder.NEIGHBOURS9) {</span>
+<span class="nc" id="L1409">								heroMindFov[mob.pos + i] = true;</span>
+							}
+						}
+<span class="nc" id="L1412">					}</span>
+				}
+			}
+			
+<span class="nc bnc" id="L1416" title="All 2 branches missed.">			if (c.buff( Awareness.class ) != null) {</span>
+<span class="nc bnc" id="L1417" title="All 2 branches missed.">				for (Heap heap : heaps.valueList()) {</span>
+<span class="nc" id="L1418">					int p = heap.pos;</span>
+<span class="nc bnc" id="L1419" title="All 2 branches missed.">					for (int i : PathFinder.NEIGHBOURS9) heroMindFov[p+i] = true;</span>
+<span class="nc" id="L1420">				}</span>
+			}
+
+<span class="nc bnc" id="L1423" title="All 2 branches missed.">			for (TalismanOfForesight.CharAwareness a : c.buffs(TalismanOfForesight.CharAwareness.class)){</span>
+<span class="nc" id="L1424">				Char ch = (Char) Actor.findById(a.charID);</span>
+<span class="nc bnc" id="L1425" title="All 4 branches missed.">				if (ch == null || !ch.isAlive()) {</span>
+<span class="nc" id="L1426">					continue;</span>
+				}
+<span class="nc" id="L1428">				int p = ch.pos;</span>
+<span class="nc bnc" id="L1429" title="All 2 branches missed.">				for (int i : PathFinder.NEIGHBOURS9) heroMindFov[p+i] = true;</span>
+<span class="nc" id="L1430">			}</span>
+
+<span class="nc bnc" id="L1432" title="All 2 branches missed.">			for (TalismanOfForesight.HeapAwareness h : c.buffs(TalismanOfForesight.HeapAwareness.class)){</span>
+<span class="nc bnc" id="L1433" title="All 4 branches missed.">				if (Dungeon.depth != h.depth || Dungeon.branch != h.branch) continue;</span>
+<span class="nc bnc" id="L1434" title="All 2 branches missed.">				for (int i : PathFinder.NEIGHBOURS9) heroMindFov[h.pos+i] = true;</span>
+<span class="nc" id="L1435">			}</span>
+
+<span class="nc bnc" id="L1437" title="All 2 branches missed.">			for (Mob m : mobs){</span>
+<span class="nc bnc" id="L1438" title="All 6 branches missed.">				if (m instanceof WandOfWarding.Ward</span>
+						|| m instanceof WandOfRegrowth.Lotus
+						|| m instanceof SpiritHawk.HawkAlly
+<span class="nc bnc" id="L1441" title="All 2 branches missed.">						|| m.buff(PowerOfMany.PowerBuff.class) != null){</span>
+<span class="nc bnc" id="L1442" title="All 4 branches missed.">					if (m.fieldOfView == null || m.fieldOfView.length != length()){</span>
+<span class="nc" id="L1443">						m.fieldOfView = new boolean[length()];</span>
+<span class="nc" id="L1444">						Dungeon.level.updateFieldOfView( m, m.fieldOfView );</span>
+					}
+<span class="nc" id="L1446">					BArray.or(heroMindFov, m.fieldOfView, heroMindFov);</span>
+				}
+<span class="nc" id="L1448">			}</span>
+
+<span class="nc bnc" id="L1450" title="All 2 branches missed.">			for (RevealedArea a : c.buffs(RevealedArea.class)){</span>
+<span class="nc bnc" id="L1451" title="All 4 branches missed.">				if (Dungeon.depth != a.depth || Dungeon.branch != a.branch) continue;</span>
+<span class="nc bnc" id="L1452" title="All 2 branches missed.">				for (int i : PathFinder.NEIGHBOURS9) heroMindFov[a.pos+i] = true;</span>
+<span class="nc" id="L1453">			}</span>
+
+			//set mind vision chars
+<span class="nc bnc" id="L1456" title="All 2 branches missed.">			for (Mob mob : mobs) {</span>
+<span class="nc bnc" id="L1457" title="All 4 branches missed.">				if (heroMindFov[mob.pos] &amp;&amp; !fieldOfView[mob.pos]){</span>
+<span class="nc" id="L1458">					Dungeon.hero.mindVisionEnemies.add(mob);</span>
+				}
+<span class="nc" id="L1460">			}</span>
+
+<span class="nc" id="L1462">			BArray.or(heroMindFov, fieldOfView, fieldOfView);</span>
+
+		}
+
+<span class="nc bnc" id="L1466" title="All 2 branches missed.">		if (c == Dungeon.hero) {</span>
+<span class="nc bnc" id="L1467" title="All 2 branches missed.">			for (Heap heap : heaps.valueList())</span>
+<span class="nc bnc" id="L1468" title="All 4 branches missed.">				if (!heap.seen &amp;&amp; fieldOfView[heap.pos])</span>
+<span class="nc" id="L1469">					heap.seen = true;</span>
+		}
+
+<span class="nc" id="L1472">	}</span>
+
+	public boolean isLevelExplored( int depth ){
+<span class="nc" id="L1475">		return false;</span>
+	}
+	
+	public int distance( int a, int b ) {
+<span class="nc" id="L1479">		int ax = a % width();</span>
+<span class="nc" id="L1480">		int ay = a / width();</span>
+<span class="nc" id="L1481">		int bx = b % width();</span>
+<span class="nc" id="L1482">		int by = b / width();</span>
+<span class="nc" id="L1483">		return Math.max( Math.abs( ax - bx ), Math.abs( ay - by ) );</span>
+	}
+	
+	public boolean adjacent( int a, int b ) {
+<span class="nc bnc" id="L1487" title="All 2 branches missed.">		return distance( a, b ) == 1;</span>
+	}
+	
+	//uses pythagorean theorum for true distance, as if there was no movement grid
+	public float trueDistance(int a, int b){
+<span class="nc" id="L1492">		int ax = a % width();</span>
+<span class="nc" id="L1493">		int ay = a / width();</span>
+<span class="nc" id="L1494">		int bx = b % width();</span>
+<span class="nc" id="L1495">		int by = b / width();</span>
+<span class="nc" id="L1496">		return (float)Math.sqrt(Math.pow(Math.abs( ax - bx ), 2) + Math.pow(Math.abs( ay - by ), 2));</span>
+	}
+
+	//usually just if a cell is solid, but other cases exist too
+	public boolean invalidHeroPos( int tile ){
+<span class="nc bnc" id="L1501" title="All 4 branches missed.">		return !passable[tile] &amp;&amp; !avoid[tile];</span>
+	}
+
+	//returns true if the input is a valid tile within the level
+	public boolean insideMap( int tile ){
+				//top and bottom row and beyond
+<span class="nc bnc" id="L1507" title="All 8 branches missed.">		return !((tile &lt; width || tile &gt;= length - width) ||</span>
+				//left and right column
+				(tile % width == 0 || tile % width == width-1));
+	}
+
+	public Point cellToPoint( int cell ){
+<span class="nc" id="L1513">		return new Point(cell % width(), cell / width());</span>
+	}
+
+	public int pointToCell( Point p ){
+<span class="nc" id="L1517">		return p.x + p.y*width();</span>
+	}
+	
+	public String tileName( int tile ) {
+		
+<span class="nc bnc" id="L1522" title="All 25 branches missed.">		switch (tile) {</span>
+			case Terrain.CHASM:
+<span class="nc" id="L1524">				return Messages.get(Level.class, &quot;chasm_name&quot;);</span>
+			case Terrain.EMPTY:
+			case Terrain.EMPTY_SP:
+			case Terrain.EMPTY_DECO:
+			case Terrain.CUSTOM_DECO_EMPTY:
+			case Terrain.SECRET_TRAP:
+<span class="nc" id="L1530">				return Messages.get(Level.class, &quot;floor_name&quot;);</span>
+			case Terrain.GRASS:
+<span class="nc" id="L1532">				return Messages.get(Level.class, &quot;grass_name&quot;);</span>
+			case Terrain.WATER:
+<span class="nc" id="L1534">				return Messages.get(Level.class, &quot;water_name&quot;);</span>
+			case Terrain.WALL:
+			case Terrain.WALL_DECO:
+			case Terrain.SECRET_DOOR:
+<span class="nc" id="L1538">				return Messages.get(Level.class, &quot;wall_name&quot;);</span>
+			case Terrain.DOOR:
+<span class="nc" id="L1540">				return Messages.get(Level.class, &quot;closed_door_name&quot;);</span>
+			case Terrain.OPEN_DOOR:
+<span class="nc" id="L1542">				return Messages.get(Level.class, &quot;open_door_name&quot;);</span>
+			case Terrain.ENTRANCE:
+			case Terrain.ENTRANCE_SP:
+<span class="nc" id="L1545">				return Messages.get(Level.class, &quot;entrace_name&quot;);</span>
+			case Terrain.EXIT:
+<span class="nc" id="L1547">				return Messages.get(Level.class, &quot;exit_name&quot;);</span>
+			case Terrain.EMBERS:
+<span class="nc" id="L1549">				return Messages.get(Level.class, &quot;embers_name&quot;);</span>
+			case Terrain.FURROWED_GRASS:
+<span class="nc" id="L1551">				return Messages.get(Level.class, &quot;furrowed_grass_name&quot;);</span>
+			case Terrain.LOCKED_DOOR:
+<span class="nc" id="L1553">				return Messages.get(Level.class, &quot;locked_door_name&quot;);</span>
+			case Terrain.CRYSTAL_DOOR:
+<span class="nc" id="L1555">				return Messages.get(Level.class, &quot;crystal_door_name&quot;);</span>
+			case Terrain.PEDESTAL:
+<span class="nc" id="L1557">				return Messages.get(Level.class, &quot;pedestal_name&quot;);</span>
+			case Terrain.BARRICADE:
+<span class="nc" id="L1559">				return Messages.get(Level.class, &quot;barricade_name&quot;);</span>
+			case Terrain.HIGH_GRASS:
+<span class="nc" id="L1561">				return Messages.get(Level.class, &quot;high_grass_name&quot;);</span>
+			case Terrain.LOCKED_EXIT:
+<span class="nc" id="L1563">				return Messages.get(Level.class, &quot;locked_exit_name&quot;);</span>
+			case Terrain.UNLOCKED_EXIT:
+<span class="nc" id="L1565">				return Messages.get(Level.class, &quot;unlocked_exit_name&quot;);</span>
+			case Terrain.WELL:
+<span class="nc" id="L1567">				return Messages.get(Level.class, &quot;well_name&quot;);</span>
+			case Terrain.EMPTY_WELL:
+<span class="nc" id="L1569">				return Messages.get(Level.class, &quot;empty_well_name&quot;);</span>
+			case Terrain.STATUE:
+			case Terrain.STATUE_SP:
+<span class="nc" id="L1572">				return Messages.get(Level.class, &quot;statue_name&quot;);</span>
+			case Terrain.INACTIVE_TRAP:
+<span class="nc" id="L1574">				return Messages.get(Level.class, &quot;inactive_trap_name&quot;);</span>
+			case Terrain.BOOKSHELF:
+<span class="nc" id="L1576">				return Messages.get(Level.class, &quot;bookshelf_name&quot;);</span>
+			case Terrain.ALCHEMY:
+<span class="nc" id="L1578">				return Messages.get(Level.class, &quot;alchemy_name&quot;);</span>
+			default:
+<span class="nc" id="L1580">				return Messages.get(Level.class, &quot;default_name&quot;);</span>
+		}
+	}
+	
+	public String tileDesc( int tile ) {
+		
+<span class="nc bnc" id="L1586" title="All 15 branches missed.">		switch (tile) {</span>
+			case Terrain.CHASM:
+<span class="nc" id="L1588">				return Messages.get(Level.class, &quot;chasm_desc&quot;);</span>
+			case Terrain.WATER:
+<span class="nc" id="L1590">				return Messages.get(Level.class, &quot;water_desc&quot;);</span>
+			case Terrain.ENTRANCE:
+			case Terrain.ENTRANCE_SP:
+<span class="nc" id="L1593">				return Messages.get(Level.class, &quot;entrance_desc&quot;);</span>
+			case Terrain.EXIT:
+			case Terrain.UNLOCKED_EXIT:
+<span class="nc" id="L1596">				return Messages.get(Level.class, &quot;exit_desc&quot;);</span>
+			case Terrain.EMBERS:
+<span class="nc" id="L1598">				return Messages.get(Level.class, &quot;embers_desc&quot;);</span>
+			case Terrain.HIGH_GRASS:
+			case Terrain.FURROWED_GRASS:
+<span class="nc" id="L1601">				return Messages.get(Level.class, &quot;high_grass_desc&quot;);</span>
+			case Terrain.LOCKED_DOOR:
+<span class="nc" id="L1603">				return Messages.get(Level.class, &quot;locked_door_desc&quot;);</span>
+			case Terrain.CRYSTAL_DOOR:
+<span class="nc" id="L1605">				return Messages.get(Level.class, &quot;crystal_door_desc&quot;);</span>
+			case Terrain.LOCKED_EXIT:
+<span class="nc" id="L1607">				return Messages.get(Level.class, &quot;locked_exit_desc&quot;);</span>
+			case Terrain.BARRICADE:
+<span class="nc" id="L1609">				return Messages.get(Level.class, &quot;barricade_desc&quot;);</span>
+			case Terrain.INACTIVE_TRAP:
+<span class="nc" id="L1611">				return Messages.get(Level.class, &quot;inactive_trap_desc&quot;);</span>
+			case Terrain.STATUE:
+			case Terrain.STATUE_SP:
+<span class="nc" id="L1614">				return Messages.get(Level.class, &quot;statue_desc&quot;);</span>
+			case Terrain.ALCHEMY:
+<span class="nc" id="L1616">				return Messages.get(Level.class, &quot;alchemy_desc&quot;);</span>
+			case Terrain.EMPTY_WELL:
+<span class="nc" id="L1618">				return Messages.get(Level.class, &quot;empty_well_desc&quot;);</span>
+			default:
+<span class="nc" id="L1620">				return &quot;&quot;;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

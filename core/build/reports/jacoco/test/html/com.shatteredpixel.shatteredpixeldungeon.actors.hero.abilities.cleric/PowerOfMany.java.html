@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PowerOfMany.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric</a> &gt; <span class="el_source">PowerOfMany.java</span></div><h1>PowerOfMany.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AllyBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.PrismaticGuard;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.BeamingRay;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.ClericSpell;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.LifeLinkSpell;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.Stasis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.DirectableAlly;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShaftParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfLivingEarth;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.MobSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.TextureFilm;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L62">public class PowerOfMany extends ArmorAbility {</span>
+
+	@Override
+	public float chargeUse(Hero hero) {
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (getPoweredAlly() instanceof LightAlly){</span>
+<span class="nc" id="L67">			return 0;</span>
+		}
+<span class="nc" id="L69">		return super.chargeUse(hero);</span>
+	}
+
+	@Override
+	public String targetingPrompt() {
+<span class="nc" id="L74">		Char ally = getPoweredAlly();</span>
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		boolean allyExists = ally != null;</span>
+
+<span class="nc bnc" id="L78" title="All 2 branches missed.">		if (Dungeon.hero.buff(PrismaticGuard.class) != null</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">				&amp;&amp; Dungeon.hero.buff(PrismaticGuard.class).isEmpowered()){</span>
+<span class="nc" id="L80">			allyExists = true;</span>
+		}
+
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if (Dungeon.hero.buff(WandOfLivingEarth.RockArmor.class) != null</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">				&amp;&amp; Dungeon.hero.buff(WandOfLivingEarth.RockArmor.class).isEmpowered()){</span>
+<span class="nc" id="L85">			allyExists = true;</span>
+		}
+
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		if (Stasis.getStasisAlly() != null){</span>
+<span class="nc" id="L89">			allyExists = true;</span>
+		}
+
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		if (ally instanceof LightAlly){</span>
+<span class="nc" id="L93">			return Messages.get(this, &quot;prompt_ally&quot;);</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		} else if (!allyExists){</span>
+<span class="nc" id="L95">			return Messages.get(this, &quot;prompt_default&quot;);</span>
+		} else {
+<span class="nc" id="L97">			return null;</span>
+		}
+	}
+
+	public boolean useTargeting(){
+<span class="nc" id="L102">		return false;</span>
+	}
+
+	@Override
+	protected void activate(ClassArmor armor, Hero hero, Integer target) {
+
+<span class="nc" id="L108">		Char ally = getPoweredAlly();</span>
+
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		boolean allyExists = ally != null;</span>
+
+<span class="nc bnc" id="L112" title="All 2 branches missed.">		if (hero.buff(PrismaticGuard.class) != null</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">				&amp;&amp; hero.buff(PrismaticGuard.class).isEmpowered()){</span>
+<span class="nc" id="L114">			allyExists = true;</span>
+		}
+
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		if (hero.buff(WandOfLivingEarth.RockArmor.class) != null</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">				&amp;&amp; hero.buff(WandOfLivingEarth.RockArmor.class).isEmpowered()){</span>
+<span class="nc" id="L119">			allyExists = true;</span>
+		}
+
+<span class="nc bnc" id="L122" title="All 2 branches missed.">		if (Stasis.getStasisAlly() != null){</span>
+<span class="nc" id="L123">			allyExists = true;</span>
+		}
+
+<span class="nc bnc" id="L126" title="All 2 branches missed.">		if (ally instanceof LightAlly){</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">			if (target == null){</span>
+<span class="nc" id="L128">				return;</span>
+			} else {
+<span class="nc" id="L130">				((LightAlly) ally).directTocell(target);</span>
+			}
+<span class="nc bnc" id="L132" title="All 2 branches missed.">		} else if (allyExists) {</span>
+<span class="nc" id="L133">			GLog.w( Messages.get(this, &quot;ally_exists&quot;));</span>
+		} else {
+<span class="nc bnc" id="L135" title="All 2 branches missed.">			if (target == null){</span>
+<span class="nc" id="L136">				return;</span>
+			}
+
+<span class="nc bnc" id="L139" title="All 2 branches missed.">			if (!Dungeon.level.heroFOV[target]){</span>
+<span class="nc" id="L140">				GLog.w(Messages.get(this, &quot;no_vision&quot;));</span>
+<span class="nc" id="L141">				return;</span>
+			}
+
+			//pre-calculate as cost becomes 0 if light ally starts to exist
+<span class="nc" id="L145">			float chargeUse = chargeUse(hero);</span>
+
+<span class="nc" id="L147">			Char ch = Actor.findChar(target);</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">			if (ch != null){</span>
+<span class="nc bnc" id="L149" title="All 4 branches missed.">				if (ch.alignment != Char.Alignment.ALLY || ch == Dungeon.hero){</span>
+<span class="nc" id="L150">					GLog.w(Messages.get(this, &quot;only_allies&quot;));</span>
+<span class="nc" id="L151">					return;</span>
+				}
+			} else {
+
+<span class="nc bnc" id="L155" title="All 4 branches missed.">				if (!Dungeon.level.passable[target] || Dungeon.level.avoid[target]){</span>
+<span class="nc" id="L156">					GLog.w(Messages.get(ClericSpell.class, &quot;invalid_target&quot;));</span>
+<span class="nc" id="L157">					return;</span>
+				}
+
+<span class="nc" id="L160">				ch = new LightAlly(hero.lvl);</span>
+<span class="nc" id="L161">				ch.pos = target;</span>
+<span class="nc" id="L162">				GameScene.add((Mob) ch);</span>
+<span class="nc" id="L163">				ScrollOfTeleportation.appear(ch, ch.pos);</span>
+			}
+
+<span class="nc" id="L166">			Buff.affect(ch, PowerBuff.class, 100f);</span>
+<span class="nc" id="L167">			Buff.affect(ch, Barrier.class).setShield(25);</span>
+
+<span class="nc" id="L169">			armor.charge -= chargeUse;</span>
+<span class="nc" id="L170">			armor.updateQuickslot();</span>
+
+<span class="nc" id="L172">			hero.sprite.zap(target);</span>
+<span class="nc" id="L173">			Sample.INSTANCE.play(Assets.Sounds.CHARGEUP);</span>
+
+<span class="nc" id="L175">			Invisibility.dispel();</span>
+<span class="nc" id="L176">			hero.spendAndNext(Actor.TICK);</span>
+
+		}
+
+<span class="nc" id="L180">	}</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L184">		return HeroIcon.POWER_OF_MANY;</span>
+	}
+
+	@Override
+	public Talent[] talents() {
+<span class="nc" id="L189">		return new Talent[]{Talent.BEAMING_RAY, Talent.LIFE_LINK, Talent.STASIS, Talent.HEROIC_ENERGY};</span>
+	}
+
+	public static Char getPoweredAlly(){
+<span class="nc bnc" id="L193" title="All 2 branches missed.">		for (Char ch : Actor.chars()){</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">			if (ch.buff(PowerBuff.class) != null){</span>
+<span class="nc" id="L195">				return ch;</span>
+			}
+<span class="nc" id="L197">		}</span>
+<span class="nc" id="L198">		return null;</span>
+	}
+
+<span class="nc" id="L201">	public static class PowerBuff extends FlavourBuff {</span>
+
+<span class="nc" id="L203">		public static float DURATION = 100f;</span>
+
+		{
+<span class="nc" id="L206">			type = buffType.POSITIVE;</span>
+<span class="nc" id="L207">			announced = true;</span>
+<span class="nc" id="L208">		}</span>
+
+		@Override
+		public int icon() {
+<span class="nc" id="L212">			return BuffIndicator.MANY_POWER;</span>
+		}
+
+		@Override
+		public float iconFadePercent() {
+<span class="nc" id="L217">			return Math.max(0, (DURATION - visualcooldown()) / DURATION);</span>
+		}
+
+		@Override
+		public void fx(boolean on) {
+<span class="nc bnc" id="L222" title="All 2 branches missed.">			if (on) target.sprite.add(CharSprite.State.GLOWING);</span>
+<span class="nc" id="L223">			else    target.sprite.remove(CharSprite.State.GLOWING);</span>
+<span class="nc" id="L224">		}</span>
+
+		@Override
+		public boolean act() {
+<span class="nc bnc" id="L228" title="All 2 branches missed.">			if (target.buff(BeamingRay.BeamingRayBoost.class) != null</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">				|| target.buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null){</span>
+<span class="nc" id="L230">				spend(TICK);</span>
+<span class="nc" id="L231">				return true;</span>
+			}
+<span class="nc" id="L233">			return super.act();</span>
+		}
+
+		@Override
+		public void detach() {
+<span class="nc" id="L238">			super.detach();</span>
+<span class="nc" id="L239">			Dungeon.observe();</span>
+<span class="nc" id="L240">			GameScene.updateFog();</span>
+<span class="nc" id="L241">		}</span>
+	}
+
+	public static class LightAlly extends DirectableAlly {
+
+		{
+<span class="nc" id="L247">			spriteClass = LightAllySprite.class;</span>
+
+<span class="nc" id="L249">			HP = HT = 80;</span>
+
+<span class="nc" id="L251">			immunities.add(AllyBuff.class);</span>
+
+<span class="nc" id="L253">			properties.add(Property.INORGANIC);</span>
+		}
+
+		HeroClass cls;
+
+		public LightAlly(){
+<span class="nc" id="L259">			super();</span>
+<span class="nc" id="L260">			cls = HeroClass.values()[Random.Int(5)];</span>
+<span class="nc" id="L261">		}</span>
+
+		public LightAlly(int heroLevel ){
+<span class="nc" id="L264">			this();</span>
+<span class="nc" id="L265">			defenseSkill = heroLevel + 5; //equal to base hero defense skill</span>
+<span class="nc" id="L266">		}</span>
+
+		@Override
+		protected boolean act() {
+<span class="nc bnc" id="L270" title="All 2 branches missed.">			if (buff(PowerOfMany.PowerBuff.class) == null){</span>
+<span class="nc" id="L271">				die(null);</span>
+<span class="nc" id="L272">				return true;</span>
+			}
+<span class="nc" id="L274">			int oldPos = pos;</span>
+<span class="nc" id="L275">			boolean result = super.act();</span>
+			//partially simulates how the hero switches to idle animation
+<span class="nc bnc" id="L277" title="All 6 branches missed.">			if ((pos == target || oldPos == pos) &amp;&amp; sprite.looping()){</span>
+<span class="nc" id="L278">				sprite.idle();</span>
+			}
+<span class="nc" id="L280">			return result;</span>
+		}
+
+		@Override
+		public void defendPos(int cell) {
+<span class="nc" id="L285">			GLog.i(Messages.get(this, &quot;direct_defend&quot;));</span>
+<span class="nc" id="L286">			super.defendPos(cell);</span>
+<span class="nc" id="L287">		}</span>
+
+		@Override
+		public void followHero() {
+<span class="nc" id="L291">			GLog.i(Messages.get(this, &quot;direct_follow&quot;));</span>
+<span class="nc" id="L292">			super.followHero();</span>
+<span class="nc" id="L293">		}</span>
+
+		@Override
+		public void targetChar(Char ch) {
+<span class="nc" id="L297">			GLog.i(Messages.get(this, &quot;direct_attack&quot;));</span>
+<span class="nc" id="L298">			super.targetChar(ch);</span>
+<span class="nc" id="L299">		}</span>
+
+		@Override
+		public int attackSkill(Char target) {
+<span class="nc" id="L303">			return defenseSkill+5; //equal to base hero attack skill</span>
+		}
+
+		@Override
+		public int damageRoll() {
+<span class="nc" id="L308">			return Random.NormalIntRange(5, 30); //+0 greatsword</span>
+		}
+
+		@Override
+		public int drRoll() {
+<span class="nc" id="L313">			return super.drRoll() + Random.NormalIntRange(1, 5); //+0 plate</span>
+		}
+
+		@Override
+		public float speed() {
+<span class="nc" id="L318">			float speed = super.speed();</span>
+
+			//moves 2 tiles at a time when returning to the hero
+<span class="nc bnc" id="L321" title="All 4 branches missed.">			if (state == WANDERING</span>
+					&amp;&amp; defendingPos == -1
+<span class="nc bnc" id="L323" title="All 2 branches missed.">					&amp;&amp; Dungeon.level.distance(pos, Dungeon.hero.pos) &gt; 1){</span>
+<span class="nc" id="L324">				speed *= 2;</span>
+			}
+
+<span class="nc" id="L327">			return speed;</span>
+		}
+
+		@Override
+		public CharSprite sprite() {
+<span class="nc" id="L332">			CharSprite sprite = super.sprite();</span>
+<span class="nc" id="L333">			((LightAllySprite)sprite).setup(cls);</span>
+<span class="nc" id="L334">			return sprite;</span>
+		}
+
+		private static final String HERO_CLS = &quot;hero_cls&quot;;
+		private static final String DEF_SKILL = &quot;def_skill&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L342">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L343">			bundle.put(HERO_CLS, cls);</span>
+<span class="nc" id="L344">			bundle.put(DEF_SKILL, defenseSkill);</span>
+<span class="nc" id="L345">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L349">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L350">			cls = bundle.getEnum(HERO_CLS, HeroClass.class);</span>
+<span class="nc" id="L351">			defenseSkill = bundle.getInt(DEF_SKILL);</span>
+<span class="nc" id="L352">		}</span>
+	}
+
+	public static class LightAllySprite extends MobSprite {
+
+		public LightAllySprite() {
+<span class="nc" id="L358">			super();</span>
+
+<span class="nc" id="L360">			setup(HeroClass.values()[Random.Int(5)]);</span>
+<span class="nc" id="L361">		}</span>
+
+		public void setup(HeroClass cls){
+<span class="nc" id="L364">			texture(cls.spritesheet());</span>
+
+<span class="nc" id="L366">			TextureFilm film = new TextureFilm( HeroSprite.tiers(), 6, 12, 15 );</span>
+
+<span class="nc" id="L368">			idle = new Animation( 1, true );</span>
+<span class="nc" id="L369">			idle.frames( film, 0, 0, 0, 1, 0, 0, 1, 1 );</span>
+
+<span class="nc" id="L371">			run = new Animation( 20, true );</span>
+<span class="nc" id="L372">			run.frames( film, 2, 3, 4, 5, 6, 7 );</span>
+
+<span class="nc" id="L374">			die = new Animation( 20, false );</span>
+<span class="nc" id="L375">			die.frames( film, 0 );</span>
+
+<span class="nc" id="L377">			attack = new Animation( 15, false );</span>
+<span class="nc" id="L378">			attack.frames( film, 13, 14, 15, 0 );</span>
+
+<span class="nc" id="L380">			play(idle, true);</span>
+<span class="nc" id="L381">			resetColor();</span>
+<span class="nc" id="L382">		}</span>
+
+		@Override
+		public void link(Char ch) {
+<span class="nc" id="L386">			super.link(ch);</span>
+<span class="nc bnc" id="L387" title="All 2 branches missed.">			if (ch instanceof LightAlly){</span>
+<span class="nc" id="L388">				setup(((LightAlly) ch).cls);</span>
+			}
+<span class="nc" id="L390">		}</span>
+
+		@Override
+		public void resetColor() {
+<span class="nc" id="L394">			super.resetColor();</span>
+<span class="nc" id="L395">			alpha(0.8f);</span>
+<span class="nc" id="L396">			tint(1.33f, 1.33f, 0.8f, 0.6f);</span>
+<span class="nc" id="L397">			rm = gm = bm = 0;</span>
+<span class="nc" id="L398">		}</span>
+
+		@Override
+		public void die() {
+<span class="nc" id="L402">			super.die();</span>
+<span class="nc" id="L403">			emitter().start( ShaftParticle.FACTORY, 0.3f, 4 );</span>
+<span class="nc" id="L404">			emitter().start( Speck.factory( Speck.LIGHT ), 0.2f, 3 );</span>
+<span class="nc" id="L405">		}</span>
+
+		@Override
+		public void draw() {
+<span class="nc bnc" id="L409" title="All 2 branches missed.">			if (alpha() &gt;= 0.8f) alpha(0.8f);</span>
+<span class="nc" id="L410">			rm = gm = bm = 0; //always flat and transparent</span>
+<span class="nc" id="L411">			super.draw();</span>
+<span class="nc" id="L412">		}</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

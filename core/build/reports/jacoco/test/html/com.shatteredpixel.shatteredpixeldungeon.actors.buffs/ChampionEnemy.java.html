@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChampionEnemy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.buffs</a> &gt; <span class="el_source">ChampionEnemy.java</span></div><h1>ChampionEnemy.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.buffs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Fire;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.watabou.utils.BArray;
+import com.watabou.noosa.Image;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L40">public abstract class ChampionEnemy extends Buff {</span>
+
+	{
+<span class="nc" id="L43">		type = buffType.POSITIVE;</span>
+<span class="nc" id="L44">		revivePersists = true;</span>
+	}
+
+	protected int color;
+
+	@Override
+	public int icon() {
+<span class="nc" id="L51">		return BuffIndicator.CORRUPT;</span>
+	}
+
+	@Override
+	public void tintIcon(Image icon) {
+<span class="nc" id="L56">		icon.hardlight(color);</span>
+<span class="nc" id="L57">	}</span>
+
+	@Override
+	public void fx(boolean on) {
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if (on) target.sprite.aura( color );</span>
+<span class="nc" id="L62">		else target.sprite.clearAura();</span>
+<span class="nc" id="L63">	}</span>
+
+	public void onAttackProc(Char enemy ){
+
+<span class="nc" id="L67">	}</span>
+
+	public boolean canAttackWithExtraReach( Char enemy ){
+<span class="nc" id="L70">		return false;</span>
+	}
+
+	public float meleeDamageFactor(){
+<span class="nc" id="L74">		return 1f;</span>
+	}
+
+	public float damageTakenFactor(){
+<span class="nc" id="L78">		return 1f;</span>
+	}
+
+	public float evasionAndAccuracyFactor(){
+<span class="nc" id="L82">		return 1f;</span>
+	}
+
+	{
+<span class="nc" id="L86">		immunities.add(AllyBuff.class);</span>
+<span class="nc" id="L87">	}</span>
+
+	public static void rollForChampion(Mob m){
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		if (Dungeon.mobsToChampion &lt;= 0) Dungeon.mobsToChampion = 8;</span>
+
+<span class="nc" id="L92">		Dungeon.mobsToChampion--;</span>
+
+		//we roll for a champion enemy even if we aren't spawning one to ensure that
+		//mobsToChampion does not affect levelgen RNG (number of calls to Random.Int() is constant)
+		Class&lt;?extends ChampionEnemy&gt; buffCls;
+<span class="nc bnc" id="L97" title="All 6 branches missed.">		switch (Random.Int(6)){</span>
+<span class="nc" id="L98">			case 0: default:    buffCls = Blazing.class;      break;</span>
+<span class="nc" id="L99">			case 1:             buffCls = Projecting.class;   break;</span>
+<span class="nc" id="L100">			case 2:             buffCls = AntiMagic.class;    break;</span>
+<span class="nc" id="L101">			case 3:             buffCls = Giant.class;        break;</span>
+<span class="nc" id="L102">			case 4:             buffCls = Blessed.class;      break;</span>
+<span class="nc" id="L103">			case 5:             buffCls = Growing.class;      break;</span>
+		}
+
+<span class="nc bnc" id="L106" title="All 4 branches missed.">		if (Dungeon.mobsToChampion &lt;= 0 &amp;&amp; Dungeon.isChallenged(Challenges.CHAMPION_ENEMIES)) {</span>
+<span class="nc" id="L107">			Buff.affect(m, buffCls);</span>
+<span class="nc" id="L108">			m.state = m.WANDERING;</span>
+		}
+<span class="nc" id="L110">	}</span>
+
+<span class="nc" id="L112">	public static class Blazing extends ChampionEnemy {</span>
+
+		{
+<span class="nc" id="L115">			color = 0xFF8800;</span>
+		}
+
+		@Override
+		public void onAttackProc(Char enemy) {
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			if (!Dungeon.level.water[enemy.pos]) {</span>
+<span class="nc" id="L121">				Buff.affect(enemy, Burning.class).reignite(enemy);</span>
+			}
+<span class="nc" id="L123">		}</span>
+
+		@Override
+		public void detach() {
+			//don't trigger when killed by being knocked into a pit
+<span class="nc bnc" id="L128" title="All 4 branches missed.">			if (target.flying || !Dungeon.level.pit[target.pos]) {</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">				for (int i : PathFinder.NEIGHBOURS9) {</span>
+<span class="nc bnc" id="L130" title="All 4 branches missed.">					if (!Dungeon.level.solid[target.pos + i] &amp;&amp; !Dungeon.level.water[target.pos + i]) {</span>
+<span class="nc" id="L131">						GameScene.add(Blob.seed(target.pos + i, 2, Fire.class));</span>
+					}
+				}
+			}
+<span class="nc" id="L135">			super.detach();</span>
+<span class="nc" id="L136">		}</span>
+
+		@Override
+		public float meleeDamageFactor() {
+<span class="nc" id="L140">			return 1.25f;</span>
+		}
+
+		{
+<span class="nc" id="L144">			immunities.add(Burning.class);</span>
+<span class="nc" id="L145">		}</span>
+	}
+
+<span class="nc" id="L148">	public static class Projecting extends ChampionEnemy {</span>
+
+		{
+<span class="nc" id="L151">			color = 0x8800FF;</span>
+<span class="nc" id="L152">		}</span>
+
+		@Override
+		public float meleeDamageFactor() {
+<span class="nc" id="L156">			return 1.25f;</span>
+		}
+
+		@Override
+		public boolean canAttackWithExtraReach(Char enemy) {
+<span class="nc bnc" id="L161" title="All 2 branches missed.">			if (Dungeon.level.distance( target.pos, enemy.pos ) &gt; 4){</span>
+<span class="nc" id="L162">				return false;</span>
+			} else {
+<span class="nc" id="L164">				boolean[] passable = BArray.not(Dungeon.level.solid, null);</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">				for (Char ch : Actor.chars()) {</span>
+					//our own tile is always passable
+<span class="nc bnc" id="L167" title="All 2 branches missed.">					passable[ch.pos] = ch == target;</span>
+<span class="nc" id="L168">				}</span>
+
+<span class="nc" id="L170">				PathFinder.buildDistanceMap(enemy.pos, passable, 4);</span>
+
+<span class="nc bnc" id="L172" title="All 2 branches missed.">				return PathFinder.distance[target.pos] &lt;= 4;</span>
+			}
+		}
+	}
+
+<span class="nc" id="L177">	public static class AntiMagic extends ChampionEnemy {</span>
+
+		{
+<span class="nc" id="L180">			color = 0x00FF00;</span>
+		}
+
+		@Override
+		public float damageTakenFactor() {
+<span class="nc" id="L185">			return 0.5f;</span>
+		}
+
+		{
+<span class="nc" id="L189">			immunities.addAll(com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.AntiMagic.RESISTS);</span>
+<span class="nc" id="L190">		}</span>
+
+	}
+
+	//Also makes target large, see Char.properties()
+<span class="nc" id="L195">	public static class Giant extends ChampionEnemy {</span>
+
+		{
+<span class="nc" id="L198">			color = 0x0088FF;</span>
+<span class="nc" id="L199">		}</span>
+
+		@Override
+		public float damageTakenFactor() {
+<span class="nc" id="L203">			return 0.2f;</span>
+		}
+
+		@Override
+		public boolean canAttackWithExtraReach(Char enemy) {
+<span class="nc bnc" id="L208" title="All 2 branches missed.">			if (Dungeon.level.distance( target.pos, enemy.pos ) &gt; 2){</span>
+<span class="nc" id="L209">				return false;</span>
+			} else {
+<span class="nc" id="L211">				boolean[] passable = BArray.not(Dungeon.level.solid, null);</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">				for (Char ch : Actor.chars()) {</span>
+					//our own tile is always passable
+<span class="nc bnc" id="L214" title="All 2 branches missed.">					passable[ch.pos] = ch == target;</span>
+<span class="nc" id="L215">				}</span>
+
+<span class="nc" id="L217">				PathFinder.buildDistanceMap(enemy.pos, passable, 2);</span>
+
+<span class="nc bnc" id="L219" title="All 2 branches missed.">				return PathFinder.distance[target.pos] &lt;= 2;</span>
+			}
+		}
+	}
+
+<span class="nc" id="L224">	public static class Blessed extends ChampionEnemy {</span>
+
+		{
+<span class="nc" id="L227">			color = 0xFFFF00;</span>
+<span class="nc" id="L228">		}</span>
+
+		@Override
+		public float evasionAndAccuracyFactor() {
+<span class="nc" id="L232">			return 4f;</span>
+		}
+	}
+
+<span class="nc" id="L236">	public static class Growing extends ChampionEnemy {</span>
+
+		{
+<span class="nc" id="L239">			color = 0xFF0000;</span>
+		}
+
+<span class="nc" id="L242">		private float multiplier = 1.19f;</span>
+
+		@Override
+		public boolean act() {
+<span class="nc" id="L246">			multiplier += 0.01f;</span>
+<span class="nc" id="L247">			spend(4*TICK);</span>
+<span class="nc" id="L248">			return true;</span>
+		}
+
+		@Override
+		public float meleeDamageFactor() {
+<span class="nc" id="L253">			return multiplier;</span>
+		}
+
+		@Override
+		public float damageTakenFactor() {
+<span class="nc" id="L258">			return 1f/multiplier;</span>
+		}
+
+		@Override
+		public float evasionAndAccuracyFactor() {
+<span class="nc" id="L263">			return multiplier;</span>
+		}
+
+		@Override
+		public String desc() {
+<span class="nc" id="L268">			return Messages.get(this, &quot;desc&quot;, (int)(100*(multiplier-1)), (int)(100*(1 - 1f/multiplier)));</span>
+		}
+
+		private static final String MULTIPLIER = &quot;multiplier&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L275">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L276">			bundle.put(MULTIPLIER, multiplier);</span>
+<span class="nc" id="L277">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L281">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L282">			multiplier = bundle.getFloat(MULTIPLIER);</span>
+<span class="nc" id="L283">		}</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,539 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Speck.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.effects</a> &gt; <span class="el_source">Speck.java</span></div><h1>Speck.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.effects;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.TextureFilm;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.utils.ColorMath;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+import com.watabou.utils.SparseArray;
+
+public class Speck extends Image {
+
+	public static final int HEALING     = 0;
+	public static final int STAR        = 1;
+	public static final int LIGHT       = 2;
+	public static final int QUESTION    = 3;
+	public static final int UP          = 4;
+	public static final int SCREAM      = 5;
+	public static final int BONE        = 6;
+	public static final int WOOL        = 7;
+	public static final int ROCK        = 8;
+	public static final int NOTE        = 9;
+	public static final int CHANGE      = 10;
+	public static final int HEART       = 11;
+	public static final int BUBBLE      = 12;
+	public static final int STEAM       = 13;
+	public static final int COIN        = 14;
+	public static final int DOWN        = 15;
+	
+	public static final int DISCOVER    = 101;
+	public static final int EVOKE       = 102;
+	public static final int MASK        = 103;
+	public static final int CROWN       = 104;
+	public static final int RATTLE      = 105;
+	public static final int JET         = 106;
+	public static final int TOXIC       = 107;
+	public static final int CORROSION   = 108;
+	public static final int PARALYSIS   = 109;
+	public static final int DUST        = 110;
+	public static final int STENCH      = 111;
+	public static final int FORGE       = 112;
+	public static final int CONFUSION   = 113;
+	public static final int RED_LIGHT   = 114;
+	public static final int CALM        = 115;
+	public static final int SMOKE       = 116;
+	public static final int STORM       = 117;
+	public static final int INFERNO     = 118;
+	public static final int BLIZZARD    = 119;
+	
+	private static final int SIZE = 7;
+	
+	private int type;
+	private float lifespan;
+	private float left;
+	
+	private static TextureFilm film;
+	
+<span class="nc" id="L82">	private static SparseArray&lt;Emitter.Factory&gt; factories = new SparseArray&lt;&gt;();</span>
+	
+	public Speck() {
+<span class="nc" id="L85">		super();</span>
+		
+<span class="nc" id="L87">		texture( Assets.Effects.SPECKS );</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		if (film == null) {</span>
+<span class="nc" id="L89">			film = new TextureFilm( texture, SIZE, SIZE );</span>
+		}
+		
+<span class="nc" id="L92">		origin.set( SIZE / 2f );</span>
+<span class="nc" id="L93">	}</span>
+
+	public Speck image( int type ){
+<span class="nc" id="L96">		reset(0, 0, 0, type);</span>
+
+<span class="nc" id="L98">		left = lifespan = Float.POSITIVE_INFINITY;</span>
+<span class="nc" id="L99">		this.type = -1;</span>
+
+<span class="nc" id="L101">		resetColor();</span>
+<span class="nc" id="L102">		scale.set( 1 );</span>
+<span class="nc" id="L103">		speed.set( 0 );</span>
+<span class="nc" id="L104">		acc.set( 0 );</span>
+<span class="nc" id="L105">		angle = 0;</span>
+<span class="nc" id="L106">		angularSpeed = 0;</span>
+
+<span class="nc" id="L108">		return this;</span>
+	}
+	
+	public void reset( int index, float x, float y, int type ) {
+<span class="nc" id="L112">		revive();</span>
+		
+<span class="nc" id="L114">		this.type = type;</span>
+<span class="nc bnc" id="L115" title="All 6 branches missed.">		switch (type) {</span>
+		case DISCOVER:
+		case RED_LIGHT:
+<span class="nc" id="L118">			frame( film.get( LIGHT ) );</span>
+<span class="nc" id="L119">			break;</span>
+		case EVOKE:
+		case MASK:
+		case CROWN:
+		case FORGE:
+<span class="nc" id="L124">			frame( film.get( STAR ) );</span>
+<span class="nc" id="L125">			break;</span>
+		case RATTLE:
+<span class="nc" id="L127">			frame( film.get( BONE ) );</span>
+<span class="nc" id="L128">			break;</span>
+		case JET:
+		case TOXIC:
+		case CORROSION:
+		case PARALYSIS:
+		case STENCH:
+		case CONFUSION:
+		case STORM:
+		case DUST:
+		case SMOKE:
+		case BLIZZARD:
+		case INFERNO:
+<span class="nc" id="L140">			frame( film.get( STEAM ) );</span>
+<span class="nc" id="L141">			break;</span>
+		case CALM:
+<span class="nc" id="L143">			frame( film.get( SCREAM ) );</span>
+<span class="nc" id="L144">			break;</span>
+		default:
+<span class="nc" id="L146">			frame( film.get( type ) );</span>
+		}
+		
+<span class="nc" id="L149">		this.x = x - origin.x;</span>
+<span class="nc" id="L150">		this.y = y - origin.y;</span>
+		
+<span class="nc" id="L152">		resetColor();</span>
+<span class="nc" id="L153">		scale.set( 1 );</span>
+<span class="nc" id="L154">		speed.set( 0 );</span>
+<span class="nc" id="L155">		acc.set( 0 );</span>
+<span class="nc" id="L156">		angle = 0;</span>
+<span class="nc" id="L157">		angularSpeed = 0;</span>
+		
+<span class="nc bnc" id="L159" title="All 36 branches missed.">		switch (type) {</span>
+			
+		case HEALING:
+<span class="nc" id="L162">			speed.set( 0, -20 );</span>
+<span class="nc" id="L163">			lifespan = 1f;</span>
+<span class="nc" id="L164">			break;</span>
+			
+		case STAR:
+<span class="nc" id="L167">			speed.polar( Random.Float( 2 * 3.1415926f ), Random.Float( 128 ) );</span>
+<span class="nc" id="L168">			acc.set( 0, 128 );</span>
+<span class="nc" id="L169">			angle = Random.Float( 360 );</span>
+<span class="nc" id="L170">			angularSpeed = Random.Float( -360, +360 );</span>
+<span class="nc" id="L171">			lifespan = 1f;</span>
+<span class="nc" id="L172">			break;</span>
+		
+		case FORGE:
+<span class="nc" id="L175">			speed.polar( Random.Float( -3.1415926f ), Random.Float( 64 ) );</span>
+<span class="nc" id="L176">			acc.set( 0, 128 );</span>
+<span class="nc" id="L177">			angle = Random.Float( 360 );</span>
+<span class="nc" id="L178">			angularSpeed = Random.Float( -360, +360 );</span>
+<span class="nc" id="L179">			lifespan = 0.51f;</span>
+<span class="nc" id="L180">			break;</span>
+			
+		case EVOKE:
+<span class="nc" id="L183">			speed.polar( Random.Float( -3.1415926f ), 50 );</span>
+<span class="nc" id="L184">			acc.set( 0, 50 );</span>
+<span class="nc" id="L185">			angle = Random.Float( 360 );</span>
+<span class="nc" id="L186">			angularSpeed = Random.Float( -180, +180 );</span>
+<span class="nc" id="L187">			lifespan = 1f;</span>
+<span class="nc" id="L188">			break;</span>
+
+		case MASK:
+<span class="nc" id="L191">			speed.polar( index * 3.1415926f / 5, 50 );</span>
+<span class="nc" id="L192">			acc.set( -speed.x, -speed.y );</span>
+<span class="nc" id="L193">			angle = index * 36;</span>
+<span class="nc" id="L194">			angularSpeed = 360;</span>
+<span class="nc" id="L195">			lifespan = 1f;</span>
+<span class="nc" id="L196">			break;</span>
+
+		case CROWN:
+<span class="nc bnc" id="L199" title="All 2 branches missed.">			acc.set( index % 2 == 0 ? Random.Float( -512, -256 ) : Random.Float( +256, +512 ), 0 );</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">			angularSpeed = acc.x &lt; 0 ? -180 : +180;</span>
+			//acc.set( -speed.x, 0 );
+<span class="nc" id="L202">			lifespan = 0.5f;</span>
+<span class="nc" id="L203">			break;</span>
+
+		case RED_LIGHT:
+<span class="nc" id="L206">			tint(0xFFCC0000);</span>
+		case LIGHT:
+<span class="nc" id="L208">			angle = Random.Float( 360 );</span>
+<span class="nc" id="L209">			angularSpeed = 90;</span>
+<span class="nc" id="L210">			lifespan = 1f;</span>
+<span class="nc" id="L211">			break;</span>
+			
+		case DISCOVER:
+<span class="nc" id="L214">			angle = Random.Float( 360 );</span>
+<span class="nc" id="L215">			angularSpeed = 90;</span>
+<span class="nc" id="L216">			lifespan = 0.5f;</span>
+<span class="nc" id="L217">			am = 0;</span>
+<span class="nc" id="L218">			break;</span>
+			
+		case QUESTION:
+<span class="nc" id="L221">			lifespan = 0.8f;</span>
+<span class="nc" id="L222">			break;</span>
+			
+		case UP:
+<span class="nc" id="L225">			speed.set( 0, -20 );</span>
+<span class="nc" id="L226">			lifespan = 1f;</span>
+<span class="nc" id="L227">			break;</span>
+		case DOWN:
+<span class="nc" id="L229">			speed.set( 0, 20 );</span>
+<span class="nc" id="L230">			lifespan = 1f;</span>
+<span class="nc" id="L231">			break;</span>
+			
+		case CALM:
+<span class="nc" id="L234">			color(0, 1, 1);</span>
+		case SCREAM:
+<span class="nc" id="L236">			lifespan = 0.9f;</span>
+<span class="nc" id="L237">			break;</span>
+			
+		case BONE:
+<span class="nc" id="L240">			lifespan = 0.2f;</span>
+<span class="nc" id="L241">			speed.polar( Random.Float( 2 * 3.1415926f ), 24 / lifespan );</span>
+<span class="nc" id="L242">			acc.set( 0, 128 );</span>
+<span class="nc" id="L243">			angle = Random.Float( 360 );</span>
+<span class="nc" id="L244">			angularSpeed = 360;</span>
+<span class="nc" id="L245">			break;</span>
+			
+		case RATTLE:
+<span class="nc" id="L248">			lifespan = 0.5f;</span>
+<span class="nc" id="L249">			speed.set( 0, -100 );</span>
+<span class="nc" id="L250">			acc.set( 0, -2 * speed.y / lifespan );</span>
+<span class="nc" id="L251">			angle = Random.Float( 360 );</span>
+<span class="nc" id="L252">			angularSpeed = 360;</span>
+<span class="nc" id="L253">			break;</span>
+			
+		case WOOL:
+<span class="nc" id="L256">			lifespan = 0.5f;</span>
+<span class="nc" id="L257">			speed.set( 0, -50 );</span>
+<span class="nc" id="L258">			angle = Random.Float( 360 );</span>
+<span class="nc" id="L259">			angularSpeed = Random.Float( -360, +360 );</span>
+<span class="nc" id="L260">			break;</span>
+			
+		case ROCK:
+<span class="nc" id="L263">			angle = Random.Float( 360 );</span>
+<span class="nc" id="L264">			angularSpeed = Random.Float( -360, +360 );</span>
+<span class="nc" id="L265">			scale.set( Random.Float( 1, 2 ) );</span>
+<span class="nc" id="L266">			speed.set( 0, 64 );</span>
+<span class="nc" id="L267">			lifespan = 0.2f;</span>
+<span class="nc" id="L268">			this.y -= speed.y * lifespan;</span>
+<span class="nc" id="L269">			break;</span>
+			
+		case NOTE:
+<span class="nc" id="L272">			angularSpeed = Random.Float( -30, +30 );</span>
+<span class="nc" id="L273">			speed.polar( (angularSpeed - 90) * PointF.G2R, 30 );</span>
+<span class="nc" id="L274">			lifespan = 1f;</span>
+<span class="nc" id="L275">			break;</span>
+			
+		case CHANGE:
+<span class="nc" id="L278">			angle = Random.Float( 360 );</span>
+<span class="nc" id="L279">			speed.polar( (angle - 90) * PointF.G2R, Random.Float( 4, 12 ) );</span>
+<span class="nc" id="L280">			lifespan = 1.5f;</span>
+<span class="nc" id="L281">			break;</span>
+			
+		case HEART:
+<span class="nc" id="L284">			speed.set( Random.IntRange( -10, +10 ), -40 );</span>
+<span class="nc" id="L285">			angularSpeed = Random.Float( -45, +45 );</span>
+<span class="nc" id="L286">			lifespan = 1f;</span>
+<span class="nc" id="L287">			break;</span>
+			
+		case BUBBLE:
+<span class="nc" id="L290">			speed.set( 0, -15 );</span>
+<span class="nc" id="L291">			scale.set( PixelScene.align(Random.Float( 0.8f, 1 )) );</span>
+<span class="nc" id="L292">			lifespan = Random.Float( 0.8f, 1.5f );</span>
+<span class="nc" id="L293">			break;</span>
+			
+		case STEAM:
+<span class="nc" id="L296">			speed.y = -Random.Float( 10, 15 );</span>
+<span class="nc" id="L297">			angularSpeed = Random.Float( +180 );</span>
+<span class="nc" id="L298">			angle = Random.Float( 360 );</span>
+<span class="nc" id="L299">			lifespan = 1f;</span>
+<span class="nc" id="L300">			break;</span>
+			
+		case JET:
+<span class="nc" id="L303">			speed.y = +32;</span>
+<span class="nc" id="L304">			acc.y = -64;</span>
+<span class="nc" id="L305">			angularSpeed = Random.Float( 180, 360 );</span>
+<span class="nc" id="L306">			angle = Random.Float( 360 );</span>
+<span class="nc" id="L307">			lifespan = 0.5f;</span>
+<span class="nc" id="L308">			break;</span>
+			
+		case TOXIC:
+<span class="nc" id="L311">			hardlight( 0x50FF60 );</span>
+<span class="nc" id="L312">			angularSpeed = 30;</span>
+<span class="nc" id="L313">			angle = Random.Float( 360 );</span>
+<span class="nc" id="L314">			lifespan = Random.Float( 1f, 3f );</span>
+<span class="nc" id="L315">			break;</span>
+
+		case CORROSION:
+<span class="nc" id="L318">			hardlight( 0xAAAAAA );</span>
+<span class="nc" id="L319">			angularSpeed = 30;</span>
+<span class="nc" id="L320">			angle = Random.Float( 360 );</span>
+<span class="nc" id="L321">			lifespan = Random.Float( 1f, 3f );</span>
+<span class="nc" id="L322">			break;</span>
+			
+		case PARALYSIS:
+<span class="nc" id="L325">			hardlight( 0xFFFF66 );</span>
+<span class="nc" id="L326">			angularSpeed = -30;</span>
+<span class="nc" id="L327">			angle = Random.Float( 360 );</span>
+<span class="nc" id="L328">			lifespan = Random.Float( 1f, 3f );</span>
+<span class="nc" id="L329">			break;</span>
+
+		case STENCH:
+<span class="nc" id="L332">			hardlight( 0x003300 );</span>
+<span class="nc" id="L333">			angularSpeed = -30;</span>
+<span class="nc" id="L334">			angle = Random.Float( 360 );</span>
+<span class="nc" id="L335">			lifespan = Random.Float( 1f, 3f );</span>
+<span class="nc" id="L336">			break;</span>
+
+		case CONFUSION:
+<span class="nc" id="L339">			hardlight( Random.Int( 0x1000000 ) | 0x000080 );</span>
+<span class="nc" id="L340">			angularSpeed = Random.Float( -20, +20 );</span>
+<span class="nc" id="L341">			angle = Random.Float( 360 );</span>
+<span class="nc" id="L342">			lifespan = Random.Float( 1f, 3f );</span>
+<span class="nc" id="L343">			break;</span>
+			
+		case STORM:
+<span class="nc" id="L346">			hardlight( 0x8AD8D8 );</span>
+<span class="nc" id="L347">			angularSpeed = Random.Float( -20, +20 );</span>
+<span class="nc" id="L348">			angle = Random.Float( 360 );</span>
+<span class="nc" id="L349">			lifespan = Random.Float( 1f, 3f );</span>
+<span class="nc" id="L350">			break;</span>
+			
+		case INFERNO:
+<span class="nc" id="L353">			hardlight( 0xEE7722 );</span>
+<span class="nc bnc" id="L354" title="All 2 branches missed.">			angularSpeed = Random.Float( 200, 300 ) * (Random.Int(2) == 0 ? -1 : 1);</span>
+<span class="nc" id="L355">			angle = Random.Float( 360 );</span>
+<span class="nc" id="L356">			lifespan = Random.Float( 1f, 3f );</span>
+<span class="nc" id="L357">			break;</span>
+			
+		case BLIZZARD:
+<span class="nc" id="L360">			hardlight( 0xFFFFFF );</span>
+<span class="nc bnc" id="L361" title="All 2 branches missed.">			angularSpeed = Random.Float( 200, 300 ) * (Random.Int(2) == 0 ? -1 : 1);</span>
+<span class="nc" id="L362">			angle = Random.Float( 360 );</span>
+<span class="nc" id="L363">			lifespan = Random.Float( 1f, 3f );</span>
+<span class="nc" id="L364">			break;</span>
+			
+		case SMOKE:
+<span class="nc" id="L367">			hardlight( 0x000000 );</span>
+<span class="nc" id="L368">			angularSpeed = 30;</span>
+<span class="nc" id="L369">			angle = Random.Float( 360 );</span>
+<span class="nc" id="L370">			lifespan = Random.Float( 1f, 1.5f );</span>
+<span class="nc" id="L371">			break;</span>
+
+		case DUST:
+<span class="nc" id="L374">			hardlight( 0xFFFF66 );</span>
+<span class="nc" id="L375">			angle = Random.Float( 360 );</span>
+<span class="nc" id="L376">			speed.polar( Random.Float( 2 * 3.1415926f ), Random.Float( 16, 48 ) );</span>
+<span class="nc" id="L377">			lifespan = 0.5f;</span>
+<span class="nc" id="L378">			break;</span>
+
+		case COIN:
+<span class="nc" id="L381">			speed.polar( -PointF.PI * Random.Float( 0.3f, 0.7f ), Random.Float( 48, 96 ) );</span>
+<span class="nc" id="L382">			acc.y = 256;</span>
+<span class="nc" id="L383">			lifespan = -speed.y / acc.y * 2;</span>
+			break;
+		}
+		
+<span class="nc" id="L387">		left = lifespan;</span>
+<span class="nc" id="L388">	}</span>
+	
+	@Override
+	public void update() {
+<span class="nc" id="L392">		super.update();</span>
+		
+<span class="nc" id="L394">		left -= Game.elapsed;</span>
+<span class="nc bnc" id="L395" title="All 2 branches missed.">		if (left &lt;= 0) {</span>
+			
+<span class="nc" id="L397">			kill();</span>
+			
+		} else {
+			
+<span class="nc" id="L401">			float p = 1 - left / lifespan;	// 0 -&gt; 1</span>
+			
+<span class="nc bnc" id="L403" title="All 21 branches missed.">			switch (type) {</span>
+				
+			case STAR:
+			case FORGE:
+<span class="nc" id="L407">				scale.set( 1 - p );</span>
+<span class="nc bnc" id="L408" title="All 2 branches missed.">				am = p &lt; 0.2f ? p * 5f : (1 - p) * 1.25f;</span>
+<span class="nc" id="L409">				break;</span>
+				
+			case MASK:
+			case CROWN:
+<span class="nc" id="L413">				am = 1 - p * p;</span>
+<span class="nc" id="L414">				break;</span>
+				
+			case EVOKE:
+				
+			case HEALING:
+<span class="nc bnc" id="L419" title="All 2 branches missed.">				am = p &lt; 0.5f ? 1 : 2 - p * 2;</span>
+<span class="nc" id="L420">				break;</span>
+
+			case RED_LIGHT:
+			case LIGHT:
+<span class="nc bnc" id="L424" title="All 2 branches missed.">				am = scale.set( p &lt; 0.2f ? p * 5f : (1 - p) * 1.25f ).x;</span>
+<span class="nc" id="L425">				break;</span>
+				
+			case DISCOVER:
+<span class="nc" id="L428">				am = 1 - p;</span>
+<span class="nc bnc" id="L429" title="All 2 branches missed.">				scale.set( (p &lt; 0.5f ? p : 1 - p) * 2 );</span>
+<span class="nc" id="L430">				break;</span>
+				
+			case QUESTION:
+<span class="nc bnc" id="L433" title="All 2 branches missed.">				scale.set( (float)(Math.sqrt( p &lt; 0.5f ? p : 1 - p ) * 3) );</span>
+<span class="nc" id="L434">				break;</span>
+				
+			case UP:
+			case DOWN:
+<span class="nc bnc" id="L438" title="All 2 branches missed.">				scale.set( (float)(Math.sqrt( p &lt; 0.5f ? p : 1 - p ) * 2) );</span>
+<span class="nc" id="L439">				break;</span>
+				
+			case CALM:
+			case SCREAM:
+<span class="nc bnc" id="L443" title="All 2 branches missed.">				am = (float)Math.sqrt( (p &lt; 0.5f ? p : 1 - p) * 2f );</span>
+<span class="nc" id="L444">				scale.set( p * 7 );</span>
+<span class="nc" id="L445">				break;</span>
+				
+			case BONE:
+			case RATTLE:
+<span class="nc bnc" id="L449" title="All 2 branches missed.">				am = p &lt; 0.9f ? 1 : (1 - p) * 10;</span>
+<span class="nc" id="L450">				break;</span>
+				
+			case ROCK:
+<span class="nc bnc" id="L453" title="All 2 branches missed.">				am = p &lt; 0.2f ? p * 5 : 1 ;</span>
+<span class="nc" id="L454">				break;</span>
+				
+			case NOTE:
+<span class="nc" id="L457">				am = 1 - p * p;</span>
+<span class="nc" id="L458">				break;</span>
+				
+			case WOOL:
+<span class="nc" id="L461">				scale.set( 1 - p );</span>
+<span class="nc" id="L462">				break;</span>
+				
+			case CHANGE:
+<span class="nc bnc" id="L465" title="All 2 branches missed.">				am = (float)Math.sqrt( (p &lt; 0.5f ? p : 1 - p) * 2);</span>
+<span class="nc" id="L466">				scale.y = (1 + p) * 0.5f;</span>
+<span class="nc" id="L467">				scale.x = scale.y * (float)Math.cos( left * 15 );</span>
+<span class="nc" id="L468">				break;</span>
+				
+			case HEART:
+<span class="nc" id="L471">				scale.set( 1 - p );</span>
+<span class="nc" id="L472">				am = 1 - p * p;</span>
+<span class="nc" id="L473">				break;</span>
+				
+			case BUBBLE:
+<span class="nc bnc" id="L476" title="All 2 branches missed.">				am = p &lt; 0.2f ? p * 5 : 1;</span>
+<span class="nc" id="L477">				break;</span>
+				
+			case STEAM:
+			case TOXIC:
+			case PARALYSIS:
+			case CONFUSION:
+			case STORM:
+			case BLIZZARD:
+			case INFERNO:
+			case DUST:
+<span class="nc bnc" id="L487" title="All 2 branches missed.">				am = (float)Math.sqrt( (p &lt; 0.5f ? p : 1 - p) * 0.5f );</span>
+<span class="nc" id="L488">				scale.set( 1 + p );</span>
+<span class="nc" id="L489">				break;</span>
+
+			case CORROSION:
+<span class="nc" id="L492">				hardlight( ColorMath.interpolate( 0xAAAAAA, 0xFF8800 , p ));</span>
+			case STENCH:
+			case SMOKE:
+<span class="nc bnc" id="L495" title="All 2 branches missed.">				am = (float)Math.sqrt( (p &lt; 0.5f ? p : 1 - p) );</span>
+<span class="nc" id="L496">				scale.set( 1 + p );</span>
+<span class="nc" id="L497">				break;</span>
+				
+			case JET:
+<span class="nc bnc" id="L500" title="All 2 branches missed.">				am = (p &lt; 0.5f ? p : 1 - p) * 2;</span>
+<span class="nc" id="L501">				scale.set( p * 1.5f );</span>
+<span class="nc" id="L502">				break;</span>
+				
+			case COIN:
+<span class="nc" id="L505">				scale.x = (float)Math.cos( left * 5 );</span>
+<span class="nc" id="L506">				rm = gm = bm = (Math.abs( scale.x ) + 1) * 0.5f;</span>
+<span class="nc bnc" id="L507" title="All 2 branches missed.">				am = p &lt; 0.9f ? 1 : (1 - p) * 10;</span>
+				break;
+			}
+		}
+<span class="nc" id="L511">	}</span>
+
+	public static Emitter.Factory factory( final int type ) {
+<span class="nc" id="L514">		return factory( type, false );</span>
+	}
+
+	public static Emitter.Factory factory( final int type, final boolean lightMode ) {
+
+<span class="nc" id="L519">		Emitter.Factory factory = factories.get( type );</span>
+
+<span class="nc bnc" id="L521" title="All 2 branches missed.">		if (factory == null) {</span>
+<span class="nc" id="L522">			factory = new Emitter.Factory() {</span>
+				@Override
+				public void emit ( Emitter emitter, int index, float x, float y ) {
+<span class="nc" id="L525">					Speck p = (Speck)emitter.recycle( Speck.class );</span>
+<span class="nc" id="L526">					p.reset( index, x, y, type );</span>
+<span class="nc" id="L527">				}</span>
+				@Override
+				public boolean lightMode() {
+<span class="nc" id="L530">					return lightMode;</span>
+				}
+			};
+<span class="nc" id="L533">			factories.put( type, factory );</span>
+		}
+
+<span class="nc" id="L536">		return factory;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

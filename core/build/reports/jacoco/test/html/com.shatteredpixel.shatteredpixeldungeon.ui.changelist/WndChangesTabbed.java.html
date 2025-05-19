@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WndChangesTabbed.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui.changelist</a> &gt; <span class="el_source">WndChangesTabbed.java</span></div><h1>WndChangesTabbed.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui.changelist;
+
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.windows.IconTitle;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndTabbed;
+import com.watabou.input.PointerEvent;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.PointerArea;
+
+import java.util.ArrayList;
+
+public class WndChangesTabbed extends WndTabbed {
+
+	protected static final int WIDTH_MIN    = 120;
+	protected static final int WIDTH_MAX    = 220;
+	protected static final int GAP	= 2;
+
+<span class="nc" id="L40">	private ArrayList&lt;RenderedTextBlock&gt; texts = new ArrayList&lt;&gt;();</span>
+
+	public WndChangesTabbed(Image icon, String title, String... messages ) {
+
+<span class="nc" id="L44">		super();</span>
+
+<span class="nc" id="L46">		int width = WIDTH_MIN;</span>
+
+<span class="nc" id="L48">		PointerArea blocker = new PointerArea( 0, 0, PixelScene.uiCamera.width, PixelScene.uiCamera.height ) {</span>
+			@Override
+			protected void onClick( PointerEvent event ) {
+<span class="nc" id="L51">				onBackPressed();</span>
+<span class="nc" id="L52">			}</span>
+		};
+<span class="nc" id="L54">		blocker.camera = PixelScene.uiCamera;</span>
+<span class="nc" id="L55">		add(blocker);</span>
+
+<span class="nc" id="L57">		IconTitle titlebar = new IconTitle( icon, title );</span>
+<span class="nc" id="L58">		titlebar.setRect( 0, 0, width, 0 );</span>
+<span class="nc" id="L59">		add(titlebar);</span>
+
+<span class="nc" id="L61">		RenderedTextBlock largest = null;</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		for (int i = 0; i &lt; messages.length; i++){</span>
+<span class="nc" id="L63">			RenderedTextBlock text = PixelScene.renderTextBlock( 6 );</span>
+<span class="nc" id="L64">			text.text( messages[i], width );</span>
+<span class="nc" id="L65">			text.setPos( titlebar.left(), titlebar.bottom() + 2*GAP );</span>
+<span class="nc" id="L66">			add( text );</span>
+<span class="nc" id="L67">			texts.add(text);</span>
+
+<span class="nc bnc" id="L69" title="All 4 branches missed.">			if (largest == null || text.height() &gt; largest.height()){</span>
+<span class="nc" id="L70">				largest = text;</span>
+			}
+
+<span class="nc" id="L73">			int finalI = i;</span>
+<span class="nc" id="L74">			add(new LabeledTab(numToNumeral(finalI + 1)){</span>
+				@Override
+				protected void select(boolean value) {
+<span class="nc" id="L77">					super.select( value );</span>
+<span class="nc" id="L78">					texts.get(finalI).visible = value;</span>
+<span class="nc" id="L79">				}</span>
+			});
+		}
+
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		while (PixelScene.landscape()</span>
+<span class="nc bnc" id="L84" title="All 4 branches missed.">				&amp;&amp; largest.bottom() &gt; (PixelScene.MIN_HEIGHT_L - 20)</span>
+				&amp;&amp; width &lt; WIDTH_MAX){
+<span class="nc" id="L86">			width += 20;</span>
+<span class="nc" id="L87">			titlebar.setRect(0, 0, width, 0);</span>
+
+<span class="nc" id="L89">			largest = null;</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">			for (RenderedTextBlock text : texts){</span>
+<span class="nc" id="L91">				text.setPos( titlebar.left(), titlebar.bottom() + 2*GAP );</span>
+<span class="nc" id="L92">				text.maxWidth(width);</span>
+<span class="nc bnc" id="L93" title="All 4 branches missed.">				if (largest == null || text.height() &gt; largest.height()){</span>
+<span class="nc" id="L94">					largest = text;</span>
+				}
+<span class="nc" id="L96">			}</span>
+		}
+
+<span class="nc" id="L99">		bringToFront(titlebar);</span>
+
+<span class="nc" id="L101">		resize( width, (int)largest.bottom() + 2 );</span>
+
+<span class="nc" id="L103">		layoutTabs();</span>
+<span class="nc" id="L104">		select(0);</span>
+
+<span class="nc" id="L106">	}</span>
+
+	private String numToNumeral(int num){
+<span class="nc bnc" id="L109" title="All 11 branches missed.">		switch (num){</span>
+<span class="nc" id="L110">			case 1: return &quot;I&quot;;</span>
+<span class="nc" id="L111">			case 2: return &quot;II&quot;;</span>
+<span class="nc" id="L112">			case 3: return &quot;III&quot;;</span>
+<span class="nc" id="L113">			case 4: return &quot;IV&quot;;</span>
+<span class="nc" id="L114">			case 5: return &quot;V&quot;;</span>
+<span class="nc" id="L115">			case 6: return &quot;VI&quot;;</span>
+<span class="nc" id="L116">			case 7: return &quot;VII&quot;;</span>
+<span class="nc" id="L117">			case 8: return &quot;VIII&quot;;</span>
+<span class="nc" id="L118">			case 9: return &quot;IX&quot;;</span>
+<span class="nc" id="L119">			case 10: return &quot;X&quot;;</span>
+<span class="nc" id="L120">			default: return Integer.toString(num);</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

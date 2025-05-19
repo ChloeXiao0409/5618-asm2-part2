@@ -1,0 +1,2610 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Hero.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero</a> &gt; <span class="el_source">Hero.java</span></div><h1>Hero.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero;
+
+import com.shatteredpixel.shatteredpixeldungeon.equipment.EquipmentManager;
+import com.shatteredpixel.shatteredpixeldungeon.equipment.IEquipment;
+import com.shatteredpixel.shatteredpixeldungeon.equipment.EquipmentSlot;
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Bones;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SacrificialFire;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AdrenalineSurge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ArtifactRecharge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AscensionChallenge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Awareness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barkskin;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Berserk;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Bless;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Charm;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Combo;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Drowsy;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Foresight;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.GreaterHaste;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.HeroDisguise;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.HoldFast;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Hunger;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invulnerability;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Levitation;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.LostInventory;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MindVision;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Momentum;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MonkEnergy;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.PhysicalEmpower;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Recharging;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.SnipersMark;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.TimeStasis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Vertigo;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.AscendedForm;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.duelist.Challenge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.duelist.ElementalStrike;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.huntress.NaturesPower;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.Endure;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.BodyForm;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.HallowedGround;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.HolyWard;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.HolyWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.Smite;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Monk;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Snake;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CheckedCell;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
+import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
+import com.shatteredpixel.shatteredpixeldungeon.items.Dewdrop;
+import com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap.Type;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Viscosity;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.AlchemistsToolkit;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CapeOfThorns;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CloakOfShadows;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.EtherealChains;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HornOfPlenty;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.MasterThievesArmband;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.TalismanOfForesight;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.TimekeepersHourglass;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.MagicalHolster;
+import com.shatteredpixel.shatteredpixeldungeon.items.journal.Guidebook;
+import com.shatteredpixel.shatteredpixeldungeon.items.keys.CrystalKey;
+import com.shatteredpixel.shatteredpixeldungeon.items.keys.GoldenKey;
+import com.shatteredpixel.shatteredpixeldungeon.items.keys.IronKey;
+import com.shatteredpixel.shatteredpixeldungeon.items.keys.Key;
+import com.shatteredpixel.shatteredpixeldungeon.items.keys.SkeletonKey;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfExperience;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs.ElixirOfMight;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfDivineInspiration;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.DarkGold;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.Pickaxe;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfAccuracy;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEvasion;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfFuror;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfHaste;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfMight;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfTenacity;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfMagicMapping;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfChallenge;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.ThirteenLeafClover;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfLivingEarth;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Crossbow;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Flail;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Quarterstaff;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.RoundShield;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sai;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Scimitar;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortsword;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Document;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.MiningLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.features.Chasm;
+import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.WeakFloorRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.ShadowCaster;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.AlchemyScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.AttackIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.StatusPane;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndHero;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndResurrect;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndTradeItem;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.tweeners.Delayer;
+import com.watabou.utils.BArray;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+
+
+public class Hero extends Char {
+
+	{
+<span class="nc" id="L195">		actPriority = HERO_PRIO;</span>
+		
+<span class="nc" id="L197">		alignment = Alignment.ALLY;</span>
+	}
+	
+	public static final int MAX_LEVEL = 30;
+
+	public static final int STARTING_STR = 10;
+	
+	private static final float TIME_TO_REST		    = 1f;
+	private static final float TIME_TO_SEARCH	    = 2f;
+	private static final float HUNGER_FOR_SEARCH	= 6f;
+	
+<span class="nc" id="L208">	public HeroClass heroClass = HeroClass.ROGUE;</span>
+<span class="nc" id="L209">	public HeroSubClass subClass = HeroSubClass.NONE;</span>
+<span class="nc" id="L210">	public ArmorAbility armorAbility = null;</span>
+<span class="nc" id="L211">	public ArrayList&lt;LinkedHashMap&lt;Talent, Integer&gt;&gt; talents = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L212">	public LinkedHashMap&lt;Talent, Talent&gt; metamorphedTalents = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc" id="L213">	private EquipmentManager equipmentManager = new EquipmentManager();</span>
+
+	
+<span class="nc" id="L216">	private int attackSkill = 10;</span>
+<span class="nc" id="L217">	private int defenseSkill = 5;</span>
+	// 基础防御值
+<span class="nc" id="L219">	private int baseDefense = 0;</span>
+<span class="nc" id="L220">	private int baseAttack = 0;</span>
+<span class="nc" id="L221">	private int luck = 0;</span>
+
+<span class="nc" id="L223">	public boolean ready = false;</span>
+<span class="nc" id="L224">	public boolean damageInterrupt = true;</span>
+<span class="nc" id="L225">	public HeroAction curAction = null;</span>
+<span class="nc" id="L226">	public HeroAction lastAction = null;</span>
+
+	private Char enemy;
+	
+<span class="nc" id="L230">	public boolean resting = false;</span>
+	
+	public Belongings belongings;
+	
+	public int STR;
+	
+	public float awareness;
+	
+<span class="nc" id="L238">	public int lvl = 1;</span>
+<span class="nc" id="L239">	public int exp = 0;</span>
+	
+<span class="nc" id="L241">	public int HTBoost = 0;</span>
+	
+	private ArrayList&lt;Mob&gt; visibleEnemies;
+
+	//This list is maintained so that some logic checks can be skipped
+	// for enemies we know we aren't seeing normally, resulting in better performance
+<span class="nc" id="L247">	public ArrayList&lt;Mob&gt; mindVisionEnemies = new ArrayList&lt;&gt;();</span>
+
+	public Hero() {
+<span class="nc" id="L250">		super();</span>
+
+<span class="nc" id="L252">		HP = HT = 20;</span>
+<span class="nc" id="L253">		STR = STARTING_STR;</span>
+		
+<span class="nc" id="L255">		belongings = new Belongings( this );</span>
+		
+<span class="nc" id="L257">		visibleEnemies = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L258">	}</span>
+	
+	public void updateHT( boolean boostHP ){
+<span class="nc" id="L261">		int curHT = HT;</span>
+		
+<span class="nc" id="L263">		HT = 20 + 5*(lvl-1) + HTBoost;</span>
+<span class="nc" id="L264">		float multiplier = RingOfMight.HTMultiplier(this);</span>
+<span class="nc" id="L265">		HT = Math.round(multiplier * HT);</span>
+		
+<span class="nc bnc" id="L267" title="All 2 branches missed.">		if (buff(ElixirOfMight.HTBoost.class) != null){</span>
+<span class="nc" id="L268">			HT += buff(ElixirOfMight.HTBoost.class).boost();</span>
+		}
+		
+<span class="nc bnc" id="L271" title="All 2 branches missed.">		if (boostHP){</span>
+<span class="nc" id="L272">			HP += Math.max(HT - curHT, 0);</span>
+		}
+<span class="nc" id="L274">		HP = Math.min(HP, HT);</span>
+<span class="nc" id="L275">	}</span>
+
+	public int STR() {
+<span class="nc" id="L278">		int strBonus = 0;</span>
+
+<span class="nc" id="L280">		strBonus += RingOfMight.strengthBonus( this );</span>
+		
+<span class="nc" id="L282">		AdrenalineSurge buff = buff(AdrenalineSurge.class);</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">		if (buff != null){</span>
+<span class="nc" id="L284">			strBonus += buff.boost();</span>
+		}
+
+<span class="nc bnc" id="L287" title="All 2 branches missed.">		if (hasTalent(Talent.STRONGMAN)){</span>
+<span class="nc" id="L288">			strBonus += (int)Math.floor(STR * (0.03f + 0.05f*pointsInTalent(Talent.STRONGMAN)));</span>
+		}
+
+<span class="nc" id="L291">		return STR + strBonus;</span>
+	}
+
+	private static final String CLASS       = &quot;class&quot;;
+	private static final String SUBCLASS    = &quot;subClass&quot;;
+	private static final String ABILITY     = &quot;armorAbility&quot;;
+
+	private static final String ATTACK		= &quot;attackSkill&quot;;
+	private static final String DEFENSE		= &quot;defenseSkill&quot;;
+	private static final String STRENGTH	= &quot;STR&quot;;
+	private static final String LEVEL		= &quot;lvl&quot;;
+	private static final String EXPERIENCE	= &quot;exp&quot;;
+	private static final String HTBOOST     = &quot;htboost&quot;;
+	
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+
+<span class="nc" id="L308">		super.storeInBundle( bundle );</span>
+
+<span class="nc" id="L310">		bundle.put( CLASS, heroClass );</span>
+<span class="nc" id="L311">		bundle.put( SUBCLASS, subClass );</span>
+<span class="nc" id="L312">		bundle.put( ABILITY, armorAbility );</span>
+<span class="nc" id="L313">		Talent.storeTalentsInBundle( bundle, this );</span>
+		
+<span class="nc" id="L315">		bundle.put( ATTACK, attackSkill );</span>
+<span class="nc" id="L316">		bundle.put( DEFENSE, defenseSkill );</span>
+		
+<span class="nc" id="L318">		bundle.put( STRENGTH, STR );</span>
+		
+<span class="nc" id="L320">		bundle.put( LEVEL, lvl );</span>
+<span class="nc" id="L321">		bundle.put( EXPERIENCE, exp );</span>
+		
+<span class="nc" id="L323">		bundle.put( HTBOOST, HTBoost );</span>
+
+<span class="nc" id="L325">		belongings.storeInBundle( bundle );</span>
+<span class="nc" id="L326">	}</span>
+	
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+
+<span class="nc" id="L331">		lvl = bundle.getInt( LEVEL );</span>
+<span class="nc" id="L332">		exp = bundle.getInt( EXPERIENCE );</span>
+
+<span class="nc" id="L334">		HTBoost = bundle.getInt(HTBOOST);</span>
+
+<span class="nc" id="L336">		super.restoreFromBundle( bundle );</span>
+
+<span class="nc" id="L338">		heroClass = bundle.getEnum( CLASS, HeroClass.class );</span>
+<span class="nc" id="L339">		subClass = bundle.getEnum( SUBCLASS, HeroSubClass.class );</span>
+<span class="nc" id="L340">		armorAbility = (ArmorAbility)bundle.get( ABILITY );</span>
+<span class="nc" id="L341">		Talent.restoreTalentsFromBundle( bundle, this );</span>
+		
+<span class="nc" id="L343">		attackSkill = bundle.getInt( ATTACK );</span>
+<span class="nc" id="L344">		defenseSkill = bundle.getInt( DEFENSE );</span>
+		
+<span class="nc" id="L346">		STR = bundle.getInt( STRENGTH );</span>
+
+<span class="nc" id="L348">		belongings.restoreFromBundle( bundle );</span>
+<span class="nc" id="L349">	}</span>
+	
+	public static void preview( GamesInProgress.Info info, Bundle bundle ) {
+<span class="nc" id="L352">		info.level = bundle.getInt( LEVEL );</span>
+<span class="nc" id="L353">		info.str = bundle.getInt( STRENGTH );</span>
+<span class="nc" id="L354">		info.exp = bundle.getInt( EXPERIENCE );</span>
+<span class="nc" id="L355">		info.hp = bundle.getInt( Char.TAG_HP );</span>
+<span class="nc" id="L356">		info.ht = bundle.getInt( Char.TAG_HT );</span>
+<span class="nc" id="L357">		info.shld = bundle.getInt( Char.TAG_SHLD );</span>
+<span class="nc" id="L358">		info.heroClass = bundle.getEnum( CLASS, HeroClass.class );</span>
+<span class="nc" id="L359">		info.subClass = bundle.getEnum( SUBCLASS, HeroSubClass.class );</span>
+<span class="nc" id="L360">		Belongings.preview( info, bundle );</span>
+<span class="nc" id="L361">	}</span>
+
+	public boolean hasTalent( Talent talent ){
+<span class="nc bnc" id="L364" title="All 2 branches missed.">		return pointsInTalent(talent) &gt; 0;</span>
+	}
+
+	public int pointsInTalent( Talent talent ){
+<span class="nc bnc" id="L368" title="All 2 branches missed.">		for (LinkedHashMap&lt;Talent, Integer&gt; tier : talents){</span>
+<span class="nc bnc" id="L369" title="All 2 branches missed.">			for (Talent f : tier.keySet()){</span>
+<span class="nc bnc" id="L370" title="All 2 branches missed.">				if (f == talent) return tier.get(f);</span>
+<span class="nc" id="L371">			}</span>
+<span class="nc" id="L372">		}</span>
+<span class="nc" id="L373">		return 0;</span>
+	}
+
+	public void upgradeTalent( Talent talent ){
+<span class="nc bnc" id="L377" title="All 2 branches missed.">		for (LinkedHashMap&lt;Talent, Integer&gt; tier : talents){</span>
+<span class="nc bnc" id="L378" title="All 2 branches missed.">			for (Talent f : tier.keySet()){</span>
+<span class="nc bnc" id="L379" title="All 2 branches missed.">				if (f == talent) tier.put(talent, tier.get(talent)+1);</span>
+<span class="nc" id="L380">			}</span>
+<span class="nc" id="L381">		}</span>
+<span class="nc" id="L382">		Talent.onTalentUpgraded(this, talent);</span>
+<span class="nc" id="L383">	}</span>
+
+	public int talentPointsSpent(int tier){
+<span class="nc" id="L386">		int total = 0;</span>
+<span class="nc bnc" id="L387" title="All 2 branches missed.">		for (int i : talents.get(tier-1).values()){</span>
+<span class="nc" id="L388">			total += i;</span>
+<span class="nc" id="L389">		}</span>
+<span class="nc" id="L390">		return total;</span>
+	}
+
+	public int talentPointsAvailable(int tier){
+<span class="nc bnc" id="L394" title="All 10 branches missed.">		if (lvl &lt; (Talent.tierLevelThresholds[tier] - 1)</span>
+			|| (tier == 3 &amp;&amp; subClass == HeroSubClass.NONE)
+			|| (tier == 4 &amp;&amp; armorAbility == null)) {
+<span class="nc" id="L397">			return 0;</span>
+<span class="nc bnc" id="L398" title="All 2 branches missed.">		} else if (lvl &gt;= Talent.tierLevelThresholds[tier+1]){</span>
+<span class="nc" id="L399">			return Talent.tierLevelThresholds[tier+1] - Talent.tierLevelThresholds[tier] - talentPointsSpent(tier) + bonusTalentPoints(tier);</span>
+		} else {
+<span class="nc" id="L401">			return 1 + lvl - Talent.tierLevelThresholds[tier] - talentPointsSpent(tier) + bonusTalentPoints(tier);</span>
+		}
+	}
+
+	public int bonusTalentPoints(int tier){
+<span class="nc bnc" id="L406" title="All 10 branches missed.">		if (lvl &lt; (Talent.tierLevelThresholds[tier]-1)</span>
+				|| (tier == 3 &amp;&amp; subClass == HeroSubClass.NONE)
+				|| (tier == 4 &amp;&amp; armorAbility == null)) {
+<span class="nc" id="L409">			return 0;</span>
+<span class="nc bnc" id="L410" title="All 2 branches missed.">		} else if (buff(PotionOfDivineInspiration.DivineInspirationTracker.class) != null</span>
+<span class="nc bnc" id="L411" title="All 2 branches missed.">					&amp;&amp; buff(PotionOfDivineInspiration.DivineInspirationTracker.class).isBoosted(tier)) {</span>
+<span class="nc" id="L412">			return 2;</span>
+		} else {
+<span class="nc" id="L414">			return 0;</span>
+		}
+	}
+	
+	public String className() {
+<span class="nc bnc" id="L419" title="All 4 branches missed.">		return subClass == null || subClass == HeroSubClass.NONE ? heroClass.title() : subClass.title();</span>
+	}
+
+	@Override
+	public String name(){
+<span class="nc bnc" id="L424" title="All 2 branches missed.">		if (buff(HeroDisguise.class) != null) {</span>
+<span class="nc" id="L425">			return buff(HeroDisguise.class).getDisguise().title();</span>
+		} else {
+<span class="nc" id="L427">			return className();</span>
+		}
+	}
+
+	@Override
+	public void hitSound(float pitch) {
+<span class="nc bnc" id="L433" title="All 2 branches missed.">		if (!RingOfForce.fightingUnarmed(this)) {</span>
+<span class="nc" id="L434">			belongings.attackingWeapon().hitSound(pitch);</span>
+<span class="nc bnc" id="L435" title="All 2 branches missed.">		} else if (RingOfForce.getBuffedBonus(this, RingOfForce.Force.class) &gt; 0) {</span>
+			//pitch deepens by 2.5% (additive) per point of strength, down to 75%
+<span class="nc" id="L437">			super.hitSound( pitch * GameMath.gate( 0.75f, 1.25f - 0.025f*STR(), 1f) );</span>
+		} else {
+<span class="nc" id="L439">			super.hitSound(pitch * 1.1f);</span>
+		}
+<span class="nc" id="L441">	}</span>
+
+	@Override
+	public boolean blockSound(float pitch) {
+<span class="nc bnc" id="L445" title="All 4 branches missed.">		if ( belongings.weapon() != null &amp;&amp; belongings.weapon().defenseFactor(this) &gt;= 4 ){</span>
+<span class="nc" id="L446">			Sample.INSTANCE.play( Assets.Sounds.HIT_PARRY, 1, pitch);</span>
+<span class="nc" id="L447">			return true;</span>
+		}
+<span class="nc" id="L449">		return super.blockSound(pitch);</span>
+	}
+
+	public void live() {
+<span class="nc bnc" id="L453" title="All 2 branches missed.">		for (Buff b : buffs()){</span>
+<span class="nc bnc" id="L454" title="All 2 branches missed.">			if (!b.revivePersists) b.detach();</span>
+<span class="nc" id="L455">		}</span>
+<span class="nc" id="L456">		Buff.affect( this, Regeneration.class );</span>
+<span class="nc" id="L457">		Buff.affect( this, Hunger.class );</span>
+<span class="nc" id="L458">	}</span>
+	
+	public int tier() {
+<span class="nc" id="L461">		Armor armor = belongings.armor();</span>
+<span class="nc bnc" id="L462" title="All 2 branches missed.">		if (armor instanceof ClassArmor){</span>
+<span class="nc" id="L463">			return 6;</span>
+<span class="nc bnc" id="L464" title="All 2 branches missed.">		} else if (armor != null){</span>
+<span class="nc" id="L465">			return armor.tier;</span>
+		} else {
+<span class="nc" id="L467">			return 0;</span>
+		}
+	}
+	
+	public boolean shoot( Char enemy, MissileWeapon wep ) {
+
+<span class="nc" id="L473">		this.enemy = enemy;</span>
+<span class="nc bnc" id="L474" title="All 6 branches missed.">		boolean wasEnemy = enemy.alignment == Alignment.ENEMY</span>
+				|| (enemy instanceof Mimic &amp;&amp; enemy.alignment == Alignment.NEUTRAL);
+
+		//temporarily set the hero's weapon to the missile weapon being used
+		//TODO improve this!
+<span class="nc" id="L479">		belongings.thrownWeapon = wep;</span>
+<span class="nc" id="L480">		boolean hit = attack( enemy );</span>
+<span class="nc" id="L481">		Invisibility.dispel();</span>
+<span class="nc" id="L482">		belongings.thrownWeapon = null;</span>
+
+<span class="nc bnc" id="L484" title="All 6 branches missed.">		if (hit &amp;&amp; subClass == HeroSubClass.GLADIATOR &amp;&amp; wasEnemy){</span>
+<span class="nc" id="L485">			Buff.affect( this, Combo.class ).hit( enemy );</span>
+		}
+
+<span class="nc bnc" id="L488" title="All 6 branches missed.">		if (hit &amp;&amp; heroClass == HeroClass.DUELIST &amp;&amp; wasEnemy){</span>
+<span class="nc" id="L489">			Buff.affect( this, Sai.ComboStrikeTracker.class).addHit();</span>
+		}
+
+<span class="nc" id="L492">		return hit;</span>
+	}
+	
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L497">		KindOfWeapon wep = belongings.attackingWeapon();</span>
+		
+<span class="nc" id="L499">		float accuracy = 1;</span>
+<span class="nc" id="L500">		accuracy *= RingOfAccuracy.accuracyMultiplier( this );</span>
+		
+<span class="nc bnc" id="L502" title="All 2 branches missed.">		if (wep instanceof MissileWeapon){</span>
+<span class="nc bnc" id="L503" title="All 2 branches missed.">			if (Dungeon.level.adjacent( pos, target.pos )) {</span>
+<span class="nc" id="L504">				accuracy *= (0.5f + 0.2f*pointsInTalent(Talent.POINT_BLANK));</span>
+			} else {
+<span class="nc" id="L506">				accuracy *= 1.5f;</span>
+			}
+		//precise assault and liquid agility
+		} else {
+<span class="nc bnc" id="L510" title="All 6 branches missed.">			if ((hasTalent(Talent.PRECISE_ASSAULT) || hasTalent(Talent.LIQUID_AGILITY))</span>
+					//does not trigger on ability attacks
+<span class="nc bnc" id="L512" title="All 2 branches missed.">					&amp;&amp; belongings.abilityWeapon != wep &amp;&amp; buff(MonkEnergy.MonkAbility.UnarmedAbilityTracker.class) == null){</span>
+
+				//non-duelist benefit for precise assault, can stack with liquid agility
+<span class="nc bnc" id="L515" title="All 2 branches missed.">				if (heroClass != HeroClass.DUELIST) {</span>
+					//persistent +10%/20%/30% ACC for other heroes
+<span class="nc" id="L517">					accuracy *= 1f + 0.1f * pointsInTalent(Talent.PRECISE_ASSAULT);</span>
+				}
+
+<span class="nc bnc" id="L520" title="All 4 branches missed.">				if (wep instanceof Flail &amp;&amp; buff(Flail.SpinAbilityTracker.class) != null){</span>
+					//do nothing, this is not a regular attack so don't consume talent fx
+<span class="nc bnc" id="L522" title="All 4 branches missed.">				} else if (wep instanceof Crossbow &amp;&amp; buff(Crossbow.ChargedShot.class) != null){</span>
+					//do nothing, this is not a regular attack so don't consume talent fx
+<span class="nc bnc" id="L524" title="All 2 branches missed.">				} else if (buff(Talent.PreciseAssaultTracker.class) != null) {</span>
+					// 2x/5x/inf. ACC for duelist if she just used a weapon ability
+<span class="nc bnc" id="L526" title="All 3 branches missed.">					switch (pointsInTalent(Talent.PRECISE_ASSAULT)){</span>
+						default: case 1:
+<span class="nc" id="L528">							accuracy *= 2; break;</span>
+						case 2:
+<span class="nc" id="L530">							accuracy *= 5; break;</span>
+						case 3:
+<span class="nc" id="L532">							accuracy *= Float.POSITIVE_INFINITY; break;</span>
+					}
+<span class="nc" id="L534">					buff(Talent.PreciseAssaultTracker.class).detach();</span>
+<span class="nc bnc" id="L535" title="All 2 branches missed.">				} else if (buff(Talent.LiquidAgilACCTracker.class) != null){</span>
+					// 3x/inf. ACC, depending on talent level
+<span class="nc bnc" id="L537" title="All 2 branches missed.">					accuracy *= pointsInTalent(Talent.LIQUID_AGILITY) == 2 ? Float.POSITIVE_INFINITY : 3f;</span>
+<span class="nc" id="L538">					Talent.LiquidAgilACCTracker buff = buff(Talent.LiquidAgilACCTracker.class);</span>
+<span class="nc" id="L539">					buff.uses--;</span>
+<span class="nc bnc" id="L540" title="All 2 branches missed.">					if (buff.uses &lt;= 0) {</span>
+<span class="nc" id="L541">						buff.detach();</span>
+					}
+				}
+			}
+		}
+
+<span class="nc bnc" id="L547" title="All 2 branches missed.">		if (buff(Scimitar.SwordDance.class) != null){</span>
+<span class="nc" id="L548">			accuracy *= 1.50f;</span>
+		}
+		
+<span class="nc bnc" id="L551" title="All 2 branches missed.">		if (!RingOfForce.fightingUnarmed(this)) {</span>
+<span class="nc" id="L552">			return (int)(attackSkill * accuracy * wep.accuracyFactor( this, target ));</span>
+		} else {
+<span class="nc" id="L554">			return (int)(attackSkill * accuracy);</span>
+		}
+	}
+	
+	@Override
+	public int defenseSkill( Char enemy ) {
+
+<span class="nc bnc" id="L561" title="All 2 branches missed.">		if (buff(Combo.ParryTracker.class) != null){</span>
+<span class="nc bnc" id="L562" title="All 4 branches missed.">			if (canAttack(enemy) &amp;&amp; !isCharmedBy(enemy)){</span>
+<span class="nc" id="L563">				Buff.affect(this, Combo.RiposteTracker.class).enemy = enemy;</span>
+			}
+<span class="nc" id="L565">			return INFINITE_EVASION;</span>
+		}
+
+<span class="nc bnc" id="L568" title="All 2 branches missed.">		if (buff(RoundShield.GuardTracker.class) != null){</span>
+<span class="nc" id="L569">			return INFINITE_EVASION;</span>
+		}
+		
+<span class="nc" id="L572">		float evasion = defenseSkill;</span>
+		
+<span class="nc" id="L574">		evasion *= RingOfEvasion.evasionMultiplier( this );</span>
+
+<span class="nc bnc" id="L576" title="All 2 branches missed.">		if (buff(Talent.LiquidAgilEVATracker.class) != null){</span>
+<span class="nc bnc" id="L577" title="All 2 branches missed.">			if (pointsInTalent(Talent.LIQUID_AGILITY) == 1){</span>
+<span class="nc" id="L578">				evasion *= 3f;</span>
+<span class="nc bnc" id="L579" title="All 2 branches missed.">			} else if (pointsInTalent(Talent.LIQUID_AGILITY) == 2){</span>
+<span class="nc" id="L580">				return INFINITE_EVASION;</span>
+			}
+		}
+
+<span class="nc bnc" id="L584" title="All 2 branches missed.">		if (buff(Quarterstaff.DefensiveStance.class) != null){</span>
+<span class="nc" id="L585">			evasion *= 3;</span>
+		}
+		
+<span class="nc bnc" id="L588" title="All 2 branches missed.">		if (paralysed &gt; 0) {</span>
+<span class="nc" id="L589">			evasion /= 2;</span>
+		}
+
+<span class="nc bnc" id="L592" title="All 2 branches missed.">		if (belongings.armor() != null) {</span>
+<span class="nc" id="L593">			evasion = belongings.armor().evasionFactor(this, evasion);</span>
+		}
+
+<span class="nc" id="L596">		return Math.round(evasion);</span>
+	}
+
+	@Override
+	public String defenseVerb() {
+<span class="nc" id="L601">		Combo.ParryTracker parry = buff(Combo.ParryTracker.class);</span>
+<span class="nc bnc" id="L602" title="All 2 branches missed.">		if (parry != null){</span>
+<span class="nc" id="L603">			parry.parried = true;</span>
+<span class="nc bnc" id="L604" title="All 4 branches missed.">			if (buff(Combo.class).getComboCount() &lt; 9 || pointsInTalent(Talent.ENHANCED_COMBO) &lt; 2){</span>
+<span class="nc" id="L605">				parry.detach();</span>
+			}
+<span class="nc" id="L607">			return Messages.get(Monk.class, &quot;parried&quot;);</span>
+		}
+
+<span class="nc bnc" id="L610" title="All 2 branches missed.">		if (buff(RoundShield.GuardTracker.class) != null){</span>
+<span class="nc" id="L611">			buff(RoundShield.GuardTracker.class).hasBlocked = true;</span>
+<span class="nc" id="L612">			BuffIndicator.refreshHero();</span>
+<span class="nc" id="L613">			Sample.INSTANCE.play(Assets.Sounds.HIT_PARRY, 1, Random.Float(0.96f, 1.05f));</span>
+<span class="nc" id="L614">			return Messages.get(RoundShield.GuardTracker.class, &quot;guarded&quot;);</span>
+		}
+
+<span class="nc bnc" id="L617" title="All 2 branches missed.">		if (buff(MonkEnergy.MonkAbility.Focus.FocusBuff.class) != null){</span>
+<span class="nc" id="L618">			buff(MonkEnergy.MonkAbility.Focus.FocusBuff.class).detach();</span>
+<span class="nc bnc" id="L619" title="All 4 branches missed.">			if (sprite != null &amp;&amp; sprite.visible) {</span>
+<span class="nc" id="L620">				Sample.INSTANCE.play(Assets.Sounds.HIT_PARRY, 1, Random.Float(0.96f, 1.05f));</span>
+			}
+<span class="nc" id="L622">			return Messages.get(Monk.class, &quot;parried&quot;);</span>
+		}
+
+<span class="nc" id="L625">		return super.defenseVerb();</span>
+	}
+
+	@Override
+	public int drRoll() {
+<span class="nc" id="L630">		int dr = super.drRoll();</span>
+
+<span class="nc bnc" id="L632" title="All 2 branches missed.">		if (belongings.armor() != null) {</span>
+<span class="nc" id="L633">			int armDr = Random.NormalIntRange( belongings.armor().DRMin(), belongings.armor().DRMax());</span>
+<span class="nc bnc" id="L634" title="All 2 branches missed.">			if (STR() &lt; belongings.armor().STRReq()){</span>
+<span class="nc" id="L635">				armDr -= 2*(belongings.armor().STRReq() - STR());</span>
+			}
+<span class="nc bnc" id="L637" title="All 2 branches missed.">			if (armDr &gt; 0) dr += armDr;</span>
+		}
+<span class="nc bnc" id="L639" title="All 4 branches missed.">		if (belongings.weapon() != null &amp;&amp; !RingOfForce.fightingUnarmed(this))  {</span>
+<span class="nc" id="L640">			int wepDr = Random.NormalIntRange( 0 , belongings.weapon().defenseFactor( this ) );</span>
+<span class="nc bnc" id="L641" title="All 2 branches missed.">			if (STR() &lt; ((Weapon)belongings.weapon()).STRReq()){</span>
+<span class="nc" id="L642">				wepDr -= 2*(((Weapon)belongings.weapon()).STRReq() - STR());</span>
+			}
+<span class="nc bnc" id="L644" title="All 2 branches missed.">			if (wepDr &gt; 0) dr += wepDr;</span>
+		}
+
+<span class="nc bnc" id="L647" title="All 2 branches missed.">		if (buff(HoldFast.class) != null){</span>
+<span class="nc" id="L648">			dr += buff(HoldFast.class).armorBonus();</span>
+		}
+		
+<span class="nc" id="L651">		return dr;</span>
+	}
+	
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L656">		KindOfWeapon wep = belongings.attackingWeapon();</span>
+		int dmg;
+
+<span class="nc bnc" id="L659" title="All 2 branches missed.">		if (!RingOfForce.fightingUnarmed(this)) {</span>
+<span class="nc" id="L660">			dmg = wep.damageRoll( this );</span>
+
+<span class="nc bnc" id="L662" title="All 2 branches missed.">			if (!(wep instanceof MissileWeapon)) dmg += RingOfForce.armedDamageBonus(this);</span>
+		} else {
+<span class="nc" id="L664">			dmg = RingOfForce.damageRoll(this);</span>
+<span class="nc bnc" id="L665" title="All 2 branches missed.">			if (RingOfForce.unarmedGetsWeaponAugment(this)){</span>
+<span class="nc" id="L666">				dmg = ((Weapon)belongings.attackingWeapon()).augment.damageFactor(dmg);</span>
+			}
+		}
+
+<span class="nc" id="L670">		PhysicalEmpower emp = buff(PhysicalEmpower.class);</span>
+<span class="nc bnc" id="L671" title="All 2 branches missed.">		if (emp != null){</span>
+<span class="nc" id="L672">			dmg += emp.dmgBoost;</span>
+<span class="nc" id="L673">			emp.left--;</span>
+<span class="nc bnc" id="L674" title="All 2 branches missed.">			if (emp.left &lt;= 0) {</span>
+<span class="nc" id="L675">				emp.detach();</span>
+			}
+<span class="nc" id="L677">			Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG, 0.75f, 1.2f);</span>
+		}
+
+<span class="nc bnc" id="L680" title="All 2 branches missed.">		if (heroClass != HeroClass.DUELIST</span>
+<span class="nc bnc" id="L681" title="All 2 branches missed.">				&amp;&amp; hasTalent(Talent.WEAPON_RECHARGING)</span>
+<span class="nc bnc" id="L682" title="All 4 branches missed.">				&amp;&amp; (buff(Recharging.class) != null || buff(ArtifactRecharge.class) != null)){</span>
+<span class="nc" id="L683">			dmg = Math.round(dmg * 1.025f + (.025f*pointsInTalent(Talent.WEAPON_RECHARGING)));</span>
+		}
+
+<span class="nc bnc" id="L686" title="All 2 branches missed.">		if (dmg &lt; 0) dmg = 0;</span>
+<span class="nc" id="L687">		return dmg;</span>
+	}
+
+	//damage rolls that come from the hero can have their RNG influenced by clover
+	public static int heroDamageIntRange(int min, int max ){
+<span class="nc bnc" id="L692" title="All 2 branches missed.">		if (Random.Float() &lt; ThirteenLeafClover.alterHeroDamageChance()){</span>
+<span class="nc" id="L693">			return ThirteenLeafClover.alterDamageRoll(min, max);</span>
+		} else {
+<span class="nc" id="L695">			return Random.NormalIntRange(min, max);</span>
+		}
+	}
+	
+	@Override
+	public float speed() {
+
+<span class="nc" id="L702">		float speed = super.speed();</span>
+
+<span class="nc" id="L704">		speed *= RingOfHaste.speedMultiplier(this);</span>
+		
+<span class="nc bnc" id="L706" title="All 2 branches missed.">		if (belongings.armor() != null) {</span>
+<span class="nc" id="L707">			speed = belongings.armor().speedFactor(this, speed);</span>
+		}
+		
+<span class="nc" id="L710">		Momentum momentum = buff(Momentum.class);</span>
+<span class="nc bnc" id="L711" title="All 2 branches missed.">		if (momentum != null){</span>
+<span class="nc bnc" id="L712" title="All 2 branches missed.">			((HeroSprite)sprite).sprint( momentum.freerunning() ? 1.5f : 1f );</span>
+<span class="nc" id="L713">			speed *= momentum.speedMultiplier();</span>
+		} else {
+<span class="nc" id="L715">			((HeroSprite)sprite).sprint( 1f );</span>
+		}
+
+<span class="nc" id="L718">		NaturesPower.naturesPowerTracker natStrength = buff(NaturesPower.naturesPowerTracker.class);</span>
+<span class="nc bnc" id="L719" title="All 2 branches missed.">		if (natStrength != null){</span>
+<span class="nc" id="L720">			speed *= (2f + 0.25f*pointsInTalent(Talent.GROWING_POWER));</span>
+		}
+
+<span class="nc" id="L723">		speed = AscensionChallenge.modifyHeroSpeed(speed);</span>
+		
+<span class="nc" id="L725">		return speed;</span>
+		
+	}
+
+	@Override
+	public boolean canSurpriseAttack(){
+<span class="nc" id="L731">		KindOfWeapon w = belongings.attackingWeapon();</span>
+<span class="nc bnc" id="L732" title="All 2 branches missed.">		if (!(w instanceof Weapon))             return true;</span>
+<span class="nc bnc" id="L733" title="All 2 branches missed.">		if (RingOfForce.fightingUnarmed(this))  return true;</span>
+<span class="nc bnc" id="L734" title="All 2 branches missed.">		if (STR() &lt; ((Weapon)w).STRReq())       return false;</span>
+<span class="nc bnc" id="L735" title="All 2 branches missed.">		if (w instanceof Flail)                 return false;</span>
+
+<span class="nc" id="L737">		return super.canSurpriseAttack();</span>
+	}
+
+	public boolean canAttack(Char enemy){
+<span class="nc bnc" id="L741" title="All 6 branches missed.">		if (enemy == null || pos == enemy.pos || !Actor.chars().contains(enemy)) {</span>
+<span class="nc" id="L742">			return false;</span>
+		}
+
+		//can always attack adjacent enemies
+<span class="nc bnc" id="L746" title="All 2 branches missed.">		if (Dungeon.level.adjacent(pos, enemy.pos)) {</span>
+<span class="nc" id="L747">			return true;</span>
+		}
+
+<span class="nc" id="L750">		KindOfWeapon wep = Dungeon.hero.belongings.attackingWeapon();</span>
+
+<span class="nc bnc" id="L752" title="All 2 branches missed.">		if (wep != null){</span>
+<span class="nc" id="L753">			return wep.canReach(this, enemy.pos);</span>
+<span class="nc bnc" id="L754" title="All 2 branches missed.">		} else if (buff(AscendedForm.AscendBuff.class) != null) {</span>
+<span class="nc" id="L755">			boolean[] passable = BArray.not(Dungeon.level.solid, null);</span>
+<span class="nc bnc" id="L756" title="All 2 branches missed.">			for (Char ch : Actor.chars()) {</span>
+<span class="nc bnc" id="L757" title="All 2 branches missed.">				if (ch != this) passable[ch.pos] = false;</span>
+<span class="nc" id="L758">			}</span>
+
+<span class="nc" id="L760">			PathFinder.buildDistanceMap(enemy.pos, passable, 3);</span>
+
+<span class="nc bnc" id="L762" title="All 2 branches missed.">			return PathFinder.distance[pos] &lt;= 3;</span>
+		} else {
+<span class="nc" id="L764">			return false;</span>
+		}
+	}
+	
+	public float attackDelay() {
+<span class="nc bnc" id="L769" title="All 2 branches missed.">		if (buff(Talent.LethalMomentumTracker.class) != null){</span>
+<span class="nc" id="L770">			buff(Talent.LethalMomentumTracker.class).detach();</span>
+<span class="nc" id="L771">			return 0;</span>
+		}
+
+<span class="nc" id="L774">		float delay = 1f;</span>
+
+<span class="nc bnc" id="L776" title="All 2 branches missed.">		if (!RingOfForce.fightingUnarmed(this)) {</span>
+			
+<span class="nc" id="L778">			return delay * belongings.attackingWeapon().delayFactor( this );</span>
+			
+		} else {
+			//Normally putting furor speed on unarmed attacks would be unnecessary
+			//But there's going to be that one guy who gets a furor+force ring combo
+			//This is for that one guy, you shall get your fists of fury!
+<span class="nc" id="L784">			float speed = RingOfFuror.attackSpeedMultiplier(this);</span>
+
+			//ditto for furor + sword dance!
+<span class="nc bnc" id="L787" title="All 2 branches missed.">			if (buff(Scimitar.SwordDance.class) != null){</span>
+<span class="nc" id="L788">				speed += 0.6f;</span>
+			}
+
+			//and augments + brawler's stance! My goodness, so many options now compared to 2014!
+<span class="nc bnc" id="L792" title="All 2 branches missed.">			if (RingOfForce.unarmedGetsWeaponAugment(this)){</span>
+<span class="nc" id="L793">				delay = ((Weapon)belongings.weapon).augment.delayFactor(delay);</span>
+			}
+
+<span class="nc" id="L796">			return delay/speed;</span>
+		}
+	}
+
+	@Override
+	public void spend( float time ) {
+<span class="nc" id="L802">		super.spend(time);</span>
+<span class="nc" id="L803">	}</span>
+
+	@Override
+	public void spendConstant(float time) {
+<span class="nc" id="L807">		justMoved = false;</span>
+<span class="nc" id="L808">		super.spendConstant(time);</span>
+<span class="nc" id="L809">	}</span>
+
+	public void spendAndNextConstant(float time ) {
+<span class="nc" id="L812">		busy();</span>
+<span class="nc" id="L813">		spendConstant( time );</span>
+<span class="nc" id="L814">		next();</span>
+<span class="nc" id="L815">	}</span>
+
+	public void spendAndNext( float time ) {
+<span class="nc" id="L818">		busy();</span>
+<span class="nc" id="L819">		spend( time );</span>
+<span class="nc" id="L820">		next();</span>
+<span class="nc" id="L821">	}</span>
+	
+	@Override
+	public boolean act() {
+		
+		//calls to dungeon.observe will also update hero's local FOV.
+<span class="nc" id="L827">		fieldOfView = Dungeon.level.heroFOV;</span>
+
+<span class="nc bnc" id="L829" title="All 2 branches missed.">		if (buff(Endure.EndureTracker.class) != null){</span>
+<span class="nc" id="L830">			buff(Endure.EndureTracker.class).endEnduring();</span>
+		}
+		
+<span class="nc bnc" id="L833" title="All 2 branches missed.">		if (!ready) {</span>
+			//do a full observe (including fog update) if not resting.
+<span class="nc bnc" id="L835" title="All 6 branches missed.">			if (!resting || buff(MindVision.class) != null || buff(Awareness.class) != null) {</span>
+<span class="nc" id="L836">				Dungeon.observe();</span>
+			} else {
+				//otherwise just directly re-calculate FOV
+<span class="nc" id="L839">				Dungeon.level.updateFieldOfView(this, fieldOfView);</span>
+			}
+		}
+		
+<span class="nc" id="L843">		checkVisibleMobs();</span>
+<span class="nc" id="L844">		BuffIndicator.refreshHero();</span>
+<span class="nc" id="L845">		BuffIndicator.refreshBoss();</span>
+		
+<span class="nc bnc" id="L847" title="All 2 branches missed.">		if (paralysed &gt; 0) {</span>
+			
+<span class="nc" id="L849">			curAction = null;</span>
+			
+<span class="nc" id="L851">			spendAndNext( TICK );</span>
+<span class="nc" id="L852">			return false;</span>
+		}
+		
+		boolean actResult;
+<span class="nc bnc" id="L856" title="All 2 branches missed.">		if (curAction == null) {</span>
+			
+<span class="nc bnc" id="L858" title="All 2 branches missed.">			if (resting) {</span>
+<span class="nc" id="L859">				spendConstant( TIME_TO_REST );</span>
+<span class="nc" id="L860">				next();</span>
+			} else {
+<span class="nc" id="L862">				ready();</span>
+			}
+
+			//if we just loaded into a level and have a search buff, make sure to process them
+<span class="nc bnc" id="L866" title="All 2 branches missed.">			if(Actor.now() == 0){</span>
+<span class="nc bnc" id="L867" title="All 2 branches missed.">				if (buff(Foresight.class) != null){</span>
+<span class="nc" id="L868">					search(false);</span>
+<span class="nc bnc" id="L869" title="All 2 branches missed.">				} else if (buff(TalismanOfForesight.Foresight.class) != null){</span>
+<span class="nc" id="L870">					buff(TalismanOfForesight.Foresight.class).checkAwareness();</span>
+				}
+			}
+			
+<span class="nc" id="L874">			actResult = false;</span>
+			
+		} else {
+			
+<span class="nc" id="L878">			resting = false;</span>
+			
+<span class="nc" id="L880">			ready = false;</span>
+			
+<span class="nc bnc" id="L882" title="All 2 branches missed.">			if (curAction instanceof HeroAction.Move) {</span>
+<span class="nc" id="L883">				actResult = actMove( (HeroAction.Move)curAction );</span>
+				
+<span class="nc bnc" id="L885" title="All 2 branches missed.">			} else if (curAction instanceof HeroAction.Interact) {</span>
+<span class="nc" id="L886">				actResult = actInteract( (HeroAction.Interact)curAction );</span>
+				
+<span class="nc bnc" id="L888" title="All 2 branches missed.">			} else if (curAction instanceof HeroAction.Buy) {</span>
+<span class="nc" id="L889">				actResult = actBuy( (HeroAction.Buy)curAction );</span>
+				
+<span class="nc bnc" id="L891" title="All 2 branches missed.">			}else if (curAction instanceof HeroAction.PickUp) {</span>
+<span class="nc" id="L892">				actResult = actPickUp( (HeroAction.PickUp)curAction );</span>
+				
+<span class="nc bnc" id="L894" title="All 2 branches missed.">			} else if (curAction instanceof HeroAction.OpenChest) {</span>
+<span class="nc" id="L895">				actResult = actOpenChest( (HeroAction.OpenChest)curAction );</span>
+				
+<span class="nc bnc" id="L897" title="All 2 branches missed.">			} else if (curAction instanceof HeroAction.Unlock) {</span>
+<span class="nc" id="L898">				actResult = actUnlock((HeroAction.Unlock) curAction);</span>
+				
+<span class="nc bnc" id="L900" title="All 2 branches missed.">			} else if (curAction instanceof HeroAction.Mine) {</span>
+<span class="nc" id="L901">				actResult = actMine( (HeroAction.Mine)curAction );</span>
+
+<span class="nc bnc" id="L903" title="All 2 branches missed.">			}else if (curAction instanceof HeroAction.LvlTransition) {</span>
+<span class="nc" id="L904">				actResult = actTransition( (HeroAction.LvlTransition)curAction );</span>
+				
+<span class="nc bnc" id="L906" title="All 2 branches missed.">			} else if (curAction instanceof HeroAction.Attack) {</span>
+<span class="nc" id="L907">				actResult = actAttack( (HeroAction.Attack)curAction );</span>
+				
+<span class="nc bnc" id="L909" title="All 2 branches missed.">			} else if (curAction instanceof HeroAction.Alchemy) {</span>
+<span class="nc" id="L910">				actResult = actAlchemy( (HeroAction.Alchemy)curAction );</span>
+				
+			} else {
+<span class="nc" id="L913">				actResult = false;</span>
+			}
+		}
+		
+<span class="nc bnc" id="L917" title="All 4 branches missed.">		if(hasTalent(Talent.BARKSKIN) &amp;&amp; Dungeon.level.map[pos] == Terrain.FURROWED_GRASS){</span>
+<span class="nc" id="L918">			Barkskin.conditionallyAppend(this, (lvl*pointsInTalent(Talent.BARKSKIN))/2, 1 );</span>
+		}
+		
+<span class="nc" id="L921">		return actResult;</span>
+	}
+	
+	public void busy() {
+<span class="nc" id="L925">		ready = false;</span>
+<span class="nc" id="L926">	}</span>
+	
+	private void ready() {
+<span class="nc bnc" id="L929" title="All 2 branches missed.">		if (sprite.looping()) sprite.idle();</span>
+<span class="nc" id="L930">		curAction = null;</span>
+<span class="nc" id="L931">		damageInterrupt = true;</span>
+<span class="nc" id="L932">		waitOrPickup = false;</span>
+<span class="nc" id="L933">		ready = true;</span>
+<span class="nc" id="L934">		canSelfTrample = true;</span>
+
+<span class="nc" id="L936">		AttackIndicator.updateState();</span>
+		
+<span class="nc" id="L938">		GameScene.ready();</span>
+<span class="nc" id="L939">	}</span>
+	
+	public void interrupt() {
+<span class="nc bnc" id="L942" title="All 10 branches missed.">		if (isAlive() &amp;&amp; curAction != null &amp;&amp;</span>
+			((curAction instanceof HeroAction.Move &amp;&amp; curAction.dst != pos) ||
+			(curAction instanceof HeroAction.LvlTransition))) {
+<span class="nc" id="L945">			lastAction = curAction;</span>
+		}
+<span class="nc" id="L947">		curAction = null;</span>
+<span class="nc" id="L948">		GameScene.resetKeyHold();</span>
+<span class="nc" id="L949">		resting = false;</span>
+<span class="nc" id="L950">	}</span>
+	
+	public void resume() {
+<span class="nc" id="L953">		curAction = lastAction;</span>
+<span class="nc" id="L954">		lastAction = null;</span>
+<span class="nc" id="L955">		damageInterrupt = false;</span>
+<span class="nc" id="L956">		next();</span>
+<span class="nc" id="L957">	}</span>
+
+<span class="nc" id="L959">	private boolean canSelfTrample = false;</span>
+	public boolean canSelfTrample(){
+<span class="nc bnc" id="L961" title="All 12 branches missed.">		return canSelfTrample &amp;&amp; !rooted &amp;&amp; !flying &amp;&amp;</span>
+				//standing in high grass
+				(Dungeon.level.map[pos] == Terrain.HIGH_GRASS ||
+				//standing in furrowed grass and not huntress
+				(heroClass != HeroClass.HUNTRESS &amp;&amp; Dungeon.level.map[pos] == Terrain.FURROWED_GRASS) ||
+				//standing on a plant
+<span class="nc bnc" id="L967" title="All 2 branches missed.">				Dungeon.level.plants.get(pos) != null);</span>
+	}
+	
+	private boolean actMove( HeroAction.Move action ) {
+
+<span class="nc bnc" id="L972" title="All 2 branches missed.">		if (getCloser( action.dst )) {</span>
+<span class="nc" id="L973">			canSelfTrample = false;</span>
+<span class="nc" id="L974">			return true;</span>
+
+		//Hero moves in place if there is grass to trample
+<span class="nc bnc" id="L977" title="All 4 branches missed.">		} else if (pos == action.dst &amp;&amp; canSelfTrample()){</span>
+<span class="nc" id="L978">			canSelfTrample = false;</span>
+<span class="nc" id="L979">			Dungeon.level.pressCell(pos);</span>
+<span class="nc" id="L980">			spendAndNext( 1 / speed() );</span>
+<span class="nc" id="L981">			return false;</span>
+		} else {
+<span class="nc" id="L983">			ready();</span>
+<span class="nc" id="L984">			return false;</span>
+		}
+	}
+	
+	private boolean actInteract( HeroAction.Interact action ) {
+		
+<span class="nc" id="L990">		Char ch = action.ch;</span>
+
+<span class="nc bnc" id="L992" title="All 4 branches missed.">		if (ch.isAlive() &amp;&amp; ch.canInteract(this)) {</span>
+			
+<span class="nc" id="L994">			ready();</span>
+<span class="nc" id="L995">			sprite.turnTo( pos, ch.pos );</span>
+<span class="nc" id="L996">			return ch.interact(this);</span>
+			
+		} else {
+			
+<span class="nc bnc" id="L1000" title="All 4 branches missed.">			if (fieldOfView[ch.pos] &amp;&amp; getCloser( ch.pos )) {</span>
+
+<span class="nc" id="L1002">				return true;</span>
+
+			} else {
+<span class="nc" id="L1005">				ready();</span>
+<span class="nc" id="L1006">				return false;</span>
+			}
+			
+		}
+	}
+	
+	private boolean actBuy( HeroAction.Buy action ) {
+<span class="nc" id="L1013">		int dst = action.dst;</span>
+<span class="nc bnc" id="L1014" title="All 2 branches missed.">		if (pos == dst) {</span>
+
+<span class="nc" id="L1016">			ready();</span>
+			
+<span class="nc" id="L1018">			Heap heap = Dungeon.level.heaps.get( dst );</span>
+<span class="nc bnc" id="L1019" title="All 6 branches missed.">			if (heap != null &amp;&amp; heap.type == Type.FOR_SALE &amp;&amp; heap.size() == 1) {</span>
+<span class="nc" id="L1020">				Game.runOnRenderThread(new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L1023">						GameScene.show( new WndTradeItem( heap ) );</span>
+<span class="nc" id="L1024">					}</span>
+				});
+			}
+
+<span class="nc" id="L1028">			return false;</span>
+
+<span class="nc bnc" id="L1030" title="All 2 branches missed.">		} else if (getCloser( dst )) {</span>
+
+<span class="nc" id="L1032">			return true;</span>
+
+		} else {
+<span class="nc" id="L1035">			ready();</span>
+<span class="nc" id="L1036">			return false;</span>
+		}
+	}
+
+	private boolean actAlchemy( HeroAction.Alchemy action ) {
+<span class="nc" id="L1041">		int dst = action.dst;</span>
+<span class="nc bnc" id="L1042" title="All 2 branches missed.">		if (Dungeon.level.distance(dst, pos) &lt;= 1) {</span>
+
+<span class="nc" id="L1044">			ready();</span>
+			
+<span class="nc" id="L1046">			AlchemistsToolkit.kitEnergy kit = buff(AlchemistsToolkit.kitEnergy.class);</span>
+<span class="nc bnc" id="L1047" title="All 4 branches missed.">			if (kit != null &amp;&amp; kit.isCursed()){</span>
+<span class="nc" id="L1048">				GLog.w( Messages.get(AlchemistsToolkit.class, &quot;cursed&quot;));</span>
+<span class="nc" id="L1049">				return false;</span>
+			}
+
+<span class="nc" id="L1052">			AlchemyScene.clearToolkit();</span>
+<span class="nc" id="L1053">			ShatteredPixelDungeon.switchScene(AlchemyScene.class);</span>
+<span class="nc" id="L1054">			return false;</span>
+
+<span class="nc bnc" id="L1056" title="All 2 branches missed.">		} else if (getCloser( dst )) {</span>
+
+<span class="nc" id="L1058">			return true;</span>
+
+		} else {
+<span class="nc" id="L1061">			ready();</span>
+<span class="nc" id="L1062">			return false;</span>
+		}
+	}
+
+	//used to keep track if the wait/pickup action was used
+	// so that the hero spends a turn even if the fail to pick up an item
+<span class="nc" id="L1068">	public boolean waitOrPickup = false;</span>
+
+	private boolean actPickUp( HeroAction.PickUp action ) {
+<span class="nc" id="L1071">		int dst = action.dst;</span>
+<span class="nc bnc" id="L1072" title="All 2 branches missed.">		if (pos == dst) {</span>
+			
+<span class="nc" id="L1074">			Heap heap = Dungeon.level.heaps.get( pos );</span>
+<span class="nc bnc" id="L1075" title="All 2 branches missed.">			if (heap != null) {</span>
+<span class="nc" id="L1076">				Item item = heap.peek();</span>
+<span class="nc bnc" id="L1077" title="All 2 branches missed.">				if (item.doPickUp( this )) {</span>
+<span class="nc" id="L1078">					heap.pickUp();</span>
+
+<span class="nc bnc" id="L1080" title="All 10 branches missed.">					if (item instanceof Dewdrop</span>
+							|| item instanceof TimekeepersHourglass.sandBag
+							|| item instanceof DriedRose.Petal
+							|| item instanceof Key
+							|| item instanceof Guidebook) {
+						//Do Nothing
+<span class="nc bnc" id="L1086" title="All 2 branches missed.">					} else if (item instanceof DarkGold) {</span>
+<span class="nc" id="L1087">						DarkGold existing = belongings.getItem(DarkGold.class);</span>
+<span class="nc bnc" id="L1088" title="All 2 branches missed.">						if (existing != null){</span>
+<span class="nc bnc" id="L1089" title="All 2 branches missed.">							if (existing.quantity() &gt;= 40) {</span>
+<span class="nc" id="L1090">								GLog.p(Messages.get(DarkGold.class, &quot;you_now_have&quot;, existing.quantity()));</span>
+							} else {
+<span class="nc" id="L1092">								GLog.i(Messages.get(DarkGold.class, &quot;you_now_have&quot;, existing.quantity()));</span>
+							}
+						}
+<span class="nc" id="L1095">					} else {</span>
+
+						//TODO make all unique items important? or just POS / SOU?
+<span class="nc bnc" id="L1098" title="All 8 branches missed.">						boolean important = item.unique &amp;&amp; item.isIdentified() &amp;&amp;</span>
+								(item instanceof Scroll || item instanceof Potion);
+<span class="nc bnc" id="L1100" title="All 2 branches missed.">						if (important) {</span>
+<span class="nc" id="L1101">							GLog.p( Messages.capitalize(Messages.get(this, &quot;you_now_have&quot;, item.name())) );</span>
+						} else {
+<span class="nc" id="L1103">							GLog.i( Messages.capitalize(Messages.get(this, &quot;you_now_have&quot;, item.name())) );</span>
+						}
+					}
+					
+<span class="nc" id="L1107">					curAction = null;</span>
+				} else {
+
+<span class="nc bnc" id="L1110" title="All 2 branches missed.">					if (waitOrPickup) {</span>
+<span class="nc" id="L1111">						spendAndNextConstant(TIME_TO_REST);</span>
+					}
+
+					//allow the hero to move between levels even if they can't collect the item
+<span class="nc bnc" id="L1115" title="All 2 branches missed.">					if (Dungeon.level.getTransition(pos) != null){</span>
+<span class="nc" id="L1116">						throwItems();</span>
+					} else {
+<span class="nc" id="L1118">						heap.sprite.drop();</span>
+					}
+
+<span class="nc bnc" id="L1121" title="All 8 branches missed.">					if (item instanceof Dewdrop</span>
+							|| item instanceof TimekeepersHourglass.sandBag
+							|| item instanceof DriedRose.Petal
+							|| item instanceof Key) {
+						//Do Nothing
+					} else {
+<span class="nc" id="L1127">						GLog.newLine();</span>
+<span class="nc" id="L1128">						GLog.n(Messages.capitalize(Messages.get(this, &quot;you_cant_have&quot;, item.name())));</span>
+					}
+
+<span class="nc" id="L1131">					ready();</span>
+				}
+<span class="nc" id="L1133">			} else {</span>
+<span class="nc" id="L1134">				ready();</span>
+			}
+
+<span class="nc" id="L1137">			return false;</span>
+
+<span class="nc bnc" id="L1139" title="All 2 branches missed.">		} else if (getCloser( dst )) {</span>
+
+<span class="nc" id="L1141">			return true;</span>
+
+		} else {
+<span class="nc" id="L1144">			ready();</span>
+<span class="nc" id="L1145">			return false;</span>
+		}
+	}
+	
+	private boolean actOpenChest( HeroAction.OpenChest action ) {
+<span class="nc" id="L1150">		int dst = action.dst;</span>
+<span class="nc bnc" id="L1151" title="All 4 branches missed.">		if (Dungeon.level.adjacent( pos, dst ) || pos == dst) {</span>
+<span class="nc" id="L1152">			path = null;</span>
+			
+<span class="nc" id="L1154">			Heap heap = Dungeon.level.heaps.get( dst );</span>
+<span class="nc bnc" id="L1155" title="All 6 branches missed.">			if (heap != null &amp;&amp; (heap.type != Type.HEAP &amp;&amp; heap.type != Type.FOR_SALE)) {</span>
+				
+<span class="nc bnc" id="L1157" title="All 6 branches missed.">				if ((heap.type == Type.LOCKED_CHEST &amp;&amp; Notes.keyCount(new GoldenKey(Dungeon.depth)) &lt; 1)</span>
+<span class="nc bnc" id="L1158" title="All 2 branches missed.">					|| (heap.type == Type.CRYSTAL_CHEST &amp;&amp; Notes.keyCount(new CrystalKey(Dungeon.depth)) &lt; 1)){</span>
+
+<span class="nc" id="L1160">						GLog.w( Messages.get(this, &quot;locked_chest&quot;) );</span>
+<span class="nc" id="L1161">						ready();</span>
+<span class="nc" id="L1162">						return false;</span>
+
+				}
+				
+<span class="nc bnc" id="L1166" title="All 3 branches missed.">				switch (heap.type) {</span>
+				case TOMB:
+<span class="nc" id="L1168">					Sample.INSTANCE.play( Assets.Sounds.TOMB );</span>
+<span class="nc" id="L1169">					PixelScene.shake( 1, 0.5f );</span>
+<span class="nc" id="L1170">					break;</span>
+				case SKELETON:
+				case REMAINS:
+<span class="nc" id="L1173">					break;</span>
+				default:
+<span class="nc" id="L1175">					Sample.INSTANCE.play( Assets.Sounds.UNLOCK );</span>
+				}
+				
+<span class="nc" id="L1178">				sprite.operate( dst );</span>
+				
+			} else {
+<span class="nc" id="L1181">				ready();</span>
+			}
+
+<span class="nc" id="L1184">			return false;</span>
+
+<span class="nc bnc" id="L1186" title="All 2 branches missed.">		} else if (getCloser( dst )) {</span>
+
+<span class="nc" id="L1188">			return true;</span>
+
+		} else {
+<span class="nc" id="L1191">			ready();</span>
+<span class="nc" id="L1192">			return false;</span>
+		}
+	}
+	
+	private boolean actUnlock( HeroAction.Unlock action ) {
+<span class="nc" id="L1197">		int doorCell = action.dst;</span>
+<span class="nc bnc" id="L1198" title="All 2 branches missed.">		if (Dungeon.level.adjacent( pos, doorCell )) {</span>
+<span class="nc" id="L1199">			path = null;</span>
+			
+<span class="nc" id="L1201">			boolean hasKey = false;</span>
+<span class="nc" id="L1202">			int door = Dungeon.level.map[doorCell];</span>
+			
+<span class="nc bnc" id="L1204" title="All 2 branches missed.">			if (door == Terrain.LOCKED_DOOR</span>
+<span class="nc bnc" id="L1205" title="All 2 branches missed.">					&amp;&amp; Notes.keyCount(new IronKey(Dungeon.depth)) &gt; 0) {</span>
+				
+<span class="nc" id="L1207">				hasKey = true;</span>
+				
+<span class="nc bnc" id="L1209" title="All 2 branches missed.">			} else if (door == Terrain.CRYSTAL_DOOR</span>
+<span class="nc bnc" id="L1210" title="All 2 branches missed.">					&amp;&amp; Notes.keyCount(new CrystalKey(Dungeon.depth)) &gt; 0) {</span>
+
+<span class="nc" id="L1212">				hasKey = true;</span>
+
+<span class="nc bnc" id="L1214" title="All 2 branches missed.">			} else if (door == Terrain.LOCKED_EXIT</span>
+<span class="nc bnc" id="L1215" title="All 2 branches missed.">					&amp;&amp; Notes.keyCount(new SkeletonKey(Dungeon.depth)) &gt; 0) {</span>
+
+<span class="nc" id="L1217">				hasKey = true;</span>
+				
+			}
+			
+<span class="nc bnc" id="L1221" title="All 2 branches missed.">			if (hasKey) {</span>
+				
+<span class="nc" id="L1223">				sprite.operate( doorCell );</span>
+				
+<span class="nc" id="L1225">				Sample.INSTANCE.play( Assets.Sounds.UNLOCK );</span>
+				
+			} else {
+<span class="nc" id="L1228">				GLog.w( Messages.get(this, &quot;locked_door&quot;) );</span>
+<span class="nc" id="L1229">				ready();</span>
+			}
+
+<span class="nc" id="L1232">			return false;</span>
+
+<span class="nc bnc" id="L1234" title="All 2 branches missed.">		} else if (getCloser( doorCell )) {</span>
+
+<span class="nc" id="L1236">			return true;</span>
+
+		} else {
+<span class="nc" id="L1239">			ready();</span>
+<span class="nc" id="L1240">			return false;</span>
+		}
+	}
+
+	private boolean actMine(HeroAction.Mine action){
+<span class="nc bnc" id="L1245" title="All 2 branches missed.">		if (Dungeon.level.adjacent(pos, action.dst)){</span>
+<span class="nc" id="L1246">			path = null;</span>
+<span class="nc bnc" id="L1247" title="All 8 branches missed.">			if ((Dungeon.level.map[action.dst] == Terrain.WALL</span>
+					|| Dungeon.level.map[action.dst] == Terrain.WALL_DECO
+					|| Dungeon.level.map[action.dst] == Terrain.MINE_CRYSTAL
+					|| Dungeon.level.map[action.dst] == Terrain.MINE_BOULDER)
+<span class="nc bnc" id="L1251" title="All 2 branches missed.">				&amp;&amp; Dungeon.level.insideMap(action.dst)){</span>
+<span class="nc" id="L1252">				sprite.attack(action.dst, new Callback() {</span>
+					@Override
+					public void call() {
+
+<span class="nc" id="L1256">						boolean crystalAdjacent = false;</span>
+<span class="nc bnc" id="L1257" title="All 2 branches missed.">						for (int i : PathFinder.NEIGHBOURS8) {</span>
+<span class="nc bnc" id="L1258" title="All 2 branches missed.">							if (Dungeon.level.map[action.dst + i] == Terrain.MINE_CRYSTAL){</span>
+<span class="nc" id="L1259">								crystalAdjacent = true;</span>
+<span class="nc" id="L1260">								break;</span>
+							}
+						}
+
+						//1 hunger spent total
+<span class="nc bnc" id="L1265" title="All 2 branches missed.">						if (Dungeon.level.map[action.dst] == Terrain.WALL_DECO){</span>
+<span class="nc" id="L1266">							DarkGold gold = new DarkGold();</span>
+<span class="nc bnc" id="L1267" title="All 2 branches missed.">							if (gold.doPickUp( Dungeon.hero )) {</span>
+<span class="nc" id="L1268">								DarkGold existing = Dungeon.hero.belongings.getItem(DarkGold.class);</span>
+<span class="nc bnc" id="L1269" title="All 4 branches missed.">								if (existing != null &amp;&amp; existing.quantity()%5 == 0){</span>
+<span class="nc bnc" id="L1270" title="All 2 branches missed.">									if (existing.quantity() &gt;= 40) {</span>
+<span class="nc" id="L1271">										GLog.p(Messages.get(DarkGold.class, &quot;you_now_have&quot;, existing.quantity()));</span>
+									} else {
+<span class="nc" id="L1273">										GLog.i(Messages.get(DarkGold.class, &quot;you_now_have&quot;, existing.quantity()));</span>
+									}
+								}
+<span class="nc" id="L1276">								spend(-Actor.TICK); //picking up the gold doesn't spend a turn here</span>
+<span class="nc" id="L1277">							} else {</span>
+<span class="nc" id="L1278">								Dungeon.level.drop( gold, pos ).sprite.drop();</span>
+							}
+<span class="nc" id="L1280">							PixelScene.shake(0.5f, 0.5f);</span>
+<span class="nc" id="L1281">							CellEmitter.center( action.dst ).burst( Speck.factory( Speck.STAR ), 7 );</span>
+<span class="nc" id="L1282">							Sample.INSTANCE.play( Assets.Sounds.EVOKE );</span>
+<span class="nc" id="L1283">							Level.set( action.dst, Terrain.EMPTY_DECO );</span>
+
+							//mining gold doesn't break crystals
+<span class="nc" id="L1286">							crystalAdjacent = false;</span>
+
+						//4 hunger spent total
+<span class="nc bnc" id="L1289" title="All 2 branches missed.">						} else if (Dungeon.level.map[action.dst] == Terrain.WALL){</span>
+<span class="nc" id="L1290">							buff(Hunger.class).affectHunger(-3);</span>
+<span class="nc" id="L1291">							PixelScene.shake(0.5f, 0.5f);</span>
+<span class="nc" id="L1292">							CellEmitter.get( action.dst ).burst( Speck.factory( Speck.ROCK ), 2 );</span>
+<span class="nc" id="L1293">							Sample.INSTANCE.play( Assets.Sounds.MINE );</span>
+<span class="nc" id="L1294">							Level.set( action.dst, Terrain.EMPTY_DECO );</span>
+
+						//1 hunger spent total
+<span class="nc bnc" id="L1297" title="All 2 branches missed.">						} else if (Dungeon.level.map[action.dst] == Terrain.MINE_CRYSTAL){</span>
+<span class="nc" id="L1298">							Splash.at(action.dst, 0xFFFFFF, 5);</span>
+<span class="nc" id="L1299">							Sample.INSTANCE.play( Assets.Sounds.SHATTER );</span>
+<span class="nc" id="L1300">							Level.set( action.dst, Terrain.EMPTY );</span>
+
+						//1 hunger spent total
+<span class="nc bnc" id="L1303" title="All 2 branches missed.">						} else if (Dungeon.level.map[action.dst] == Terrain.MINE_BOULDER){</span>
+<span class="nc" id="L1304">							Splash.at(action.dst, 0x555555, 5);</span>
+<span class="nc" id="L1305">							Sample.INSTANCE.play( Assets.Sounds.MINE, 0.6f );</span>
+<span class="nc" id="L1306">							Level.set( action.dst, Terrain.EMPTY_DECO );</span>
+						}
+
+<span class="nc bnc" id="L1309" title="All 2 branches missed.">						for (int i : PathFinder.NEIGHBOURS9) {</span>
+<span class="nc" id="L1310">							Dungeon.level.discoverable[action.dst + i] = true;</span>
+						}
+<span class="nc bnc" id="L1312" title="All 2 branches missed.">						for (int i : PathFinder.NEIGHBOURS9) {</span>
+<span class="nc" id="L1313">							GameScene.updateMap( action.dst+i );</span>
+						}
+
+<span class="nc bnc" id="L1316" title="All 2 branches missed.">						if (crystalAdjacent){</span>
+<span class="nc" id="L1317">							sprite.parent.add(new Delayer(0.2f){</span>
+								@Override
+								protected void onComplete() {
+<span class="nc" id="L1320">									boolean broke = false;</span>
+<span class="nc bnc" id="L1321" title="All 2 branches missed.">									for (int i : PathFinder.NEIGHBOURS8) {</span>
+<span class="nc bnc" id="L1322" title="All 2 branches missed.">										if (Dungeon.level.map[action.dst+i] == Terrain.MINE_CRYSTAL){</span>
+<span class="nc" id="L1323">											Splash.at(action.dst+i, 0xFFFFFF, 5);</span>
+<span class="nc" id="L1324">											Level.set( action.dst+i, Terrain.EMPTY );</span>
+<span class="nc" id="L1325">											broke = true;</span>
+										}
+									}
+<span class="nc bnc" id="L1328" title="All 2 branches missed.">									if (broke){</span>
+<span class="nc" id="L1329">										Sample.INSTANCE.play( Assets.Sounds.SHATTER );</span>
+									}
+
+<span class="nc bnc" id="L1332" title="All 2 branches missed.">									for (int i : PathFinder.NEIGHBOURS9) {</span>
+<span class="nc" id="L1333">										GameScene.updateMap( action.dst+i );</span>
+									}
+<span class="nc" id="L1335">									spendAndNext(TICK);</span>
+<span class="nc" id="L1336">									ready();</span>
+<span class="nc" id="L1337">								}</span>
+							});
+						} else {
+<span class="nc" id="L1340">							spendAndNext(TICK);</span>
+<span class="nc" id="L1341">							ready();</span>
+						}
+
+<span class="nc" id="L1344">						Dungeon.observe();</span>
+<span class="nc" id="L1345">					}</span>
+				});
+			} else {
+<span class="nc" id="L1348">				ready();</span>
+			}
+<span class="nc" id="L1350">			return false;</span>
+<span class="nc bnc" id="L1351" title="All 2 branches missed.">		} else if (getCloser( action.dst )) {</span>
+
+<span class="nc" id="L1353">			return true;</span>
+
+		} else {
+<span class="nc" id="L1356">			ready();</span>
+<span class="nc" id="L1357">			return false;</span>
+		}
+	}
+	
+	private boolean actTransition(HeroAction.LvlTransition action ) {
+<span class="nc" id="L1362">		int stairs = action.dst;</span>
+<span class="nc" id="L1363">		LevelTransition transition = Dungeon.level.getTransition(stairs);</span>
+
+<span class="nc bnc" id="L1365" title="All 2 branches missed.">		if (rooted) {</span>
+<span class="nc" id="L1366">			PixelScene.shake(1, 1f);</span>
+<span class="nc" id="L1367">			ready();</span>
+<span class="nc" id="L1368">			return false;</span>
+
+<span class="nc bnc" id="L1370" title="All 6 branches missed.">		} else if (!Dungeon.level.locked &amp;&amp; transition != null &amp;&amp; transition.inside(pos)) {</span>
+
+<span class="nc bnc" id="L1372" title="All 2 branches missed.">			if (Dungeon.level.activateTransition(this, transition)){</span>
+<span class="nc" id="L1373">				curAction = null;</span>
+			} else {
+<span class="nc" id="L1375">				ready();</span>
+			}
+
+<span class="nc" id="L1378">			return false;</span>
+
+<span class="nc bnc" id="L1380" title="All 2 branches missed.">		} else if (getCloser( stairs )) {</span>
+
+<span class="nc" id="L1382">			return true;</span>
+
+		} else {
+<span class="nc" id="L1385">			ready();</span>
+<span class="nc" id="L1386">			return false;</span>
+		}
+	}
+	
+	private boolean actAttack( HeroAction.Attack action ) {
+
+<span class="nc" id="L1392">		enemy = action.target;</span>
+
+<span class="nc bnc" id="L1394" title="All 2 branches missed.">		if (isCharmedBy( enemy )){</span>
+<span class="nc" id="L1395">			GLog.w( Messages.get(Charm.class, &quot;cant_attack&quot;));</span>
+<span class="nc" id="L1396">			ready();</span>
+<span class="nc" id="L1397">			return false;</span>
+		}
+
+<span class="nc bnc" id="L1400" title="All 6 branches missed.">		if (enemy.isAlive() &amp;&amp; canAttack( enemy ) &amp;&amp; enemy.invisible == 0) {</span>
+
+<span class="nc bnc" id="L1402" title="All 2 branches missed.">			if (heroClass != HeroClass.DUELIST</span>
+<span class="nc bnc" id="L1403" title="All 2 branches missed.">					&amp;&amp; hasTalent(Talent.AGGRESSIVE_BARRIER)</span>
+<span class="nc bnc" id="L1404" title="All 2 branches missed.">					&amp;&amp; buff(Talent.AggressiveBarrierCooldown.class) == null</span>
+<span class="nc bnc" id="L1405" title="All 2 branches missed.">					&amp;&amp; (HP / (float)HT) &lt; 0.20f*(1+pointsInTalent(Talent.AGGRESSIVE_BARRIER))){</span>
+<span class="nc" id="L1406">				Buff.affect(this, Barrier.class).setShield(3);</span>
+<span class="nc" id="L1407">				sprite.showStatusWithIcon(CharSprite.POSITIVE, &quot;3&quot;, FloatingText.SHIELDING);</span>
+<span class="nc" id="L1408">				Buff.affect(this, Talent.AggressiveBarrierCooldown.class, 50f);</span>
+
+			}
+<span class="nc" id="L1411">			sprite.attack( enemy.pos );</span>
+
+<span class="nc" id="L1413">			return false;</span>
+
+		} else {
+
+<span class="nc bnc" id="L1417" title="All 4 branches missed.">			if (fieldOfView[enemy.pos] &amp;&amp; getCloser( enemy.pos )) {</span>
+
+<span class="nc" id="L1419">				return true;</span>
+
+			} else {
+<span class="nc" id="L1422">				ready();</span>
+<span class="nc" id="L1423">				return false;</span>
+			}
+
+		}
+	}
+
+	public Char enemy(){
+<span class="nc" id="L1430">		return enemy;</span>
+	}
+	
+	public void rest( boolean fullRest ) {
+<span class="nc" id="L1434">		spendAndNextConstant( TIME_TO_REST );</span>
+<span class="nc bnc" id="L1435" title="All 2 branches missed.">		if (hasTalent(Talent.HOLD_FAST)){</span>
+<span class="nc" id="L1436">			Buff.affect(this, HoldFast.class).pos = pos;</span>
+		}
+<span class="nc bnc" id="L1438" title="All 2 branches missed.">		if (hasTalent(Talent.PATIENT_STRIKE)){</span>
+<span class="nc" id="L1439">			Buff.affect(Dungeon.hero, Talent.PatientStrikeTracker.class).pos = Dungeon.hero.pos;</span>
+		}
+<span class="nc bnc" id="L1441" title="All 2 branches missed.">		if (!fullRest) {</span>
+<span class="nc bnc" id="L1442" title="All 2 branches missed.">			if (sprite != null) {</span>
+<span class="nc" id="L1443">				sprite.showStatus(CharSprite.DEFAULT, Messages.get(this, &quot;wait&quot;));</span>
+			}
+		}
+<span class="nc" id="L1446">		resting = fullRest;</span>
+<span class="nc" id="L1447">	}</span>
+	
+	@Override
+	public int attackProc( final Char enemy, int damage ) {
+<span class="nc" id="L1451">		damage = super.attackProc( enemy, damage );</span>
+
+		KindOfWeapon wep;
+<span class="nc bnc" id="L1454" title="All 4 branches missed.">		if (RingOfForce.fightingUnarmed(this) &amp;&amp; !RingOfForce.unarmedGetsWeaponEnchantment(this)){</span>
+<span class="nc" id="L1455">			wep = null;</span>
+		} else {
+<span class="nc" id="L1457">			wep = belongings.attackingWeapon();</span>
+		}
+
+<span class="nc" id="L1460">		damage = Talent.onAttackProc( this, enemy, damage );</span>
+
+<span class="nc bnc" id="L1462" title="All 2 branches missed.">		if (wep != null) {</span>
+<span class="nc" id="L1463">			damage = wep.proc( this, enemy, damage );</span>
+		} else {
+<span class="nc bnc" id="L1465" title="All 2 branches missed.">			boolean wasEnemy = enemy.alignment == Alignment.ENEMY;</span>
+<span class="nc bnc" id="L1466" title="All 2 branches missed.">			if (buff(BodyForm.BodyFormBuff.class) != null</span>
+<span class="nc bnc" id="L1467" title="All 2 branches missed.">					&amp;&amp; buff(BodyForm.BodyFormBuff.class).enchant() != null){</span>
+<span class="nc" id="L1468">				damage = buff(BodyForm.BodyFormBuff.class).enchant().proc(new WornShortsword(), this, enemy, damage);</span>
+			}
+<span class="nc bnc" id="L1470" title="All 4 branches missed.">			if (!wasEnemy || enemy.alignment == Alignment.ENEMY) {</span>
+<span class="nc bnc" id="L1471" title="All 2 branches missed.">				if (buff(HolyWeapon.HolyWepBuff.class) != null) {</span>
+<span class="nc bnc" id="L1472" title="All 2 branches missed.">					int dmg = subClass == HeroSubClass.PALADIN ? 6 : 2;</span>
+<span class="nc" id="L1473">					enemy.damage(Math.round(dmg * Weapon.Enchantment.genericProcChanceMultiplier(this)), HolyWeapon.INSTANCE);</span>
+				}
+<span class="nc bnc" id="L1475" title="All 2 branches missed.">				if (buff(Smite.SmiteTracker.class) != null) {</span>
+<span class="nc" id="L1476">					enemy.damage(Smite.bonusDmg(this, enemy), Smite.INSTANCE);</span>
+				}
+			}
+		}
+		
+<span class="nc bnc" id="L1481" title="All 2 branches missed.">		switch (subClass) {</span>
+		case SNIPER:
+<span class="nc bnc" id="L1483" title="All 6 branches missed.">			if (wep instanceof MissileWeapon &amp;&amp; !(wep instanceof SpiritBow.SpiritArrow) &amp;&amp; enemy != this) {</span>
+<span class="nc" id="L1484">				Actor.add(new Actor() {</span>
+					
+					{
+<span class="nc" id="L1487">						actPriority = VFX_PRIO;</span>
+<span class="nc" id="L1488">					}</span>
+					
+					@Override
+					protected boolean act() {
+<span class="nc bnc" id="L1492" title="All 2 branches missed.">						if (enemy.isAlive()) {</span>
+<span class="nc bnc" id="L1493" title="All 2 branches missed.">							if (hasTalent(Talent.SHARED_UPGRADES)){</span>
+<span class="nc" id="L1494">								int bonusTurns = wep.buffedLvl();</span>
+								// bonus dmg is 2.5% x talent lvl x weapon level x weapon tier
+<span class="nc" id="L1496">								float bonusDmg = wep.buffedLvl() * ((MissileWeapon) wep).tier * pointsInTalent(Talent.SHARED_UPGRADES) * 0.025f;</span>
+<span class="nc" id="L1497">								Buff.prolong(Hero.this, SnipersMark.class, SnipersMark.DURATION + bonusTurns).set(enemy.id(), bonusDmg);</span>
+<span class="nc" id="L1498">							} else {</span>
+<span class="nc" id="L1499">								Buff.prolong(Hero.this, SnipersMark.class, SnipersMark.DURATION).set(enemy.id(), 0);</span>
+							}
+						}
+<span class="nc" id="L1502">						Actor.remove(this);</span>
+<span class="nc" id="L1503">						return true;</span>
+					}
+				});
+			}
+			break;
+		default:
+		}
+		
+<span class="nc" id="L1511">		return damage;</span>
+	}
+	
+	@Override
+	public int defenseProc( Char enemy, int damage ) {
+		
+<span class="nc bnc" id="L1517" title="All 4 branches missed.">		if (damage &gt; 0 &amp;&amp; subClass == HeroSubClass.BERSERKER){</span>
+<span class="nc" id="L1518">			Berserk berserk = Buff.affect(this, Berserk.class);</span>
+<span class="nc" id="L1519">			berserk.damage(damage);</span>
+		}
+		
+<span class="nc bnc" id="L1522" title="All 2 branches missed.">		if (belongings.armor() != null) {</span>
+<span class="nc" id="L1523">			damage = belongings.armor().proc( enemy, this, damage );</span>
+		} else {
+<span class="nc bnc" id="L1525" title="All 2 branches missed.">			if (buff(BodyForm.BodyFormBuff.class) != null</span>
+<span class="nc bnc" id="L1526" title="All 2 branches missed.">				&amp;&amp; buff(BodyForm.BodyFormBuff.class).glyph() != null){</span>
+<span class="nc" id="L1527">				damage = buff(BodyForm.BodyFormBuff.class).glyph().proc(new ClothArmor(), enemy, this, damage);</span>
+			}
+<span class="nc bnc" id="L1529" title="All 2 branches missed.">			if (buff(HolyWard.HolyArmBuff.class) != null){</span>
+<span class="nc bnc" id="L1530" title="All 2 branches missed.">				int blocking = subClass == HeroSubClass.PALADIN ? 3 : 1;</span>
+<span class="nc" id="L1531">				damage -= Math.round(blocking * Armor.Glyph.genericProcChanceMultiplier(enemy));</span>
+			}
+		}
+
+<span class="nc" id="L1535">		WandOfLivingEarth.RockArmor rockArmor = buff(WandOfLivingEarth.RockArmor.class);</span>
+<span class="nc bnc" id="L1536" title="All 2 branches missed.">		if (rockArmor != null) {</span>
+<span class="nc" id="L1537">			damage = rockArmor.absorb(damage);</span>
+		}
+		
+<span class="nc" id="L1540">		return super.defenseProc( enemy, damage );</span>
+	}
+
+	@Override
+	public int glyphLevel(Class&lt;? extends Armor.Glyph&gt; cls) {
+<span class="nc bnc" id="L1545" title="All 4 branches missed.">		if (belongings.armor() != null &amp;&amp; belongings.armor().hasGlyph(cls, this)){</span>
+<span class="nc" id="L1546">			return Math.max(super.glyphLevel(cls), belongings.armor.buffedLvl());</span>
+<span class="nc bnc" id="L1547" title="All 2 branches missed.">		} else if (buff(BodyForm.BodyFormBuff.class) != null</span>
+<span class="nc bnc" id="L1548" title="All 2 branches missed.">				&amp;&amp; buff(BodyForm.BodyFormBuff.class).glyph() != null</span>
+<span class="nc bnc" id="L1549" title="All 2 branches missed.">				&amp;&amp; buff(BodyForm.BodyFormBuff.class).glyph().getClass() == cls){</span>
+<span class="nc bnc" id="L1550" title="All 2 branches missed.">			return belongings.armor() != null ? belongings.armor.buffedLvl() : 0;</span>
+		} else {
+<span class="nc" id="L1552">			return super.glyphLevel(cls);</span>
+		}
+	}
+
+	@Override
+	public void damage( int dmg, Object src ) {
+<span class="nc bnc" id="L1558" title="All 2 branches missed.">		if (buff(TimekeepersHourglass.timeStasis.class) != null</span>
+<span class="nc bnc" id="L1559" title="All 2 branches missed.">				|| buff(TimeStasis.class) != null) {</span>
+<span class="nc" id="L1560">			return;</span>
+		}
+
+		//regular damage interrupt, triggers on any damage except specific mild DOT effects
+		// unless the player recently hit 'continue moving', in which case this is ignored
+<span class="nc bnc" id="L1565" title="All 6 branches missed.">		if (!(src instanceof Hunger || src instanceof Viscosity.DeferedDamage) &amp;&amp; damageInterrupt) {</span>
+<span class="nc" id="L1566">			interrupt();</span>
+		}
+
+<span class="nc bnc" id="L1569" title="All 2 branches missed.">		if (this.buff(Drowsy.class) != null){</span>
+<span class="nc" id="L1570">			Buff.detach(this, Drowsy.class);</span>
+<span class="nc" id="L1571">			GLog.w( Messages.get(this, &quot;pain_resist&quot;) );</span>
+		}
+
+		//temporarily assign to a float to avoid rounding a bunch
+<span class="nc" id="L1575">		float damage = dmg;</span>
+
+<span class="nc" id="L1577">		Endure.EndureTracker endure = buff(Endure.EndureTracker.class);</span>
+<span class="nc bnc" id="L1578" title="All 2 branches missed.">		if (!(src instanceof Char)){</span>
+			//reduce damage here if it isn't coming from a character (if it is we already reduced it)
+<span class="nc bnc" id="L1580" title="All 2 branches missed.">			if (endure != null){</span>
+<span class="nc" id="L1581">				damage = endure.adjustDamageTaken(dmg);</span>
+			}
+			//the same also applies to challenge scroll damage reduction
+<span class="nc bnc" id="L1584" title="All 2 branches missed.">			if (buff(ScrollOfChallenge.ChallengeArena.class) != null){</span>
+<span class="nc" id="L1585">				damage *= 0.67f;</span>
+			}
+			//and to monk meditate damage reduction
+<span class="nc bnc" id="L1588" title="All 2 branches missed.">			if (buff(MonkEnergy.MonkAbility.Meditate.MeditateResistance.class) != null){</span>
+<span class="nc" id="L1589">				damage *= 0.2f;</span>
+			}
+		}
+
+		//unused, could be removed
+<span class="nc" id="L1594">		CapeOfThorns.Thorns thorns = buff( CapeOfThorns.Thorns.class );</span>
+<span class="nc bnc" id="L1595" title="All 2 branches missed.">		if (thorns != null) {</span>
+<span class="nc bnc" id="L1596" title="All 2 branches missed.">			damage = thorns.proc((int)damage, (src instanceof Char ? (Char)src : null),  this);</span>
+		}
+
+<span class="nc bnc" id="L1599" title="All 2 branches missed.">		if (buff(Talent.WarriorFoodImmunity.class) != null){</span>
+<span class="nc bnc" id="L1600" title="All 2 branches missed.">			if (pointsInTalent(Talent.IRON_STOMACH) == 1)       damage /= 4f;</span>
+<span class="nc bnc" id="L1601" title="All 2 branches missed.">			else if (pointsInTalent(Talent.IRON_STOMACH) == 2)  damage = 0;</span>
+		}
+
+<span class="nc" id="L1604">		dmg = Math.round(damage);</span>
+
+		//we ceil this one to avoid letting the player easily take 0 dmg from tenacity early
+<span class="nc" id="L1607">		dmg = (int)Math.ceil(dmg * RingOfTenacity.damageMultiplier( this ));</span>
+
+<span class="nc" id="L1609">		int preHP = HP + shielding();</span>
+<span class="nc bnc" id="L1610" title="All 2 branches missed.">		if (src instanceof Hunger) preHP -= shielding();</span>
+<span class="nc" id="L1611">		super.damage( dmg, src );</span>
+<span class="nc" id="L1612">		int postHP = HP + shielding();</span>
+<span class="nc bnc" id="L1613" title="All 2 branches missed.">		if (src instanceof Hunger) postHP -= shielding();</span>
+<span class="nc" id="L1614">		int effectiveDamage = preHP - postHP;</span>
+
+<span class="nc bnc" id="L1616" title="All 2 branches missed.">		if (effectiveDamage &lt;= 0) return;</span>
+
+<span class="nc bnc" id="L1618" title="All 2 branches missed.">		if (buff(Challenge.DuelParticipant.class) != null){</span>
+<span class="nc" id="L1619">			buff(Challenge.DuelParticipant.class).addDamage(effectiveDamage);</span>
+		}
+
+		//flash red when hit for serious damage.
+<span class="nc" id="L1623">		float percentDMG = effectiveDamage / (float)preHP; //percent of current HP that was taken</span>
+<span class="nc" id="L1624">		float percentHP = 1 - ((HT - postHP) / (float)HT); //percent health after damage was taken</span>
+		// The flash intensity increases primarily based on damage taken and secondarily on missing HP.
+<span class="nc" id="L1626">		float flashIntensity = 0.25f * (percentDMG * percentDMG) / percentHP;</span>
+		//if the intensity is very low don't flash at all
+<span class="nc bnc" id="L1628" title="All 2 branches missed.">		if (flashIntensity &gt;= 0.05f){</span>
+<span class="nc" id="L1629">			flashIntensity = Math.min(1/3f, flashIntensity); //cap intensity at 1/3</span>
+<span class="nc" id="L1630">			GameScene.flash( (int)(0xFF*flashIntensity) &lt;&lt; 16 );</span>
+<span class="nc bnc" id="L1631" title="All 2 branches missed.">			if (isAlive()) {</span>
+<span class="nc bnc" id="L1632" title="All 2 branches missed.">				if (flashIntensity &gt;= 1/6f) {</span>
+<span class="nc" id="L1633">					Sample.INSTANCE.play(Assets.Sounds.HEALTH_CRITICAL, 1/3f + flashIntensity * 2f);</span>
+				} else {
+<span class="nc" id="L1635">					Sample.INSTANCE.play(Assets.Sounds.HEALTH_WARN, 1/3f + flashIntensity * 4f);</span>
+				}
+				//hero gets interrupted on taking serious damage, regardless of any other factor
+<span class="nc" id="L1638">				interrupt();</span>
+<span class="nc" id="L1639">				damageInterrupt = true;</span>
+			}
+		}
+<span class="nc" id="L1642">	}</span>
+	
+	public void checkVisibleMobs() {
+<span class="nc" id="L1645">		ArrayList&lt;Mob&gt; visible = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L1647">		boolean newMob = false;</span>
+
+<span class="nc" id="L1649">		Mob target = null;</span>
+<span class="nc bnc" id="L1650" title="All 2 branches missed.">		for (Mob m : Dungeon.level.mobs.toArray(new Mob[0])) {</span>
+<span class="nc bnc" id="L1651" title="All 4 branches missed.">			if (fieldOfView[ m.pos ] &amp;&amp; m.landmark() != null){</span>
+<span class="nc" id="L1652">				Notes.add(m.landmark());</span>
+			}
+
+<span class="nc bnc" id="L1655" title="All 4 branches missed.">			if (fieldOfView[ m.pos ] &amp;&amp; m.alignment == Alignment.ENEMY) {</span>
+<span class="nc" id="L1656">				visible.add(m);</span>
+<span class="nc bnc" id="L1657" title="All 2 branches missed.">				if (!visibleEnemies.contains( m )) {</span>
+<span class="nc" id="L1658">					newMob = true;</span>
+				}
+
+				//only do a simple check for mind visioned enemies, better performance
+<span class="nc bnc" id="L1662" title="All 4 branches missed.">				if ((!mindVisionEnemies.contains(m) &amp;&amp; QuickSlotButton.autoAim(m) != -1)</span>
+<span class="nc bnc" id="L1663" title="All 4 branches missed.">						|| (mindVisionEnemies.contains(m) &amp;&amp; new Ballistica( pos, m.pos, Ballistica.PROJECTILE ).collisionPos == m.pos)) {</span>
+<span class="nc bnc" id="L1664" title="All 2 branches missed.">					if (target == null) {</span>
+<span class="nc" id="L1665">						target = m;</span>
+<span class="nc bnc" id="L1666" title="All 2 branches missed.">					} else if (distance(target) &gt; distance(m)) {</span>
+<span class="nc" id="L1667">						target = m;</span>
+					}
+<span class="nc bnc" id="L1669" title="All 4 branches missed.">					if (m instanceof Snake &amp;&amp; Dungeon.level.distance(m.pos, pos) &lt;= 4</span>
+<span class="nc bnc" id="L1670" title="All 2 branches missed.">							&amp;&amp; !Document.ADVENTURERS_GUIDE.isPageRead(Document.GUIDE_EXAMINING)){</span>
+<span class="nc" id="L1671">						GameScene.flashForDocument(Document.ADVENTURERS_GUIDE, Document.GUIDE_EXAMINING);</span>
+						//we set to read here to prevent this message popping up a bunch
+<span class="nc" id="L1673">						Document.ADVENTURERS_GUIDE.readPage(Document.GUIDE_EXAMINING);</span>
+					}
+				}
+			}
+		}
+
+<span class="nc" id="L1679">		Char lastTarget = QuickSlotButton.lastTarget;</span>
+<span class="nc bnc" id="L1680" title="All 4 branches missed.">		if (target != null &amp;&amp; (lastTarget == null ||</span>
+<span class="nc bnc" id="L1681" title="All 8 branches missed.">							!lastTarget.isAlive() || !lastTarget.isActive() ||</span>
+							lastTarget.alignment == Alignment.ALLY ||
+							!fieldOfView[lastTarget.pos])){
+<span class="nc" id="L1684">			QuickSlotButton.target(target);</span>
+		}
+		
+<span class="nc bnc" id="L1687" title="All 2 branches missed.">		if (newMob) {</span>
+<span class="nc bnc" id="L1688" title="All 2 branches missed.">			if (resting){</span>
+<span class="nc" id="L1689">				Dungeon.observe();</span>
+			}
+<span class="nc" id="L1691">			interrupt();</span>
+		}
+
+<span class="nc" id="L1694">		visibleEnemies = visible;</span>
+
+		//we also scan for blob landmarks here
+<span class="nc bnc" id="L1697" title="All 2 branches missed.">		for (Blob b : Dungeon.level.blobs.values().toArray(new Blob[0])){</span>
+<span class="nc bnc" id="L1698" title="All 6 branches missed.">			if (b.volume &gt; 0 &amp;&amp; b.landmark() != null &amp;&amp; !Notes.contains(b.landmark())){</span>
+				int cell;
+<span class="nc" id="L1700">				boolean found = false;</span>
+				//if a single cell within the blob is visible, we add the landmark
+<span class="nc bnc" id="L1702" title="All 2 branches missed.">				for (int i=b.area.top; i &lt; b.area.bottom; i++) {</span>
+<span class="nc bnc" id="L1703" title="All 2 branches missed.">					for (int j = b.area.left; j &lt; b.area.right; j++) {</span>
+<span class="nc" id="L1704">						cell = j + i* Dungeon.level.width();</span>
+<span class="nc bnc" id="L1705" title="All 4 branches missed.">						if (fieldOfView[cell] &amp;&amp; b.cur[cell] &gt; 0) {</span>
+<span class="nc" id="L1706">							Notes.add( b.landmark() );</span>
+<span class="nc" id="L1707">							found = true;</span>
+<span class="nc" id="L1708">							break;</span>
+						}
+					}
+<span class="nc bnc" id="L1711" title="All 2 branches missed.">					if (found) break;</span>
+				}
+
+				//Clear blobs that only exist for landmarks.
+				// Might want to make this a properly if it's used more
+<span class="nc bnc" id="L1716" title="All 4 branches missed.">				if (found &amp;&amp; b instanceof WeakFloorRoom.WellID){</span>
+<span class="nc" id="L1717">					b.fullyClear();</span>
+				}
+			}
+		}
+<span class="nc" id="L1721">	}</span>
+	
+	public int visibleEnemies() {
+<span class="nc" id="L1724">		return visibleEnemies.size();</span>
+	}
+	
+	public Mob visibleEnemy( int index ) {
+<span class="nc" id="L1728">		return visibleEnemies.get(index % visibleEnemies.size());</span>
+	}
+
+	public ArrayList&lt;Mob&gt; getVisibleEnemies(){
+<span class="nc" id="L1732">		return new ArrayList&lt;&gt;(visibleEnemies);</span>
+	}
+	
+<span class="nc" id="L1735">	private boolean walkingToVisibleTrapInFog = false;</span>
+	
+	//FIXME this is a fairly crude way to track this, really it would be nice to have a short
+	//history of hero actions
+<span class="nc" id="L1739">	public boolean justMoved = false;</span>
+	
+	private boolean getCloser( final int target ) {
+
+<span class="nc bnc" id="L1743" title="All 2 branches missed.">		if (target == pos)</span>
+<span class="nc" id="L1744">			return false;</span>
+
+<span class="nc bnc" id="L1746" title="All 2 branches missed.">		if (rooted) {</span>
+<span class="nc" id="L1747">			PixelScene.shake( 1, 1f );</span>
+<span class="nc" id="L1748">			return false;</span>
+		}
+		
+<span class="nc" id="L1751">		int step = -1;</span>
+		
+<span class="nc bnc" id="L1753" title="All 2 branches missed.">		if (Dungeon.level.adjacent( pos, target )) {</span>
+
+<span class="nc" id="L1755">			path = null;</span>
+
+<span class="nc bnc" id="L1757" title="All 2 branches missed.">			if (Actor.findChar( target ) == null) {</span>
+<span class="nc bnc" id="L1758" title="All 4 branches missed.">				if (Dungeon.level.passable[target] || Dungeon.level.avoid[target]) {</span>
+<span class="nc" id="L1759">					step = target;</span>
+				}
+<span class="nc bnc" id="L1761" title="All 2 branches missed.">				if (walkingToVisibleTrapInFog</span>
+<span class="nc bnc" id="L1762" title="All 2 branches missed.">						&amp;&amp; Dungeon.level.traps.get(target) != null</span>
+<span class="nc bnc" id="L1763" title="All 2 branches missed.">						&amp;&amp; Dungeon.level.traps.get(target).visible</span>
+<span class="nc bnc" id="L1764" title="All 2 branches missed.">						&amp;&amp; Dungeon.level.traps.get(target).active){</span>
+<span class="nc" id="L1765">					return false;</span>
+				}
+			}
+			
+		} else {
+
+<span class="nc" id="L1771">			boolean newPath = false;</span>
+<span class="nc bnc" id="L1772" title="All 6 branches missed.">			if (path == null || path.isEmpty() || !Dungeon.level.adjacent(pos, path.getFirst()))</span>
+<span class="nc" id="L1773">				newPath = true;</span>
+<span class="nc bnc" id="L1774" title="All 2 branches missed.">			else if (path.getLast() != target)</span>
+<span class="nc" id="L1775">				newPath = true;</span>
+			else {
+<span class="nc bnc" id="L1777" title="All 4 branches missed.">				if (!Dungeon.level.passable[path.get(0)] || Actor.findChar(path.get(0)) != null) {</span>
+<span class="nc" id="L1778">					newPath = true;</span>
+				}
+			}
+
+<span class="nc bnc" id="L1782" title="All 2 branches missed.">			if (newPath) {</span>
+
+<span class="nc" id="L1784">				int len = Dungeon.level.length();</span>
+<span class="nc" id="L1785">				boolean[] p = Dungeon.level.passable;</span>
+<span class="nc" id="L1786">				boolean[] v = Dungeon.level.visited;</span>
+<span class="nc" id="L1787">				boolean[] m = Dungeon.level.mapped;</span>
+<span class="nc" id="L1788">				boolean[] passable = new boolean[len];</span>
+<span class="nc bnc" id="L1789" title="All 2 branches missed.">				for (int i = 0; i &lt; len; i++) {</span>
+<span class="nc bnc" id="L1790" title="All 6 branches missed.">					passable[i] = p[i] &amp;&amp; (v[i] || m[i]);</span>
+				}
+
+<span class="nc" id="L1793">				PathFinder.Path newpath = Dungeon.findPath(this, target, passable, fieldOfView, true);</span>
+<span class="nc bnc" id="L1794" title="All 6 branches missed.">				if (newpath != null &amp;&amp; path != null &amp;&amp; newpath.size() &gt; 2*path.size()){</span>
+<span class="nc" id="L1795">					path = null;</span>
+				} else {
+<span class="nc" id="L1797">					path = newpath;</span>
+				}
+			}
+
+<span class="nc bnc" id="L1801" title="All 2 branches missed.">			if (path == null) return false;</span>
+<span class="nc" id="L1802">			step = path.removeFirst();</span>
+
+		}
+
+<span class="nc bnc" id="L1806" title="All 2 branches missed.">		if (step != -1) {</span>
+
+<span class="nc" id="L1808">			float delay = 1 / speed();</span>
+
+<span class="nc bnc" id="L1810" title="All 2 branches missed.">			if (buff(GreaterHaste.class) != null){</span>
+<span class="nc" id="L1811">				delay = 0;</span>
+			}
+
+<span class="nc bnc" id="L1814" title="All 6 branches missed.">			if (Dungeon.level.pit[step] &amp;&amp; !Dungeon.level.solid[step]</span>
+<span class="nc bnc" id="L1815" title="All 4 branches missed.">					&amp;&amp; (!flying || buff(Levitation.class) != null &amp;&amp; buff(Levitation.class).detachesWithinDelay(delay))){</span>
+<span class="nc bnc" id="L1816" title="All 2 branches missed.">				if (!Chasm.jumpConfirmed){</span>
+<span class="nc" id="L1817">					Chasm.heroJump(this);</span>
+<span class="nc" id="L1818">					interrupt();</span>
+				} else {
+<span class="nc" id="L1820">					flying = false;</span>
+<span class="nc" id="L1821">					remove(buff(Levitation.class)); //directly remove to prevent cell pressing</span>
+<span class="nc" id="L1822">					Chasm.heroFall(target);</span>
+				}
+<span class="nc" id="L1824">				canSelfTrample = false;</span>
+<span class="nc" id="L1825">				return false;</span>
+			}
+
+<span class="nc bnc" id="L1828" title="All 2 branches missed.">			if (buff(GreaterHaste.class) != null){</span>
+<span class="nc" id="L1829">				buff(GreaterHaste.class).spendMove();</span>
+			}
+
+<span class="nc bnc" id="L1832" title="All 2 branches missed.">			if (subClass == HeroSubClass.FREERUNNER){</span>
+<span class="nc" id="L1833">				Buff.affect(this, Momentum.class).gainStack();</span>
+			}
+			
+<span class="nc" id="L1836">			sprite.move(pos, step);</span>
+<span class="nc" id="L1837">			move(step);</span>
+
+<span class="nc" id="L1839">			spend( delay );</span>
+<span class="nc" id="L1840">			justMoved = true;</span>
+			
+<span class="nc" id="L1842">			search(false);</span>
+
+<span class="nc" id="L1844">			return true;</span>
+
+		} else {
+
+<span class="nc" id="L1848">			return false;</span>
+			
+		}
+
+	}
+	
+	public boolean handle( int cell ) {
+		
+<span class="nc bnc" id="L1856" title="All 2 branches missed.">		if (cell == -1) {</span>
+<span class="nc" id="L1857">			return false;</span>
+		}
+
+<span class="nc bnc" id="L1860" title="All 4 branches missed.">		if (fieldOfView == null || fieldOfView.length != Dungeon.level.length()){</span>
+<span class="nc" id="L1861">			fieldOfView = new boolean[Dungeon.level.length()];</span>
+<span class="nc" id="L1862">			Dungeon.level.updateFieldOfView( this, fieldOfView );</span>
+		}
+
+<span class="nc bnc" id="L1865" title="All 4 branches missed.">		if (!Dungeon.level.visited[cell] &amp;&amp; !Dungeon.level.mapped[cell]</span>
+<span class="nc bnc" id="L1866" title="All 2 branches missed.">				&amp;&amp; Dungeon.level.traps.get(cell) != null</span>
+<span class="nc bnc" id="L1867" title="All 2 branches missed.">				&amp;&amp; Dungeon.level.traps.get(cell).visible</span>
+<span class="nc bnc" id="L1868" title="All 2 branches missed.">				&amp;&amp; Dungeon.level.traps.get(cell).active) {</span>
+<span class="nc" id="L1869">			walkingToVisibleTrapInFog = true;</span>
+		} else {
+<span class="nc" id="L1871">			walkingToVisibleTrapInFog = false;</span>
+		}
+		
+<span class="nc" id="L1874">		Char ch = Actor.findChar( cell );</span>
+<span class="nc" id="L1875">		Heap heap = Dungeon.level.heaps.get( cell );</span>
+
+<span class="nc bnc" id="L1877" title="All 4 branches missed.">		if (Dungeon.level.map[cell] == Terrain.ALCHEMY &amp;&amp; cell != pos) {</span>
+			
+<span class="nc" id="L1879">			curAction = new HeroAction.Alchemy( cell );</span>
+			
+<span class="nc bnc" id="L1881" title="All 4 branches missed.">		} else if (fieldOfView[cell] &amp;&amp; ch instanceof Mob) {</span>
+
+<span class="nc bnc" id="L1883" title="All 2 branches missed.">			if (((Mob) ch).heroShouldInteract()) {</span>
+<span class="nc" id="L1884">				curAction = new HeroAction.Interact( ch );</span>
+			} else {
+<span class="nc" id="L1886">				curAction = new HeroAction.Attack( ch );</span>
+			}
+
+		//TODO perhaps only trigger this if hero is already adjacent? reducing mistaps
+<span class="nc bnc" id="L1890" title="All 2 branches missed.">		} else if (Dungeon.level instanceof MiningLevel &amp;&amp;</span>
+<span class="nc bnc" id="L1891" title="All 10 branches missed.">					belongings.getItem(Pickaxe.class) != null &amp;&amp;</span>
+				(Dungeon.level.map[cell] == Terrain.WALL
+						|| Dungeon.level.map[cell] == Terrain.WALL_DECO
+						|| Dungeon.level.map[cell] == Terrain.MINE_CRYSTAL
+						|| Dungeon.level.map[cell] == Terrain.MINE_BOULDER)){
+
+<span class="nc" id="L1897">			curAction = new HeroAction.Mine( cell );</span>
+
+<span class="nc bnc" id="L1899" title="All 2 branches missed.">		} else if (heap != null</span>
+				//moving to an item doesn't auto-pickup when enemies are near...
+<span class="nc bnc" id="L1901" title="All 8 branches missed.">				&amp;&amp; (visibleEnemies.size() == 0 || cell == pos ||</span>
+				//...but only for standard heaps. Chests and similar open as normal.
+				(heap.type != Type.HEAP &amp;&amp; heap.type != Type.FOR_SALE))) {
+
+<span class="nc bnc" id="L1905" title="All 3 branches missed.">			switch (heap.type) {</span>
+			case HEAP:
+<span class="nc" id="L1907">				curAction = new HeroAction.PickUp( cell );</span>
+<span class="nc" id="L1908">				break;</span>
+			case FOR_SALE:
+<span class="nc bnc" id="L1910" title="All 4 branches missed.">				curAction = heap.size() == 1 &amp;&amp; heap.peek().value() &gt; 0 ?</span>
+<span class="nc" id="L1911">					new HeroAction.Buy( cell ) :</span>
+<span class="nc" id="L1912">					new HeroAction.PickUp( cell );</span>
+<span class="nc" id="L1913">				break;</span>
+			default:
+<span class="nc" id="L1915">				curAction = new HeroAction.OpenChest( cell );</span>
+			}
+			
+<span class="nc bnc" id="L1918" title="All 6 branches missed.">		} else if (Dungeon.level.map[cell] == Terrain.LOCKED_DOOR || Dungeon.level.map[cell] == Terrain.CRYSTAL_DOOR || Dungeon.level.map[cell] == Terrain.LOCKED_EXIT) {</span>
+			
+<span class="nc" id="L1920">			curAction = new HeroAction.Unlock( cell );</span>
+			
+<span class="nc bnc" id="L1922" title="All 2 branches missed.">		} else if (Dungeon.level.getTransition(cell) != null</span>
+				//moving to a transition doesn't automatically trigger it when enemies are near
+<span class="nc bnc" id="L1924" title="All 6 branches missed.">				&amp;&amp; (visibleEnemies.size() == 0 || cell == pos)</span>
+				&amp;&amp; !Dungeon.level.locked
+<span class="nc bnc" id="L1926" title="All 4 branches missed.">				&amp;&amp; !Dungeon.level.plants.containsKey(cell)</span>
+<span class="nc bnc" id="L1927" title="All 2 branches missed.">				&amp;&amp; (Dungeon.depth &lt; 26 || Dungeon.level.getTransition(cell).type == LevelTransition.Type.REGULAR_ENTRANCE) ) {</span>
+
+<span class="nc" id="L1929">			curAction = new HeroAction.LvlTransition( cell );</span>
+			
+		}  else {
+			
+<span class="nc" id="L1933">			curAction = new HeroAction.Move( cell );</span>
+<span class="nc" id="L1934">			lastAction = null;</span>
+			
+		}
+
+<span class="nc" id="L1938">		return true;</span>
+	}
+	
+	public void earnExp( int exp, Class source ) {
+
+		//xp granted by ascension challenge is only for on-exp gain effects
+<span class="nc bnc" id="L1944" title="All 2 branches missed.">		if (source != AscensionChallenge.class) {</span>
+<span class="nc" id="L1945">			this.exp += exp;</span>
+		}
+<span class="nc" id="L1947">		float percent = exp/(float)maxExp();</span>
+
+<span class="nc" id="L1949">		EtherealChains.chainsRecharge chains = buff(EtherealChains.chainsRecharge.class);</span>
+<span class="nc bnc" id="L1950" title="All 2 branches missed.">		if (chains != null) chains.gainExp(percent);</span>
+
+<span class="nc" id="L1952">		HornOfPlenty.hornRecharge horn = buff(HornOfPlenty.hornRecharge.class);</span>
+<span class="nc bnc" id="L1953" title="All 2 branches missed.">		if (horn != null) horn.gainCharge(percent);</span>
+		
+<span class="nc" id="L1955">		AlchemistsToolkit.kitEnergy kit = buff(AlchemistsToolkit.kitEnergy.class);</span>
+<span class="nc bnc" id="L1956" title="All 2 branches missed.">		if (kit != null) kit.gainCharge(percent);</span>
+
+<span class="nc" id="L1958">		MasterThievesArmband.Thievery armband = buff(MasterThievesArmband.Thievery.class);</span>
+<span class="nc bnc" id="L1959" title="All 2 branches missed.">		if (armband != null) armband.gainCharge(percent);</span>
+
+<span class="nc" id="L1961">		Berserk berserk = buff(Berserk.class);</span>
+<span class="nc bnc" id="L1962" title="All 2 branches missed.">		if (berserk != null) berserk.recover(percent);</span>
+		
+<span class="nc bnc" id="L1964" title="All 2 branches missed.">		if (source != PotionOfExperience.class) {</span>
+<span class="nc bnc" id="L1965" title="All 2 branches missed.">			for (Item i : belongings) {</span>
+<span class="nc" id="L1966">				i.onHeroGainExp(percent, this);</span>
+<span class="nc" id="L1967">			}</span>
+<span class="nc bnc" id="L1968" title="All 2 branches missed.">			if (buff(Talent.RejuvenatingStepsFurrow.class) != null){</span>
+<span class="nc" id="L1969">				buff(Talent.RejuvenatingStepsFurrow.class).countDown(percent*200f);</span>
+<span class="nc bnc" id="L1970" title="All 2 branches missed.">				if (buff(Talent.RejuvenatingStepsFurrow.class).count() &lt;= 0){</span>
+<span class="nc" id="L1971">					buff(Talent.RejuvenatingStepsFurrow.class).detach();</span>
+				}
+			}
+<span class="nc bnc" id="L1974" title="All 2 branches missed.">			if (buff(ElementalStrike.ElementalStrikeFurrowCounter.class) != null){</span>
+<span class="nc" id="L1975">				buff(ElementalStrike.ElementalStrikeFurrowCounter.class).countDown(percent*20f);</span>
+<span class="nc bnc" id="L1976" title="All 2 branches missed.">				if (buff(ElementalStrike.ElementalStrikeFurrowCounter.class).count() &lt;= 0){</span>
+<span class="nc" id="L1977">					buff(ElementalStrike.ElementalStrikeFurrowCounter.class).detach();</span>
+				}
+			}
+<span class="nc bnc" id="L1980" title="All 2 branches missed.">			if (buff(HallowedGround.HallowedFurrowTracker.class) != null){</span>
+<span class="nc" id="L1981">				buff(HallowedGround.HallowedFurrowTracker.class).countDown(percent*5f);</span>
+<span class="nc bnc" id="L1982" title="All 2 branches missed.">				if (buff(HallowedGround.HallowedFurrowTracker.class).count() &lt;= 0){</span>
+<span class="nc" id="L1983">					buff(HallowedGround.HallowedFurrowTracker.class).detach();</span>
+				}
+			}
+		}
+		
+<span class="nc" id="L1988">		boolean levelUp = false;</span>
+<span class="nc bnc" id="L1989" title="All 2 branches missed.">		while (this.exp &gt;= maxExp()) {</span>
+<span class="nc" id="L1990">			this.exp -= maxExp();</span>
+
+<span class="nc bnc" id="L1992" title="All 2 branches missed.">			if (buff(Talent.WandPreservationCounter.class) != null</span>
+<span class="nc bnc" id="L1993" title="All 2 branches missed.">				&amp;&amp; pointsInTalent(Talent.WAND_PRESERVATION) == 2){</span>
+<span class="nc" id="L1994">				buff(Talent.WandPreservationCounter.class).detach();</span>
+			}
+
+<span class="nc bnc" id="L1997" title="All 2 branches missed.">			if (lvl &lt; MAX_LEVEL) {</span>
+<span class="nc" id="L1998">				lvl++;</span>
+<span class="nc" id="L1999">				levelUp = true;</span>
+				
+<span class="nc bnc" id="L2001" title="All 2 branches missed.">				if (buff(ElixirOfMight.HTBoost.class) != null){</span>
+<span class="nc" id="L2002">					buff(ElixirOfMight.HTBoost.class).onLevelUp();</span>
+				}
+				
+<span class="nc" id="L2005">				updateHT( true );</span>
+<span class="nc" id="L2006">				attackSkill++;</span>
+<span class="nc" id="L2007">				defenseSkill++;</span>
+
+			} else {
+<span class="nc" id="L2010">				Buff.prolong(this, Bless.class, Bless.DURATION);</span>
+<span class="nc" id="L2011">				this.exp = 0;</span>
+
+<span class="nc" id="L2013">				GLog.newLine();</span>
+<span class="nc" id="L2014">				GLog.p( Messages.get(this, &quot;level_cap&quot;));</span>
+<span class="nc" id="L2015">				Sample.INSTANCE.play( Assets.Sounds.LEVELUP );</span>
+			}
+			
+		}
+		
+<span class="nc bnc" id="L2020" title="All 2 branches missed.">		if (levelUp) {</span>
+			
+<span class="nc bnc" id="L2022" title="All 2 branches missed.">			if (sprite != null) {</span>
+<span class="nc" id="L2023">				GLog.newLine();</span>
+<span class="nc" id="L2024">				GLog.p( Messages.get(this, &quot;new_level&quot;) );</span>
+<span class="nc" id="L2025">				sprite.showStatus( CharSprite.POSITIVE, Messages.get(Hero.class, &quot;level_up&quot;) );</span>
+<span class="nc" id="L2026">				Sample.INSTANCE.play( Assets.Sounds.LEVELUP );</span>
+<span class="nc bnc" id="L2027" title="All 2 branches missed.">				if (lvl &lt; Talent.tierLevelThresholds[Talent.MAX_TALENT_TIERS+1]){</span>
+<span class="nc" id="L2028">					GLog.newLine();</span>
+<span class="nc" id="L2029">					GLog.p( Messages.get(this, &quot;new_talent&quot;) );</span>
+<span class="nc" id="L2030">					StatusPane.talentBlink = 10f;</span>
+<span class="nc" id="L2031">					WndHero.lastIdx = 1;</span>
+				}
+			}
+			
+<span class="nc" id="L2035">			Item.updateQuickslot();</span>
+			
+<span class="nc" id="L2037">			Badges.validateLevelReached();</span>
+		}
+<span class="nc" id="L2039">	}</span>
+	
+	public int maxExp() {
+<span class="nc" id="L2042">		return maxExp( lvl );</span>
+	}
+	
+	public static int maxExp( int lvl ){
+<span class="nc" id="L2046">		return 5 + lvl * 5;</span>
+	}
+	
+	public boolean isStarving() {
+<span class="nc" id="L2050">		return Buff.affect(this, Hunger.class).isStarving();</span>
+	}
+	
+	@Override
+	public boolean add( Buff buff ) {
+
+<span class="nc bnc" id="L2056" title="All 2 branches missed.">		if (buff(TimekeepersHourglass.timeStasis.class) != null</span>
+<span class="nc bnc" id="L2057" title="All 2 branches missed.">			|| buff(TimeStasis.class) != null) {</span>
+<span class="nc" id="L2058">			return false;</span>
+		}
+
+<span class="nc" id="L2061">		boolean added = super.add( buff );</span>
+
+<span class="nc bnc" id="L2063" title="All 4 branches missed.">		if (sprite != null &amp;&amp; added) {</span>
+<span class="nc" id="L2064">			String msg = buff.heroMessage();</span>
+<span class="nc bnc" id="L2065" title="All 2 branches missed.">			if (msg != null){</span>
+<span class="nc" id="L2066">				GLog.w(msg);</span>
+			}
+
+<span class="nc bnc" id="L2069" title="All 4 branches missed.">			if (buff instanceof Paralysis || buff instanceof Vertigo) {</span>
+<span class="nc" id="L2070">				interrupt();</span>
+			}
+
+		}
+		
+<span class="nc" id="L2075">		BuffIndicator.refreshHero();</span>
+
+<span class="nc" id="L2077">		return added;</span>
+	}
+	
+	@Override
+	public boolean remove( Buff buff ) {
+<span class="nc bnc" id="L2082" title="All 2 branches missed.">		if (super.remove( buff )) {</span>
+<span class="nc" id="L2083">			BuffIndicator.refreshHero();</span>
+<span class="nc" id="L2084">			return true;</span>
+		}
+<span class="nc" id="L2086">		return false;</span>
+	}
+	
+	@Override
+	public void die( Object cause ) {
+		
+<span class="nc" id="L2092">		curAction = null;</span>
+
+<span class="nc" id="L2094">		Ankh ankh = null;</span>
+
+		//look for ankhs in player inventory, prioritize ones which are blessed.
+<span class="nc bnc" id="L2097" title="All 2 branches missed.">		for (Ankh i : belongings.getAllItems(Ankh.class)){</span>
+<span class="nc bnc" id="L2098" title="All 4 branches missed.">			if (ankh == null || i.isBlessed()) {</span>
+<span class="nc" id="L2099">				ankh = i;</span>
+			}
+<span class="nc" id="L2101">		}</span>
+
+<span class="nc bnc" id="L2103" title="All 2 branches missed.">		if (ankh != null) {</span>
+<span class="nc" id="L2104">			interrupt();</span>
+
+<span class="nc bnc" id="L2106" title="All 2 branches missed.">			if (ankh.isBlessed()) {</span>
+<span class="nc" id="L2107">				this.HP = HT / 4;</span>
+
+<span class="nc" id="L2109">				PotionOfHealing.cure(this);</span>
+<span class="nc" id="L2110">				Buff.prolong(this, Invulnerability.class, Invulnerability.DURATION);</span>
+
+<span class="nc" id="L2112">				SpellSprite.show(this, SpellSprite.ANKH);</span>
+<span class="nc" id="L2113">				GameScene.flash(0x80FFFF40);</span>
+<span class="nc" id="L2114">				Sample.INSTANCE.play(Assets.Sounds.TELEPORT);</span>
+<span class="nc" id="L2115">				GLog.w(Messages.get(this, &quot;revive&quot;));</span>
+<span class="nc" id="L2116">				Statistics.ankhsUsed++;</span>
+<span class="nc" id="L2117">				Catalog.countUse(Ankh.class);</span>
+
+<span class="nc" id="L2119">				ankh.detach(belongings.backpack);</span>
+
+<span class="nc bnc" id="L2121" title="All 2 branches missed.">				for (Char ch : Actor.chars()) {</span>
+<span class="nc bnc" id="L2122" title="All 2 branches missed.">					if (ch instanceof DriedRose.GhostHero) {</span>
+<span class="nc" id="L2123">						((DriedRose.GhostHero) ch).sayAnhk();</span>
+<span class="nc" id="L2124">						return;</span>
+					}
+<span class="nc" id="L2126">				}</span>
+			} else {
+
+				//this is hacky, basically we want to declare that a wndResurrect exists before
+				//it actually gets created. This is important so that the game knows to not
+				//delete the run or submit it to rankings, because a WndResurrect is about to exist
+				//this is needed because the actual creation of the window is delayed here
+<span class="nc" id="L2133">				WndResurrect.instance = new Object();</span>
+<span class="nc" id="L2134">				Ankh finalAnkh = ankh;</span>
+<span class="nc" id="L2135">				Game.runOnRenderThread(new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L2138">						GameScene.show( new WndResurrect(finalAnkh) );</span>
+<span class="nc" id="L2139">					}</span>
+				});
+
+<span class="nc bnc" id="L2142" title="All 2 branches missed.">				if (cause instanceof Hero.Doom) {</span>
+<span class="nc" id="L2143">					((Hero.Doom)cause).onDeath();</span>
+				}
+
+<span class="nc" id="L2146">				SacrificialFire.Marked sacMark = buff(SacrificialFire.Marked.class);</span>
+<span class="nc bnc" id="L2147" title="All 2 branches missed.">				if (sacMark != null){</span>
+<span class="nc" id="L2148">					sacMark.detach();</span>
+				}
+
+			}
+<span class="nc" id="L2152">			return;</span>
+		}
+		
+<span class="nc" id="L2155">		Actor.fixTime();</span>
+<span class="nc" id="L2156">		super.die( cause );</span>
+<span class="nc" id="L2157">		reallyDie( cause );</span>
+<span class="nc" id="L2158">	}</span>
+	
+	public static void reallyDie( Object cause ) {
+		
+<span class="nc" id="L2162">		int length = Dungeon.level.length();</span>
+<span class="nc" id="L2163">		int[] map = Dungeon.level.map;</span>
+<span class="nc" id="L2164">		boolean[] visited = Dungeon.level.visited;</span>
+<span class="nc" id="L2165">		boolean[] discoverable = Dungeon.level.discoverable;</span>
+		
+<span class="nc bnc" id="L2167" title="All 2 branches missed.">		for (int i=0; i &lt; length; i++) {</span>
+			
+<span class="nc" id="L2169">			int terr = map[i];</span>
+			
+<span class="nc bnc" id="L2171" title="All 2 branches missed.">			if (discoverable[i]) {</span>
+				
+<span class="nc" id="L2173">				visited[i] = true;</span>
+<span class="nc bnc" id="L2174" title="All 2 branches missed.">				if ((Terrain.flags[terr] &amp; Terrain.SECRET) != 0) {</span>
+<span class="nc" id="L2175">					Dungeon.level.discover( i );</span>
+				}
+			}
+		}
+		
+<span class="nc" id="L2180">		Bones.leave();</span>
+		
+<span class="nc" id="L2182">		Dungeon.observe();</span>
+<span class="nc" id="L2183">		GameScene.updateFog();</span>
+				
+<span class="nc" id="L2185">		Dungeon.hero.belongings.identify();</span>
+
+<span class="nc" id="L2187">		int pos = Dungeon.hero.pos;</span>
+
+<span class="nc" id="L2189">		ArrayList&lt;Integer&gt; passable = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L2190" title="All 2 branches missed.">		for (Integer ofs : PathFinder.NEIGHBOURS8) {</span>
+<span class="nc" id="L2191">			int cell = pos + ofs;</span>
+<span class="nc bnc" id="L2192" title="All 6 branches missed.">			if ((Dungeon.level.passable[cell] || Dungeon.level.avoid[cell]) &amp;&amp; Dungeon.level.heaps.get( cell ) == null) {</span>
+<span class="nc" id="L2193">				passable.add( cell );</span>
+			}
+		}
+<span class="nc" id="L2196">		Collections.shuffle( passable );</span>
+
+<span class="nc" id="L2198">		ArrayList&lt;Item&gt; items = new ArrayList&lt;&gt;(Dungeon.hero.belongings.backpack.items);</span>
+<span class="nc bnc" id="L2199" title="All 2 branches missed.">		for (Integer cell : passable) {</span>
+<span class="nc bnc" id="L2200" title="All 2 branches missed.">			if (items.isEmpty()) {</span>
+<span class="nc" id="L2201">				break;</span>
+			}
+
+<span class="nc" id="L2204">			Item item = Random.element( items );</span>
+<span class="nc" id="L2205">			Dungeon.level.drop( item, cell ).sprite.drop( pos );</span>
+<span class="nc" id="L2206">			items.remove( item );</span>
+<span class="nc" id="L2207">		}</span>
+
+<span class="nc bnc" id="L2209" title="All 2 branches missed.">		for (Char c : Actor.chars()){</span>
+<span class="nc bnc" id="L2210" title="All 2 branches missed.">			if (c instanceof DriedRose.GhostHero){</span>
+<span class="nc" id="L2211">				((DriedRose.GhostHero) c).sayHeroKilled();</span>
+			}
+<span class="nc" id="L2213">		}</span>
+
+<span class="nc" id="L2215">		Game.runOnRenderThread(new Callback() {</span>
+			@Override
+			public void call() {
+<span class="nc" id="L2218">				GameScene.gameOver();</span>
+<span class="nc" id="L2219">				Sample.INSTANCE.play( Assets.Sounds.DEATH );</span>
+<span class="nc" id="L2220">			}</span>
+		});
+
+<span class="nc bnc" id="L2223" title="All 2 branches missed.">		if (cause instanceof Hero.Doom) {</span>
+<span class="nc" id="L2224">			((Hero.Doom)cause).onDeath();</span>
+		}
+
+<span class="nc" id="L2227">		Dungeon.deleteGame( GamesInProgress.curSlot, true );</span>
+<span class="nc" id="L2228">	}</span>
+
+	//effectively cache this buff to prevent having to call buff(...) a bunch.
+	//This is relevant because we call isAlive during drawing, which has both performance
+	//and thread coordination implications if that method calls buff(...) frequently
+	private Berserk berserk;
+
+	@Override
+	public boolean isAlive() {
+		
+<span class="nc bnc" id="L2238" title="All 2 branches missed.">		if (HP &lt;= 0){</span>
+<span class="nc bnc" id="L2239" title="All 2 branches missed.">			if (berserk == null) berserk = buff(Berserk.class);</span>
+<span class="nc bnc" id="L2240" title="All 4 branches missed.">			return berserk != null &amp;&amp; berserk.berserking();</span>
+		} else {
+<span class="nc" id="L2242">			berserk = null;</span>
+<span class="nc" id="L2243">			return super.isAlive();</span>
+		}
+	}
+
+	@Override
+	public void move(int step, boolean travelling) {
+<span class="nc bnc" id="L2249" title="All 2 branches missed.">		boolean wasHighGrass = Dungeon.level.map[step] == Terrain.HIGH_GRASS;</span>
+
+<span class="nc" id="L2251">		super.move( step, travelling);</span>
+		
+<span class="nc bnc" id="L2253" title="All 4 branches missed.">		if (!flying &amp;&amp; travelling) {</span>
+<span class="nc bnc" id="L2254" title="All 2 branches missed.">			if (Dungeon.level.water[pos]) {</span>
+<span class="nc" id="L2255">				Sample.INSTANCE.play( Assets.Sounds.WATER, 1, Random.Float( 0.8f, 1.25f ) );</span>
+<span class="nc bnc" id="L2256" title="All 2 branches missed.">			} else if (Dungeon.level.map[pos] == Terrain.EMPTY_SP) {</span>
+<span class="nc" id="L2257">				Sample.INSTANCE.play( Assets.Sounds.STURDY, 1, Random.Float( 0.96f, 1.05f ) );</span>
+<span class="nc bnc" id="L2258" title="All 6 branches missed.">			} else if (Dungeon.level.map[pos] == Terrain.GRASS</span>
+					|| Dungeon.level.map[pos] == Terrain.EMBERS
+					|| Dungeon.level.map[pos] == Terrain.FURROWED_GRASS){
+<span class="nc bnc" id="L2261" title="All 4 branches missed.">				if (step == pos &amp;&amp; wasHighGrass) {</span>
+<span class="nc" id="L2262">					Sample.INSTANCE.play(Assets.Sounds.TRAMPLE, 1, Random.Float( 0.96f, 1.05f ) );</span>
+				} else {
+<span class="nc" id="L2264">					Sample.INSTANCE.play( Assets.Sounds.GRASS, 1, Random.Float( 0.96f, 1.05f ) );</span>
+				}
+			} else {
+<span class="nc" id="L2267">				Sample.INSTANCE.play( Assets.Sounds.STEP, 1, Random.Float( 0.96f, 1.05f ) );</span>
+			}
+		}
+<span class="nc" id="L2270">	}</span>
+	
+	@Override
+	public void onAttackComplete() {
+
+<span class="nc bnc" id="L2275" title="All 2 branches missed.">		if (enemy == null){</span>
+<span class="nc" id="L2276">			curAction = null;</span>
+<span class="nc" id="L2277">			super.onAttackComplete();</span>
+<span class="nc" id="L2278">			return;</span>
+		}
+		
+<span class="nc" id="L2281">		AttackIndicator.target(enemy);</span>
+<span class="nc bnc" id="L2282" title="All 6 branches missed.">		boolean wasEnemy = enemy.alignment == Alignment.ENEMY</span>
+				|| (enemy instanceof Mimic &amp;&amp; enemy.alignment == Alignment.NEUTRAL);
+
+<span class="nc" id="L2285">		boolean hit = attack( enemy );</span>
+		
+<span class="nc" id="L2287">		Invisibility.dispel();</span>
+<span class="nc" id="L2288">		spend( attackDelay() );</span>
+
+<span class="nc bnc" id="L2290" title="All 6 branches missed.">		if (hit &amp;&amp; subClass == HeroSubClass.GLADIATOR &amp;&amp; wasEnemy){</span>
+<span class="nc" id="L2291">			Buff.affect( this, Combo.class ).hit( enemy );</span>
+		}
+
+<span class="nc bnc" id="L2294" title="All 6 branches missed.">		if (hit &amp;&amp; heroClass == HeroClass.DUELIST &amp;&amp; wasEnemy){</span>
+<span class="nc" id="L2295">			Buff.affect( this, Sai.ComboStrikeTracker.class).addHit();</span>
+		}
+
+<span class="nc" id="L2298">		curAction = null;</span>
+
+<span class="nc" id="L2300">		super.onAttackComplete();</span>
+<span class="nc" id="L2301">	}</span>
+	
+	@Override
+	public void onMotionComplete() {
+<span class="nc" id="L2305">		GameScene.checkKeyHold();</span>
+<span class="nc" id="L2306">	}</span>
+	
+	@Override
+	public void onOperateComplete() {
+		
+<span class="nc bnc" id="L2311" title="All 2 branches missed.">		if (curAction instanceof HeroAction.Unlock) {</span>
+
+<span class="nc" id="L2313">			int doorCell = ((HeroAction.Unlock)curAction).dst;</span>
+<span class="nc" id="L2314">			int door = Dungeon.level.map[doorCell];</span>
+			
+<span class="nc bnc" id="L2316" title="All 2 branches missed.">			if (Dungeon.level.distance(pos, doorCell) &lt;= 1) {</span>
+<span class="nc" id="L2317">				boolean hasKey = true;</span>
+<span class="nc bnc" id="L2318" title="All 2 branches missed.">				if (door == Terrain.LOCKED_DOOR) {</span>
+<span class="nc" id="L2319">					hasKey = Notes.remove(new IronKey(Dungeon.depth));</span>
+<span class="nc bnc" id="L2320" title="All 2 branches missed.">					if (hasKey) Level.set(doorCell, Terrain.DOOR);</span>
+<span class="nc bnc" id="L2321" title="All 2 branches missed.">				} else if (door == Terrain.CRYSTAL_DOOR) {</span>
+<span class="nc" id="L2322">					hasKey = Notes.remove(new CrystalKey(Dungeon.depth));</span>
+<span class="nc bnc" id="L2323" title="All 2 branches missed.">					if (hasKey) {</span>
+<span class="nc" id="L2324">						Level.set(doorCell, Terrain.EMPTY);</span>
+<span class="nc" id="L2325">						Sample.INSTANCE.play(Assets.Sounds.TELEPORT);</span>
+<span class="nc" id="L2326">						CellEmitter.get( doorCell ).start( Speck.factory( Speck.DISCOVER ), 0.025f, 20 );</span>
+					}
+				} else {
+<span class="nc" id="L2329">					hasKey = Notes.remove(new SkeletonKey(Dungeon.depth));</span>
+<span class="nc bnc" id="L2330" title="All 2 branches missed.">					if (hasKey) Level.set(doorCell, Terrain.UNLOCKED_EXIT);</span>
+				}
+				
+<span class="nc bnc" id="L2333" title="All 2 branches missed.">				if (hasKey) {</span>
+<span class="nc" id="L2334">					GameScene.updateKeyDisplay();</span>
+<span class="nc" id="L2335">					GameScene.updateMap(doorCell);</span>
+<span class="nc" id="L2336">					spend(Key.TIME_TO_UNLOCK);</span>
+				}
+			}
+			
+<span class="nc bnc" id="L2340" title="All 2 branches missed.">		} else if (curAction instanceof HeroAction.OpenChest) {</span>
+			
+<span class="nc" id="L2342">			Heap heap = Dungeon.level.heaps.get( ((HeroAction.OpenChest)curAction).dst );</span>
+			
+<span class="nc bnc" id="L2344" title="All 2 branches missed.">			if (Dungeon.level.distance(pos, heap.pos) &lt;= 1){</span>
+<span class="nc" id="L2345">				boolean hasKey = true;</span>
+<span class="nc bnc" id="L2346" title="All 4 branches missed.">				if (heap.type == Type.SKELETON || heap.type == Type.REMAINS) {</span>
+<span class="nc" id="L2347">					Sample.INSTANCE.play( Assets.Sounds.BONES );</span>
+<span class="nc bnc" id="L2348" title="All 2 branches missed.">				} else if (heap.type == Type.LOCKED_CHEST){</span>
+<span class="nc" id="L2349">					hasKey = Notes.remove(new GoldenKey(Dungeon.depth));</span>
+<span class="nc bnc" id="L2350" title="All 2 branches missed.">				} else if (heap.type == Type.CRYSTAL_CHEST){</span>
+<span class="nc" id="L2351">					hasKey = Notes.remove(new CrystalKey(Dungeon.depth));</span>
+				}
+				
+<span class="nc bnc" id="L2354" title="All 2 branches missed.">				if (hasKey) {</span>
+<span class="nc" id="L2355">					GameScene.updateKeyDisplay();</span>
+<span class="nc" id="L2356">					heap.open(this);</span>
+<span class="nc" id="L2357">					spend(Key.TIME_TO_UNLOCK);</span>
+				}
+			}
+			
+		}
+<span class="nc" id="L2362">		curAction = null;</span>
+
+<span class="nc bnc" id="L2364" title="All 2 branches missed.">		if (!ready) {</span>
+<span class="nc" id="L2365">			super.onOperateComplete();</span>
+		}
+<span class="nc" id="L2367">	}</span>
+
+	public boolean search( boolean intentional ) {
+		
+<span class="nc bnc" id="L2371" title="All 2 branches missed.">		if (!isAlive()) return false;</span>
+		
+<span class="nc" id="L2373">		boolean smthFound = false;</span>
+
+<span class="nc bnc" id="L2375" title="All 2 branches missed.">		boolean circular = pointsInTalent(Talent.WIDE_SEARCH) == 1;</span>
+<span class="nc bnc" id="L2376" title="All 2 branches missed.">		int distance = heroClass == HeroClass.ROGUE ? 2 : 1;</span>
+<span class="nc bnc" id="L2377" title="All 2 branches missed.">		if (hasTalent(Talent.WIDE_SEARCH)) distance++;</span>
+		
+<span class="nc bnc" id="L2379" title="All 2 branches missed.">		boolean foresight = buff(Foresight.class) != null;</span>
+<span class="nc bnc" id="L2380" title="All 4 branches missed.">		boolean foresightScan = foresight &amp;&amp; !Dungeon.level.mapped[pos];</span>
+
+<span class="nc bnc" id="L2382" title="All 2 branches missed.">		if (foresightScan){</span>
+<span class="nc" id="L2383">			Dungeon.level.mapped[pos] = true;</span>
+		}
+
+<span class="nc bnc" id="L2386" title="All 2 branches missed.">		if (foresight) {</span>
+<span class="nc" id="L2387">			distance = Foresight.DISTANCE;</span>
+<span class="nc" id="L2388">			circular = true;</span>
+		}
+
+<span class="nc" id="L2391">		Point c = Dungeon.level.cellToPoint(pos);</span>
+
+<span class="nc" id="L2393">		TalismanOfForesight.Foresight talisman = buff( TalismanOfForesight.Foresight.class );</span>
+<span class="nc bnc" id="L2394" title="All 4 branches missed.">		boolean cursed = talisman != null &amp;&amp; talisman.isCursed();</span>
+
+<span class="nc" id="L2396">		int[] rounding = ShadowCaster.rounding[distance];</span>
+
+		int left, right;
+		int curr;
+<span class="nc bnc" id="L2400" title="All 2 branches missed.">		for (int y = Math.max(0, c.y - distance); y &lt;= Math.min(Dungeon.level.height()-1, c.y + distance); y++) {</span>
+<span class="nc bnc" id="L2401" title="All 2 branches missed.">			if (!circular){</span>
+<span class="nc" id="L2402">				left = c.x - distance;</span>
+<span class="nc bnc" id="L2403" title="All 2 branches missed.">			} else if (rounding[Math.abs(c.y - y)] &lt; Math.abs(c.y - y)) {</span>
+<span class="nc" id="L2404">				left = c.x - rounding[Math.abs(c.y - y)];</span>
+			} else {
+<span class="nc" id="L2406">				left = distance;</span>
+<span class="nc bnc" id="L2407" title="All 2 branches missed.">				while (rounding[left] &lt; rounding[Math.abs(c.y - y)]){</span>
+<span class="nc" id="L2408">					left--;</span>
+				}
+<span class="nc" id="L2410">				left = c.x - left;</span>
+			}
+<span class="nc" id="L2412">			right = Math.min(Dungeon.level.width()-1, c.x + c.x - left);</span>
+<span class="nc" id="L2413">			left = Math.max(0, left);</span>
+<span class="nc bnc" id="L2414" title="All 2 branches missed.">			for (curr = left + y * Dungeon.level.width(); curr &lt;= right + y * Dungeon.level.width(); curr++){</span>
+
+<span class="nc bnc" id="L2416" title="All 6 branches missed.">				if ((foresight || fieldOfView[curr]) &amp;&amp; curr != pos) {</span>
+
+<span class="nc bnc" id="L2418" title="All 6 branches missed.">					if ((foresight &amp;&amp; (!Dungeon.level.mapped[curr] || foresightScan))){</span>
+<span class="nc bnc" id="L2419" title="All 2 branches missed.">						GameScene.effectOverFog(new CheckedCell(curr, foresightScan ? pos : curr));</span>
+<span class="nc bnc" id="L2420" title="All 2 branches missed.">					} else if (intentional) {</span>
+<span class="nc" id="L2421">						GameScene.effectOverFog(new CheckedCell(curr, pos));</span>
+					}
+
+<span class="nc bnc" id="L2424" title="All 2 branches missed.">					if (foresight){</span>
+<span class="nc" id="L2425">						Dungeon.level.mapped[curr] = true;</span>
+					}
+					
+<span class="nc bnc" id="L2428" title="All 2 branches missed.">					if (Dungeon.level.secret[curr]){</span>
+						
+<span class="nc" id="L2430">						Trap trap = Dungeon.level.traps.get( curr );</span>
+						float chance;
+
+						//searches aided by foresight always succeed, even if trap isn't searchable
+<span class="nc bnc" id="L2434" title="All 2 branches missed.">						if (foresight){</span>
+<span class="nc" id="L2435">							chance = 1f;</span>
+
+						//otherwise if the trap isn't searchable, searching always fails
+<span class="nc bnc" id="L2438" title="All 4 branches missed.">						} else if (trap != null &amp;&amp; !trap.canBeSearched){</span>
+<span class="nc" id="L2439">							chance = 0f;</span>
+
+						//intentional searches always succeed against regular traps and doors
+<span class="nc bnc" id="L2442" title="All 2 branches missed.">						} else if (intentional){</span>
+<span class="nc" id="L2443">							chance = 1f;</span>
+						
+						//unintentional searches always fail with a cursed talisman
+<span class="nc bnc" id="L2446" title="All 2 branches missed.">						} else if (cursed) {</span>
+<span class="nc" id="L2447">							chance = 0f;</span>
+							
+						//unintentional trap detection scales from 40% at floor 0 to 30% at floor 25
+<span class="nc bnc" id="L2450" title="All 2 branches missed.">						} else if (Dungeon.level.map[curr] == Terrain.SECRET_TRAP) {</span>
+<span class="nc" id="L2451">							chance = 0.4f - (Dungeon.depth / 250f);</span>
+							
+						//unintentional door detection scales from 20% at floor 0 to 0% at floor 20
+						} else {
+<span class="nc" id="L2455">							chance = 0.2f - (Dungeon.depth / 100f);</span>
+						}
+
+						//don't want to let the player search though hidden doors in tutorial
+<span class="nc bnc" id="L2459" title="All 2 branches missed.">						if (SPDSettings.intro()){</span>
+<span class="nc" id="L2460">							chance = 0;</span>
+						}
+						
+<span class="nc bnc" id="L2463" title="All 2 branches missed.">						if (Random.Float() &lt; chance) {</span>
+						
+<span class="nc" id="L2465">							int oldValue = Dungeon.level.map[curr];</span>
+							
+<span class="nc" id="L2467">							GameScene.discoverTile( curr, oldValue );</span>
+							
+<span class="nc" id="L2469">							Dungeon.level.discover( curr );</span>
+							
+<span class="nc" id="L2471">							ScrollOfMagicMapping.discover( curr );</span>
+							
+<span class="nc bnc" id="L2473" title="All 2 branches missed.">							if (fieldOfView[curr]) smthFound = true;</span>
+	
+<span class="nc bnc" id="L2475" title="All 2 branches missed.">							if (talisman != null){</span>
+<span class="nc bnc" id="L2476" title="All 2 branches missed.">								if (oldValue == Terrain.SECRET_TRAP){</span>
+<span class="nc" id="L2477">									talisman.charge(2);</span>
+<span class="nc bnc" id="L2478" title="All 2 branches missed.">								} else if (oldValue == Terrain.SECRET_DOOR){</span>
+<span class="nc" id="L2479">									talisman.charge(10);</span>
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		
+<span class="nc bnc" id="L2488" title="All 2 branches missed.">		if (intentional) {</span>
+<span class="nc" id="L2489">			sprite.showStatus( CharSprite.DEFAULT, Messages.get(this, &quot;search&quot;) );</span>
+<span class="nc" id="L2490">			sprite.operate( pos );</span>
+<span class="nc bnc" id="L2491" title="All 2 branches missed.">			if (!Dungeon.level.locked) {</span>
+<span class="nc bnc" id="L2492" title="All 2 branches missed.">				if (cursed) {</span>
+<span class="nc" id="L2493">					GLog.n(Messages.get(this, &quot;search_distracted&quot;));</span>
+<span class="nc" id="L2494">					Buff.affect(this, Hunger.class).affectHunger(TIME_TO_SEARCH - (2 * HUNGER_FOR_SEARCH));</span>
+				} else {
+<span class="nc" id="L2496">					Buff.affect(this, Hunger.class).affectHunger(TIME_TO_SEARCH - HUNGER_FOR_SEARCH);</span>
+				}
+			}
+<span class="nc" id="L2499">			spendAndNext(TIME_TO_SEARCH);</span>
+			
+		}
+		
+<span class="nc bnc" id="L2503" title="All 2 branches missed.">		if (smthFound) {</span>
+<span class="nc" id="L2504">			GLog.w( Messages.get(this, &quot;noticed_smth&quot;) );</span>
+<span class="nc" id="L2505">			Sample.INSTANCE.play( Assets.Sounds.SECRET );</span>
+<span class="nc" id="L2506">			interrupt();</span>
+		}
+
+<span class="nc bnc" id="L2509" title="All 2 branches missed.">		if (foresight){</span>
+<span class="nc" id="L2510">			GameScene.updateFog(pos, Foresight.DISTANCE+1);</span>
+		}
+
+<span class="nc bnc" id="L2513" title="All 2 branches missed.">		if (talisman != null){</span>
+<span class="nc" id="L2514">			talisman.checkAwareness();</span>
+		}
+		
+<span class="nc" id="L2517">		return smthFound;</span>
+	}
+	
+	public void resurrect() {
+<span class="nc" id="L2521">		HP = HT;</span>
+<span class="nc" id="L2522">		live();</span>
+
+<span class="nc" id="L2524">		MagicalHolster holster = belongings.getItem(MagicalHolster.class);</span>
+
+<span class="nc" id="L2526">		Buff.affect(this, LostInventory.class);</span>
+<span class="nc" id="L2527">		Buff.affect(this, Invisibility.class, 3f);</span>
+		//lost inventory is dropped in interlevelscene
+
+		//activate items that persist after lost inventory
+		//FIXME this is very messy, maybe it would be better to just have one buff that
+		// handled all items that recharge over time?
+<span class="nc bnc" id="L2533" title="All 2 branches missed.">		for (Item i : belongings){</span>
+<span class="nc bnc" id="L2534" title="All 4 branches missed.">			if (i instanceof EquipableItem &amp;&amp; i.isEquipped(this)){</span>
+<span class="nc" id="L2535">				((EquipableItem) i).activate(this);</span>
+<span class="nc bnc" id="L2536" title="All 6 branches missed.">			} else if (i instanceof CloakOfShadows &amp;&amp; i.keptThroughLostInventory() &amp;&amp; hasTalent(Talent.LIGHT_CLOAK)) {</span>
+<span class="nc" id="L2537">				((CloakOfShadows) i).activate(this);</span>
+<span class="nc bnc" id="L2538" title="All 6 branches missed.">			} else if (i instanceof HolyTome  &amp;&amp; i.keptThroughLostInventory() &amp;&amp; hasTalent(Talent.LIGHT_READING)) {</span>
+<span class="nc" id="L2539">				((HolyTome) i).activate(this);</span>
+<span class="nc bnc" id="L2540" title="All 4 branches missed.">			} else if (i instanceof Wand &amp;&amp; i.keptThroughLostInventory()){</span>
+<span class="nc bnc" id="L2541" title="All 4 branches missed.">				if (holster != null &amp;&amp; holster.contains(i)){</span>
+<span class="nc" id="L2542">					((Wand) i).charge(this, MagicalHolster.HOLSTER_SCALE_FACTOR);</span>
+				} else {
+<span class="nc" id="L2544">					((Wand) i).charge(this);</span>
+				}
+<span class="nc bnc" id="L2546" title="All 4 branches missed.">			} else if (i instanceof MagesStaff &amp;&amp; i.keptThroughLostInventory()){</span>
+<span class="nc" id="L2547">				((MagesStaff) i).applyWandChargeBuff(this);</span>
+			}
+<span class="nc" id="L2549">		}</span>
+
+<span class="nc" id="L2551">		updateHT(false);</span>
+<span class="nc" id="L2552">	}</span>
+
+	@Override
+	public void next() {
+<span class="nc bnc" id="L2556" title="All 2 branches missed.">		if (isAlive())</span>
+<span class="nc" id="L2557">			super.next();</span>
+<span class="nc" id="L2558">	}</span>
+
+	public static interface Doom {
+		public void onDeath();
+	}
+	/**
+	 * 增减防御值
+	 * @param amount 要增加或减少的防御值
+	 */
+	public void increaseDefense(int amount) {
+<span class="nc" id="L2568">		baseDefense += amount;</span>
+		// 你可以添加日志或提示
+<span class="nc" id="L2570">		System.out.println(&quot;Hero defense changed to: &quot; + baseDefense);</span>
+<span class="nc" id="L2571">	}</span>
+
+	/**
+	 * 获取当前防御值
+	 */
+	public int getDefense() {
+<span class="nc" id="L2577">		return baseDefense;</span>
+	}
+
+	public void equipItem(EquipmentSlot slot, IEquipment equipment) {
+<span class="nc" id="L2581">		equipmentManager.equip(slot, equipment, this);</span>
+<span class="nc" id="L2582">	}</span>
+	
+	public void unequipItem(EquipmentSlot slot) {
+<span class="nc" id="L2585">		equipmentManager.unequip(slot, this);</span>
+<span class="nc" id="L2586">	}</span>
+	
+	public IEquipment getEquippedItem(EquipmentSlot slot) {
+<span class="nc" id="L2589">		return equipmentManager.getEquipped(slot);</span>
+	}
+
+	public void increaseAttack(int amount) {
+<span class="nc" id="L2593">		baseAttack += amount;</span>
+<span class="nc" id="L2594">		System.out.println(&quot;Hero attack changed to: &quot; + baseAttack);</span>
+<span class="nc" id="L2595">	}</span>
+	
+	public int getAttack() {
+<span class="nc" id="L2598">		return baseAttack;</span>
+	}
+
+	public void increaseLuck(int amount) {
+<span class="nc" id="L2602">		luck += amount;</span>
+<span class="nc" id="L2603">		System.out.println(&quot;Hero luck changed to: &quot; + luck);</span>
+<span class="nc" id="L2604">	}</span>
+	
+	public int getLuck() {
+<span class="nc" id="L2607">		return luck;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

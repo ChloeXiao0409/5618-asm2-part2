@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScrollOfMetamorphosis.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic</a> &gt; <span class="el_source">ScrollOfMetamorphosis.java</span></div><h1>ScrollOfMetamorphosis.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Transmuting;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.InventoryScroll;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.TalentButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.TalentsPane;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.windows.IconTitle;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Set;
+
+<span class="nc" id="L49">public class ScrollOfMetamorphosis extends ExoticScroll {</span>
+	
+	{
+<span class="nc" id="L52">		icon = ItemSpriteSheet.Icons.SCROLL_METAMORPH;</span>
+
+<span class="nc" id="L54">		talentFactor = 2f;</span>
+<span class="nc" id="L55">	}</span>
+
+<span class="nc" id="L57">	protected static boolean identifiedByUse = false;</span>
+	
+	@Override
+	public void doRead() {
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if (!isKnown()) {</span>
+<span class="nc" id="L62">			identify();</span>
+<span class="nc" id="L63">			curItem = detach(curUser.belongings.backpack);</span>
+<span class="nc" id="L64">			identifiedByUse = true;</span>
+		} else {
+<span class="nc" id="L66">			identifiedByUse = false;</span>
+		}
+<span class="nc" id="L68">		GameScene.show(new WndMetamorphChoose());</span>
+<span class="nc" id="L69">	}</span>
+
+	public static void onMetamorph( Talent oldTalent, Talent newTalent ){
+<span class="nc bnc" id="L72" title="All 2 branches missed.">		if (curItem instanceof ScrollOfMetamorphosis) {</span>
+<span class="nc" id="L73">			((ScrollOfMetamorphosis) curItem).readAnimation();</span>
+<span class="nc" id="L74">			Sample.INSTANCE.play(Assets.Sounds.READ);</span>
+		}
+<span class="nc" id="L76">		curUser.sprite.emitter().start(Speck.factory(Speck.CHANGE), 0.2f, 10);</span>
+<span class="nc" id="L77">		Transmuting.show(curUser, oldTalent, newTalent);</span>
+
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if (Dungeon.hero.hasTalent(newTalent)) {</span>
+<span class="nc" id="L80">			Talent.onTalentUpgraded(Dungeon.hero, newTalent);</span>
+		}
+<span class="nc" id="L82">	}</span>
+
+	private void confirmCancelation( Window chooseWindow, boolean byID ) {
+<span class="nc" id="L85">		GameScene.show( new WndOptions(new ItemSprite(this),</span>
+<span class="nc" id="L86">				Messages.titleCase(name()),</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">				byID ? Messages.get(InventoryScroll.class, &quot;warning&quot;) : Messages.get(ScrollOfMetamorphosis.class, &quot;cancel_warn&quot;),</span>
+<span class="nc" id="L88">				Messages.get(InventoryScroll.class, &quot;yes&quot;),</span>
+<span class="nc" id="L89">				Messages.get(InventoryScroll.class, &quot;no&quot;) ) {</span>
+			@Override
+			protected void onSelect( int index ) {
+<span class="nc bnc" id="L92" title="All 2 branches missed.">				switch (index) {</span>
+					case 0:
+<span class="nc" id="L94">						curUser.spendAndNext( TIME_TO_READ );</span>
+<span class="nc" id="L95">						identifiedByUse = false;</span>
+<span class="nc" id="L96">						chooseWindow.hide();</span>
+<span class="nc" id="L97">						break;</span>
+					case 1:
+						//do nothing
+						break;
+				}
+<span class="nc" id="L102">			}</span>
+<span class="nc" id="L103">			public void onBackPressed() {}</span>
+		} );
+<span class="nc" id="L105">	}</span>
+
+	public static class WndMetamorphChoose extends Window {
+
+		public static WndMetamorphChoose INSTANCE;
+
+		TalentsPane pane;
+
+		public WndMetamorphChoose(){
+<span class="nc" id="L114">			super();</span>
+
+<span class="nc" id="L116">			INSTANCE = this;</span>
+
+<span class="nc" id="L118">			float top = 0;</span>
+
+<span class="nc" id="L120">			IconTitle title = new IconTitle( curItem );</span>
+<span class="nc" id="L121">			title.color( TITLE_COLOR );</span>
+<span class="nc" id="L122">			title.setRect(0, 0, 120, 0);</span>
+<span class="nc" id="L123">			add(title);</span>
+
+<span class="nc" id="L125">			top = title.bottom() + 2;</span>
+
+<span class="nc" id="L127">			RenderedTextBlock text = PixelScene.renderTextBlock(Messages.get(ScrollOfMetamorphosis.class, &quot;choose_desc&quot;), 6);</span>
+<span class="nc" id="L128">			text.maxWidth(120);</span>
+<span class="nc" id="L129">			text.setPos(0, top);</span>
+<span class="nc" id="L130">			add(text);</span>
+
+<span class="nc" id="L132">			top = text.bottom() + 2;</span>
+
+<span class="nc" id="L134">			ArrayList&lt;LinkedHashMap&lt;Talent, Integer&gt;&gt; talents = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L135">			Talent.initClassTalents(Dungeon.hero.heroClass, talents, Dungeon.hero.metamorphedTalents);</span>
+
+<span class="nc bnc" id="L137" title="All 2 branches missed.">			for (LinkedHashMap&lt;Talent, Integer&gt; tier : talents){</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">				for (Talent talent : tier.keySet()){</span>
+<span class="nc" id="L139">					tier.put(talent, Dungeon.hero.pointsInTalent(talent));</span>
+<span class="nc" id="L140">				}</span>
+<span class="nc" id="L141">			}</span>
+
+<span class="nc" id="L143">			pane = new TalentsPane(TalentButton.Mode.METAMORPH_CHOOSE, talents);</span>
+<span class="nc" id="L144">			add(pane);</span>
+<span class="nc" id="L145">			pane.setPos(0, top);</span>
+<span class="nc" id="L146">			pane.setSize(120, pane.content().height());</span>
+<span class="nc" id="L147">			resize((int)pane.width(), (int)pane.bottom());</span>
+<span class="nc" id="L148">			pane.setPos(0, top);</span>
+<span class="nc" id="L149">		}</span>
+
+		@Override
+		public void hide() {
+<span class="nc" id="L153">			super.hide();</span>
+<span class="nc" id="L154">			INSTANCE = null;</span>
+<span class="nc" id="L155">		}</span>
+
+		@Override
+		public void onBackPressed() {
+
+<span class="nc bnc" id="L160" title="All 2 branches missed.">			if (identifiedByUse){</span>
+<span class="nc" id="L161">				((ScrollOfMetamorphosis)curItem).confirmCancelation(this, true);</span>
+			} else {
+<span class="nc" id="L163">				super.onBackPressed();</span>
+			}
+<span class="nc" id="L165">		}</span>
+
+		@Override
+		public void offset(int xOffset, int yOffset) {
+<span class="nc" id="L169">			super.offset(xOffset, yOffset);</span>
+<span class="nc" id="L170">			pane.setPos(pane.left(), pane.top()); //triggers layout</span>
+<span class="nc" id="L171">		}</span>
+	}
+
+	public static class WndMetamorphReplace extends Window {
+
+		public static WndMetamorphReplace INSTANCE;
+
+		public Talent replacing;
+		public int tier;
+		LinkedHashMap&lt;Talent, Integer&gt; replaceOptions;
+
+		//for window restoring
+		public WndMetamorphReplace(){
+<span class="nc" id="L184">			super();</span>
+
+<span class="nc bnc" id="L186" title="All 2 branches missed.">			if (INSTANCE != null){</span>
+<span class="nc" id="L187">				replacing = INSTANCE.replacing;</span>
+<span class="nc" id="L188">				tier = INSTANCE.tier;</span>
+<span class="nc" id="L189">				replaceOptions = INSTANCE.replaceOptions;</span>
+<span class="nc" id="L190">				INSTANCE = this;</span>
+<span class="nc" id="L191">				setup(replacing, tier, replaceOptions);</span>
+			} else {
+<span class="nc" id="L193">				hide();</span>
+			}
+<span class="nc" id="L195">		}</span>
+
+		public WndMetamorphReplace(Talent replacing, int tier){
+<span class="nc" id="L198">			super();</span>
+
+<span class="nc bnc" id="L200" title="All 4 branches missed.">			if (!identifiedByUse &amp;&amp; curItem instanceof ScrollOfMetamorphosis) {</span>
+<span class="nc" id="L201">				curItem.detach(curUser.belongings.backpack);</span>
+			}
+<span class="nc" id="L203">			identifiedByUse = false;</span>
+
+<span class="nc" id="L205">			INSTANCE = this;</span>
+
+<span class="nc" id="L207">			this.replacing = replacing;</span>
+<span class="nc" id="L208">			this.tier = tier;</span>
+
+<span class="nc" id="L210">			LinkedHashMap&lt;Talent, Integer&gt; options = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc" id="L211">			Set&lt;Talent&gt; curTalentsAtTier = Dungeon.hero.talents.get(tier-1).keySet();</span>
+
+<span class="nc bnc" id="L213" title="All 2 branches missed.">			for (HeroClass cls : HeroClass.values()){</span>
+
+<span class="nc" id="L215">				ArrayList&lt;LinkedHashMap&lt;Talent, Integer&gt;&gt; clsTalents = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L216">				Talent.initClassTalents(cls, clsTalents);</span>
+
+<span class="nc" id="L218">				Set&lt;Talent&gt; clsTalentsAtTier = clsTalents.get(tier-1).keySet();</span>
+<span class="nc" id="L219">				boolean replacingIsInSet = false;</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">				for (Talent talent : clsTalentsAtTier.toArray(new Talent[0])){</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">					if (talent == replacing){</span>
+<span class="nc" id="L222">						replacingIsInSet = true;</span>
+<span class="nc" id="L223">						break;</span>
+					} else {
+<span class="nc bnc" id="L225" title="All 2 branches missed.">						if (curTalentsAtTier.contains(talent)){</span>
+<span class="nc" id="L226">							clsTalentsAtTier.remove(talent);</span>
+						}
+					}
+				}
+<span class="nc bnc" id="L230" title="All 4 branches missed.">				if (!replacingIsInSet &amp;&amp; !clsTalentsAtTier.isEmpty()) {</span>
+<span class="nc" id="L231">					options.put(Random.element(clsTalentsAtTier), Dungeon.hero.pointsInTalent(replacing));</span>
+				}
+			}
+
+<span class="nc" id="L235">			replaceOptions = options;</span>
+<span class="nc" id="L236">			setup(replacing, tier, options);</span>
+<span class="nc" id="L237">		}</span>
+
+		private void setup(Talent replacing, int tier, LinkedHashMap&lt;Talent, Integer&gt; replaceOptions){
+<span class="nc" id="L240">			float top = 0;</span>
+
+<span class="nc" id="L242">			IconTitle title = new IconTitle( curItem );</span>
+<span class="nc" id="L243">			title.color( TITLE_COLOR );</span>
+<span class="nc" id="L244">			title.setRect(0, 0, 120, 0);</span>
+<span class="nc" id="L245">			add(title);</span>
+
+<span class="nc" id="L247">			top = title.bottom() + 2;</span>
+
+<span class="nc" id="L249">			RenderedTextBlock text = PixelScene.renderTextBlock(Messages.get(ScrollOfMetamorphosis.class, &quot;replace_desc&quot;), 6);</span>
+<span class="nc" id="L250">			text.maxWidth(120);</span>
+<span class="nc" id="L251">			text.setPos(0, top);</span>
+<span class="nc" id="L252">			add(text);</span>
+
+<span class="nc" id="L254">			top = text.bottom() + 2;</span>
+
+<span class="nc" id="L256">			TalentsPane.TalentTierPane optionsPane = new TalentsPane.TalentTierPane(replaceOptions, tier, TalentButton.Mode.METAMORPH_REPLACE);</span>
+<span class="nc" id="L257">			add(optionsPane);</span>
+<span class="nc" id="L258">			optionsPane.title.text(&quot; &quot;);</span>
+<span class="nc" id="L259">			optionsPane.setPos(0, top);</span>
+<span class="nc" id="L260">			optionsPane.setSize(120, optionsPane.height());</span>
+<span class="nc" id="L261">			resize((int)optionsPane.width(), (int)optionsPane.bottom());</span>
+
+<span class="nc" id="L263">			resize(120, (int)optionsPane.bottom());</span>
+<span class="nc" id="L264">		}</span>
+
+		@Override
+		public void hide() {
+<span class="nc" id="L268">			super.hide();</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">			if (INSTANCE == this) {</span>
+<span class="nc" id="L270">				INSTANCE = null;</span>
+			}
+<span class="nc" id="L272">		}</span>
+
+		@Override
+		public void onBackPressed() {
+<span class="nc bnc" id="L276" title="All 2 branches missed.">			if (curItem instanceof ScrollOfMetamorphosis) {</span>
+<span class="nc" id="L277">				((ScrollOfMetamorphosis) curItem).confirmCancelation(this, false);</span>
+			} else {
+<span class="nc" id="L279">				super.onBackPressed();</span>
+			}
+<span class="nc" id="L281">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

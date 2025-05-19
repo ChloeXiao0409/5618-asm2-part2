@@ -1,0 +1,1348 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Badges.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon</a> &gt; <span class="el_source">Badges.java</span></div><h1>Badges.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon;
+
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.MagicalHolster;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.PotionBandolier;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.ScrollHolder;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.VelvetPouch;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
+import com.shatteredpixel.shatteredpixeldungeon.items.remains.RemainsItem;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Bestiary;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Document;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.FileUtils;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+
+<span class="nc" id="L55">public class Badges {</span>
+
+<span class="nc" id="L57">	public enum BadgeType {</span>
+<span class="nc" id="L58">		HIDDEN, //internal badges used for data tracking</span>
+<span class="nc" id="L59">		LOCAL,  //unlocked on a per-run basis and added to overall player profile</span>
+<span class="nc" id="L60">		GLOBAL, //unlocked for the save profile only, usually over multiple runs</span>
+<span class="nc" id="L61">		JOURNAL //profile-based and also tied to the journal, which means they even unlock in seeded runs</span>
+	}
+
+<span class="nc" id="L64">	public enum Badge {</span>
+<span class="nc" id="L65">		MASTERY_WARRIOR,</span>
+<span class="nc" id="L66">		MASTERY_MAGE,</span>
+<span class="nc" id="L67">		MASTERY_ROGUE,</span>
+<span class="nc" id="L68">		MASTERY_HUNTRESS,</span>
+<span class="nc" id="L69">		MASTERY_DUELIST,</span>
+<span class="nc" id="L70">		MASTERY_CLERIC,</span>
+<span class="nc" id="L71">		FOUND_RATMOGRIFY,</span>
+
+		//bronze
+<span class="nc" id="L74">		UNLOCK_MAGE                 ( 1 ),</span>
+<span class="nc" id="L75">		UNLOCK_ROGUE                ( 2 ),</span>
+<span class="nc" id="L76">		UNLOCK_HUNTRESS             ( 3 ),</span>
+<span class="nc" id="L77">		UNLOCK_DUELIST              ( 4 ),</span>
+<span class="nc" id="L78">		UNLOCK_CLERIC               ( 5 ),</span>
+<span class="nc" id="L79">		MONSTERS_SLAIN_1            ( 6 ),</span>
+<span class="nc" id="L80">		MONSTERS_SLAIN_2            ( 7 ),</span>
+<span class="nc" id="L81">		GOLD_COLLECTED_1            ( 8 ),</span>
+<span class="nc" id="L82">		GOLD_COLLECTED_2            ( 9 ),</span>
+<span class="nc" id="L83">		ITEM_LEVEL_1                ( 10 ),</span>
+<span class="nc" id="L84">		LEVEL_REACHED_1             ( 11 ),</span>
+<span class="nc" id="L85">		STRENGTH_ATTAINED_1         ( 12 ),</span>
+<span class="nc" id="L86">		FOOD_EATEN_1                ( 13 ),</span>
+<span class="nc" id="L87">		ITEMS_CRAFTED_1             ( 14 ),</span>
+<span class="nc" id="L88">		BOSS_SLAIN_1                ( 15 ),</span>
+<span class="nc" id="L89">		CATALOG_ONE_EQUIPMENT       ( 16, BadgeType.JOURNAL ),</span>
+<span class="nc" id="L90">		DEATH_FROM_FIRE             ( 17 ),</span>
+<span class="nc" id="L91">		DEATH_FROM_POISON           ( 18 ),</span>
+<span class="nc" id="L92">		DEATH_FROM_GAS              ( 19 ),</span>
+<span class="nc" id="L93">		DEATH_FROM_HUNGER           ( 20 ),</span>
+<span class="nc" id="L94">		DEATH_FROM_FALLING          ( 21 ),</span>
+<span class="nc" id="L95">		RESEARCHER_1                ( 22, BadgeType.JOURNAL ),</span>
+<span class="nc" id="L96">		GAMES_PLAYED_1              ( 23, BadgeType.GLOBAL ),</span>
+<span class="nc" id="L97">		HIGH_SCORE_1                ( 24 ),</span>
+
+		//silver
+<span class="nc" id="L100">		NO_MONSTERS_SLAIN           ( 32 ),</span>
+<span class="nc" id="L101">		BOSS_SLAIN_REMAINS          ( 33 ),</span>
+<span class="nc" id="L102">		MONSTERS_SLAIN_3            ( 34 ),</span>
+<span class="nc" id="L103">		MONSTERS_SLAIN_4            ( 35 ),</span>
+<span class="nc" id="L104">		GOLD_COLLECTED_3            ( 36 ),</span>
+<span class="nc" id="L105">		GOLD_COLLECTED_4            ( 37 ),</span>
+<span class="nc" id="L106">		ITEM_LEVEL_2                ( 38 ),</span>
+<span class="nc" id="L107">		ITEM_LEVEL_3                ( 39 ),</span>
+<span class="nc" id="L108">		LEVEL_REACHED_2             ( 40 ),</span>
+<span class="nc" id="L109">		LEVEL_REACHED_3             ( 41 ),</span>
+<span class="nc" id="L110">		STRENGTH_ATTAINED_2         ( 42 ),</span>
+<span class="nc" id="L111">		STRENGTH_ATTAINED_3         ( 43 ),</span>
+<span class="nc" id="L112">		FOOD_EATEN_2                ( 44 ),</span>
+<span class="nc" id="L113">		FOOD_EATEN_3                ( 45 ),</span>
+<span class="nc" id="L114">		ITEMS_CRAFTED_2             ( 46 ),</span>
+<span class="nc" id="L115">		ITEMS_CRAFTED_3             ( 47 ),</span>
+<span class="nc" id="L116">		BOSS_SLAIN_2                ( 48 ),</span>
+<span class="nc" id="L117">		BOSS_SLAIN_3                ( 49 ),</span>
+<span class="nc" id="L118">		ALL_POTIONS_IDENTIFIED      , //still exists internally for pre-2.5 saves</span>
+<span class="nc" id="L119">		ALL_SCROLLS_IDENTIFIED      , //still exists internally for pre-2.5 saves</span>
+<span class="nc" id="L120">		CATALOG_POTIONS_SCROLLS     ( 50 ),</span>
+<span class="nc" id="L121">		DEATH_FROM_ENEMY_MAGIC      ( 51 ),</span>
+<span class="nc" id="L122">		DEATH_FROM_FRIENDLY_MAGIC   ( 52 ),</span>
+<span class="nc" id="L123">		DEATH_FROM_SACRIFICE        ( 53 ),</span>
+<span class="nc" id="L124">		BOSS_SLAIN_1_WARRIOR,</span>
+<span class="nc" id="L125">		BOSS_SLAIN_1_MAGE,</span>
+<span class="nc" id="L126">		BOSS_SLAIN_1_ROGUE,</span>
+<span class="nc" id="L127">		BOSS_SLAIN_1_HUNTRESS,</span>
+<span class="nc" id="L128">		BOSS_SLAIN_1_DUELIST,</span>
+<span class="nc" id="L129">		BOSS_SLAIN_1_CLERIC,</span>
+<span class="nc" id="L130">		BOSS_SLAIN_1_ALL_CLASSES    ( 54, BadgeType.GLOBAL ),</span>
+<span class="nc" id="L131">		RESEARCHER_2                ( 55, BadgeType.JOURNAL ),</span>
+<span class="nc" id="L132">		GAMES_PLAYED_2              ( 56, BadgeType.GLOBAL ),</span>
+<span class="nc" id="L133">		HIGH_SCORE_2                ( 57 ),</span>
+
+		//gold
+<span class="nc" id="L136">		PIRANHAS                    ( 64 ),</span>
+<span class="nc" id="L137">		GRIM_WEAPON                 ( 65 ),</span>
+<span class="nc" id="L138">		BAG_BOUGHT_VELVET_POUCH,</span>
+<span class="nc" id="L139">		BAG_BOUGHT_SCROLL_HOLDER,</span>
+<span class="nc" id="L140">		BAG_BOUGHT_POTION_BANDOLIER,</span>
+<span class="nc" id="L141">		BAG_BOUGHT_MAGICAL_HOLSTER,</span>
+<span class="nc" id="L142">		ALL_BAGS_BOUGHT             ( 66 ),</span>
+<span class="nc" id="L143">		MASTERY_COMBO               ( 67 ),</span>
+<span class="nc" id="L144">		MONSTERS_SLAIN_5            ( 68 ),</span>
+<span class="nc" id="L145">		GOLD_COLLECTED_5            ( 69 ),</span>
+<span class="nc" id="L146">		ITEM_LEVEL_4                ( 70 ),</span>
+<span class="nc" id="L147">		LEVEL_REACHED_4             ( 71 ),</span>
+<span class="nc" id="L148">		STRENGTH_ATTAINED_4         ( 72 ),</span>
+<span class="nc" id="L149">		STRENGTH_ATTAINED_5         ( 73 ),</span>
+<span class="nc" id="L150">		FOOD_EATEN_4                ( 74 ),</span>
+<span class="nc" id="L151">		FOOD_EATEN_5                ( 75 ),</span>
+<span class="nc" id="L152">		ITEMS_CRAFTED_4             ( 76 ),</span>
+<span class="nc" id="L153">		ITEMS_CRAFTED_5             ( 77 ),</span>
+<span class="nc" id="L154">		BOSS_SLAIN_4                ( 78 ),</span>
+<span class="nc" id="L155">		ALL_RINGS_IDENTIFIED        , //still exists internally for pre-2.5 saves</span>
+<span class="nc" id="L156">		ALL_ARTIFACTS_IDENTIFIED    , //still exists internally for pre-2.5 saves</span>
+<span class="nc" id="L157">		ALL_RARE_ENEMIES            ( 79, BadgeType.JOURNAL ),</span>
+<span class="nc" id="L158">		DEATH_FROM_GRIM_TRAP        ( 80 ), //also disintegration traps</span>
+<span class="nc" id="L159">		VICTORY                     ( 81 ),</span>
+<span class="nc" id="L160">		BOSS_CHALLENGE_1            ( 82 ),</span>
+<span class="nc" id="L161">		BOSS_CHALLENGE_2            ( 83 ),</span>
+<span class="nc" id="L162">		RESEARCHER_3                ( 84, BadgeType.JOURNAL ),</span>
+<span class="nc" id="L163">		GAMES_PLAYED_3              ( 85, BadgeType.GLOBAL ),</span>
+<span class="nc" id="L164">		HIGH_SCORE_3                ( 86 ),</span>
+
+		//platinum
+<span class="nc" id="L167">		ITEM_LEVEL_5                ( 96 ),</span>
+<span class="nc" id="L168">		LEVEL_REACHED_5             ( 97 ),</span>
+<span class="nc" id="L169">		HAPPY_END                   ( 98 ),</span>
+<span class="nc" id="L170">		HAPPY_END_REMAINS           ( 99 ),</span>
+<span class="nc" id="L171">		RODNEY                      ( 100, BadgeType.JOURNAL ),</span>
+<span class="nc" id="L172">		ALL_WEAPONS_IDENTIFIED      , //still exists internally for pre-2.5 saves</span>
+<span class="nc" id="L173">		ALL_ARMOR_IDENTIFIED        , //still exists internally for pre-2.5 saves</span>
+<span class="nc" id="L174">		ALL_WANDS_IDENTIFIED        , //still exists internally for pre-2.5 saves</span>
+<span class="nc" id="L175">		ALL_ITEMS_IDENTIFIED        , //still exists internally for pre-2.5 saves</span>
+<span class="nc" id="L176">		VICTORY_WARRIOR,</span>
+<span class="nc" id="L177">		VICTORY_MAGE,</span>
+<span class="nc" id="L178">		VICTORY_ROGUE,</span>
+<span class="nc" id="L179">		VICTORY_HUNTRESS,</span>
+<span class="nc" id="L180">		VICTORY_DUELIST,</span>
+<span class="nc" id="L181">		VICTORY_CLERIC,</span>
+<span class="nc" id="L182">		VICTORY_ALL_CLASSES         ( 101, BadgeType.GLOBAL ),</span>
+<span class="nc" id="L183">		DEATH_FROM_ALL              ( 102, BadgeType.GLOBAL ),</span>
+<span class="nc" id="L184">		BOSS_SLAIN_3_GLADIATOR,</span>
+<span class="nc" id="L185">		BOSS_SLAIN_3_BERSERKER,</span>
+<span class="nc" id="L186">		BOSS_SLAIN_3_WARLOCK,</span>
+<span class="nc" id="L187">		BOSS_SLAIN_3_BATTLEMAGE,</span>
+<span class="nc" id="L188">		BOSS_SLAIN_3_FREERUNNER,</span>
+<span class="nc" id="L189">		BOSS_SLAIN_3_ASSASSIN,</span>
+<span class="nc" id="L190">		BOSS_SLAIN_3_SNIPER,</span>
+<span class="nc" id="L191">		BOSS_SLAIN_3_WARDEN,</span>
+<span class="nc" id="L192">		BOSS_SLAIN_3_CHAMPION,</span>
+<span class="nc" id="L193">		BOSS_SLAIN_3_MONK,</span>
+<span class="nc" id="L194">		BOSS_SLAIN_3_PRIEST,</span>
+<span class="nc" id="L195">		BOSS_SLAIN_3_PALADIN,</span>
+<span class="nc" id="L196">		BOSS_SLAIN_3_ALL_SUBCLASSES ( 103, BadgeType.GLOBAL ),</span>
+<span class="nc" id="L197">		BOSS_CHALLENGE_3            ( 104 ),</span>
+<span class="nc" id="L198">		BOSS_CHALLENGE_4            ( 105 ),</span>
+<span class="nc" id="L199">		RESEARCHER_4                ( 106, BadgeType.JOURNAL ),</span>
+<span class="nc" id="L200">		GAMES_PLAYED_4              ( 107, BadgeType.GLOBAL ),</span>
+<span class="nc" id="L201">		HIGH_SCORE_4                ( 108 ),</span>
+<span class="nc" id="L202">		CHAMPION_1                  ( 109 ),</span>
+
+		//diamond
+<span class="nc" id="L205">		BOSS_CHALLENGE_5            ( 120 ),</span>
+<span class="nc" id="L206">		RESEARCHER_5                ( 121, BadgeType.JOURNAL ),</span>
+<span class="nc" id="L207">		GAMES_PLAYED_5              ( 122, BadgeType.GLOBAL ),</span>
+<span class="nc" id="L208">		HIGH_SCORE_5                ( 123 ),</span>
+<span class="nc" id="L209">		CHAMPION_2                  ( 124 ),</span>
+<span class="nc" id="L210">		CHAMPION_3                  ( 125 );</span>
+
+		public boolean meta;
+
+		public int image;
+		public BadgeType type;
+
+		Badge(){
+<span class="nc" id="L218">			this(-1, BadgeType.HIDDEN);</span>
+<span class="nc" id="L219">		}</span>
+
+		Badge( int image ) {
+<span class="nc" id="L222">			this( image, BadgeType.LOCAL );</span>
+<span class="nc" id="L223">		}</span>
+
+<span class="nc" id="L225">		Badge( int image, BadgeType type ) {</span>
+<span class="nc" id="L226">			this.image = image;</span>
+<span class="nc" id="L227">			this.type = type;</span>
+<span class="nc" id="L228">		}</span>
+
+		public String title(){
+<span class="nc" id="L231">			return Messages.get(this, name()+&quot;.title&quot;);</span>
+		}
+
+		public String desc(){
+<span class="nc" id="L235">			return Messages.get(this, name()+&quot;.desc&quot;);</span>
+		}
+	}
+	
+	private static HashSet&lt;Badge&gt; global;
+<span class="nc" id="L240">	private static HashSet&lt;Badge&gt; local = new HashSet&lt;&gt;();</span>
+	
+<span class="nc" id="L242">	private static boolean saveNeeded = false;</span>
+
+	public static void reset() {
+<span class="nc" id="L245">		local.clear();</span>
+<span class="nc" id="L246">		loadGlobal();</span>
+<span class="nc" id="L247">	}</span>
+	
+	public static final String BADGES_FILE	= &quot;badges.dat&quot;;
+	private static final String BADGES		= &quot;badges&quot;;
+	
+<span class="nc" id="L252">	private static final HashSet&lt;String&gt; removedBadges = new HashSet&lt;&gt;();</span>
+	static{
+		//no removed badges currently
+	}
+
+<span class="nc" id="L257">	private static final HashMap&lt;String, String&gt; renamedBadges = new HashMap&lt;&gt;();</span>
+	static{
+		//no renamed badges currently
+	}
+
+	public static HashSet&lt;Badge&gt; restore( Bundle bundle ) {
+<span class="nc" id="L263">		HashSet&lt;Badge&gt; badges = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">		if (bundle == null) return badges;</span>
+		
+<span class="nc" id="L266">		String[] names = bundle.getStringArray( BADGES );</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">		if (names == null) return badges;</span>
+
+<span class="nc bnc" id="L269" title="All 2 branches missed.">		for (int i=0; i &lt; names.length; i++) {</span>
+			try {
+<span class="nc bnc" id="L271" title="All 2 branches missed.">				if (renamedBadges.containsKey(names[i])){</span>
+<span class="nc" id="L272">					names[i] = renamedBadges.get(names[i]);</span>
+				}
+<span class="nc bnc" id="L274" title="All 2 branches missed.">				if (!removedBadges.contains(names[i])){</span>
+<span class="nc" id="L275">					badges.add( Badge.valueOf( names[i] ) );</span>
+				}
+<span class="nc" id="L277">			} catch (Exception e) {</span>
+<span class="nc" id="L278">				ShatteredPixelDungeon.reportException(e);</span>
+<span class="nc" id="L279">			}</span>
+		}
+
+<span class="nc" id="L282">		addReplacedBadges(badges);</span>
+	
+<span class="nc" id="L284">		return badges;</span>
+	}
+	
+	public static void store( Bundle bundle, HashSet&lt;Badge&gt; badges ) {
+<span class="nc" id="L288">		addReplacedBadges(badges);</span>
+
+<span class="nc" id="L290">		int count = 0;</span>
+<span class="nc" id="L291">		String names[] = new String[badges.size()];</span>
+		
+<span class="nc bnc" id="L293" title="All 2 branches missed.">		for (Badge badge:badges) {</span>
+<span class="nc" id="L294">			names[count++] = badge.name();</span>
+<span class="nc" id="L295">		}</span>
+<span class="nc" id="L296">		bundle.put( BADGES, names );</span>
+<span class="nc" id="L297">	}</span>
+	
+	public static void loadLocal( Bundle bundle ) {
+<span class="nc" id="L300">		local = restore( bundle );</span>
+<span class="nc" id="L301">	}</span>
+	
+	public static void saveLocal( Bundle bundle ) {
+<span class="nc" id="L304">		store( bundle, local );</span>
+<span class="nc" id="L305">	}</span>
+	
+	public static void loadGlobal() {
+<span class="nc bnc" id="L308" title="All 2 branches missed.">		if (global == null) {</span>
+			try {
+<span class="nc" id="L310">				Bundle bundle = FileUtils.bundleFromFile( BADGES_FILE );</span>
+<span class="nc" id="L311">				global = restore( bundle );</span>
+
+<span class="nc" id="L313">			} catch (IOException e) {</span>
+<span class="nc" id="L314">				global = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L315">			}</span>
+		}
+<span class="nc" id="L317">	}</span>
+
+	public static void saveGlobal(){
+<span class="nc" id="L320">		saveGlobal(false);</span>
+<span class="nc" id="L321">	}</span>
+
+	public static void saveGlobal(boolean force) {
+<span class="nc bnc" id="L324" title="All 4 branches missed.">		if (saveNeeded || force) {</span>
+			
+<span class="nc" id="L326">			Bundle bundle = new Bundle();</span>
+<span class="nc" id="L327">			store( bundle, global );</span>
+			
+			try {
+<span class="nc" id="L330">				FileUtils.bundleToFile(BADGES_FILE, bundle);</span>
+<span class="nc" id="L331">				saveNeeded = false;</span>
+<span class="nc" id="L332">			} catch (IOException e) {</span>
+<span class="nc" id="L333">				ShatteredPixelDungeon.reportException(e);</span>
+<span class="nc" id="L334">			}</span>
+		}
+<span class="nc" id="L336">	}</span>
+
+	public static int totalUnlocked(boolean global){
+<span class="nc bnc" id="L339" title="All 2 branches missed.">		if (global) return Badges.global.size();</span>
+<span class="nc" id="L340">		else        return Badges.local.size();</span>
+	}
+
+	public static void validateMonstersSlain() {
+<span class="nc" id="L344">		Badge badge = null;</span>
+		
+<span class="nc bnc" id="L346" title="All 4 branches missed.">		if (!local.contains( Badge.MONSTERS_SLAIN_1 ) &amp;&amp; Statistics.enemiesSlain &gt;= 10) {</span>
+<span class="nc" id="L347">			badge = Badge.MONSTERS_SLAIN_1;</span>
+<span class="nc" id="L348">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L350" title="All 4 branches missed.">		if (!local.contains( Badge.MONSTERS_SLAIN_2 ) &amp;&amp; Statistics.enemiesSlain &gt;= 50) {</span>
+<span class="nc bnc" id="L351" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L352">			badge = Badge.MONSTERS_SLAIN_2;</span>
+<span class="nc" id="L353">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L355" title="All 4 branches missed.">		if (!local.contains( Badge.MONSTERS_SLAIN_3 ) &amp;&amp; Statistics.enemiesSlain &gt;= 100) {</span>
+<span class="nc bnc" id="L356" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L357">			badge = Badge.MONSTERS_SLAIN_3;</span>
+<span class="nc" id="L358">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L360" title="All 4 branches missed.">		if (!local.contains( Badge.MONSTERS_SLAIN_4 ) &amp;&amp; Statistics.enemiesSlain &gt;= 250) {</span>
+<span class="nc bnc" id="L361" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L362">			badge = Badge.MONSTERS_SLAIN_4;</span>
+<span class="nc" id="L363">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L365" title="All 4 branches missed.">		if (!local.contains( Badge.MONSTERS_SLAIN_5 ) &amp;&amp; Statistics.enemiesSlain &gt;= 500) {</span>
+<span class="nc bnc" id="L366" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L367">			badge = Badge.MONSTERS_SLAIN_5;</span>
+<span class="nc" id="L368">			local.add( badge );</span>
+		}
+		
+<span class="nc" id="L371">		displayBadge( badge );</span>
+<span class="nc" id="L372">	}</span>
+	
+	public static void validateGoldCollected() {
+<span class="nc" id="L375">		Badge badge = null;</span>
+		
+<span class="nc bnc" id="L377" title="All 4 branches missed.">		if (!local.contains( Badge.GOLD_COLLECTED_1 ) &amp;&amp; Statistics.goldCollected &gt;= 250) {</span>
+<span class="nc bnc" id="L378" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L379">			badge = Badge.GOLD_COLLECTED_1;</span>
+<span class="nc" id="L380">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L382" title="All 4 branches missed.">		if (!local.contains( Badge.GOLD_COLLECTED_2 ) &amp;&amp; Statistics.goldCollected &gt;= 1000) {</span>
+<span class="nc bnc" id="L383" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L384">			badge = Badge.GOLD_COLLECTED_2;</span>
+<span class="nc" id="L385">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L387" title="All 4 branches missed.">		if (!local.contains( Badge.GOLD_COLLECTED_3 ) &amp;&amp; Statistics.goldCollected &gt;= 2500) {</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L389">			badge = Badge.GOLD_COLLECTED_3;</span>
+<span class="nc" id="L390">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L392" title="All 4 branches missed.">		if (!local.contains( Badge.GOLD_COLLECTED_4 ) &amp;&amp; Statistics.goldCollected &gt;= 7500) {</span>
+<span class="nc bnc" id="L393" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L394">			badge = Badge.GOLD_COLLECTED_4;</span>
+<span class="nc" id="L395">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L397" title="All 4 branches missed.">		if (!local.contains( Badge.GOLD_COLLECTED_5 ) &amp;&amp; Statistics.goldCollected &gt;= 15_000) {</span>
+<span class="nc bnc" id="L398" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L399">			badge = Badge.GOLD_COLLECTED_5;</span>
+<span class="nc" id="L400">			local.add( badge );</span>
+		}
+		
+<span class="nc" id="L403">		displayBadge( badge );</span>
+<span class="nc" id="L404">	}</span>
+	
+	public static void validateLevelReached() {
+<span class="nc" id="L407">		Badge badge = null;</span>
+		
+<span class="nc bnc" id="L409" title="All 4 branches missed.">		if (!local.contains( Badge.LEVEL_REACHED_1 ) &amp;&amp; Dungeon.hero.lvl &gt;= 6) {</span>
+<span class="nc" id="L410">			badge = Badge.LEVEL_REACHED_1;</span>
+<span class="nc" id="L411">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L413" title="All 4 branches missed.">		if (!local.contains( Badge.LEVEL_REACHED_2 ) &amp;&amp; Dungeon.hero.lvl &gt;= 12) {</span>
+<span class="nc bnc" id="L414" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L415">			badge = Badge.LEVEL_REACHED_2;</span>
+<span class="nc" id="L416">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L418" title="All 4 branches missed.">		if (!local.contains( Badge.LEVEL_REACHED_3 ) &amp;&amp; Dungeon.hero.lvl &gt;= 18) {</span>
+<span class="nc bnc" id="L419" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L420">			badge = Badge.LEVEL_REACHED_3;</span>
+<span class="nc" id="L421">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L423" title="All 4 branches missed.">		if (!local.contains( Badge.LEVEL_REACHED_4 ) &amp;&amp; Dungeon.hero.lvl &gt;= 24) {</span>
+<span class="nc bnc" id="L424" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L425">			badge = Badge.LEVEL_REACHED_4;</span>
+<span class="nc" id="L426">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L428" title="All 4 branches missed.">		if (!local.contains( Badge.LEVEL_REACHED_5 ) &amp;&amp; Dungeon.hero.lvl &gt;= 30) {</span>
+<span class="nc bnc" id="L429" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L430">			badge = Badge.LEVEL_REACHED_5;</span>
+<span class="nc" id="L431">			local.add( badge );</span>
+		}
+		
+<span class="nc" id="L434">		displayBadge( badge );</span>
+<span class="nc" id="L435">	}</span>
+	
+	public static void validateStrengthAttained() {
+<span class="nc" id="L438">		Badge badge = null;</span>
+		
+<span class="nc bnc" id="L440" title="All 4 branches missed.">		if (!local.contains( Badge.STRENGTH_ATTAINED_1 ) &amp;&amp; Dungeon.hero.STR &gt;= 12) {</span>
+<span class="nc" id="L441">			badge = Badge.STRENGTH_ATTAINED_1;</span>
+<span class="nc" id="L442">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L444" title="All 4 branches missed.">		if (!local.contains( Badge.STRENGTH_ATTAINED_2 ) &amp;&amp; Dungeon.hero.STR &gt;= 14) {</span>
+<span class="nc bnc" id="L445" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L446">			badge = Badge.STRENGTH_ATTAINED_2;</span>
+<span class="nc" id="L447">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L449" title="All 4 branches missed.">		if (!local.contains( Badge.STRENGTH_ATTAINED_3 ) &amp;&amp; Dungeon.hero.STR &gt;= 16) {</span>
+<span class="nc bnc" id="L450" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L451">			badge = Badge.STRENGTH_ATTAINED_3;</span>
+<span class="nc" id="L452">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L454" title="All 4 branches missed.">		if (!local.contains( Badge.STRENGTH_ATTAINED_4 ) &amp;&amp; Dungeon.hero.STR &gt;= 18) {</span>
+<span class="nc bnc" id="L455" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L456">			badge = Badge.STRENGTH_ATTAINED_4;</span>
+<span class="nc" id="L457">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L459" title="All 4 branches missed.">		if (!local.contains( Badge.STRENGTH_ATTAINED_5 ) &amp;&amp; Dungeon.hero.STR &gt;= 20) {</span>
+<span class="nc bnc" id="L460" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L461">			badge = Badge.STRENGTH_ATTAINED_5;</span>
+<span class="nc" id="L462">			local.add( badge );</span>
+		}
+		
+<span class="nc" id="L465">		displayBadge( badge );</span>
+<span class="nc" id="L466">	}</span>
+	
+	public static void validateFoodEaten() {
+<span class="nc" id="L469">		Badge badge = null;</span>
+		
+<span class="nc bnc" id="L471" title="All 4 branches missed.">		if (!local.contains( Badge.FOOD_EATEN_1 ) &amp;&amp; Statistics.foodEaten &gt;= 10) {</span>
+<span class="nc" id="L472">			badge = Badge.FOOD_EATEN_1;</span>
+<span class="nc" id="L473">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L475" title="All 4 branches missed.">		if (!local.contains( Badge.FOOD_EATEN_2 ) &amp;&amp; Statistics.foodEaten &gt;= 20) {</span>
+<span class="nc bnc" id="L476" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L477">			badge = Badge.FOOD_EATEN_2;</span>
+<span class="nc" id="L478">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L480" title="All 4 branches missed.">		if (!local.contains( Badge.FOOD_EATEN_3 ) &amp;&amp; Statistics.foodEaten &gt;= 30) {</span>
+<span class="nc bnc" id="L481" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L482">			badge = Badge.FOOD_EATEN_3;</span>
+<span class="nc" id="L483">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L485" title="All 4 branches missed.">		if (!local.contains( Badge.FOOD_EATEN_4 ) &amp;&amp; Statistics.foodEaten &gt;= 40) {</span>
+<span class="nc bnc" id="L486" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L487">			badge = Badge.FOOD_EATEN_4;</span>
+<span class="nc" id="L488">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L490" title="All 4 branches missed.">		if (!local.contains( Badge.FOOD_EATEN_5 ) &amp;&amp; Statistics.foodEaten &gt;= 50) {</span>
+<span class="nc bnc" id="L491" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L492">			badge = Badge.FOOD_EATEN_5;</span>
+<span class="nc" id="L493">			local.add( badge );</span>
+		}
+		
+<span class="nc" id="L496">		displayBadge( badge );</span>
+<span class="nc" id="L497">	}</span>
+	
+	public static void validateItemsCrafted() {
+<span class="nc" id="L500">		Badge badge = null;</span>
+		
+<span class="nc bnc" id="L502" title="All 4 branches missed.">		if (!local.contains( Badge.ITEMS_CRAFTED_1 ) &amp;&amp; Statistics.itemsCrafted &gt;= 3) {</span>
+<span class="nc" id="L503">			badge = Badge.ITEMS_CRAFTED_1;</span>
+<span class="nc" id="L504">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L506" title="All 4 branches missed.">		if (!local.contains( Badge.ITEMS_CRAFTED_2 ) &amp;&amp; Statistics.itemsCrafted &gt;= 8) {</span>
+<span class="nc bnc" id="L507" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L508">			badge = Badge.ITEMS_CRAFTED_2;</span>
+<span class="nc" id="L509">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L511" title="All 4 branches missed.">		if (!local.contains( Badge.ITEMS_CRAFTED_3 ) &amp;&amp; Statistics.itemsCrafted &gt;= 15) {</span>
+<span class="nc bnc" id="L512" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L513">			badge = Badge.ITEMS_CRAFTED_3;</span>
+<span class="nc" id="L514">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L516" title="All 4 branches missed.">		if (!local.contains( Badge.ITEMS_CRAFTED_4 ) &amp;&amp; Statistics.itemsCrafted &gt;= 24) {</span>
+<span class="nc bnc" id="L517" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L518">			badge = Badge.ITEMS_CRAFTED_4;</span>
+<span class="nc" id="L519">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L521" title="All 4 branches missed.">		if (!local.contains( Badge.ITEMS_CRAFTED_5 ) &amp;&amp; Statistics.itemsCrafted &gt;= 35) {</span>
+<span class="nc bnc" id="L522" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L523">			badge = Badge.ITEMS_CRAFTED_5;</span>
+<span class="nc" id="L524">			local.add( badge );</span>
+		}
+		
+<span class="nc" id="L527">		displayBadge( badge );</span>
+<span class="nc" id="L528">	}</span>
+	
+	public static void validatePiranhasKilled() {
+<span class="nc" id="L531">		Badge badge = null;</span>
+		
+<span class="nc bnc" id="L533" title="All 4 branches missed.">		if (!local.contains( Badge.PIRANHAS ) &amp;&amp; Statistics.piranhasKilled &gt;= 6) {</span>
+<span class="nc" id="L534">			badge = Badge.PIRANHAS;</span>
+<span class="nc" id="L535">			local.add( badge );</span>
+		}
+		
+<span class="nc" id="L538">		displayBadge( badge );</span>
+<span class="nc" id="L539">	}</span>
+	
+	public static void validateItemLevelAquired( Item item ) {
+		
+		// This method should be called:
+		// 1) When an item is obtained (Item.collect)
+		// 2) When an item is upgraded (ScrollOfUpgrade, ScrollOfWeaponUpgrade, ShortSword, WandOfMagicMissile)
+		// 3) When an item is identified
+
+		// Note that artifacts should never trigger this badge as they are alternatively upgraded
+<span class="nc bnc" id="L549" title="All 4 branches missed.">		if (!item.levelKnown || item instanceof Artifact) {</span>
+<span class="nc" id="L550">			return;</span>
+		}
+
+<span class="nc bnc" id="L553" title="All 2 branches missed.">		if (item instanceof MeleeWeapon){</span>
+<span class="nc" id="L554">			validateDuelistUnlock();</span>
+		}
+		
+<span class="nc" id="L557">		Badge badge = null;</span>
+<span class="nc bnc" id="L558" title="All 4 branches missed.">		if (!local.contains( Badge.ITEM_LEVEL_1 ) &amp;&amp; item.level() &gt;= 3) {</span>
+<span class="nc" id="L559">			badge = Badge.ITEM_LEVEL_1;</span>
+<span class="nc" id="L560">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L562" title="All 4 branches missed.">		if (!local.contains( Badge.ITEM_LEVEL_2 ) &amp;&amp; item.level() &gt;= 6) {</span>
+<span class="nc bnc" id="L563" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L564">			badge = Badge.ITEM_LEVEL_2;</span>
+<span class="nc" id="L565">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L567" title="All 4 branches missed.">		if (!local.contains( Badge.ITEM_LEVEL_3 ) &amp;&amp; item.level() &gt;= 9) {</span>
+<span class="nc bnc" id="L568" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L569">			badge = Badge.ITEM_LEVEL_3;</span>
+<span class="nc" id="L570">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L572" title="All 4 branches missed.">		if (!local.contains( Badge.ITEM_LEVEL_4 ) &amp;&amp; item.level() &gt;= 12) {</span>
+<span class="nc bnc" id="L573" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L574">			badge = Badge.ITEM_LEVEL_4;</span>
+<span class="nc" id="L575">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L577" title="All 4 branches missed.">		if (!local.contains( Badge.ITEM_LEVEL_5 ) &amp;&amp; item.level() &gt;= 15) {</span>
+<span class="nc bnc" id="L578" title="All 2 branches missed.">			if (badge != null) unlock(badge);</span>
+<span class="nc" id="L579">			badge = Badge.ITEM_LEVEL_5;</span>
+<span class="nc" id="L580">			local.add( badge );</span>
+		}
+		
+<span class="nc" id="L583">		displayBadge( badge );</span>
+<span class="nc" id="L584">	}</span>
+	
+	public static void validateAllBagsBought( Item bag ) {
+		
+<span class="nc" id="L588">		Badge badge = null;</span>
+<span class="nc bnc" id="L589" title="All 2 branches missed.">		if (bag instanceof VelvetPouch) {</span>
+<span class="nc" id="L590">			badge = Badge.BAG_BOUGHT_VELVET_POUCH;</span>
+<span class="nc bnc" id="L591" title="All 2 branches missed.">		} else if (bag instanceof ScrollHolder) {</span>
+<span class="nc" id="L592">			badge = Badge.BAG_BOUGHT_SCROLL_HOLDER;</span>
+<span class="nc bnc" id="L593" title="All 2 branches missed.">		} else if (bag instanceof PotionBandolier) {</span>
+<span class="nc" id="L594">			badge = Badge.BAG_BOUGHT_POTION_BANDOLIER;</span>
+<span class="nc bnc" id="L595" title="All 2 branches missed.">		} else if (bag instanceof MagicalHolster) {</span>
+<span class="nc" id="L596">			badge = Badge.BAG_BOUGHT_MAGICAL_HOLSTER;</span>
+		}
+		
+<span class="nc bnc" id="L599" title="All 2 branches missed.">		if (badge != null) {</span>
+			
+<span class="nc" id="L601">			local.add( badge );</span>
+			
+<span class="nc bnc" id="L603" title="All 2 branches missed.">			if (!local.contains( Badge.ALL_BAGS_BOUGHT ) &amp;&amp;</span>
+<span class="nc bnc" id="L604" title="All 2 branches missed.">				local.contains( Badge.BAG_BOUGHT_VELVET_POUCH ) &amp;&amp;</span>
+<span class="nc bnc" id="L605" title="All 2 branches missed.">				local.contains( Badge.BAG_BOUGHT_SCROLL_HOLDER ) &amp;&amp;</span>
+<span class="nc bnc" id="L606" title="All 2 branches missed.">				local.contains( Badge.BAG_BOUGHT_POTION_BANDOLIER ) &amp;&amp;</span>
+<span class="nc bnc" id="L607" title="All 2 branches missed.">				local.contains( Badge.BAG_BOUGHT_MAGICAL_HOLSTER )) {</span>
+						
+<span class="nc" id="L609">					badge = Badge.ALL_BAGS_BOUGHT;</span>
+<span class="nc" id="L610">					local.add( badge );</span>
+<span class="nc" id="L611">					displayBadge( badge );</span>
+			}
+		}
+<span class="nc" id="L614">	}</span>
+
+	//several badges all tie into catalog completion
+	public static void validateCatalogBadges(){
+
+<span class="nc" id="L619">		int totalSeen = 0;</span>
+<span class="nc" id="L620">		int totalThings = 0;</span>
+
+<span class="nc bnc" id="L622" title="All 2 branches missed.">		for (Catalog cat : Catalog.values()){</span>
+<span class="nc" id="L623">			totalSeen += cat.totalSeen();</span>
+<span class="nc" id="L624">			totalThings += cat.totalItems();</span>
+		}
+
+<span class="nc bnc" id="L627" title="All 2 branches missed.">		for (Bestiary cat : Bestiary.values()){</span>
+<span class="nc" id="L628">			totalSeen += cat.totalSeen();</span>
+<span class="nc" id="L629">			totalThings += cat.totalEntities();</span>
+		}
+
+<span class="nc bnc" id="L632" title="All 2 branches missed.">		for (Document doc : Document.values()){</span>
+<span class="nc bnc" id="L633" title="All 2 branches missed.">			if (!doc.isLoreDoc()) {</span>
+<span class="nc bnc" id="L634" title="All 2 branches missed.">				for (String page : doc.pageNames()){</span>
+<span class="nc bnc" id="L635" title="All 2 branches missed.">					if (doc.isPageFound(page)) totalSeen++;</span>
+<span class="nc" id="L636">					totalThings++;</span>
+<span class="nc" id="L637">				}</span>
+			}
+		}
+
+		//overall unlock badges
+<span class="nc" id="L642">		Badge badge = null;</span>
+<span class="nc bnc" id="L643" title="All 2 branches missed.">		if (totalSeen &gt;= 40) {</span>
+<span class="nc" id="L644">			badge = Badge.RESEARCHER_1;</span>
+		}
+<span class="nc bnc" id="L646" title="All 2 branches missed.">		if (totalSeen &gt;= 80) {</span>
+<span class="nc" id="L647">			unlock(badge);</span>
+<span class="nc" id="L648">			badge = Badge.RESEARCHER_2;</span>
+		}
+<span class="nc bnc" id="L650" title="All 2 branches missed.">		if (totalSeen &gt;= 160) {</span>
+<span class="nc" id="L651">			unlock(badge);</span>
+<span class="nc" id="L652">			badge = Badge.RESEARCHER_3;</span>
+		}
+<span class="nc bnc" id="L654" title="All 2 branches missed.">		if (totalSeen &gt;= 320) {</span>
+<span class="nc" id="L655">			unlock(badge);</span>
+<span class="nc" id="L656">			badge = Badge.RESEARCHER_4;</span>
+		}
+<span class="nc bnc" id="L658" title="All 2 branches missed.">		if (totalSeen == totalThings) {</span>
+<span class="nc" id="L659">			unlock(badge);</span>
+<span class="nc" id="L660">			badge = Badge.RESEARCHER_5;</span>
+		}
+<span class="nc" id="L662">		displayBadge( badge );</span>
+
+		//specific task badges
+
+<span class="nc" id="L666">		boolean qualified = true;</span>
+<span class="nc bnc" id="L667" title="All 2 branches missed.">		for (Catalog cat : Catalog.equipmentCatalogs) {</span>
+<span class="nc bnc" id="L668" title="All 4 branches missed.">			if (cat != Catalog.ENCHANTMENTS &amp;&amp; cat != Catalog.GLYPHS) {</span>
+<span class="nc bnc" id="L669" title="All 2 branches missed.">				if (cat.totalSeen() == 0) {</span>
+<span class="nc" id="L670">					qualified = false;</span>
+<span class="nc" id="L671">					break;</span>
+				}
+			}
+<span class="nc" id="L674">		}</span>
+<span class="nc bnc" id="L675" title="All 2 branches missed.">		if (qualified) {</span>
+<span class="nc" id="L676">			displayBadge(Badge.CATALOG_ONE_EQUIPMENT);</span>
+		}
+
+		//doesn't actually use catalogs, but triggers at the same time effectively
+<span class="nc bnc" id="L680" title="All 2 branches missed.">		if (!local.contains(Badge.CATALOG_POTIONS_SCROLLS)</span>
+<span class="nc bnc" id="L681" title="All 6 branches missed.">				&amp;&amp; Potion.allKnown() &amp;&amp; Scroll.allKnown()</span>
+<span class="nc bnc" id="L682" title="All 2 branches missed.">				&amp;&amp; Dungeon.hero != null &amp;&amp; Dungeon.hero.isAlive()){</span>
+<span class="nc" id="L683">			local.add(Badge.CATALOG_POTIONS_SCROLLS);</span>
+<span class="nc" id="L684">			displayBadge(Badge.CATALOG_POTIONS_SCROLLS);</span>
+		}
+
+<span class="nc bnc" id="L687" title="All 2 branches missed.">		if (Bestiary.RARE.totalEntities() == Bestiary.RARE.totalSeen()){</span>
+<span class="nc" id="L688">			displayBadge(Badge.ALL_RARE_ENEMIES);</span>
+		}
+
+<span class="nc bnc" id="L691" title="All 2 branches missed.">		if (Document.HALLS_KING.isPageRead(Document.KING_ATTRITION)){</span>
+<span class="nc" id="L692">			displayBadge(Badge.RODNEY);</span>
+		}
+
+<span class="nc" id="L695">	}</span>
+	
+	public static void validateDeathFromFire() {
+<span class="nc" id="L698">		Badge badge = Badge.DEATH_FROM_FIRE;</span>
+<span class="nc" id="L699">		local.add( badge );</span>
+<span class="nc" id="L700">		displayBadge( badge );</span>
+		
+<span class="nc" id="L702">		validateDeathFromAll();</span>
+<span class="nc" id="L703">	}</span>
+	
+	public static void validateDeathFromPoison() {
+<span class="nc" id="L706">		Badge badge = Badge.DEATH_FROM_POISON;</span>
+<span class="nc" id="L707">		local.add( badge );</span>
+<span class="nc" id="L708">		displayBadge( badge );</span>
+		
+<span class="nc" id="L710">		validateDeathFromAll();</span>
+<span class="nc" id="L711">	}</span>
+	
+	public static void validateDeathFromGas() {
+<span class="nc" id="L714">		Badge badge = Badge.DEATH_FROM_GAS;</span>
+<span class="nc" id="L715">		local.add( badge );</span>
+<span class="nc" id="L716">		displayBadge( badge );</span>
+		
+<span class="nc" id="L718">		validateDeathFromAll();</span>
+<span class="nc" id="L719">	}</span>
+	
+	public static void validateDeathFromHunger() {
+<span class="nc" id="L722">		Badge badge = Badge.DEATH_FROM_HUNGER;</span>
+<span class="nc" id="L723">		local.add( badge );</span>
+<span class="nc" id="L724">		displayBadge( badge );</span>
+		
+<span class="nc" id="L726">		validateDeathFromAll();</span>
+<span class="nc" id="L727">	}</span>
+
+	public static void validateDeathFromFalling() {
+<span class="nc" id="L730">		Badge badge = Badge.DEATH_FROM_FALLING;</span>
+<span class="nc" id="L731">		local.add( badge );</span>
+<span class="nc" id="L732">		displayBadge( badge );</span>
+
+<span class="nc" id="L734">		validateDeathFromAll();</span>
+<span class="nc" id="L735">	}</span>
+
+	public static void validateDeathFromEnemyMagic() {
+<span class="nc" id="L738">		Badge badge = Badge.DEATH_FROM_ENEMY_MAGIC;</span>
+<span class="nc" id="L739">		local.add( badge );</span>
+<span class="nc" id="L740">		displayBadge( badge );</span>
+
+<span class="nc" id="L742">		validateDeathFromAll();</span>
+<span class="nc" id="L743">	}</span>
+	
+	public static void validateDeathFromFriendlyMagic() {
+<span class="nc" id="L746">		Badge badge = Badge.DEATH_FROM_FRIENDLY_MAGIC;</span>
+<span class="nc" id="L747">		local.add( badge );</span>
+<span class="nc" id="L748">		displayBadge( badge );</span>
+
+<span class="nc" id="L750">		validateDeathFromAll();</span>
+<span class="nc" id="L751">	}</span>
+
+	public static void validateDeathFromSacrifice() {
+<span class="nc" id="L754">		Badge badge = Badge.DEATH_FROM_SACRIFICE;</span>
+<span class="nc" id="L755">		local.add( badge );</span>
+<span class="nc" id="L756">		displayBadge( badge );</span>
+
+<span class="nc" id="L758">		validateDeathFromAll();</span>
+<span class="nc" id="L759">	}</span>
+
+	public static void validateDeathFromGrimOrDisintTrap() {
+<span class="nc" id="L762">		Badge badge = Badge.DEATH_FROM_GRIM_TRAP;</span>
+<span class="nc" id="L763">		local.add( badge );</span>
+<span class="nc" id="L764">		displayBadge( badge );</span>
+
+<span class="nc" id="L766">		validateDeathFromAll();</span>
+<span class="nc" id="L767">	}</span>
+	
+	private static void validateDeathFromAll() {
+<span class="nc bnc" id="L770" title="All 2 branches missed.">		if (isUnlocked( Badge.DEATH_FROM_FIRE ) &amp;&amp;</span>
+<span class="nc bnc" id="L771" title="All 2 branches missed.">				isUnlocked( Badge.DEATH_FROM_POISON ) &amp;&amp;</span>
+<span class="nc bnc" id="L772" title="All 2 branches missed.">				isUnlocked( Badge.DEATH_FROM_GAS ) &amp;&amp;</span>
+<span class="nc bnc" id="L773" title="All 2 branches missed.">				isUnlocked( Badge.DEATH_FROM_HUNGER) &amp;&amp;</span>
+<span class="nc bnc" id="L774" title="All 2 branches missed.">				isUnlocked( Badge.DEATH_FROM_FALLING) &amp;&amp;</span>
+<span class="nc bnc" id="L775" title="All 2 branches missed.">				isUnlocked( Badge.DEATH_FROM_ENEMY_MAGIC) &amp;&amp;</span>
+<span class="nc bnc" id="L776" title="All 2 branches missed.">				isUnlocked( Badge.DEATH_FROM_FRIENDLY_MAGIC) &amp;&amp;</span>
+<span class="nc bnc" id="L777" title="All 2 branches missed.">				isUnlocked( Badge.DEATH_FROM_SACRIFICE) &amp;&amp;</span>
+<span class="nc bnc" id="L778" title="All 2 branches missed.">				isUnlocked( Badge.DEATH_FROM_GRIM_TRAP)) {</span>
+
+<span class="nc" id="L780">			Badge badge = Badge.DEATH_FROM_ALL;</span>
+<span class="nc bnc" id="L781" title="All 2 branches missed.">			if (!isUnlocked( badge )) {</span>
+<span class="nc" id="L782">				displayBadge( badge );</span>
+			}
+		}
+<span class="nc" id="L785">	}</span>
+
+<span class="nc" id="L787">	private static LinkedHashMap&lt;HeroClass, Badge&gt; firstBossClassBadges = new LinkedHashMap&lt;&gt;();</span>
+	static {
+<span class="nc" id="L789">		firstBossClassBadges.put(HeroClass.WARRIOR, Badge.BOSS_SLAIN_1_WARRIOR);</span>
+<span class="nc" id="L790">		firstBossClassBadges.put(HeroClass.MAGE, Badge.BOSS_SLAIN_1_MAGE);</span>
+<span class="nc" id="L791">		firstBossClassBadges.put(HeroClass.ROGUE, Badge.BOSS_SLAIN_1_ROGUE);</span>
+<span class="nc" id="L792">		firstBossClassBadges.put(HeroClass.HUNTRESS, Badge.BOSS_SLAIN_1_HUNTRESS);</span>
+<span class="nc" id="L793">		firstBossClassBadges.put(HeroClass.DUELIST, Badge.BOSS_SLAIN_1_DUELIST);</span>
+<span class="nc" id="L794">		firstBossClassBadges.put(HeroClass.CLERIC, Badge.BOSS_SLAIN_1_CLERIC);</span>
+	}
+
+<span class="nc" id="L797">	private static LinkedHashMap&lt;HeroClass, Badge&gt; victoryClassBadges = new LinkedHashMap&lt;&gt;();</span>
+	static {
+<span class="nc" id="L799">		victoryClassBadges.put(HeroClass.WARRIOR, Badge.VICTORY_WARRIOR);</span>
+<span class="nc" id="L800">		victoryClassBadges.put(HeroClass.MAGE, Badge.VICTORY_MAGE);</span>
+<span class="nc" id="L801">		victoryClassBadges.put(HeroClass.ROGUE, Badge.VICTORY_ROGUE);</span>
+<span class="nc" id="L802">		victoryClassBadges.put(HeroClass.HUNTRESS, Badge.VICTORY_HUNTRESS);</span>
+<span class="nc" id="L803">		victoryClassBadges.put(HeroClass.DUELIST, Badge.VICTORY_DUELIST);</span>
+<span class="nc" id="L804">		victoryClassBadges.put(HeroClass.CLERIC, Badge.VICTORY_CLERIC);</span>
+	}
+
+<span class="nc" id="L807">	private static LinkedHashMap&lt;HeroSubClass, Badge&gt; thirdBossSubclassBadges = new LinkedHashMap&lt;&gt;();</span>
+	static {
+<span class="nc" id="L809">		thirdBossSubclassBadges.put(HeroSubClass.BERSERKER, Badge.BOSS_SLAIN_3_BERSERKER);</span>
+<span class="nc" id="L810">		thirdBossSubclassBadges.put(HeroSubClass.GLADIATOR, Badge.BOSS_SLAIN_3_GLADIATOR);</span>
+<span class="nc" id="L811">		thirdBossSubclassBadges.put(HeroSubClass.BATTLEMAGE, Badge.BOSS_SLAIN_3_BATTLEMAGE);</span>
+<span class="nc" id="L812">		thirdBossSubclassBadges.put(HeroSubClass.WARLOCK, Badge.BOSS_SLAIN_3_WARLOCK);</span>
+<span class="nc" id="L813">		thirdBossSubclassBadges.put(HeroSubClass.ASSASSIN, Badge.BOSS_SLAIN_3_ASSASSIN);</span>
+<span class="nc" id="L814">		thirdBossSubclassBadges.put(HeroSubClass.FREERUNNER, Badge.BOSS_SLAIN_3_FREERUNNER);</span>
+<span class="nc" id="L815">		thirdBossSubclassBadges.put(HeroSubClass.SNIPER, Badge.BOSS_SLAIN_3_SNIPER);</span>
+<span class="nc" id="L816">		thirdBossSubclassBadges.put(HeroSubClass.WARDEN, Badge.BOSS_SLAIN_3_WARDEN);</span>
+<span class="nc" id="L817">		thirdBossSubclassBadges.put(HeroSubClass.CHAMPION, Badge.BOSS_SLAIN_3_CHAMPION);</span>
+<span class="nc" id="L818">		thirdBossSubclassBadges.put(HeroSubClass.MONK, Badge.BOSS_SLAIN_3_MONK);</span>
+<span class="nc" id="L819">		thirdBossSubclassBadges.put(HeroSubClass.PRIEST, Badge.BOSS_SLAIN_3_PRIEST);</span>
+<span class="nc" id="L820">		thirdBossSubclassBadges.put(HeroSubClass.PALADIN, Badge.BOSS_SLAIN_3_PALADIN);</span>
+	}
+	
+	public static void validateBossSlain() {
+<span class="nc" id="L824">		Badge badge = null;</span>
+<span class="nc bnc" id="L825" title="All 5 branches missed.">		switch (Dungeon.depth) {</span>
+		case 5:
+<span class="nc" id="L827">			badge = Badge.BOSS_SLAIN_1;</span>
+<span class="nc" id="L828">			break;</span>
+		case 10:
+<span class="nc" id="L830">			badge = Badge.BOSS_SLAIN_2;</span>
+<span class="nc" id="L831">			break;</span>
+		case 15:
+<span class="nc" id="L833">			badge = Badge.BOSS_SLAIN_3;</span>
+<span class="nc" id="L834">			break;</span>
+		case 20:
+<span class="nc" id="L836">			badge = Badge.BOSS_SLAIN_4;</span>
+			break;
+		}
+		
+<span class="nc bnc" id="L840" title="All 2 branches missed.">		if (badge != null) {</span>
+<span class="nc" id="L841">			local.add( badge );</span>
+<span class="nc" id="L842">			displayBadge( badge );</span>
+			
+<span class="nc bnc" id="L844" title="All 2 branches missed.">			if (badge == Badge.BOSS_SLAIN_1) {</span>
+<span class="nc" id="L845">				badge = firstBossClassBadges.get(Dungeon.hero.heroClass);</span>
+<span class="nc bnc" id="L846" title="All 2 branches missed.">				if (badge == null) return;</span>
+<span class="nc" id="L847">				local.add( badge );</span>
+<span class="nc" id="L848">				unlock(badge);</span>
+
+<span class="nc" id="L850">				boolean allUnlocked = true;</span>
+<span class="nc bnc" id="L851" title="All 2 branches missed.">				for (Badge b : firstBossClassBadges.values()){</span>
+<span class="nc bnc" id="L852" title="All 2 branches missed.">					if (!isUnlocked(b)){</span>
+<span class="nc" id="L853">						allUnlocked = false;</span>
+<span class="nc" id="L854">						break;</span>
+					}
+<span class="nc" id="L856">				}</span>
+<span class="nc bnc" id="L857" title="All 2 branches missed.">				if (allUnlocked) {</span>
+					
+<span class="nc" id="L859">					badge = Badge.BOSS_SLAIN_1_ALL_CLASSES;</span>
+<span class="nc bnc" id="L860" title="All 2 branches missed.">					if (!isUnlocked( badge )) {</span>
+<span class="nc" id="L861">						displayBadge( badge );</span>
+					}
+				}
+<span class="nc bnc" id="L864" title="All 2 branches missed.">			} else if (badge == Badge.BOSS_SLAIN_3) {</span>
+
+<span class="nc" id="L866">				badge = thirdBossSubclassBadges.get(Dungeon.hero.subClass);</span>
+<span class="nc bnc" id="L867" title="All 2 branches missed.">				if (badge == null) return;</span>
+<span class="nc" id="L868">				local.add( badge );</span>
+<span class="nc" id="L869">				unlock(badge);</span>
+
+<span class="nc" id="L871">				boolean allUnlocked = true;</span>
+<span class="nc bnc" id="L872" title="All 2 branches missed.">				for (Badge b : thirdBossSubclassBadges.values()){</span>
+<span class="nc bnc" id="L873" title="All 2 branches missed.">					if (!isUnlocked(b)){</span>
+<span class="nc" id="L874">						allUnlocked = false;</span>
+<span class="nc" id="L875">						break;</span>
+					}
+<span class="nc" id="L877">				}</span>
+<span class="nc bnc" id="L878" title="All 2 branches missed.">				if (allUnlocked) {</span>
+<span class="nc" id="L879">					badge = Badge.BOSS_SLAIN_3_ALL_SUBCLASSES;</span>
+<span class="nc bnc" id="L880" title="All 2 branches missed.">					if (!isUnlocked( badge )) {</span>
+<span class="nc" id="L881">						displayBadge( badge );</span>
+					}
+				}
+			}
+
+<span class="nc bnc" id="L886" title="All 4 branches missed.">			if (Statistics.qualifiedForBossRemainsBadge &amp;&amp; Dungeon.hero.belongings.getItem(RemainsItem.class) != null){</span>
+<span class="nc" id="L887">				badge = Badge.BOSS_SLAIN_REMAINS;</span>
+<span class="nc" id="L888">				local.add( badge );</span>
+<span class="nc" id="L889">				displayBadge( badge );</span>
+			}
+
+		}
+<span class="nc" id="L893">	}</span>
+
+	public static void validateBossChallengeCompleted(){
+<span class="nc" id="L896">		Badge badge = null;</span>
+<span class="nc bnc" id="L897" title="All 6 branches missed.">		switch (Dungeon.depth) {</span>
+			case 5:
+<span class="nc" id="L899">				badge = Badge.BOSS_CHALLENGE_1;</span>
+<span class="nc" id="L900">				break;</span>
+			case 10:
+<span class="nc" id="L902">				badge = Badge.BOSS_CHALLENGE_2;</span>
+<span class="nc" id="L903">				break;</span>
+			case 15:
+<span class="nc" id="L905">				badge = Badge.BOSS_CHALLENGE_3;</span>
+<span class="nc" id="L906">				break;</span>
+			case 20:
+<span class="nc" id="L908">				badge = Badge.BOSS_CHALLENGE_4;</span>
+<span class="nc" id="L909">				break;</span>
+			case 25:
+<span class="nc" id="L911">				badge = Badge.BOSS_CHALLENGE_5;</span>
+				break;
+		}
+
+<span class="nc bnc" id="L915" title="All 2 branches missed.">		if (badge != null) {</span>
+<span class="nc" id="L916">			local.add(badge);</span>
+<span class="nc" id="L917">			displayBadge(badge);</span>
+		}
+<span class="nc" id="L919">	}</span>
+	
+	public static void validateMastery() {
+		
+<span class="nc" id="L923">		Badge badge = null;</span>
+<span class="nc bnc" id="L924" title="All 7 branches missed.">		switch (Dungeon.hero.heroClass) {</span>
+			case WARRIOR:
+<span class="nc" id="L926">				badge = Badge.MASTERY_WARRIOR;</span>
+<span class="nc" id="L927">				break;</span>
+			case MAGE:
+<span class="nc" id="L929">				badge = Badge.MASTERY_MAGE;</span>
+<span class="nc" id="L930">				break;</span>
+			case ROGUE:
+<span class="nc" id="L932">				badge = Badge.MASTERY_ROGUE;</span>
+<span class="nc" id="L933">				break;</span>
+			case HUNTRESS:
+<span class="nc" id="L935">				badge = Badge.MASTERY_HUNTRESS;</span>
+<span class="nc" id="L936">				break;</span>
+			case DUELIST:
+<span class="nc" id="L938">				badge = Badge.MASTERY_DUELIST;</span>
+<span class="nc" id="L939">				break;</span>
+			case CLERIC:
+<span class="nc" id="L941">				badge = Badge.MASTERY_CLERIC;</span>
+				break;
+		}
+		
+<span class="nc" id="L945">		unlock(badge);</span>
+<span class="nc" id="L946">	}</span>
+
+	public static void validateRatmogrify(){
+<span class="nc" id="L949">		unlock(Badge.FOUND_RATMOGRIFY);</span>
+<span class="nc" id="L950">	}</span>
+	
+	public static void validateMageUnlock(){
+<span class="nc bnc" id="L953" title="All 4 branches missed.">		if (Statistics.upgradesUsed &gt;= 1 &amp;&amp; !isUnlocked(Badge.UNLOCK_MAGE)){</span>
+<span class="nc" id="L954">			displayBadge( Badge.UNLOCK_MAGE );</span>
+		}
+<span class="nc" id="L956">	}</span>
+	
+	public static void validateRogueUnlock(){
+<span class="nc bnc" id="L959" title="All 4 branches missed.">		if (Statistics.sneakAttacks &gt;= 10 &amp;&amp; !isUnlocked(Badge.UNLOCK_ROGUE)){</span>
+<span class="nc" id="L960">			displayBadge( Badge.UNLOCK_ROGUE );</span>
+		}
+<span class="nc" id="L962">	}</span>
+	
+	public static void validateHuntressUnlock(){
+<span class="nc bnc" id="L965" title="All 4 branches missed.">		if (Statistics.thrownAttacks &gt;= 10 &amp;&amp; !isUnlocked(Badge.UNLOCK_HUNTRESS)){</span>
+<span class="nc" id="L966">			displayBadge( Badge.UNLOCK_HUNTRESS );</span>
+		}
+<span class="nc" id="L968">	}</span>
+
+	public static void validateDuelistUnlock(){
+<span class="nc bnc" id="L971" title="All 8 branches missed.">		if (!isUnlocked(Badge.UNLOCK_DUELIST) &amp;&amp; Dungeon.hero != null</span>
+				&amp;&amp; Dungeon.hero.belongings.weapon instanceof MeleeWeapon
+				&amp;&amp; ((MeleeWeapon) Dungeon.hero.belongings.weapon).tier &gt;= 2
+<span class="nc bnc" id="L974" title="All 2 branches missed.">				&amp;&amp; ((MeleeWeapon) Dungeon.hero.belongings.weapon).STRReq() &lt;= Dungeon.hero.STR()){</span>
+
+<span class="nc bnc" id="L976" title="All 2 branches missed.">			if (Dungeon.hero.belongings.weapon.isIdentified() &amp;&amp;</span>
+<span class="nc bnc" id="L977" title="All 2 branches missed.">					((MeleeWeapon) Dungeon.hero.belongings.weapon).STRReq() &lt;= Dungeon.hero.STR()) {</span>
+<span class="nc" id="L978">				displayBadge(Badge.UNLOCK_DUELIST);</span>
+
+<span class="nc bnc" id="L980" title="All 2 branches missed.">			} else if (!Dungeon.hero.belongings.weapon.isIdentified() &amp;&amp;</span>
+<span class="nc bnc" id="L981" title="All 2 branches missed.">					((MeleeWeapon) Dungeon.hero.belongings.weapon).STRReq(0) &lt;= Dungeon.hero.STR()){</span>
+<span class="nc" id="L982">				displayBadge(Badge.UNLOCK_DUELIST);</span>
+			}
+		}
+<span class="nc" id="L985">	}</span>
+
+	public static void validateClericUnlock(){
+<span class="nc bnc" id="L988" title="All 2 branches missed.">		if (!isUnlocked(Badge.UNLOCK_CLERIC)){</span>
+<span class="nc" id="L989">			displayBadge( Badge.UNLOCK_CLERIC );</span>
+		}
+<span class="nc" id="L991">	}</span>
+	
+	public static void validateMasteryCombo( int n ) {
+<span class="nc bnc" id="L994" title="All 4 branches missed.">		if (!local.contains( Badge.MASTERY_COMBO ) &amp;&amp; n == 10) {</span>
+<span class="nc" id="L995">			Badge badge = Badge.MASTERY_COMBO;</span>
+<span class="nc" id="L996">			local.add( badge );</span>
+<span class="nc" id="L997">			displayBadge( badge );</span>
+		}
+<span class="nc" id="L999">	}</span>
+	
+	public static void validateVictory() {
+
+<span class="nc" id="L1003">		Badge badge = Badge.VICTORY;</span>
+<span class="nc" id="L1004">		local.add( badge );</span>
+<span class="nc" id="L1005">		displayBadge( badge );</span>
+
+<span class="nc" id="L1007">		badge = victoryClassBadges.get(Dungeon.hero.heroClass);</span>
+<span class="nc bnc" id="L1008" title="All 2 branches missed.">		if (badge == null) return;</span>
+<span class="nc" id="L1009">		local.add( badge );</span>
+<span class="nc" id="L1010">		unlock(badge);</span>
+
+<span class="nc" id="L1012">		boolean allUnlocked = true;</span>
+<span class="nc bnc" id="L1013" title="All 2 branches missed.">		for (Badge b : victoryClassBadges.values()){</span>
+<span class="nc bnc" id="L1014" title="All 2 branches missed.">			if (!isUnlocked(b)){</span>
+<span class="nc" id="L1015">				allUnlocked = false;</span>
+<span class="nc" id="L1016">				break;</span>
+			}
+<span class="nc" id="L1018">		}</span>
+<span class="nc bnc" id="L1019" title="All 2 branches missed.">		if (allUnlocked){</span>
+<span class="nc" id="L1020">			badge = Badge.VICTORY_ALL_CLASSES;</span>
+<span class="nc" id="L1021">			displayBadge( badge );</span>
+		}
+<span class="nc" id="L1023">	}</span>
+
+	public static void validateNoKilling() {
+<span class="nc bnc" id="L1026" title="All 4 branches missed.">		if (!local.contains( Badge.NO_MONSTERS_SLAIN ) &amp;&amp; Statistics.completedWithNoKilling) {</span>
+<span class="nc" id="L1027">			Badge badge = Badge.NO_MONSTERS_SLAIN;</span>
+<span class="nc" id="L1028">			local.add( badge );</span>
+<span class="nc" id="L1029">			displayBadge( badge );</span>
+<span class="nc" id="L1030">			Statistics.completedWithNoKilling = false;</span>
+		}
+<span class="nc" id="L1032">	}</span>
+	
+	public static void validateGrimWeapon() {
+<span class="nc bnc" id="L1035" title="All 2 branches missed.">		if (!local.contains( Badge.GRIM_WEAPON )) {</span>
+<span class="nc" id="L1036">			Badge badge = Badge.GRIM_WEAPON;</span>
+<span class="nc" id="L1037">			local.add( badge );</span>
+<span class="nc" id="L1038">			displayBadge( badge );</span>
+		}
+<span class="nc" id="L1040">	}</span>
+	
+	public static void validateGamesPlayed() {
+<span class="nc" id="L1043">		Badge badge = null;</span>
+<span class="nc bnc" id="L1044" title="All 4 branches missed.">		if (Rankings.INSTANCE.totalNumber &gt;= 10 || Rankings.INSTANCE.wonNumber &gt;= 1) {</span>
+<span class="nc" id="L1045">			badge = Badge.GAMES_PLAYED_1;</span>
+		}
+<span class="nc bnc" id="L1047" title="All 4 branches missed.">		if (Rankings.INSTANCE.totalNumber &gt;= 25 || Rankings.INSTANCE.wonNumber &gt;= 3) {</span>
+<span class="nc" id="L1048">			unlock(badge);</span>
+<span class="nc" id="L1049">			badge = Badge.GAMES_PLAYED_2;</span>
+		}
+<span class="nc bnc" id="L1051" title="All 4 branches missed.">		if (Rankings.INSTANCE.totalNumber &gt;= 50 || Rankings.INSTANCE.wonNumber &gt;= 5) {</span>
+<span class="nc" id="L1052">			unlock(badge);</span>
+<span class="nc" id="L1053">			badge = Badge.GAMES_PLAYED_3;</span>
+		}
+<span class="nc bnc" id="L1055" title="All 4 branches missed.">		if (Rankings.INSTANCE.totalNumber &gt;= 200 || Rankings.INSTANCE.wonNumber &gt;= 10) {</span>
+<span class="nc" id="L1056">			unlock(badge);</span>
+<span class="nc" id="L1057">			badge = Badge.GAMES_PLAYED_4;</span>
+		}
+<span class="nc bnc" id="L1059" title="All 4 branches missed.">		if (Rankings.INSTANCE.totalNumber &gt;= 1000 || Rankings.INSTANCE.wonNumber &gt;= 25) {</span>
+<span class="nc" id="L1060">			unlock(badge);</span>
+<span class="nc" id="L1061">			badge = Badge.GAMES_PLAYED_5;</span>
+		}
+		
+<span class="nc" id="L1064">		displayBadge( badge );</span>
+<span class="nc" id="L1065">	}</span>
+
+	public static void validateHighScore( int score ){
+<span class="nc" id="L1068">		Badge badge = null;</span>
+<span class="nc bnc" id="L1069" title="All 2 branches missed.">		if (score &gt;= 5000) {</span>
+<span class="nc" id="L1070">			badge = Badge.HIGH_SCORE_1;</span>
+<span class="nc" id="L1071">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L1073" title="All 2 branches missed.">		if (score &gt;= 25_000) {</span>
+<span class="nc" id="L1074">			unlock(badge);</span>
+<span class="nc" id="L1075">			badge = Badge.HIGH_SCORE_2;</span>
+<span class="nc" id="L1076">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L1078" title="All 2 branches missed.">		if (score &gt;= 100_000) {</span>
+<span class="nc" id="L1079">			unlock(badge);</span>
+<span class="nc" id="L1080">			badge = Badge.HIGH_SCORE_3;</span>
+<span class="nc" id="L1081">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L1083" title="All 2 branches missed.">		if (score &gt;= 250_000) {</span>
+<span class="nc" id="L1084">			unlock(badge);</span>
+<span class="nc" id="L1085">			badge = Badge.HIGH_SCORE_4;</span>
+<span class="nc" id="L1086">			local.add( badge );</span>
+		}
+<span class="nc bnc" id="L1088" title="All 2 branches missed.">		if (score &gt;= 1_000_000) {</span>
+<span class="nc" id="L1089">			unlock(badge);</span>
+<span class="nc" id="L1090">			badge = Badge.HIGH_SCORE_5;</span>
+<span class="nc" id="L1091">			local.add( badge );</span>
+		}
+
+<span class="nc" id="L1094">		displayBadge( badge );</span>
+<span class="nc" id="L1095">	}</span>
+	
+	public static void validateHappyEnd() {
+<span class="nc" id="L1098">		local.add( Badge.HAPPY_END );</span>
+<span class="nc" id="L1099">		displayBadge( Badge.HAPPY_END );</span>
+
+<span class="nc bnc" id="L1101" title="All 2 branches missed.">		if( Dungeon.hero.belongings.getItem(RemainsItem.class) != null ){</span>
+<span class="nc" id="L1102">			local.add( Badge.HAPPY_END_REMAINS );</span>
+<span class="nc" id="L1103">			displayBadge( Badge.HAPPY_END_REMAINS );</span>
+		}
+<span class="nc" id="L1105">	}</span>
+
+	public static void validateChampion( int challenges ) {
+<span class="nc bnc" id="L1108" title="All 2 branches missed.">		if (challenges == 0) return;</span>
+<span class="nc" id="L1109">		Badge badge = null;</span>
+<span class="nc bnc" id="L1110" title="All 2 branches missed.">		if (challenges &gt;= 1) {</span>
+<span class="nc" id="L1111">			badge = Badge.CHAMPION_1;</span>
+		}
+<span class="nc bnc" id="L1113" title="All 2 branches missed.">		if (challenges &gt;= 3){</span>
+<span class="nc" id="L1114">			unlock(badge);</span>
+<span class="nc" id="L1115">			badge = Badge.CHAMPION_2;</span>
+		}
+<span class="nc bnc" id="L1117" title="All 2 branches missed.">		if (challenges &gt;= 6){</span>
+<span class="nc" id="L1118">			unlock(badge);</span>
+<span class="nc" id="L1119">			badge = Badge.CHAMPION_3;</span>
+		}
+<span class="nc" id="L1121">		local.add(badge);</span>
+<span class="nc" id="L1122">		displayBadge( badge );</span>
+<span class="nc" id="L1123">	}</span>
+	
+	private static void displayBadge( Badge badge ) {
+
+<span class="nc bnc" id="L1127" title="All 6 branches missed.">		if (badge == null || (badge.type != BadgeType.JOURNAL &amp;&amp; !Dungeon.customSeedText.isEmpty())) {</span>
+<span class="nc" id="L1128">			return;</span>
+		}
+		
+<span class="nc bnc" id="L1131" title="All 2 branches missed.">		if (isUnlocked( badge )) {</span>
+			
+<span class="nc bnc" id="L1133" title="All 2 branches missed.">			if (badge.type == BadgeType.LOCAL) {</span>
+<span class="nc" id="L1134">				GLog.h( Messages.get(Badges.class, &quot;endorsed&quot;, badge.title()) );</span>
+<span class="nc" id="L1135">				GLog.newLine();</span>
+			}
+			
+		} else {
+			
+<span class="nc" id="L1140">			unlock(badge);</span>
+			
+<span class="nc" id="L1142">			GLog.h( Messages.get(Badges.class, &quot;new&quot;, badge.title() + &quot; (&quot; + badge.desc() + &quot;)&quot;) );</span>
+<span class="nc" id="L1143">			GLog.newLine();</span>
+<span class="nc" id="L1144">			PixelScene.showBadge( badge );</span>
+		}
+<span class="nc" id="L1146">	}</span>
+	
+	public static boolean isUnlocked( Badge badge ) {
+<span class="nc" id="L1149">		return global.contains( badge );</span>
+	}
+	
+	public static HashSet&lt;Badge&gt; allUnlocked(){
+<span class="nc" id="L1153">		loadGlobal();</span>
+<span class="nc" id="L1154">		return new HashSet&lt;&gt;(global);</span>
+	}
+	
+	public static void disown( Badge badge ) {
+<span class="nc" id="L1158">		loadGlobal();</span>
+<span class="nc" id="L1159">		global.remove( badge );</span>
+<span class="nc" id="L1160">		saveNeeded = true;</span>
+<span class="nc" id="L1161">	}</span>
+	
+	public static void unlock( Badge badge ){
+<span class="nc bnc" id="L1164" title="All 6 branches missed.">		if (!isUnlocked(badge) &amp;&amp; (badge.type == BadgeType.JOURNAL || Dungeon.customSeedText.isEmpty())){</span>
+<span class="nc" id="L1165">			global.add( badge );</span>
+<span class="nc" id="L1166">			saveNeeded = true;</span>
+		}
+<span class="nc" id="L1168">	}</span>
+
+	public static List&lt;Badge&gt; filterReplacedBadges( boolean global ) {
+
+<span class="nc bnc" id="L1172" title="All 2 branches missed.">		ArrayList&lt;Badge&gt; badges = new ArrayList&lt;&gt;(global ? Badges.global : Badges.local);</span>
+
+<span class="nc" id="L1174">		Iterator&lt;Badge&gt; iterator = badges.iterator();</span>
+<span class="nc bnc" id="L1175" title="All 2 branches missed.">		while (iterator.hasNext()) {</span>
+<span class="nc" id="L1176">			Badge badge = iterator.next();</span>
+<span class="nc bnc" id="L1177" title="All 6 branches missed.">			if ((!global &amp;&amp; badge.type != BadgeType.LOCAL) || badge.type == BadgeType.HIDDEN) {</span>
+<span class="nc" id="L1178">				iterator.remove();</span>
+			}
+<span class="nc" id="L1180">		}</span>
+
+<span class="nc" id="L1182">		Collections.sort(badges);</span>
+
+<span class="nc" id="L1184">		return filterReplacedBadges(badges);</span>
+
+	}
+
+	//only show the highest unlocked and the lowest locked
+<span class="nc" id="L1189">	private static final Badge[][] tierBadgeReplacements = new Badge[][]{</span>
+			{Badge.MONSTERS_SLAIN_1, Badge.MONSTERS_SLAIN_2, Badge.MONSTERS_SLAIN_3, Badge.MONSTERS_SLAIN_4, Badge.MONSTERS_SLAIN_5},
+			{Badge.GOLD_COLLECTED_1, Badge.GOLD_COLLECTED_2, Badge.GOLD_COLLECTED_3, Badge.GOLD_COLLECTED_4, Badge.GOLD_COLLECTED_5},
+			{Badge.ITEM_LEVEL_1, Badge.ITEM_LEVEL_2, Badge.ITEM_LEVEL_3, Badge.ITEM_LEVEL_4, Badge.ITEM_LEVEL_5},
+			{Badge.LEVEL_REACHED_1, Badge.LEVEL_REACHED_2, Badge.LEVEL_REACHED_3, Badge.LEVEL_REACHED_4, Badge.LEVEL_REACHED_5},
+			{Badge.STRENGTH_ATTAINED_1, Badge.STRENGTH_ATTAINED_2, Badge.STRENGTH_ATTAINED_3, Badge.STRENGTH_ATTAINED_4, Badge.STRENGTH_ATTAINED_5},
+			{Badge.FOOD_EATEN_1, Badge.FOOD_EATEN_2, Badge.FOOD_EATEN_3, Badge.FOOD_EATEN_4, Badge.FOOD_EATEN_5},
+			{Badge.ITEMS_CRAFTED_1, Badge.ITEMS_CRAFTED_2, Badge.ITEMS_CRAFTED_3, Badge.ITEMS_CRAFTED_4, Badge.ITEMS_CRAFTED_5},
+			{Badge.BOSS_SLAIN_1, Badge.BOSS_SLAIN_2, Badge.BOSS_SLAIN_3, Badge.BOSS_SLAIN_4},
+			{Badge.RESEARCHER_1, Badge.RESEARCHER_2, Badge.RESEARCHER_3, Badge.RESEARCHER_4, Badge.RESEARCHER_5},
+			{Badge.HIGH_SCORE_1, Badge.HIGH_SCORE_2, Badge.HIGH_SCORE_3, Badge.HIGH_SCORE_4, Badge.HIGH_SCORE_5},
+			{Badge.GAMES_PLAYED_1, Badge.GAMES_PLAYED_2, Badge.GAMES_PLAYED_3, Badge.GAMES_PLAYED_4, Badge.GAMES_PLAYED_5},
+			{Badge.CHAMPION_1, Badge.CHAMPION_2, Badge.CHAMPION_3}
+	};
+
+	//don't show the later badge if the earlier one isn't unlocked
+<span class="nc" id="L1205">	private static final Badge[][] prerequisiteBadges = new Badge[][]{</span>
+			{Badge.BOSS_SLAIN_1, Badge.BOSS_CHALLENGE_1},
+			{Badge.BOSS_SLAIN_2, Badge.BOSS_CHALLENGE_2},
+			{Badge.BOSS_SLAIN_3, Badge.BOSS_CHALLENGE_3},
+			{Badge.BOSS_SLAIN_4, Badge.BOSS_CHALLENGE_4},
+			{Badge.VICTORY,      Badge.BOSS_CHALLENGE_5},
+	};
+
+	//If the summary badge is unlocked, don't show the component badges
+<span class="nc" id="L1214">	private static final Badge[][] summaryBadgeReplacements = new Badge[][]{</span>
+			{Badge.DEATH_FROM_FIRE, Badge.DEATH_FROM_ALL},
+			{Badge.DEATH_FROM_GAS, Badge.DEATH_FROM_ALL},
+			{Badge.DEATH_FROM_HUNGER, Badge.DEATH_FROM_ALL},
+			{Badge.DEATH_FROM_POISON, Badge.DEATH_FROM_ALL},
+			{Badge.DEATH_FROM_FALLING, Badge.DEATH_FROM_ALL},
+			{Badge.DEATH_FROM_ENEMY_MAGIC, Badge.DEATH_FROM_ALL},
+			{Badge.DEATH_FROM_FRIENDLY_MAGIC, Badge.DEATH_FROM_ALL},
+			{Badge.DEATH_FROM_SACRIFICE, Badge.DEATH_FROM_ALL},
+			{Badge.DEATH_FROM_GRIM_TRAP, Badge.DEATH_FROM_ALL},
+
+			{Badge.ALL_WEAPONS_IDENTIFIED, Badge.ALL_ITEMS_IDENTIFIED},
+			{Badge.ALL_ARMOR_IDENTIFIED, Badge.ALL_ITEMS_IDENTIFIED},
+			{Badge.ALL_WANDS_IDENTIFIED, Badge.ALL_ITEMS_IDENTIFIED},
+			{Badge.ALL_RINGS_IDENTIFIED, Badge.ALL_ITEMS_IDENTIFIED},
+			{Badge.ALL_ARTIFACTS_IDENTIFIED, Badge.ALL_ITEMS_IDENTIFIED},
+			{Badge.ALL_POTIONS_IDENTIFIED, Badge.ALL_ITEMS_IDENTIFIED},
+			{Badge.ALL_SCROLLS_IDENTIFIED, Badge.ALL_ITEMS_IDENTIFIED}
+	};
+	
+	public static List&lt;Badge&gt; filterReplacedBadges( List&lt;Badge&gt; badges ) {
+
+<span class="nc bnc" id="L1236" title="All 2 branches missed.">		for (Badge[] tierReplace : tierBadgeReplacements){</span>
+<span class="nc" id="L1237">			leaveBest( badges, tierReplace );</span>
+		}
+
+<span class="nc bnc" id="L1240" title="All 2 branches missed.">		for (Badge[] metaReplace : summaryBadgeReplacements){</span>
+<span class="nc" id="L1241">			leaveBest( badges, metaReplace );</span>
+		}
+		
+<span class="nc" id="L1244">		return badges;</span>
+	}
+	
+	private static void leaveBest( Collection&lt;Badge&gt; list, Badge...badges ) {
+<span class="nc bnc" id="L1248" title="All 2 branches missed.">		for (int i=badges.length-1; i &gt; 0; i--) {</span>
+<span class="nc bnc" id="L1249" title="All 2 branches missed.">			if (list.contains( badges[i])) {</span>
+<span class="nc bnc" id="L1250" title="All 2 branches missed.">				for (int j=0; j &lt; i; j++) {</span>
+<span class="nc" id="L1251">					list.remove( badges[j] );</span>
+				}
+<span class="nc" id="L1253">				break;</span>
+			}
+		}
+<span class="nc" id="L1256">	}</span>
+
+	public static List&lt;Badge&gt; filterBadgesWithoutPrerequisites(List&lt;Badges.Badge&gt; badges ) {
+
+<span class="nc bnc" id="L1260" title="All 2 branches missed.">		for (Badge[] prereqReplace : prerequisiteBadges){</span>
+<span class="nc" id="L1261">			leaveWorst( badges, prereqReplace );</span>
+		}
+
+<span class="nc bnc" id="L1264" title="All 2 branches missed.">		for (Badge[] tierReplace : tierBadgeReplacements){</span>
+<span class="nc" id="L1265">			leaveWorst( badges, tierReplace );</span>
+		}
+
+<span class="nc" id="L1268">		Collections.sort( badges );</span>
+
+<span class="nc" id="L1270">		return badges;</span>
+	}
+
+	private static void leaveWorst( Collection&lt;Badge&gt; list, Badge...badges ) {
+<span class="nc bnc" id="L1274" title="All 2 branches missed.">		for (int i=0; i &lt; badges.length; i++) {</span>
+<span class="nc bnc" id="L1275" title="All 2 branches missed.">			if (list.contains( badges[i])) {</span>
+<span class="nc bnc" id="L1276" title="All 2 branches missed.">				for (int j=i+1; j &lt; badges.length; j++) {</span>
+<span class="nc" id="L1277">					list.remove( badges[j] );</span>
+				}
+<span class="nc" id="L1279">				break;</span>
+			}
+		}
+<span class="nc" id="L1282">	}</span>
+
+	public static Collection&lt;Badge&gt; addReplacedBadges(Collection&lt;Badges.Badge&gt; badges ) {
+
+<span class="nc bnc" id="L1286" title="All 2 branches missed.">		for (Badge[] tierReplace : tierBadgeReplacements){</span>
+<span class="nc" id="L1287">			addLower( badges, tierReplace );</span>
+		}
+
+<span class="nc bnc" id="L1290" title="All 2 branches missed.">		for (Badge[] metaReplace : summaryBadgeReplacements){</span>
+<span class="nc" id="L1291">			addLower( badges, metaReplace );</span>
+		}
+
+<span class="nc" id="L1294">		return badges;</span>
+	}
+
+	private static void addLower( Collection&lt;Badge&gt; list, Badge...badges ) {
+<span class="nc bnc" id="L1298" title="All 2 branches missed.">		for (int i=badges.length-1; i &gt; 0; i--) {</span>
+<span class="nc bnc" id="L1299" title="All 2 branches missed.">			if (list.contains( badges[i])) {</span>
+<span class="nc bnc" id="L1300" title="All 2 branches missed.">				for (int j=0; j &lt; i; j++) {</span>
+<span class="nc" id="L1301">					list.add( badges[j] );</span>
+				}
+<span class="nc" id="L1303">				break;</span>
+			}
+		}
+<span class="nc" id="L1306">	}</span>
+
+	//used for badges with completion progress that would otherwise be hard to track
+	public static String showCompletionProgress( Badge badge ){
+<span class="nc bnc" id="L1310" title="All 2 branches missed.">		if (isUnlocked(badge)) return null;</span>
+
+<span class="nc" id="L1312">		String result = &quot;\n&quot;;</span>
+
+<span class="nc bnc" id="L1314" title="All 2 branches missed.">		if (badge == Badge.BOSS_SLAIN_1_ALL_CLASSES){</span>
+<span class="nc bnc" id="L1315" title="All 2 branches missed.">			for (HeroClass cls : HeroClass.values()){</span>
+<span class="nc" id="L1316">				result += &quot;\n&quot;;</span>
+<span class="nc bnc" id="L1317" title="All 2 branches missed.">				if (isUnlocked(firstBossClassBadges.get(cls)))  result += &quot;_&quot; + Messages.titleCase(cls.title()) + &quot;_&quot;;</span>
+<span class="nc" id="L1318">				else                                            result += Messages.titleCase(cls.title());</span>
+			}
+
+<span class="nc" id="L1321">			return result;</span>
+
+<span class="nc bnc" id="L1323" title="All 2 branches missed.">		} else if (badge == Badge.VICTORY_ALL_CLASSES) {</span>
+
+<span class="nc bnc" id="L1325" title="All 2 branches missed.">			for (HeroClass cls : HeroClass.values()){</span>
+<span class="nc" id="L1326">				result += &quot;\n&quot;;</span>
+<span class="nc bnc" id="L1327" title="All 2 branches missed.">				if (isUnlocked(victoryClassBadges.get(cls)))    result += &quot;_&quot; + Messages.titleCase(cls.title()) + &quot;_&quot;;</span>
+<span class="nc" id="L1328">				else                                            result += Messages.titleCase(cls.title());</span>
+			}
+
+<span class="nc" id="L1331">			return result;</span>
+
+<span class="nc bnc" id="L1333" title="All 2 branches missed.">		} else if (badge == Badge.BOSS_SLAIN_3_ALL_SUBCLASSES){</span>
+
+<span class="nc bnc" id="L1335" title="All 2 branches missed.">			for (HeroSubClass cls : HeroSubClass.values()){</span>
+<span class="nc bnc" id="L1336" title="All 2 branches missed.">				if (cls == HeroSubClass.NONE) continue;</span>
+<span class="nc" id="L1337">				result += &quot;\n&quot;;</span>
+<span class="nc bnc" id="L1338" title="All 2 branches missed.">				if (isUnlocked(thirdBossSubclassBadges.get(cls)))   result += &quot;_&quot; + Messages.titleCase(cls.title()) + &quot;_&quot;;</span>
+<span class="nc" id="L1339">				else                                                result += Messages.titleCase(cls.title()) ;</span>
+			}
+
+<span class="nc" id="L1342">			return result;</span>
+		}
+
+<span class="nc" id="L1345">		return null;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

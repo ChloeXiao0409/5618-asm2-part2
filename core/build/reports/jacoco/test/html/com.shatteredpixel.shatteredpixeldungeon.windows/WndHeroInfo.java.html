@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WndHeroInfo.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.windows</a> &gt; <span class="el_source">WndHeroInfo.java</span></div><h1>WndHeroInfo.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.windows;
+
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.IconButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.TalentButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.TalentsPane;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.ui.Component;
+import com.watabou.utils.DeviceCompat;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+
+public class WndHeroInfo extends WndTabbed {
+
+	private HeroInfoTab heroInfo;
+	private TalentInfoTab talentInfo;
+	private SubclassInfoTab subclassInfo;
+	private ArmorAbilityInfoTab abilityInfo;
+
+<span class="nc" id="L53">	private static int WIDTH = 120;</span>
+<span class="nc" id="L54">	private static int MIN_HEIGHT = 125;</span>
+<span class="nc" id="L55">	private static int MARGIN = 2;</span>
+
+<span class="nc" id="L57">	public WndHeroInfo( HeroClass cl ){</span>
+
+		Image tabIcon;
+<span class="nc bnc" id="L60" title="All 6 branches missed.">		switch (cl){</span>
+			case WARRIOR: default:
+<span class="nc" id="L62">				tabIcon = new ItemSprite(ItemSpriteSheet.SEAL, null);</span>
+<span class="nc" id="L63">				break;</span>
+			case MAGE:
+<span class="nc" id="L65">				tabIcon = new ItemSprite(ItemSpriteSheet.MAGES_STAFF, null);</span>
+<span class="nc" id="L66">				break;</span>
+			case ROGUE:
+<span class="nc" id="L68">				tabIcon = new ItemSprite(ItemSpriteSheet.ARTIFACT_CLOAK, null);</span>
+<span class="nc" id="L69">				break;</span>
+			case HUNTRESS:
+<span class="nc" id="L71">				tabIcon = new ItemSprite(ItemSpriteSheet.SPIRIT_BOW, null);</span>
+<span class="nc" id="L72">				break;</span>
+			case DUELIST:
+<span class="nc" id="L74">				tabIcon = new ItemSprite(ItemSpriteSheet.RAPIER, null);</span>
+<span class="nc" id="L75">				break;</span>
+			case CLERIC:
+<span class="nc" id="L77">				tabIcon = new ItemSprite(ItemSpriteSheet.ARTIFACT_TOME, null);</span>
+				break;
+		}
+
+<span class="nc" id="L81">		int finalHeight = MIN_HEIGHT;</span>
+
+<span class="nc" id="L83">		heroInfo = new HeroInfoTab(cl);</span>
+<span class="nc" id="L84">		add(heroInfo);</span>
+<span class="nc" id="L85">		heroInfo.setSize(WIDTH, MIN_HEIGHT);</span>
+<span class="nc" id="L86">		finalHeight = (int)Math.max(finalHeight, heroInfo.height());</span>
+
+<span class="nc" id="L88">		add( new IconTab( tabIcon ){</span>
+			@Override
+			protected void select(boolean value) {
+<span class="nc" id="L91">				super.select(value);</span>
+<span class="nc" id="L92">				heroInfo.visible = heroInfo.active = value;</span>
+<span class="nc" id="L93">			}</span>
+		});
+
+<span class="nc" id="L96">		talentInfo = new TalentInfoTab(cl);</span>
+<span class="nc" id="L97">		add(talentInfo);</span>
+<span class="nc" id="L98">		talentInfo.setSize(WIDTH, MIN_HEIGHT);</span>
+<span class="nc" id="L99">		finalHeight = (int)Math.max(finalHeight, talentInfo.height());</span>
+
+<span class="nc" id="L101">		add( new IconTab( Icons.get(Icons.TALENT) ){</span>
+			@Override
+			protected void select(boolean value) {
+<span class="nc" id="L104">				super.select(value);</span>
+<span class="nc" id="L105">				talentInfo.visible = talentInfo.active = value;</span>
+<span class="nc" id="L106">			}</span>
+		});
+
+<span class="nc bnc" id="L109" title="All 4 branches missed.">		if (Badges.isUnlocked(Badges.Badge.BOSS_SLAIN_2) || DeviceCompat.isDebug()) {</span>
+<span class="nc" id="L110">			subclassInfo = new SubclassInfoTab(cl);</span>
+<span class="nc" id="L111">			add(subclassInfo);</span>
+<span class="nc" id="L112">			subclassInfo.setSize(WIDTH, MIN_HEIGHT);</span>
+<span class="nc" id="L113">			finalHeight = (int)Math.max(finalHeight, subclassInfo.height());</span>
+
+<span class="nc" id="L115">			add(new IconTab(new ItemSprite(ItemSpriteSheet.MASK, null)) {</span>
+				@Override
+				protected void select(boolean value) {
+<span class="nc" id="L118">					super.select(value);</span>
+<span class="nc" id="L119">					subclassInfo.visible = subclassInfo.active = value;</span>
+<span class="nc" id="L120">				}</span>
+			});
+		}
+
+<span class="nc bnc" id="L124" title="All 4 branches missed.">		if (Badges.isUnlocked(Badges.Badge.BOSS_SLAIN_4) || DeviceCompat.isDebug()) {</span>
+<span class="nc" id="L125">			abilityInfo = new ArmorAbilityInfoTab(cl);</span>
+<span class="nc" id="L126">			add(abilityInfo);</span>
+<span class="nc" id="L127">			abilityInfo.setSize(WIDTH, MIN_HEIGHT);</span>
+<span class="nc" id="L128">			finalHeight = (int)Math.max(finalHeight, abilityInfo.height());</span>
+
+<span class="nc" id="L130">			add(new IconTab(new ItemSprite(ItemSpriteSheet.CROWN, null)) {</span>
+				@Override
+				protected void select(boolean value) {
+<span class="nc" id="L133">					super.select(value);</span>
+<span class="nc" id="L134">					abilityInfo.visible = abilityInfo.active = value;</span>
+<span class="nc" id="L135">				}</span>
+			});
+		}
+
+<span class="nc" id="L139">		resize(WIDTH, finalHeight);</span>
+
+<span class="nc" id="L141">		layoutTabs();</span>
+<span class="nc" id="L142">		talentInfo.layout();</span>
+
+<span class="nc" id="L144">		select(0);</span>
+
+<span class="nc" id="L146">	}</span>
+
+	@Override
+	public void offset(int xOffset, int yOffset) {
+<span class="nc" id="L150">		super.offset(xOffset, yOffset);</span>
+<span class="nc" id="L151">		talentInfo.layout();</span>
+<span class="nc" id="L152">	}</span>
+
+	private static class HeroInfoTab extends Component {
+
+		private RenderedTextBlock title;
+		private RenderedTextBlock[] info;
+		private Image[] icons;
+
+		public HeroInfoTab(HeroClass cls){
+<span class="nc" id="L161">			super();</span>
+<span class="nc" id="L162">			title = PixelScene.renderTextBlock(Messages.titleCase(cls.title()), 9);</span>
+<span class="nc" id="L163">			title.hardlight(TITLE_COLOR);</span>
+<span class="nc" id="L164">			add(title);</span>
+
+<span class="nc" id="L166">			String[] desc_entries = cls.desc().split(&quot;\n\n&quot;);</span>
+
+<span class="nc" id="L168">			info = new RenderedTextBlock[desc_entries.length];</span>
+
+<span class="nc bnc" id="L170" title="All 2 branches missed.">			for (int i = 0; i &lt; desc_entries.length; i++){</span>
+<span class="nc" id="L171">				info[i] = PixelScene.renderTextBlock(desc_entries[i], 6);</span>
+<span class="nc" id="L172">				add(info[i]);</span>
+			}
+
+<span class="nc bnc" id="L175" title="All 6 branches missed.">			switch (cls){</span>
+				case WARRIOR: default:
+<span class="nc" id="L177">					icons = new Image[]{ new ItemSprite(ItemSpriteSheet.SEAL),</span>
+							new ItemSprite(ItemSpriteSheet.WORN_SHORTSWORD),
+							new ItemSprite(ItemSpriteSheet.SCROLL_ISAZ)};
+<span class="nc" id="L180">					break;</span>
+				case MAGE:
+<span class="nc" id="L182">					icons = new Image[]{ new ItemSprite(ItemSpriteSheet.MAGES_STAFF),</span>
+							new ItemSprite(ItemSpriteSheet.WAND_MAGIC_MISSILE),
+							new ItemSprite(ItemSpriteSheet.SCROLL_ISAZ)};
+<span class="nc" id="L185">					break;</span>
+				case ROGUE:
+<span class="nc" id="L187">					icons = new Image[]{ new ItemSprite(ItemSpriteSheet.ARTIFACT_CLOAK),</span>
+<span class="nc" id="L188">							Icons.get(Icons.STAIRS),</span>
+							new ItemSprite(ItemSpriteSheet.DAGGER),
+							new ItemSprite(ItemSpriteSheet.SCROLL_ISAZ)};
+<span class="nc" id="L191">					break;</span>
+				case HUNTRESS:
+<span class="nc" id="L193">					icons = new Image[]{ new ItemSprite(ItemSpriteSheet.SPIRIT_BOW),</span>
+<span class="nc" id="L194">							Icons.GRASS.get(),</span>
+							new ItemSprite(ItemSpriteSheet.GLOVES),
+							new ItemSprite(ItemSpriteSheet.SCROLL_ISAZ)};
+<span class="nc" id="L197">					break;</span>
+				case DUELIST:
+<span class="nc" id="L199">					icons = new Image[]{ new ItemSprite(ItemSpriteSheet.RAPIER),</span>
+							new ItemSprite(ItemSpriteSheet.WAR_HAMMER),
+							new ItemSprite(ItemSpriteSheet.THROWING_SPIKE),
+							new ItemSprite(ItemSpriteSheet.SCROLL_ISAZ)};
+<span class="nc" id="L203">					break;</span>
+				case CLERIC:
+<span class="nc" id="L205">					icons = new Image[]{ new ItemSprite(ItemSpriteSheet.ARTIFACT_TOME),</span>
+<span class="nc" id="L206">							Icons.TALENT.get(),</span>
+							new ItemSprite(ItemSpriteSheet.CUDGEL),
+							new ItemSprite(ItemSpriteSheet.SCROLL_ISAZ)};
+					break;
+			}
+<span class="nc bnc" id="L211" title="All 2 branches missed.">			for (Image im : icons) {</span>
+<span class="nc" id="L212">				add(im);</span>
+			}
+
+<span class="nc" id="L215">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L219">			super.layout();</span>
+
+<span class="nc" id="L221">			title.setPos((width-title.width())/2, MARGIN);</span>
+
+<span class="nc" id="L223">			float pos = title.bottom()+4*MARGIN;</span>
+
+<span class="nc bnc" id="L225" title="All 2 branches missed.">			for (int i = 0; i &lt; info.length; i++){</span>
+<span class="nc" id="L226">				info[i].maxWidth((int)width - 20);</span>
+<span class="nc" id="L227">				info[i].setPos(20, pos);</span>
+
+<span class="nc" id="L229">				icons[i].x = (20-icons[i].width())/2;</span>
+<span class="nc" id="L230">				icons[i].y = info[i].top() + (info[i].height() - icons[i].height())/2;</span>
+<span class="nc" id="L231">				PixelScene.align(icons[i]);</span>
+
+<span class="nc" id="L233">				pos = info[i].bottom() + 4*MARGIN;</span>
+			}
+
+<span class="nc" id="L236">			height = Math.max(height, pos - 4*MARGIN);</span>
+
+<span class="nc" id="L238">		}</span>
+	}
+
+	private static class TalentInfoTab extends Component {
+
+		private RenderedTextBlock title;
+		private RenderedTextBlock message;
+		private TalentsPane talentPane;
+
+		public TalentInfoTab( HeroClass cls ){
+<span class="nc" id="L248">			super();</span>
+<span class="nc" id="L249">			title = PixelScene.renderTextBlock(Messages.titleCase(Messages.get(WndHeroInfo.class, &quot;talents&quot;)), 9);</span>
+<span class="nc" id="L250">			title.hardlight(TITLE_COLOR);</span>
+<span class="nc" id="L251">			add(title);</span>
+
+<span class="nc" id="L253">			message = PixelScene.renderTextBlock(Messages.get(WndHeroInfo.class, &quot;talents_msg&quot;), 6);</span>
+<span class="nc" id="L254">			add(message);</span>
+
+<span class="nc" id="L256">			ArrayList&lt;LinkedHashMap&lt;Talent, Integer&gt;&gt; talents = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L257">			Talent.initClassTalents(cls, talents);</span>
+<span class="nc" id="L258">			talents.get(2).clear(); //we show T3 talents with subclasses</span>
+
+<span class="nc" id="L260">			talentPane = new TalentsPane(TalentButton.Mode.INFO, talents);</span>
+<span class="nc" id="L261">			add(talentPane);</span>
+<span class="nc" id="L262">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L266">			super.layout();</span>
+
+<span class="nc" id="L268">			title.setPos((width-title.width())/2, MARGIN);</span>
+<span class="nc" id="L269">			message.maxWidth((int)width);</span>
+<span class="nc" id="L270">			message.setPos(0, title.bottom()+4*MARGIN);</span>
+
+<span class="nc" id="L272">			talentPane.setRect(0, message.bottom() + 3*MARGIN, width, 85);</span>
+
+<span class="nc" id="L274">			height = Math.max(height, talentPane.bottom());</span>
+<span class="nc" id="L275">		}</span>
+	}
+
+	private static class SubclassInfoTab extends Component {
+
+		private RenderedTextBlock title;
+		private RenderedTextBlock message;
+		private RenderedTextBlock[] subClsDescs;
+		private IconButton[] subClsInfos;
+
+		public SubclassInfoTab( HeroClass cls ){
+<span class="nc" id="L286">			super();</span>
+<span class="nc" id="L287">			title = PixelScene.renderTextBlock(Messages.titleCase(Messages.get(WndHeroInfo.class, &quot;subclasses&quot;)), 9);</span>
+<span class="nc" id="L288">			title.hardlight(TITLE_COLOR);</span>
+<span class="nc" id="L289">			add(title);</span>
+
+<span class="nc" id="L291">			message = PixelScene.renderTextBlock(Messages.get(WndHeroInfo.class, &quot;subclasses_msg&quot;), 6);</span>
+<span class="nc" id="L292">			add(message);</span>
+
+<span class="nc" id="L294">			HeroSubClass[] subClasses = cls.subClasses();</span>
+
+<span class="nc" id="L296">			subClsDescs = new RenderedTextBlock[subClasses.length];</span>
+<span class="nc" id="L297">			subClsInfos = new IconButton[subClasses.length];</span>
+
+<span class="nc bnc" id="L299" title="All 2 branches missed.">			for (int i = 0; i &lt; subClasses.length; i++){</span>
+<span class="nc" id="L300">				subClsDescs[i] = PixelScene.renderTextBlock(subClasses[i].shortDesc(), 6);</span>
+<span class="nc" id="L301">				int finalI = i;</span>
+<span class="nc" id="L302">				subClsInfos[i] = new IconButton( Icons.get(Icons.INFO) ){</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L305">						Game.scene().addToFront(new WndInfoSubclass(cls, subClasses[finalI]));</span>
+<span class="nc" id="L306">					}</span>
+				};
+<span class="nc" id="L308">				add(subClsDescs[i]);</span>
+<span class="nc" id="L309">				add(subClsInfos[i]);</span>
+			}
+
+<span class="nc" id="L312">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L316">			super.layout();</span>
+
+<span class="nc" id="L318">			title.setPos((width-title.width())/2, MARGIN);</span>
+<span class="nc" id="L319">			message.maxWidth((int)width);</span>
+<span class="nc" id="L320">			message.setPos(0, title.bottom()+4*MARGIN);</span>
+
+<span class="nc" id="L322">			float pos = message.bottom()+4*MARGIN;</span>
+
+<span class="nc bnc" id="L324" title="All 2 branches missed.">			for (int i = 0; i &lt; subClsDescs.length; i++){</span>
+<span class="nc" id="L325">				subClsDescs[i].maxWidth((int)width - 20);</span>
+<span class="nc" id="L326">				subClsDescs[i].setPos(0, pos);</span>
+
+<span class="nc" id="L328">				subClsInfos[i].setRect(width-20, subClsDescs[i].top() + (subClsDescs[i].height()-20)/2, 20, 20);</span>
+
+<span class="nc" id="L330">				pos = subClsDescs[i].bottom() + 4*MARGIN;</span>
+			}
+
+<span class="nc" id="L333">			height = Math.max(height, pos - 4*MARGIN);</span>
+
+<span class="nc" id="L335">		}</span>
+	}
+
+	private static class ArmorAbilityInfoTab extends Component {
+
+		private RenderedTextBlock title;
+		private RenderedTextBlock message;
+		private RenderedTextBlock[] abilityDescs;
+		private IconButton[] abilityInfos;
+
+		public ArmorAbilityInfoTab(HeroClass cls){
+<span class="nc" id="L346">			super();</span>
+<span class="nc" id="L347">			title = PixelScene.renderTextBlock(Messages.titleCase(Messages.get(WndHeroInfo.class, &quot;abilities&quot;)), 9);</span>
+<span class="nc" id="L348">			title.hardlight(TITLE_COLOR);</span>
+<span class="nc" id="L349">			add(title);</span>
+
+<span class="nc" id="L351">			message = PixelScene.renderTextBlock(Messages.get(WndHeroInfo.class, &quot;abilities_msg&quot;), 6);</span>
+<span class="nc" id="L352">			add(message);</span>
+
+<span class="nc" id="L354">			ArmorAbility[] abilities = cls.armorAbilities();</span>
+
+<span class="nc" id="L356">			abilityDescs = new RenderedTextBlock[abilities.length];</span>
+<span class="nc" id="L357">			abilityInfos = new IconButton[abilities.length];</span>
+
+<span class="nc bnc" id="L359" title="All 2 branches missed.">			for (int i = 0; i &lt; abilities.length; i++){</span>
+<span class="nc" id="L360">				abilityDescs[i] = PixelScene.renderTextBlock(abilities[i].shortDesc(), 6);</span>
+<span class="nc" id="L361">				int finalI = i;</span>
+<span class="nc" id="L362">				abilityInfos[i] = new IconButton( Icons.get(Icons.INFO) ){</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L365">						Game.scene().addToFront(new WndInfoArmorAbility(cls, abilities[finalI]));</span>
+<span class="nc" id="L366">					}</span>
+				};
+<span class="nc" id="L368">				add(abilityDescs[i]);</span>
+<span class="nc" id="L369">				add(abilityInfos[i]);</span>
+			}
+
+<span class="nc" id="L372">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L376">			super.layout();</span>
+
+<span class="nc" id="L378">			title.setPos((width-title.width())/2, MARGIN);</span>
+<span class="nc" id="L379">			message.maxWidth((int)width);</span>
+<span class="nc" id="L380">			message.setPos(0, title.bottom()+4*MARGIN);</span>
+
+<span class="nc" id="L382">			float pos = message.bottom()+4*MARGIN;</span>
+
+<span class="nc bnc" id="L384" title="All 2 branches missed.">			for (int i = 0; i &lt; abilityDescs.length; i++){</span>
+<span class="nc" id="L385">				abilityDescs[i].maxWidth((int)width - 20);</span>
+<span class="nc" id="L386">				abilityDescs[i].setPos(0, pos);</span>
+
+<span class="nc" id="L388">				abilityInfos[i].setRect(width-20, abilityDescs[i].top() + (abilityDescs[i].height()-20)/2, 20, 20);</span>
+
+<span class="nc" id="L390">				pos = abilityDescs[i].bottom() + 4*MARGIN;</span>
+			}
+
+<span class="nc" id="L393">			height = Math.max(height, pos - 4*MARGIN);</span>
+
+<span class="nc" id="L395">		}</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

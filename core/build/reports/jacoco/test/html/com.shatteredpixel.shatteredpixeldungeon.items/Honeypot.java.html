@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Honeypot.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items</a> &gt; <span class="el_source">Honeypot.java</span></div><h1>Honeypot.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Bee;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.tweeners.AlphaTweener;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L42">public class Honeypot extends Item {</span>
+	
+	public static final String AC_SHATTER	= &quot;SHATTER&quot;;
+	
+	{
+<span class="nc" id="L47">		image = ItemSpriteSheet.HONEYPOT;</span>
+
+<span class="nc" id="L49">		defaultAction = AC_THROW;</span>
+<span class="nc" id="L50">		usesTargeting = true;</span>
+
+<span class="nc" id="L52">		stackable = true;</span>
+<span class="nc" id="L53">	}</span>
+	
+	@Override
+	public ArrayList&lt;String&gt; actions( Hero hero ) {
+<span class="nc" id="L57">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc" id="L58">		actions.add( AC_SHATTER );</span>
+<span class="nc" id="L59">		return actions;</span>
+	}
+	
+	@Override
+	public void execute( final Hero hero, String action ) {
+
+<span class="nc" id="L65">		super.execute( hero, action );</span>
+
+<span class="nc bnc" id="L67" title="All 2 branches missed.">		if (action.equals( AC_SHATTER )) {</span>
+			
+<span class="nc" id="L69">			hero.sprite.zap( hero.pos );</span>
+			
+<span class="nc" id="L71">			detach( hero.belongings.backpack );</span>
+<span class="nc" id="L72">			Catalog.countUse(getClass());</span>
+
+<span class="nc" id="L74">			Item item = shatter( hero, hero.pos );</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">			if (!item.collect()){</span>
+<span class="nc" id="L76">				Dungeon.level.drop(item, hero.pos);</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">				if (item instanceof ShatteredPot){</span>
+<span class="nc" id="L78">					((ShatteredPot) item).dropPot(hero, hero.pos);</span>
+				}
+			}
+
+<span class="nc" id="L82">			hero.next();</span>
+
+		}
+<span class="nc" id="L85">	}</span>
+	
+	@Override
+	protected void onThrow( int cell ) {
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		if (Dungeon.level.pit[cell]) {</span>
+<span class="nc" id="L90">			super.onThrow( cell );</span>
+		} else {
+<span class="nc" id="L92">			Catalog.countUse(getClass());</span>
+<span class="nc" id="L93">			Dungeon.level.drop(shatter( null, cell ), cell);</span>
+		}
+<span class="nc" id="L95">	}</span>
+	
+	public Item shatter( Char owner, int pos ) {
+		
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		if (Dungeon.level.heroFOV[pos]) {</span>
+<span class="nc" id="L100">			Sample.INSTANCE.play( Assets.Sounds.SHATTER );</span>
+<span class="nc" id="L101">			Splash.at( pos, 0xffd500, 5 );</span>
+		}
+		
+<span class="nc" id="L104">		int newPos = pos;</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		if (Actor.findChar( pos ) != null) {</span>
+<span class="nc" id="L106">			ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+			
+<span class="nc bnc" id="L108" title="All 2 branches missed.">			for (int n : PathFinder.NEIGHBOURS4) {</span>
+<span class="nc" id="L109">				int c = pos + n;</span>
+<span class="nc bnc" id="L110" title="All 4 branches missed.">				if (!Dungeon.level.solid[c] &amp;&amp; Actor.findChar( c ) == null) {</span>
+<span class="nc" id="L111">					candidates.add( c );</span>
+				}
+			}
+	
+<span class="nc bnc" id="L115" title="All 2 branches missed.">			newPos = candidates.size() &gt; 0 ? Random.element( candidates ) : -1;</span>
+		}
+		
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		if (newPos != -1) {</span>
+<span class="nc" id="L119">			Bee bee = new Bee();</span>
+<span class="nc" id="L120">			bee.spawn( Dungeon.scalingDepth() );</span>
+<span class="nc" id="L121">			bee.setPotInfo( pos, owner );</span>
+<span class="nc" id="L122">			bee.HP = bee.HT;</span>
+<span class="nc" id="L123">			bee.pos = newPos;</span>
+			
+<span class="nc" id="L125">			GameScene.add( bee );</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">			if (newPos != pos) Actor.add( new Pushing( bee, pos, newPos ) );</span>
+
+<span class="nc" id="L128">			bee.sprite.alpha( 0 );</span>
+<span class="nc" id="L129">			bee.sprite.parent.add( new AlphaTweener( bee.sprite, 1, 0.15f ) );</span>
+			
+<span class="nc" id="L131">			Sample.INSTANCE.play( Assets.Sounds.BEE );</span>
+<span class="nc" id="L132">			return new ShatteredPot();</span>
+		} else {
+<span class="nc" id="L134">			return this;</span>
+		}
+	}
+	
+	@Override
+	public boolean isUpgradable() {
+<span class="nc" id="L140">		return false;</span>
+	}
+	
+	@Override
+	public boolean isIdentified() {
+<span class="nc" id="L145">		return true;</span>
+	}
+	
+	@Override
+	public int value() {
+<span class="nc" id="L150">		return 30 * quantity;</span>
+	}
+
+	//The bee's broken 'home', all this item does is let its bee know where it is, and who owns it (if anyone).
+<span class="nc" id="L154">	public static class ShatteredPot extends Item {</span>
+
+		{
+<span class="nc" id="L157">			image = ItemSpriteSheet.SHATTPOT;</span>
+<span class="nc" id="L158">			stackable = true;</span>
+<span class="nc" id="L159">		}</span>
+
+		@Override
+		public boolean doPickUp(Hero hero, int pos) {
+<span class="nc bnc" id="L163" title="All 2 branches missed.">			if ( super.doPickUp(hero, pos) ){</span>
+<span class="nc" id="L164">				pickupPot( hero );</span>
+<span class="nc" id="L165">				return true;</span>
+			} else {
+<span class="nc" id="L167">				return false;</span>
+			}
+		}
+
+		@Override
+		public void doDrop(Hero hero) {
+<span class="nc" id="L173">			super.doDrop(hero);</span>
+<span class="nc" id="L174">			dropPot(hero, hero.pos);</span>
+<span class="nc" id="L175">		}</span>
+
+		@Override
+		protected void onThrow(int cell) {
+<span class="nc" id="L179">			super.onThrow(cell);</span>
+<span class="nc" id="L180">			dropPot(curUser, cell);</span>
+<span class="nc" id="L181">		}</span>
+
+		public void pickupPot(Char holder){
+<span class="nc bnc" id="L184" title="All 2 branches missed.">			for (Bee bee : findBees(holder.pos)){</span>
+<span class="nc" id="L185">				updateBee(bee, -1, holder);</span>
+<span class="nc" id="L186">			}</span>
+<span class="nc" id="L187">		}</span>
+		
+		public void dropPot( Char holder, int dropPos ){
+<span class="nc bnc" id="L190" title="All 2 branches missed.">			for (Bee bee : findBees(holder)){</span>
+<span class="nc" id="L191">				updateBee(bee, dropPos, null);</span>
+<span class="nc" id="L192">			}</span>
+<span class="nc" id="L193">		}</span>
+
+		public void movePot( int oldpos, int movePos){
+<span class="nc bnc" id="L196" title="All 2 branches missed.">			for (Bee bee : findBees(oldpos)){</span>
+<span class="nc" id="L197">				updateBee(bee, movePos, null);</span>
+<span class="nc" id="L198">			}</span>
+<span class="nc" id="L199">		}</span>
+
+		public void destroyPot( int potPos ){
+<span class="nc bnc" id="L202" title="All 2 branches missed.">			for (Bee bee : findBees(potPos)){</span>
+<span class="nc" id="L203">				updateBee(bee, -1, null);</span>
+<span class="nc" id="L204">			}</span>
+<span class="nc" id="L205">		}</span>
+
+		private void updateBee( Bee bee, int cell, Char holder ){
+<span class="nc bnc" id="L208" title="All 4 branches missed.">			if (bee != null &amp;&amp; bee.alignment == Char.Alignment.ENEMY)</span>
+<span class="nc" id="L209">				bee.setPotInfo( cell, holder );</span>
+<span class="nc" id="L210">		}</span>
+		
+		//returns up to quantity bees which match the current pot Pos
+		private ArrayList&lt;Bee&gt; findBees( int potPos ){
+<span class="nc" id="L214">			ArrayList&lt;Bee&gt; bees = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">			for (Char c : Actor.chars()){</span>
+<span class="nc bnc" id="L216" title="All 4 branches missed.">				if (c instanceof Bee &amp;&amp; ((Bee) c).potPos() == potPos){</span>
+<span class="nc" id="L217">					bees.add((Bee) c);</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">					if (bees.size() &gt;= quantity) {</span>
+<span class="nc" id="L219">						break;</span>
+					}
+				}
+<span class="nc" id="L222">			}</span>
+			
+<span class="nc" id="L224">			return bees;</span>
+		}
+		
+		//returns up to quantity bees which match the current pot holder
+		private ArrayList&lt;Bee&gt; findBees( Char potHolder ){
+<span class="nc" id="L229">			ArrayList&lt;Bee&gt; bees = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">			for (Char c : Actor.chars()){</span>
+<span class="nc bnc" id="L231" title="All 4 branches missed.">				if (c instanceof Bee &amp;&amp; ((Bee) c).potHolderID() == potHolder.id()){</span>
+<span class="nc" id="L232">					bees.add((Bee) c);</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">					if (bees.size() &gt;= quantity) {</span>
+<span class="nc" id="L234">						break;</span>
+					}
+				}
+<span class="nc" id="L237">			}</span>
+			
+<span class="nc" id="L239">			return bees;</span>
+		}
+
+		@Override
+		public boolean isUpgradable() {
+<span class="nc" id="L244">			return false;</span>
+		}
+
+		@Override
+		public boolean isIdentified() {
+<span class="nc" id="L249">			return true;</span>
+		}
+		
+		@Override
+		public int value() {
+<span class="nc" id="L254">			return 5 * quantity;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

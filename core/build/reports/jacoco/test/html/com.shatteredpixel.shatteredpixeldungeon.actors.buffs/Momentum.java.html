@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Momentum.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.buffs</a> &gt; <span class="el_source">Momentum.java</span></div><h1>Momentum.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.buffs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ActionIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.Visual;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.GameMath;
+
+<span class="nc" id="L42">public class Momentum extends Buff implements ActionIndicator.Action {</span>
+	
+	{
+<span class="nc" id="L45">		type = buffType.POSITIVE;</span>
+
+		//acts before the hero
+<span class="nc" id="L48">		actPriority = HERO_PRIO+1;</span>
+	}
+	
+<span class="nc" id="L51">	private int momentumStacks = 0;</span>
+<span class="nc" id="L52">	private int freerunTurns = 0;</span>
+<span class="nc" id="L53">	private int freerunCooldown = 0;</span>
+
+<span class="nc" id="L55">	private boolean movedLastTurn = true;</span>
+
+	@Override
+	public void detach() {
+<span class="nc" id="L59">		super.detach();</span>
+<span class="nc" id="L60">		ActionIndicator.clearAction(this);</span>
+<span class="nc" id="L61">	}</span>
+
+	@Override
+	public boolean act() {
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		if (freerunCooldown &gt; 0){</span>
+<span class="nc" id="L66">			freerunCooldown--;</span>
+		}
+
+<span class="nc bnc" id="L69" title="All 8 branches missed.">		if (freerunCooldown == 0 &amp;&amp; !freerunning() &amp;&amp; target.invisible &gt; 0 &amp;&amp; Dungeon.hero.pointsInTalent(Talent.SPEEDY_STEALTH) &gt;= 1){</span>
+<span class="nc" id="L70">			momentumStacks = Math.min(momentumStacks + 2, 10);</span>
+<span class="nc" id="L71">			movedLastTurn = true;</span>
+<span class="nc" id="L72">			ActionIndicator.setAction(this);</span>
+<span class="nc" id="L73">			BuffIndicator.refreshHero();</span>
+		}
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		if (freerunTurns &gt; 0){</span>
+<span class="nc bnc" id="L77" title="All 4 branches missed.">			if (target.invisible == 0 || Dungeon.hero.pointsInTalent(Talent.SPEEDY_STEALTH) &lt; 2) {</span>
+<span class="nc" id="L78">				freerunTurns--;</span>
+			}
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		} else if (!movedLastTurn){</span>
+<span class="nc" id="L81">			momentumStacks = (int)GameMath.gate(0, momentumStacks-1, Math.round(momentumStacks * 0.667f));</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">			if (momentumStacks &lt;= 0) {</span>
+<span class="nc" id="L83">				ActionIndicator.clearAction(this);</span>
+<span class="nc" id="L84">				BuffIndicator.refreshHero();</span>
+			} else {
+<span class="nc" id="L86">				ActionIndicator.refresh();</span>
+			}
+		}
+<span class="nc" id="L89">		movedLastTurn = false;</span>
+
+<span class="nc" id="L91">		spend(TICK);</span>
+<span class="nc" id="L92">		return true;</span>
+	}
+	
+	public void gainStack(){
+<span class="nc" id="L96">		movedLastTurn = true;</span>
+<span class="nc bnc" id="L97" title="All 4 branches missed.">		if (freerunCooldown &lt;= 0 &amp;&amp; !freerunning()){</span>
+<span class="nc" id="L98">			postpone(target.cooldown()+(1/target.speed()));</span>
+<span class="nc" id="L99">			momentumStacks = Math.min(momentumStacks + 1, 10);</span>
+<span class="nc" id="L100">			ActionIndicator.setAction(this);</span>
+<span class="nc" id="L101">			BuffIndicator.refreshHero();</span>
+		}
+<span class="nc" id="L103">	}</span>
+
+	public boolean freerunning(){
+<span class="nc bnc" id="L106" title="All 2 branches missed.">		return freerunTurns &gt; 0;</span>
+	}
+	
+	public float speedMultiplier(){
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		if (freerunning()){</span>
+<span class="nc" id="L111">			return 2;</span>
+<span class="nc bnc" id="L112" title="All 4 branches missed.">		} else if (target.invisible &gt; 0 &amp;&amp; Dungeon.hero.pointsInTalent(Talent.SPEEDY_STEALTH) == 3){</span>
+<span class="nc" id="L113">			return 2;</span>
+		} else {
+<span class="nc" id="L115">			return 1;</span>
+		}
+	}
+	
+	public int evasionBonus( int heroLvl, int excessArmorStr ){
+<span class="nc bnc" id="L120" title="All 2 branches missed.">		if (freerunTurns &gt; 0) {</span>
+<span class="nc" id="L121">			return heroLvl/2 + excessArmorStr*Dungeon.hero.pointsInTalent(Talent.EVASIVE_ARMOR);</span>
+		} else {
+<span class="nc" id="L123">			return 0;</span>
+		}
+	}
+	
+	@Override
+	public int icon() {
+<span class="nc bnc" id="L129" title="All 4 branches missed.">		if (momentumStacks &gt; 0 || freerunCooldown &gt; 0)  return BuffIndicator.MOMENTUM;</span>
+<span class="nc" id="L130">		else                                            return BuffIndicator.NONE;</span>
+	}
+	
+	@Override
+	public void tintIcon(Image icon) {
+<span class="nc bnc" id="L135" title="All 4 branches missed.">		if (freerunCooldown == 0 || freerunTurns &gt; 0){</span>
+<span class="nc" id="L136">			icon.hardlight(1,1,0);</span>
+		} else {
+<span class="nc" id="L138">			icon.hardlight(0.5f,0.5f,1);</span>
+		}
+<span class="nc" id="L140">	}</span>
+
+	@Override
+	public float iconFadePercent() {
+<span class="nc bnc" id="L144" title="All 2 branches missed.">		if (freerunTurns &gt; 0){</span>
+<span class="nc" id="L145">			return (20 - freerunTurns) / 20f;</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">		} else if (freerunCooldown &gt; 0){</span>
+<span class="nc" id="L147">			return (freerunCooldown) / 30f;</span>
+		} else {
+<span class="nc" id="L149">			return 0;</span>
+		}
+	}
+
+	@Override
+	public String iconTextDisplay() {
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		if (freerunTurns &gt; 0){</span>
+<span class="nc" id="L156">			return Integer.toString(freerunTurns);</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		} else if (freerunCooldown &gt; 0){</span>
+<span class="nc" id="L158">			return Integer.toString(freerunCooldown);</span>
+		} else {
+<span class="nc" id="L160">			return &quot;&quot;;</span>
+		}
+	}
+
+	@Override
+	public String name() {
+<span class="nc bnc" id="L166" title="All 2 branches missed.">		if (freerunTurns &gt; 0){</span>
+<span class="nc" id="L167">			return Messages.get(this, &quot;running&quot;);</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">		} else if (freerunCooldown &gt; 0){</span>
+<span class="nc" id="L169">			return Messages.get(this, &quot;resting&quot;);</span>
+		} else {
+<span class="nc" id="L171">			return Messages.get(this, &quot;momentum&quot;);</span>
+		}
+	}
+	
+	@Override
+	public String desc() {
+<span class="nc bnc" id="L177" title="All 2 branches missed.">		if (freerunTurns &gt; 0){</span>
+<span class="nc" id="L178">			return Messages.get(this, &quot;running_desc&quot;, freerunTurns);</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">		} else if (freerunCooldown &gt; 0){</span>
+<span class="nc" id="L180">			return Messages.get(this, &quot;resting_desc&quot;, freerunCooldown);</span>
+		} else {
+<span class="nc" id="L182">			return Messages.get(this, &quot;momentum_desc&quot;, momentumStacks);</span>
+		}
+	}
+	
+	private static final String STACKS =        &quot;stacks&quot;;
+	private static final String FREERUN_TURNS = &quot;freerun_turns&quot;;
+	private static final String FREERUN_CD =    &quot;freerun_CD&quot;;
+	
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L192">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L193">		bundle.put(STACKS, momentumStacks);</span>
+<span class="nc" id="L194">		bundle.put(FREERUN_TURNS, freerunTurns);</span>
+<span class="nc" id="L195">		bundle.put(FREERUN_CD, freerunCooldown);</span>
+<span class="nc" id="L196">	}</span>
+	
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L200">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L201">		momentumStacks = bundle.getInt(STACKS);</span>
+<span class="nc" id="L202">		freerunTurns = bundle.getInt(FREERUN_TURNS);</span>
+<span class="nc" id="L203">		freerunCooldown = bundle.getInt(FREERUN_CD);</span>
+<span class="nc bnc" id="L204" title="All 4 branches missed.">		if (momentumStacks &gt; 0 &amp;&amp; freerunTurns &lt;= 0){</span>
+<span class="nc" id="L205">			ActionIndicator.setAction(this);</span>
+		}
+<span class="nc" id="L207">		movedLastTurn = false;</span>
+<span class="nc" id="L208">	}</span>
+
+	@Override
+	public String actionName() {
+<span class="nc" id="L212">		return Messages.get(this, &quot;action_name&quot;);</span>
+	}
+
+	@Override
+	public int actionIcon() {
+<span class="nc" id="L217">		return HeroIcon.MOMENTUM;</span>
+	}
+
+	@Override
+	public Visual secondaryVisual() {
+<span class="nc" id="L222">		BitmapText txt = new BitmapText(PixelScene.pixelFont);</span>
+<span class="nc" id="L223">		txt.text(Integer.toString((int)momentumStacks) );</span>
+<span class="nc" id="L224">		txt.hardlight(CharSprite.POSITIVE);</span>
+<span class="nc" id="L225">		txt.measure();</span>
+<span class="nc" id="L226">		return txt;</span>
+	}
+
+	@Override
+	public int indicatorColor() {
+<span class="nc" id="L231">		return 0x444444;</span>
+	}
+
+	@Override
+	public void doAction() {
+<span class="nc" id="L236">		freerunTurns = 2*momentumStacks;</span>
+		//cooldown is functionally 10+2*stacks when active effect ends
+<span class="nc" id="L238">		freerunCooldown = 10 + 4*momentumStacks;</span>
+<span class="nc" id="L239">		Sample.INSTANCE.play(Assets.Sounds.MISS, 1f, 0.8f);</span>
+<span class="nc" id="L240">		target.sprite.emitter().burst(Speck.factory(Speck.JET), 5+ momentumStacks);</span>
+<span class="nc" id="L241">		SpellSprite.show(target, SpellSprite.HASTE, 1, 1, 0);</span>
+<span class="nc" id="L242">		momentumStacks = 0;</span>
+<span class="nc" id="L243">		BuffIndicator.refreshHero();</span>
+<span class="nc" id="L244">		ActionIndicator.clearAction(this);</span>
+<span class="nc" id="L245">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

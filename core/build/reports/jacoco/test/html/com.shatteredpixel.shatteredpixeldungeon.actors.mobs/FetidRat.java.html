@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FetidRat.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">FetidRat.java</span></div><h1>FetidRat.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.StenchGas;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Ooze;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Ghost;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.FetidRatSprite;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L36">public class FetidRat extends Rat {</span>
+
+	{
+<span class="nc" id="L39">		spriteClass = FetidRatSprite.class;</span>
+
+<span class="nc" id="L41">		HP = HT = 20;</span>
+<span class="nc" id="L42">		defenseSkill = 5;</span>
+
+<span class="nc" id="L44">		EXP = 4;</span>
+
+<span class="nc" id="L46">		WANDERING = new Wandering();</span>
+<span class="nc" id="L47">		state = WANDERING;</span>
+
+<span class="nc" id="L49">		properties.add(Property.MINIBOSS);</span>
+<span class="nc" id="L50">		properties.add(Property.DEMONIC);</span>
+	}
+
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L55">		return 12;</span>
+	}
+
+	@Override
+	public int drRoll() {
+<span class="nc" id="L60">		return super.drRoll() + Random.NormalIntRange(0, 2);</span>
+	}
+
+	@Override
+	public int attackProc( Char enemy, int damage ) {
+<span class="nc" id="L65">		damage = super.attackProc( enemy, damage );</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (Random.Int(3) == 0) {</span>
+<span class="nc" id="L67">			Buff.affect(enemy, Ooze.class).set( Ooze.DURATION );</span>
+		}
+
+<span class="nc" id="L70">		return damage;</span>
+	}
+
+	@Override
+	public int defenseProc( Char enemy, int damage ) {
+
+<span class="nc" id="L76">		GameScene.add(Blob.seed(pos, 20, StenchGas.class));</span>
+
+<span class="nc" id="L78">		return super.defenseProc(enemy, damage);</span>
+	}
+
+	@Override
+	public void die( Object cause ) {
+<span class="nc" id="L83">		super.die( cause );</span>
+
+<span class="nc" id="L85">		Ghost.Quest.process();</span>
+<span class="nc" id="L86">	}</span>
+
+<span class="nc" id="L88">	protected class Wandering extends Mob.Wandering{</span>
+		@Override
+		protected int randomDestination() {
+			//of two potential wander positions, picks the one closest to the hero
+<span class="nc" id="L92">			int pos1 = super.randomDestination();</span>
+<span class="nc" id="L93">			int pos2 = super.randomDestination();</span>
+<span class="nc" id="L94">			PathFinder.buildDistanceMap(Dungeon.hero.pos, Dungeon.level.passable);</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">			if (PathFinder.distance[pos2] &lt; PathFinder.distance[pos1]){</span>
+<span class="nc" id="L96">				return pos2;</span>
+			} else {
+<span class="nc" id="L98">				return pos1;</span>
+			}
+		}
+	}
+	
+	{
+<span class="nc" id="L104">		immunities.add( StenchGas.class );</span>
+<span class="nc" id="L105">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ArcaneResin.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items</a> &gt; <span class="el_source">ArcaneResin.java</span></div><h1>ArcaneResin.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.MagicalHolster;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.watabou.noosa.audio.Sample;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L44">public class ArcaneResin extends Item {</span>
+
+	{
+<span class="nc" id="L47">		image = ItemSpriteSheet.ARCANE_RESIN;</span>
+
+<span class="nc" id="L49">		stackable = true;</span>
+
+<span class="nc" id="L51">		defaultAction = AC_APPLY;</span>
+
+<span class="nc" id="L53">		bones = true;</span>
+	}
+
+	private static final String AC_APPLY = &quot;APPLY&quot;;
+
+	@Override
+	public ArrayList&lt;String&gt; actions(Hero hero ) {
+<span class="nc" id="L60">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc" id="L61">		actions.add( AC_APPLY );</span>
+<span class="nc" id="L62">		return actions;</span>
+	}
+
+	@Override
+	public void execute( Hero hero, String action ) {
+
+<span class="nc" id="L68">		super.execute( hero, action );</span>
+
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		if (action.equals(AC_APPLY)) {</span>
+
+<span class="nc" id="L72">			curUser = hero;</span>
+<span class="nc" id="L73">			GameScene.selectItem( itemSelector );</span>
+
+		}
+<span class="nc" id="L76">	}</span>
+
+	@Override
+	public boolean isUpgradable() {
+<span class="nc" id="L80">		return false;</span>
+	}
+
+	@Override
+	public boolean isIdentified() {
+<span class="nc" id="L85">		return true;</span>
+	}
+
+	@Override
+	public int value() {
+<span class="nc" id="L90">		return 30*quantity();</span>
+	}
+
+<span class="nc" id="L93">	private final WndBag.ItemSelector itemSelector = new WndBag.ItemSelector() {</span>
+
+		@Override
+		public String textPrompt() {
+<span class="nc" id="L97">			return Messages.get(ArcaneResin.class, &quot;prompt&quot;);</span>
+		}
+
+		@Override
+		public Class&lt;?extends Bag&gt; preferredBag(){
+<span class="nc" id="L102">			return MagicalHolster.class;</span>
+		}
+
+		@Override
+		public boolean itemSelectable(Item item) {
+<span class="nc bnc" id="L107" title="All 4 branches missed.">			return item instanceof Wand &amp;&amp; item.isIdentified();</span>
+		}
+
+		@Override
+		public void onSelect( Item item ) {
+<span class="nc bnc" id="L112" title="All 4 branches missed.">			if (item != null &amp;&amp; item instanceof Wand) {</span>
+<span class="nc" id="L113">				Wand w = (Wand)item;</span>
+
+<span class="nc bnc" id="L115" title="All 2 branches missed.">				if (w.level() &gt;= 3){</span>
+<span class="nc" id="L116">					GLog.w(Messages.get(ArcaneResin.class, &quot;level_too_high&quot;));</span>
+<span class="nc" id="L117">					return;</span>
+				}
+
+<span class="nc" id="L120">				int resinToUse = w.level()+1;</span>
+
+<span class="nc bnc" id="L122" title="All 2 branches missed.">				if (quantity() &lt; resinToUse){</span>
+<span class="nc" id="L123">					GLog.w(Messages.get(ArcaneResin.class, &quot;not_enough&quot;));</span>
+
+				} else {
+
+<span class="nc" id="L127">					Catalog.countUses(ArcaneResin.class, resinToUse);</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">					if (resinToUse &lt; quantity()){</span>
+<span class="nc" id="L129">						quantity(quantity()-resinToUse);</span>
+					} else {
+<span class="nc" id="L131">						detachAll(Dungeon.hero.belongings.backpack);</span>
+					}
+
+<span class="nc" id="L134">					w.resinBonus++;</span>
+<span class="nc" id="L135">					w.curCharges++;</span>
+<span class="nc" id="L136">					w.updateLevel();</span>
+<span class="nc" id="L137">					Item.updateQuickslot();</span>
+
+<span class="nc" id="L139">					curUser.sprite.operate(curUser.pos);</span>
+<span class="nc" id="L140">					Sample.INSTANCE.play(Assets.Sounds.TELEPORT);</span>
+<span class="nc" id="L141">					curUser.sprite.emitter().start( Speck.factory( Speck.UP ), 0.2f, 3 );</span>
+
+<span class="nc" id="L143">					curUser.spendAndNext(Actor.TICK);</span>
+<span class="nc" id="L144">					GLog.p(Messages.get(ArcaneResin.class, &quot;apply&quot;));</span>
+				}
+			}
+<span class="nc" id="L147">		}</span>
+	};
+
+<span class="nc" id="L150">	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe {</span>
+
+		@Override
+		public boolean testIngredients(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc bnc" id="L154" title="All 2 branches missed.">			return ingredients.size() == 1</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">					&amp;&amp; ingredients.get(0) instanceof Wand</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">					&amp;&amp; ingredients.get(0).isIdentified()</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">					&amp;&amp; !ingredients.get(0).cursed;</span>
+		}
+
+		@Override
+		public int cost(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc" id="L162">			return 5;</span>
+		}
+
+		@Override
+		public Item brew(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc" id="L167">			Item result = sampleOutput(ingredients);</span>
+
+<span class="nc" id="L169">			ingredients.get(0).quantity(0);</span>
+
+<span class="nc" id="L171">			return result;</span>
+		}
+
+		@Override
+		public Item sampleOutput(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc" id="L176">			Wand w = (Wand)ingredients.get(0);</span>
+<span class="nc" id="L177">			int level = w.level() - w.resinBonus;</span>
+
+<span class="nc" id="L179">			Item output = new ArcaneResin().quantity(2*(level+1));</span>
+
+<span class="nc bnc" id="L181" title="All 4 branches missed.">			if (Dungeon.hero.heroClass != HeroClass.MAGE &amp;&amp; Dungeon.hero.hasTalent(Talent.WAND_PRESERVATION)){</span>
+<span class="nc" id="L182">				output.quantity(output.quantity() + Dungeon.hero.pointsInTalent(Talent.WAND_PRESERVATION));</span>
+			}
+
+<span class="nc" id="L185">			return output;</span>
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

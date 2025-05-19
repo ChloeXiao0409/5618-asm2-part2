@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RotGardenRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest</a> &gt; <span class="el_source">RotGardenRoom.java</span></div><h1>RotGardenRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.RotHeart;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.RotLasher;
+import com.shatteredpixel.shatteredpixeldungeon.items.keys.IronKey;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.SpecialRoom;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+
+<span class="nc" id="L40">public class RotGardenRoom extends SpecialRoom {</span>
+	
+	@Override
+<span class="nc" id="L43">	public int minWidth() { return 10; }</span>
+	
+	@Override
+<span class="nc" id="L46">	public int minHeight() { return 10; }</span>
+
+	public void paint( Level level ) {
+
+<span class="nc" id="L50">		Door entrance = entrance();</span>
+<span class="nc" id="L51">		entrance.set(Door.Type.LOCKED);</span>
+<span class="nc" id="L52">		level.addItemToSpawn(new IronKey(Dungeon.depth));</span>
+
+		//define basic terrain, mostly high grass with some chaotically placed wall tiles
+<span class="nc" id="L55">		Painter.fill(level, this, Terrain.WALL);</span>
+<span class="nc" id="L56">		Painter.set(level, entrance, Terrain.LOCKED_DOOR);</span>
+
+<span class="nc" id="L58">		ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L59">		boolean[] passable = new boolean[level.length()];</span>
+<span class="nc" id="L60">		int entryPos = level.pointToCell(entrance());</span>
+		do {
+<span class="nc" id="L62">			Painter.fill(level, this, 1, Terrain.HIGH_GRASS);</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">			for (int i = 0; i &lt; 12; i++) {</span>
+<span class="nc" id="L64">				Painter.set(level, random(1), Terrain.WALL);</span>
+			}
+<span class="nc bnc" id="L66" title="All 2 branches missed.">			for (int i = 0; i &lt; 8; i++) {</span>
+<span class="nc" id="L67">				Painter.set(level, random(2), Terrain.WALL);</span>
+			}
+<span class="nc bnc" id="L69" title="All 2 branches missed.">			for (int i = 0; i &lt; 4; i++) {</span>
+<span class="nc" id="L70">				Painter.set(level, random(3), Terrain.WALL);</span>
+			}
+<span class="nc" id="L72">			Painter.drawInside(level, this, entrance, 3, Terrain.HIGH_GRASS);</span>
+
+<span class="nc bnc" id="L74" title="All 2 branches missed.">			for (int i = 0; i &lt; passable.length; i++) {</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">				passable[i] = level.map[i] != Terrain.WALL;</span>
+			}
+
+			//place the heart in a slightly random location sufficiently far from the entrance
+<span class="nc" id="L79">			PathFinder.buildDistanceMap(entryPos, passable);</span>
+<span class="nc" id="L80">			candidates.clear();</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">			for (Point p : getPoints()) {</span>
+<span class="nc" id="L82">				int i = level.pointToCell(p);</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">				if (PathFinder.distance[i] != Integer.MAX_VALUE) {</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">					if (PathFinder.distance[i] &gt;= 7) {</span>
+<span class="nc" id="L85">						candidates.add(i);</span>
+					}
+				} else {
+					//fill in grass tiles that are enclosed
+<span class="nc bnc" id="L89" title="All 2 branches missed.">					if (level.map[i] == Terrain.HIGH_GRASS) {</span>
+<span class="nc" id="L90">						level.map[i] = Terrain.WALL;</span>
+					}
+				}
+<span class="nc" id="L93">			}</span>
+<span class="nc" id="L94">			Random.shuffle(candidates);</span>
+<span class="nc" id="L95">			int closestPos = 7;</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">			while (candidates.size() &gt; 5) {</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">				for (Integer i : candidates.toArray(new Integer[0])) {</span>
+<span class="nc bnc" id="L98" title="All 4 branches missed.">					if (candidates.size() &gt; 5 &amp;&amp; PathFinder.distance[i] == closestPos) {</span>
+<span class="nc" id="L99">						candidates.remove(i);</span>
+					}
+				}
+<span class="nc" id="L102">				closestPos++;</span>
+			}
+
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		} while (candidates.isEmpty());</span>
+<span class="nc" id="L106">		int heartPos = Random.element(candidates);</span>
+<span class="nc" id="L107">		placePlant(level, heartPos, new RotHeart());</span>
+
+		//place up to 6 lashers in such a way that there is always a safe path to the heart
+<span class="nc" id="L110">		boolean[] newPassable = Arrays.copyOf(passable, passable.length);</span>
+<span class="nc" id="L111">		int maxLashers = 6;</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">		for (int i = 1; i &lt;= maxLashers; i++){</span>
+			int pos;
+<span class="nc" id="L114">			int tries = 50;</span>
+			do {
+<span class="nc" id="L116">				pos = level.pointToCell(random());</span>
+<span class="nc" id="L117">				tries--;</span>
+<span class="nc bnc" id="L118" title="All 4 branches missed.">			} while (tries &gt; 0 &amp;&amp; !validPlantPos(passable, newPassable, level, pos, heartPos, entryPos));</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">			if (tries &lt;= 0){</span>
+<span class="nc" id="L120">				break;</span>
+			}
+<span class="nc" id="L122">			placePlant(level, pos, new RotLasher());</span>
+		}
+
+		//look for open diagonals near the hard and create open cardinals near them.
+		//This is important so that the heart can spread gas
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		for (int i = 0; i &lt; PathFinder.CIRCLE8.length; i+=2){</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">			if (level.map[heartPos + PathFinder.CIRCLE8[i]] != Terrain.WALL){</span>
+<span class="nc" id="L129">				Painter.set(level, heartPos + PathFinder.CIRCLE8[i+1], Terrain.HIGH_GRASS);</span>
+			}
+		}
+
+<span class="nc" id="L133">	}</span>
+
+	private static boolean validPlantPos(boolean[] passable, boolean[] newPassable, Level level, int pos, int heartPos, int entryPos){
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		if (level.map[pos] != Terrain.HIGH_GRASS){</span>
+<span class="nc" id="L137">			return false;</span>
+		}
+
+<span class="nc bnc" id="L140" title="All 2 branches missed.">		for (int i : PathFinder.NEIGHBOURS9){</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">			if (level.findMob(pos+i) != null){</span>
+<span class="nc" id="L142">				return false;</span>
+			}
+		}
+
+<span class="nc" id="L146">		newPassable[pos] = false;</span>
+
+		//if lasher isn't near heart, we can just use cardinal directions
+<span class="nc bnc" id="L149" title="All 2 branches missed.">		if (level.distance(pos, heartPos) &gt; 2){</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS4){</span>
+<span class="nc" id="L151">				newPassable[pos+i] = false;</span>
+			}
+		//if it is near, has to count as blocking all adjacent
+		// so that we can guarantee a safe tile to stay still in next to the heart
+		} else {
+<span class="nc bnc" id="L156" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc" id="L157">				newPassable[pos+i] = false;</span>
+			}
+		}
+
+<span class="nc" id="L161">		PathFinder.buildDistanceMap(heartPos, newPassable);</span>
+
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		if (PathFinder.distance[entryPos] == Integer.MAX_VALUE){</span>
+<span class="nc" id="L164">			System.arraycopy(passable, 0, newPassable, 0, passable.length);</span>
+<span class="nc" id="L165">			return false;</span>
+		} else {
+<span class="nc" id="L167">			System.arraycopy(newPassable, 0, passable, 0, passable.length);</span>
+<span class="nc" id="L168">			return true;</span>
+		}
+	}
+
+	private static void placePlant(Level level, int pos, Mob plant){
+<span class="nc" id="L173">		plant.pos = pos;</span>
+<span class="nc" id="L174">		level.mobs.add( plant );</span>
+
+<span class="nc" id="L176">		Painter.set(level, pos, Terrain.GRASS);</span>
+<span class="nc" id="L177">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

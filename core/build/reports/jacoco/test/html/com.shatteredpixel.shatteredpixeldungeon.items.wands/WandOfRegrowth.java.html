@@ -1,0 +1,513 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WandOfRegrowth.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.wands</a> &gt; <span class="el_source">WandOfRegrowth.java</span></div><h1>WandOfRegrowth.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.wands;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Doom;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Roots;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.mage.WildMagic;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DwarfKing;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.NPC;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.items.Dewdrop;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.ConeAOE;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Sungrass;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.LotusSprite;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.ColorMath;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+
+<span class="nc" id="L61">public class WandOfRegrowth extends Wand {</span>
+
+	{
+<span class="nc" id="L64">		image = ItemSpriteSheet.WAND_REGROWTH;</span>
+
+		//only used for targeting, actual projectile logic is Ballistica.STOP_SOLID
+<span class="nc" id="L67">		collisionProperties = Ballistica.WONT_STOP;</span>
+	}
+	
+<span class="nc" id="L70">	private int totChrgUsed = 0;</span>
+<span class="nc" id="L71">	private int chargesOverLimit = 0;</span>
+
+	ConeAOE cone;
+	int target;
+
+	@Override
+	public boolean tryToZap(Hero owner, int target) {
+<span class="nc bnc" id="L78" title="All 2 branches missed.">		if (super.tryToZap(owner, target)){</span>
+<span class="nc" id="L79">			this.target = target;</span>
+<span class="nc" id="L80">			return true;</span>
+		} else {
+<span class="nc" id="L82">			return false;</span>
+		}
+	}
+
+	@Override
+	public void onZap(Ballistica bolt) {
+
+<span class="nc" id="L89">		ArrayList&lt;Integer&gt; cells = new ArrayList&lt;&gt;(cone.cells);</span>
+
+<span class="nc" id="L91">		float furrowedChance = 0;</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		if (totChrgUsed &gt;= chargeLimit(Dungeon.hero.lvl)){</span>
+<span class="nc" id="L93">			furrowedChance = (chargesOverLimit+1)/5f;</span>
+		}
+
+<span class="nc" id="L96">		int chrgUsed = chargesPerCast();</span>
+<span class="nc" id="L97">		int grassToPlace = Math.round((3.67f+buffedLvl()/3f)*chrgUsed);</span>
+
+		//ignore cells which can't have anything grow in them.
+<span class="nc bnc" id="L100" title="All 2 branches missed.">		for (Iterator&lt;Integer&gt; i = cells.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L101">			int cell = i.next();</span>
+<span class="nc" id="L102">			int terr = Dungeon.level.map[cell];</span>
+<span class="nc bnc" id="L103" title="All 12 branches missed.">			if (!(terr == Terrain.EMPTY || terr == Terrain.EMBERS || terr == Terrain.EMPTY_DECO ||</span>
+					terr == Terrain.GRASS || terr == Terrain.HIGH_GRASS || terr == Terrain.FURROWED_GRASS)) {
+<span class="nc" id="L105">				i.remove();</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			} else if (Char.hasProp(Actor.findChar(cell), Char.Property.IMMOVABLE)) {</span>
+<span class="nc" id="L107">				i.remove();</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">			} else if (Dungeon.level.plants.get(cell) != null){</span>
+<span class="nc" id="L109">				i.remove();</span>
+			} else {
+<span class="nc bnc" id="L111" title="All 4 branches missed.">				if (terr != Terrain.HIGH_GRASS &amp;&amp; terr != Terrain.FURROWED_GRASS) {</span>
+<span class="nc" id="L112">					Level.set(cell, Terrain.GRASS);</span>
+<span class="nc" id="L113">					GameScene.updateMap( cell );</span>
+				}
+<span class="nc" id="L115">				Char ch = Actor.findChar(cell);</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">				if (ch != null){</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">					if (ch instanceof DwarfKing){</span>
+<span class="nc" id="L118">						Statistics.qualifiedForBossChallengeBadge = false;</span>
+					}
+<span class="nc" id="L120">					wandProc(ch, chargesPerCast());</span>
+<span class="nc" id="L121">					Buff.prolong( ch, Roots.class, 4f * chrgUsed );</span>
+				}
+			}
+<span class="nc" id="L124">		}</span>
+
+<span class="nc" id="L126">		Random.shuffle(cells);</span>
+
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		if (chargesPerCast() &gt;= 3){</span>
+<span class="nc" id="L129">			Lotus l = new Lotus();</span>
+<span class="nc" id="L130">			l.setLevel(buffedLvl());</span>
+<span class="nc bnc" id="L131" title="All 4 branches missed.">			if (cells.contains(target) &amp;&amp; Actor.findChar(target) == null){</span>
+<span class="nc" id="L132">				cells.remove((Integer)target);</span>
+<span class="nc" id="L133">				l.pos = target;</span>
+<span class="nc" id="L134">				GameScene.add(l);</span>
+			} else {
+<span class="nc bnc" id="L136" title="All 2 branches missed.">				for (int i = bolt.path.size()-1; i &gt;= 0; i--){</span>
+<span class="nc" id="L137">					int c = bolt.path.get(i);</span>
+<span class="nc bnc" id="L138" title="All 4 branches missed.">					if (cells.contains(c) &amp;&amp; Actor.findChar(c) == null){</span>
+<span class="nc" id="L139">						cells.remove((Integer)c);</span>
+<span class="nc" id="L140">						l.pos = c;</span>
+<span class="nc" id="L141">						GameScene.add(l);</span>
+<span class="nc" id="L142">						break;</span>
+					}
+				}
+			}
+		}
+
+		//places grass along center of cone
+<span class="nc bnc" id="L149" title="All 2 branches missed.">		for (int cell : bolt.path){</span>
+<span class="nc bnc" id="L150" title="All 4 branches missed.">			if (grassToPlace &gt; 0 &amp;&amp; cells.contains(cell)){</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">				if (Random.Float() &gt; furrowedChance) {</span>
+<span class="nc" id="L152">					Level.set(cell, Terrain.HIGH_GRASS);</span>
+				} else {
+<span class="nc" id="L154">					Level.set(cell, Terrain.FURROWED_GRASS);</span>
+				}
+<span class="nc" id="L156">				GameScene.updateMap( cell );</span>
+<span class="nc" id="L157">				grassToPlace--;</span>
+				//moves cell to the back
+<span class="nc" id="L159">				cells.remove((Integer)cell);</span>
+<span class="nc" id="L160">				cells.add(cell);</span>
+			}
+<span class="nc" id="L162">		}</span>
+
+<span class="nc bnc" id="L164" title="All 4 branches missed.">		if (!cells.isEmpty() &amp;&amp; Random.Float() &gt; furrowedChance &amp;&amp;</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">				(Random.Int(6) &lt; chrgUsed)){ // 16%/33%/50% chance to spawn a seed pod or dewcatcher</span>
+<span class="nc" id="L166">			int cell = cells.remove(0);</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">			Dungeon.level.plant( Random.Int(2) == 0 ? new Seedpod.Seed() : new Dewcatcher.Seed(), cell);</span>
+		}
+
+<span class="nc bnc" id="L170" title="All 4 branches missed.">		if (!cells.isEmpty() &amp;&amp; Random.Float() &gt; furrowedChance &amp;&amp;</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">				(Random.Int(3) &lt; chrgUsed)){ // 33%/66%/100% chance to spawn a plant</span>
+<span class="nc" id="L172">			int cell = cells.remove(0);</span>
+<span class="nc" id="L173">			Dungeon.level.plant((Plant.Seed) Generator.randomUsingDefaults(Generator.Category.SEED), cell);</span>
+		}
+
+<span class="nc bnc" id="L176" title="All 2 branches missed.">		for (int cell : cells){</span>
+<span class="nc bnc" id="L177" title="All 4 branches missed.">			if (grassToPlace &lt;= 0 || bolt.path.contains(cell)) break;</span>
+
+<span class="nc bnc" id="L179" title="All 2 branches missed.">			if (Dungeon.level.map[cell] == Terrain.HIGH_GRASS) continue;</span>
+
+<span class="nc bnc" id="L181" title="All 2 branches missed.">			if (Random.Float() &gt; furrowedChance) {</span>
+<span class="nc" id="L182">				Level.set(cell, Terrain.HIGH_GRASS);</span>
+			} else {
+<span class="nc" id="L184">				Level.set(cell, Terrain.FURROWED_GRASS);</span>
+			}
+<span class="nc" id="L186">			GameScene.updateMap( cell );</span>
+<span class="nc" id="L187">			grassToPlace--;</span>
+<span class="nc" id="L188">		}</span>
+
+<span class="nc bnc" id="L190" title="All 2 branches missed.">		if (totChrgUsed &lt; chargeLimit(Dungeon.hero.lvl)) {</span>
+<span class="nc" id="L191">			chargesOverLimit = 0;</span>
+<span class="nc" id="L192">			totChrgUsed += chrgUsed;</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">			if (totChrgUsed &gt; chargeLimit(Dungeon.hero.lvl)){</span>
+<span class="nc" id="L194">				chargesOverLimit = totChrgUsed - chargeLimit(Dungeon.hero.lvl);</span>
+<span class="nc" id="L195">				totChrgUsed = chargeLimit(Dungeon.hero.lvl);</span>
+			}
+		} else {
+<span class="nc" id="L198">			chargesOverLimit += chrgUsed;</span>
+		}
+
+<span class="nc" id="L201">	}</span>
+
+	private int chargeLimit( int heroLvl ){
+<span class="nc" id="L204">		return chargeLimit(  heroLvl, level() );</span>
+	}
+
+	private int chargeLimit( int heroLvl, int wndLvl ){
+<span class="nc bnc" id="L208" title="All 2 branches missed.">		if (wndLvl &gt;= 10){</span>
+<span class="nc" id="L209">			return Integer.MAX_VALUE;</span>
+		} else {
+			//20 charges at base, plus:
+			//2/3.1/4.2/5.5/6.8/8.4/10.4/13.2/18.0/30.8/inf. charges per hero level, at wand level:
+			//0/1  /2  /3  /4  /5  /6   /7   /8   /9   /10
+<span class="nc" id="L214">			return Math.round(20 + heroLvl * (2+wndLvl) * (1f + (wndLvl/(50 - 5*wndLvl))));</span>
+		}
+	}
+
+	@Override
+	public void onHit(MagesStaff staff, Char attacker, Char defender, int damage) {
+		//like pre-nerf vampiric enchantment, except with herbal healing buff, only in grass
+<span class="nc" id="L221">		boolean grass = false;</span>
+<span class="nc" id="L222">		int terr = Dungeon.level.map[attacker.pos];</span>
+<span class="nc bnc" id="L223" title="All 6 branches missed.">		if (terr == Terrain.GRASS || terr == Terrain.HIGH_GRASS || terr == Terrain.FURROWED_GRASS){</span>
+<span class="nc" id="L224">			grass = true;</span>
+		}
+<span class="nc" id="L226">		terr = Dungeon.level.map[defender.pos];</span>
+<span class="nc bnc" id="L227" title="All 6 branches missed.">		if (terr == Terrain.GRASS || terr == Terrain.HIGH_GRASS || terr == Terrain.FURROWED_GRASS){</span>
+<span class="nc" id="L228">			grass = true;</span>
+		}
+
+<span class="nc bnc" id="L231" title="All 2 branches missed.">		if (grass) {</span>
+<span class="nc" id="L232">			int level = Math.max(0, staff.buffedLvl());</span>
+
+			// lvl 0 - 16%
+			// lvl 1 - 21%
+			// lvl 2 - 25%
+<span class="nc" id="L237">			int healing = Math.round(damage * (level + 2f) / (level + 6f) / 2f);</span>
+<span class="nc" id="L238">			healing = Math.round(healing * procChanceMultiplier(attacker));</span>
+<span class="nc" id="L239">			Buff.affect(attacker, Sungrass.Health.class).boost(healing);</span>
+		}
+
+<span class="nc" id="L242">	}</span>
+
+	public void fx(Ballistica bolt, Callback callback) {
+
+		// 4/6/8 distance
+<span class="nc" id="L247">		int maxDist = 2 + 2*chargesPerCast();</span>
+
+<span class="nc" id="L249">		cone = new ConeAOE( bolt,</span>
+				maxDist,
+<span class="nc" id="L251">				20 + 10*chargesPerCast(),</span>
+				Ballistica.STOP_SOLID | Ballistica.STOP_TARGET);
+
+		//cast to cells at the tip, rather than all cells, better performance.
+<span class="nc" id="L255">		Ballistica longestRay = null;</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">		for (Ballistica ray : cone.outerRays){</span>
+<span class="nc bnc" id="L257" title="All 4 branches missed.">			if (longestRay == null || ray.dist &gt; longestRay.dist){</span>
+<span class="nc" id="L258">				longestRay = ray;</span>
+			}
+<span class="nc" id="L260">			((MagicMissile)curUser.sprite.parent.recycle( MagicMissile.class )).reset(</span>
+					MagicMissile.FOLIAGE_CONE,
+					curUser.sprite,
+<span class="nc" id="L263">					ray.path.get(ray.dist),</span>
+					null
+			);
+<span class="nc" id="L266">		}</span>
+
+		//final zap at half distance of the longest ray, for timing of the actual wand effect
+<span class="nc" id="L269">		MagicMissile.boltFromChar( curUser.sprite.parent,</span>
+				MagicMissile.FOLIAGE_CONE,
+				curUser.sprite,
+<span class="nc" id="L272">				longestRay.path.get(longestRay.dist/2),</span>
+				callback );
+<span class="nc" id="L274">		Sample.INSTANCE.play( Assets.Sounds.ZAP );</span>
+<span class="nc" id="L275">	}</span>
+
+	@Override
+	protected int chargesPerCast() {
+<span class="nc bnc" id="L279" title="All 6 branches missed.">		if (cursed ||</span>
+<span class="nc bnc" id="L280" title="All 2 branches missed.">				(charger != null &amp;&amp; charger.target != null &amp;&amp; charger.target.buff(WildMagic.WildMagicTracker.class) != null)){</span>
+<span class="nc" id="L281">			return 1;</span>
+		}
+		//consumes 30% of current charges, rounded up, with a min of 1 and a max of 3.
+<span class="nc" id="L284">		return (int) GameMath.gate(1, (int)Math.ceil(curCharges*0.3f), 3);</span>
+	}
+
+	@Override
+	public String statsDesc() {
+<span class="nc" id="L289">		String desc = Messages.get(this, &quot;stats_desc&quot;, chargesPerCast());</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">		if (isIdentified()){</span>
+<span class="nc" id="L291">			int chargeLeft = chargeLimit(Dungeon.hero.lvl) - totChrgUsed;</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">			if (chargeLeft &lt; 10000) desc += &quot; &quot; + Messages.get(this, &quot;degradation&quot;, Math.max(chargeLeft, 0));</span>
+		}
+<span class="nc" id="L294">		return desc;</span>
+	}
+
+	@Override
+	public String upgradeStat1(int level) {
+<span class="nc" id="L299">		return Messages.decimalFormat(&quot;#.##&quot;, 3 + (2+level)/3f);</span>
+	}
+
+	@Override
+	public String upgradeStat2(int level) {
+<span class="nc bnc" id="L304" title="All 2 branches missed.">		if (level &gt;= 10){</span>
+<span class="nc" id="L305">			return &quot;∞&quot;;</span>
+		} else {
+<span class="nc" id="L307">			return Integer.toString(chargeLimit(Dungeon.hero.lvl, level));</span>
+		}
+	}
+
+	@Override
+	public void staffFx(MagesStaff.StaffParticle particle) {
+<span class="nc" id="L313">		particle.color( ColorMath.random(0x004400, 0x88CC44) );</span>
+<span class="nc" id="L314">		particle.am = 1f;</span>
+<span class="nc" id="L315">		particle.setLifespan(1f);</span>
+<span class="nc" id="L316">		particle.setSize( 1f, 1.5f);</span>
+<span class="nc" id="L317">		particle.shuffleXY(0.5f);</span>
+<span class="nc" id="L318">		float dst = Random.Float(11f);</span>
+<span class="nc" id="L319">		particle.x -= dst;</span>
+<span class="nc" id="L320">		particle.y += dst;</span>
+<span class="nc" id="L321">	}</span>
+	
+	private static final String TOTAL = &quot;totChrgUsed&quot;;
+	private static final String OVER = &quot;chargesOverLimit&quot;;
+	
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L328">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L329">		bundle.put( TOTAL, totChrgUsed );</span>
+<span class="nc" id="L330">		bundle.put( OVER, chargesOverLimit);</span>
+<span class="nc" id="L331">	}</span>
+	
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L335">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L336">		totChrgUsed = bundle.getInt(TOTAL);</span>
+<span class="nc" id="L337">		chargesOverLimit = bundle.getInt(OVER);</span>
+<span class="nc" id="L338">	}</span>
+	
+<span class="nc" id="L340">	public static class Dewcatcher extends Plant{</span>
+
+		{
+<span class="nc" id="L343">			image = 13;</span>
+<span class="nc" id="L344">		}</span>
+
+		@Override
+		public void activate( Char ch ) {
+
+<span class="nc" id="L349">			int nDrops = Random.NormalIntRange(3, 6);</span>
+
+<span class="nc" id="L351">			ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L352" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L353" title="All 2 branches missed.">				if (Dungeon.level.passable[pos+i]</span>
+<span class="nc bnc" id="L354" title="All 2 branches missed.">						&amp;&amp; pos+i != Dungeon.level.entrance()</span>
+<span class="nc bnc" id="L355" title="All 2 branches missed.">						&amp;&amp; pos+i != Dungeon.level.exit()){</span>
+<span class="nc" id="L356">					candidates.add(pos+i);</span>
+				}
+			}
+
+<span class="nc bnc" id="L360" title="All 4 branches missed.">			for (int i = 0; i &lt; nDrops &amp;&amp; !candidates.isEmpty(); i++){</span>
+<span class="nc" id="L361">				Integer c = Random.element(candidates);</span>
+<span class="nc bnc" id="L362" title="All 2 branches missed.">				if (Dungeon.level.heaps.get(c) == null) {</span>
+<span class="nc" id="L363">					Dungeon.level.drop(new Dewdrop(), c).sprite.drop(pos);</span>
+				} else {
+<span class="nc" id="L365">					Dungeon.level.drop(new Dewdrop(), c).sprite.drop(c);</span>
+				}
+<span class="nc" id="L367">				candidates.remove(c);</span>
+			}
+
+<span class="nc" id="L370">		}</span>
+
+		//seed is never dropped, only care about plant class
+<span class="nc" id="L373">		public static class Seed extends Plant.Seed {</span>
+			{
+<span class="nc" id="L375">				plantClass = Dewcatcher.class;</span>
+<span class="nc" id="L376">			}</span>
+		}
+	}
+
+<span class="nc" id="L380">	public static class Seedpod extends Plant{</span>
+
+		{
+<span class="nc" id="L383">			image = 14;</span>
+<span class="nc" id="L384">		}</span>
+
+		@Override
+		public void activate( Char ch ) {
+
+<span class="nc" id="L389">			int nSeeds = Random.NormalIntRange(2, 4);</span>
+
+<span class="nc" id="L391">			ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L392" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L393" title="All 2 branches missed.">				if (Dungeon.level.passable[pos+i]</span>
+<span class="nc bnc" id="L394" title="All 2 branches missed.">						&amp;&amp; pos+i != Dungeon.level.entrance()</span>
+<span class="nc bnc" id="L395" title="All 2 branches missed.">						&amp;&amp; pos+i != Dungeon.level.exit()){</span>
+<span class="nc" id="L396">					candidates.add(pos+i);</span>
+				}
+			}
+
+<span class="nc bnc" id="L400" title="All 4 branches missed.">			for (int i = 0; i &lt; nSeeds &amp;&amp; !candidates.isEmpty(); i++){</span>
+<span class="nc" id="L401">				Integer c = Random.element(candidates);</span>
+<span class="nc" id="L402">				Dungeon.level.drop(Generator.randomUsingDefaults(Generator.Category.SEED), c).sprite.drop(pos);</span>
+<span class="nc" id="L403">				candidates.remove(c);</span>
+			}
+
+<span class="nc" id="L406">		}</span>
+
+		//seed is never dropped, only care about plant class
+<span class="nc" id="L409">		public static class Seed extends Plant.Seed {</span>
+			{
+<span class="nc" id="L411">				plantClass = Seedpod.class;</span>
+<span class="nc" id="L412">			}</span>
+		}
+
+	}
+
+<span class="nc" id="L417">	public static class Lotus extends NPC {</span>
+
+		{
+<span class="nc" id="L420">			alignment = Alignment.NEUTRAL;</span>
+<span class="nc" id="L421">			properties.add(Property.IMMOVABLE);</span>
+<span class="nc" id="L422">			properties.add(Property.STATIC);</span>
+
+<span class="nc" id="L424">			spriteClass = LotusSprite.class;</span>
+
+<span class="nc" id="L426">			viewDistance = 1;</span>
+		}
+
+<span class="nc" id="L429">		private int wandLvl = 0;</span>
+
+		private void setLevel( int lvl ){
+<span class="nc" id="L432">			wandLvl = lvl;</span>
+<span class="nc" id="L433">			HP = HT = 25 + 3*lvl;</span>
+<span class="nc" id="L434">		}</span>
+
+		public boolean inRange(int pos){
+<span class="nc bnc" id="L437" title="All 2 branches missed.">			return Dungeon.level.trueDistance(this.pos, pos) &lt;= wandLvl;</span>
+		}
+
+		public float seedPreservation(){
+<span class="nc" id="L441">			return Math.min( 1f, 0.40f + 0.04f*wandLvl );</span>
+		}
+
+		@Override
+		public boolean canInteract(Char c) {
+<span class="nc" id="L446">			return false;</span>
+		}
+
+		@Override
+		protected boolean act() {
+<span class="nc" id="L451">			super.act();</span>
+
+<span class="nc bnc" id="L453" title="All 2 branches missed.">			if (--HP &lt;= 0){</span>
+<span class="nc" id="L454">				destroy();</span>
+<span class="nc" id="L455">				sprite.die();</span>
+			}
+
+<span class="nc" id="L458">			return true;</span>
+		}
+
+		@Override
+		public void damage( int dmg, Object src ) {
+			//do nothing
+<span class="nc" id="L464">		}</span>
+
+		@Override
+		public boolean add( Buff buff ) {
+<span class="nc" id="L468">			return false;</span>
+		}
+
+		@Override
+		public void destroy() {
+<span class="nc" id="L473">			super.destroy();</span>
+<span class="nc" id="L474">			Dungeon.observe();</span>
+<span class="nc" id="L475">			GameScene.updateFog(pos, viewDistance+1);</span>
+<span class="nc" id="L476">		}</span>
+
+		@Override
+		public boolean isInvulnerable(Class effect) {
+<span class="nc" id="L480">			return true;</span>
+		}
+
+		{
+<span class="nc" id="L484">			immunities.add( Doom.class );</span>
+<span class="nc" id="L485">		}</span>
+
+		@Override
+		public String description() {
+<span class="nc" id="L489">			String desc = Messages.get(this, &quot;desc&quot;);</span>
+<span class="nc bnc" id="L490" title="All 2 branches missed.">			if (Actor.chars().contains(this)) {</span>
+<span class="nc" id="L491">				int preservation = Math.round(seedPreservation()*100);</span>
+<span class="nc" id="L492">				desc += &quot;\n\n&quot; + Messages.get(this, &quot;wand_info&quot;, wandLvl, preservation, preservation);</span>
+			}
+<span class="nc" id="L494">			return desc;</span>
+		}
+
+		private static final String WAND_LVL = &quot;wand_lvl&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L501">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L502">			bundle.put(WAND_LVL, wandLvl);</span>
+<span class="nc" id="L503">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L507">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L508">			wandLvl = bundle.getInt(WAND_LVL);</span>
+<span class="nc" id="L509">		}</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

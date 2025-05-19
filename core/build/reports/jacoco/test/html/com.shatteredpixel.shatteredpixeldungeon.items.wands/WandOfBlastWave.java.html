@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WandOfBlastWave.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.wands</a> &gt; <span class="el_source">WandOfBlastWave.java</span></div><h1>WandOfBlastWave.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.wands;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Effects;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Elastic;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.features.Door;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.TenguDartTrap;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Group;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Callback;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L54">public class WandOfBlastWave extends DamageWand {</span>
+
+	{
+<span class="nc" id="L57">		image = ItemSpriteSheet.WAND_BLAST_WAVE;</span>
+
+<span class="nc" id="L59">		collisionProperties = Ballistica.PROJECTILE;</span>
+<span class="nc" id="L60">	}</span>
+
+	public int min(int lvl){
+<span class="nc" id="L63">		return 1+lvl;</span>
+	}
+
+	public int max(int lvl){
+<span class="nc" id="L67">		return 3+3*lvl;</span>
+	}
+
+	@Override
+	public void onZap(Ballistica bolt) {
+<span class="nc" id="L72">		Sample.INSTANCE.play( Assets.Sounds.BLAST );</span>
+<span class="nc" id="L73">		BlastWave.blast(bolt.collisionPos);</span>
+
+		//presses all tiles in the AOE first, with the exception of tengu dart traps
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		for (int i : PathFinder.NEIGHBOURS9){</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">			if (!(Dungeon.level.traps.get(bolt.collisionPos+i) instanceof TenguDartTrap)) {</span>
+<span class="nc" id="L78">				Dungeon.level.pressCell(bolt.collisionPos + i);</span>
+			}
+		}
+
+		//throws other chars around the center.
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		for (int i  : PathFinder.NEIGHBOURS8){</span>
+<span class="nc" id="L84">			Char ch = Actor.findChar(bolt.collisionPos + i);</span>
+
+<span class="nc bnc" id="L86" title="All 2 branches missed.">			if (ch != null){</span>
+<span class="nc" id="L87">				wandProc(ch, chargesPerCast());</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">				if (ch.alignment != Char.Alignment.ALLY) ch.damage(damageRoll(), this);</span>
+
+				//do not push chars that are dieing over a pit, or that move due to the damage
+<span class="nc bnc" id="L91" title="All 6 branches missed.">				if ((ch.isAlive() || ch.flying || !Dungeon.level.pit[ch.pos])</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">						&amp;&amp; ch.pos == bolt.collisionPos + i) {</span>
+<span class="nc" id="L93">					Ballistica trajectory = new Ballistica(ch.pos, ch.pos + i, Ballistica.MAGIC_BOLT);</span>
+<span class="nc" id="L94">					int strength = 1 + Math.round(buffedLvl() / 2f);</span>
+<span class="nc" id="L95">					throwChar(ch, trajectory, strength, false, true, this);</span>
+				}
+
+			}
+		}
+
+		//throws the char at the center of the blast
+<span class="nc" id="L102">		Char ch = Actor.findChar(bolt.collisionPos);</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		if (ch != null){</span>
+<span class="nc" id="L104">			wandProc(ch, chargesPerCast());</span>
+<span class="nc" id="L105">			ch.damage(damageRoll(), this);</span>
+
+			//do not push chars that are dieing over a pit, or that move due to the damage
+<span class="nc bnc" id="L108" title="All 6 branches missed.">			if ((ch.isAlive() || ch.flying || !Dungeon.level.pit[ch.pos])</span>
+<span class="nc bnc" id="L109" title="All 4 branches missed.">					&amp;&amp; bolt.path.size() &gt; bolt.dist+1 &amp;&amp; ch.pos == bolt.collisionPos) {</span>
+<span class="nc" id="L110">				Ballistica trajectory = new Ballistica(ch.pos, bolt.path.get(bolt.dist + 1), Ballistica.MAGIC_BOLT);</span>
+<span class="nc" id="L111">				int strength = buffedLvl() + 3;</span>
+<span class="nc" id="L112">				throwChar(ch, trajectory, strength, false, true, this);</span>
+			}
+		}
+		
+<span class="nc" id="L116">	}</span>
+
+	public static void throwChar(final Char ch, final Ballistica trajectory, int power,
+	                             boolean closeDoors, boolean collideDmg, Object cause){
+<span class="nc bnc" id="L120" title="All 2 branches missed.">		if (ch.properties().contains(Char.Property.BOSS)) {</span>
+<span class="nc" id="L121">			power = (power+1)/2;</span>
+		}
+
+<span class="nc" id="L124">		int dist = Math.min(trajectory.dist, power);</span>
+
+<span class="nc bnc" id="L126" title="All 2 branches missed.">		boolean collided = dist == trajectory.dist;</span>
+
+<span class="nc bnc" id="L128" title="All 4 branches missed.">		if (dist &lt;= 0</span>
+				|| ch.rooted
+<span class="nc bnc" id="L130" title="All 2 branches missed.">				|| ch.properties().contains(Char.Property.IMMOVABLE)) return;</span>
+
+		//large characters cannot be moved into non-open space
+<span class="nc bnc" id="L133" title="All 2 branches missed.">		if (Char.hasProp(ch, Char.Property.LARGE)) {</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">			for (int i = 1; i &lt;= dist; i++) {</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">				if (!Dungeon.level.openSpace[trajectory.path.get(i)]){</span>
+<span class="nc" id="L136">					dist = i-1;</span>
+<span class="nc" id="L137">					collided = true;</span>
+<span class="nc" id="L138">					break;</span>
+				}
+			}
+		}
+
+<span class="nc bnc" id="L143" title="All 2 branches missed.">		if (Actor.findChar(trajectory.path.get(dist)) != null){</span>
+<span class="nc" id="L144">			dist--;</span>
+<span class="nc" id="L145">			collided = true;</span>
+		}
+
+<span class="nc bnc" id="L148" title="All 2 branches missed.">		if (dist &lt; 0) return;</span>
+
+<span class="nc" id="L150">		final int newPos = trajectory.path.get(dist);</span>
+
+<span class="nc bnc" id="L152" title="All 2 branches missed.">		if (newPos == ch.pos) return;</span>
+
+<span class="nc" id="L154">		final int finalDist = dist;</span>
+<span class="nc bnc" id="L155" title="All 4 branches missed.">		final boolean finalCollided = collided &amp;&amp; collideDmg;</span>
+<span class="nc" id="L156">		final int initialpos = ch.pos;</span>
+
+<span class="nc" id="L158">		Actor.add(new Pushing(ch, ch.pos, newPos, new Callback() {</span>
+			public void call() {
+<span class="nc bnc" id="L160" title="All 4 branches missed.">				if (initialpos != ch.pos || Actor.findChar(newPos) != null) {</span>
+					//something caused movement or added chars before pushing resolved, cancel to be safe.
+<span class="nc" id="L162">					ch.sprite.place(ch.pos);</span>
+<span class="nc" id="L163">					return;</span>
+				}
+<span class="nc" id="L165">				int oldPos = ch.pos;</span>
+<span class="nc" id="L166">				ch.pos = newPos;</span>
+<span class="nc bnc" id="L167" title="All 4 branches missed.">				if (finalCollided &amp;&amp; ch.isActive()) {</span>
+<span class="nc" id="L168">					ch.damage(Random.NormalIntRange(finalDist, 2*finalDist), new Knockback());</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">					if (ch.isActive()) {</span>
+<span class="nc" id="L170">						Paralysis.prolong(ch, Paralysis.class, 1 + finalDist/2f);</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">					} else if (ch == Dungeon.hero){</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">						if (cause instanceof WandOfBlastWave){</span>
+<span class="nc" id="L173">							Badges.validateDeathFromFriendlyMagic();</span>
+						}
+<span class="nc" id="L175">						GLog.n(Messages.get(WandOfBlastWave.class, &quot;knockback_ondeath&quot;));</span>
+<span class="nc" id="L176">						Dungeon.fail(cause);</span>
+					}
+				}
+<span class="nc bnc" id="L179" title="All 4 branches missed.">				if (closeDoors &amp;&amp; Dungeon.level.map[oldPos] == Terrain.OPEN_DOOR){</span>
+<span class="nc" id="L180">					Door.leave(oldPos);</span>
+				}
+<span class="nc" id="L182">				Dungeon.level.occupyCell(ch);</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">				if (ch == Dungeon.hero){</span>
+<span class="nc" id="L184">					Dungeon.observe();</span>
+<span class="nc" id="L185">					GameScene.updateFog();</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">				} else if (Dungeon.level.heroFOV[initialpos] != Dungeon.level.heroFOV[newPos]){</span>
+<span class="nc" id="L187">					Dungeon.observe();</span>
+				}
+<span class="nc" id="L189">			}</span>
+		}));
+<span class="nc" id="L191">	}</span>
+
+<span class="nc" id="L193">	public static class Knockback{}</span>
+
+	@Override
+	public void onHit(MagesStaff staff, Char attacker, Char defender, int damage) {
+
+<span class="nc" id="L198">		Talent.EmpoweredStrikeTracker tracker = attacker.buff(Talent.EmpoweredStrikeTracker.class);</span>
+
+<span class="nc bnc" id="L200" title="All 2 branches missed.">		if (tracker != null){</span>
+<span class="nc" id="L201">			tracker.delayedDetach = true;</span>
+		}
+
+		//acts like elastic enchantment
+		//we delay this with an actor to prevent conflicts with regular elastic
+		//so elastic always fully resolves first, then this effect activates
+<span class="nc" id="L207">		Actor.add(new Actor() {</span>
+			{
+<span class="nc" id="L209">				actPriority = VFX_PRIO+9; //act after pushing effects</span>
+<span class="nc" id="L210">			}</span>
+
+			@Override
+			protected boolean act() {
+<span class="nc" id="L214">				Actor.remove(this);</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">				if (defender.isAlive()) {</span>
+<span class="nc" id="L216">					new BlastWaveOnHit().proc(staff, attacker, defender, damage);</span>
+				}
+<span class="nc bnc" id="L218" title="All 2 branches missed.">				if (tracker != null) tracker.detach();</span>
+<span class="nc" id="L219">				return true;</span>
+			}
+		});
+<span class="nc" id="L222">	}</span>
+
+	private static class BlastWaveOnHit extends Elastic{
+		@Override
+		protected float procChanceMultiplier(Char attacker) {
+<span class="nc" id="L227">			return Wand.procChanceMultiplier(attacker);</span>
+		}
+	}
+
+	@Override
+	public String upgradeStat2(int level) {
+<span class="nc" id="L233">		return Integer.toString(3 + level);</span>
+	}
+
+	@Override
+	public void fx(Ballistica bolt, Callback callback) {
+<span class="nc" id="L238">		MagicMissile.boltFromChar( curUser.sprite.parent,</span>
+				MagicMissile.FORCE,
+				curUser.sprite,
+<span class="nc" id="L241">				bolt.collisionPos,</span>
+				callback);
+<span class="nc" id="L243">		Sample.INSTANCE.play(Assets.Sounds.ZAP);</span>
+<span class="nc" id="L244">	}</span>
+
+	@Override
+	public void staffFx(MagesStaff.StaffParticle particle) {
+<span class="nc" id="L248">		particle.color( 0x664422 ); particle.am = 0.6f;</span>
+<span class="nc" id="L249">		particle.setLifespan(3f);</span>
+<span class="nc" id="L250">		particle.speed.polar(Random.Float(PointF.PI2), 0.3f);</span>
+<span class="nc" id="L251">		particle.setSize( 1f, 2f);</span>
+<span class="nc" id="L252">		particle.radiateXY(2.5f);</span>
+<span class="nc" id="L253">	}</span>
+
+	public static class BlastWave extends Image {
+
+		private static final float TIME_TO_FADE = 0.2f;
+
+		private float time;
+		private float size;
+
+		public BlastWave(){
+<span class="nc" id="L263">			super(Effects.get(Effects.Type.RIPPLE));</span>
+<span class="nc" id="L264">			origin.set(width / 2, height / 2);</span>
+<span class="nc" id="L265">		}</span>
+
+		public void reset(int pos, float size) {
+<span class="nc" id="L268">			revive();</span>
+
+<span class="nc" id="L270">			x = (pos % Dungeon.level.width()) * DungeonTilemap.SIZE + (DungeonTilemap.SIZE - width) / 2;</span>
+<span class="nc" id="L271">			y = (pos / Dungeon.level.width()) * DungeonTilemap.SIZE + (DungeonTilemap.SIZE - height) / 2;</span>
+
+<span class="nc" id="L273">			time = TIME_TO_FADE;</span>
+<span class="nc" id="L274">			this.size = size;</span>
+<span class="nc" id="L275">		}</span>
+
+		@Override
+		public void update() {
+<span class="nc" id="L279">			super.update();</span>
+
+<span class="nc bnc" id="L281" title="All 2 branches missed.">			if ((time -= Game.elapsed) &lt;= 0) {</span>
+<span class="nc" id="L282">				kill();</span>
+			} else {
+<span class="nc" id="L284">				float p = time / TIME_TO_FADE;</span>
+<span class="nc" id="L285">				alpha(p);</span>
+<span class="nc" id="L286">				scale.y = scale.x = (1-p)*size;</span>
+			}
+<span class="nc" id="L288">		}</span>
+
+		public static void blast(int pos) {
+<span class="nc" id="L291">			blast(pos, 3);</span>
+<span class="nc" id="L292">		}</span>
+
+		public static void blast(int pos, float radius) {
+<span class="nc" id="L295">			Group parent = Dungeon.hero.sprite.parent;</span>
+<span class="nc" id="L296">			BlastWave b = (BlastWave) parent.recycle(BlastWave.class);</span>
+<span class="nc" id="L297">			parent.bringToFront(b);</span>
+<span class="nc" id="L298">			b.reset(pos, radius);</span>
+<span class="nc" id="L299">		}</span>
+
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

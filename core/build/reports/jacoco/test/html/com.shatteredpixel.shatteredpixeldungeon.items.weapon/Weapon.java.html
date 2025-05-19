@@ -1,0 +1,662 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Weapon.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.weapon</a> &gt; <span class="el_source">Weapon.java</span></div><h1>Weapon.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.weapon;
+
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Berserk;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.AscendedForm;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.duelist.ElementalStrike;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.BodyForm;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.HolyWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.Smite;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfArcana;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfFuror;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.ParchmentScrap;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.ShardOfOblivion;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.curses.Annoying;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.curses.Dazzling;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.curses.Displacing;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.curses.Explosive;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.curses.Friendly;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.curses.Polarized;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.curses.Sacrificial;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.curses.Wayward;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Blazing;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Blocking;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Blooming;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Chilling;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Corrupting;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Elastic;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Grim;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Kinetic;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Lucky;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Projecting;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Shocking;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Unstable;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Vampiric;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.RunicBlade;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Scimitar;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.Bundlable;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import com.shatteredpixel.shatteredpixeldungeon.equipment.IEquipment;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+
+
+
+<span class="fc" id="L86">public abstract class Weapon extends KindOfWeapon implements IEquipment {</span>
+
+<span class="fc" id="L88">	public float    ACC = 1f;	// Accuracy modifier</span>
+<span class="fc" id="L89">	public float	DLY	= 1f;	// Speed modifier</span>
+<span class="fc" id="L90">	public int      RCH = 1;    // Reach modifier (only applies to melee hits)</span>
+
+<span class="fc" id="L92">	public enum Augment {</span>
+<span class="fc" id="L93">		SPEED   (0.7f, 2/3f),</span>
+<span class="fc" id="L94">		DAMAGE  (1.5f, 5/3f),</span>
+<span class="fc" id="L95">		NONE	(1.0f, 1f);</span>
+
+		private float damageFactor;
+		private float delayFactor;
+
+<span class="fc" id="L100">		Augment(float dmg, float dly){</span>
+<span class="fc" id="L101">			damageFactor = dmg;</span>
+<span class="fc" id="L102">			delayFactor = dly;</span>
+<span class="fc" id="L103">		}</span>
+
+		public int damageFactor(int dmg){
+<span class="nc" id="L106">			return Math.round(dmg * damageFactor);</span>
+		}
+
+		public float delayFactor(float dly){
+<span class="nc" id="L110">			return dly * delayFactor;</span>
+		}
+	}
+	
+<span class="fc" id="L114">	public Augment augment = Augment.NONE;</span>
+	
+	private static final int USES_TO_ID = 20;
+<span class="fc" id="L117">	private float usesLeftToID = USES_TO_ID;</span>
+<span class="fc" id="L118">	private float availableUsesToID = USES_TO_ID/2f;</span>
+	
+	public Enchantment enchantment;
+<span class="fc" id="L121">	public boolean enchantHardened = false;</span>
+<span class="fc" id="L122">	public boolean curseInfusionBonus = false;</span>
+<span class="fc" id="L123">	public boolean masteryPotionBonus = false;</span>
+	
+	@Override
+	public int proc( Char attacker, Char defender, int damage ) {
+
+<span class="nc" id="L128">		boolean becameAlly = false;</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">		boolean wasAlly = defender.alignment == Char.Alignment.ALLY;</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">		if (attacker.buff(MagicImmune.class) == null) {</span>
+<span class="nc" id="L131">			Enchantment trinityEnchant = null;</span>
+<span class="nc bnc" id="L132" title="All 4 branches missed.">			if (Dungeon.hero.buff(BodyForm.BodyFormBuff.class) != null &amp;&amp; this instanceof MeleeWeapon){</span>
+<span class="nc" id="L133">				trinityEnchant = Dungeon.hero.buff(BodyForm.BodyFormBuff.class).enchant();</span>
+<span class="nc bnc" id="L134" title="All 6 branches missed.">				if (enchantment != null &amp;&amp; trinityEnchant != null &amp;&amp; trinityEnchant.getClass() == enchantment.getClass()){</span>
+<span class="nc" id="L135">					trinityEnchant = null;</span>
+				}
+			}
+
+<span class="nc bnc" id="L139" title="All 4 branches missed.">			if (attacker instanceof Hero &amp;&amp; isEquipped((Hero) attacker)</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">					&amp;&amp; attacker.buff(HolyWeapon.HolyWepBuff.class) != null){</span>
+<span class="nc bnc" id="L141" title="All 4 branches missed.">				if (enchantment != null &amp;&amp;</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">						(((Hero) attacker).subClass == HeroSubClass.PALADIN || hasCurseEnchant())){</span>
+<span class="nc" id="L143">					damage = enchantment.proc(this, attacker, defender, damage);</span>
+<span class="nc bnc" id="L144" title="All 4 branches missed.">					if (defender.alignment == Char.Alignment.ALLY &amp;&amp; !wasAlly){</span>
+<span class="nc" id="L145">						becameAlly = true;</span>
+					}
+				}
+<span class="nc bnc" id="L148" title="All 6 branches missed.">				if (defender.isAlive() &amp;&amp; !becameAlly &amp;&amp; trinityEnchant != null){</span>
+<span class="nc" id="L149">					damage = trinityEnchant.proc(this, attacker, defender, damage);</span>
+				}
+<span class="nc bnc" id="L151" title="All 4 branches missed.">				if (defender.isAlive() &amp;&amp; !becameAlly) {</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">					int dmg = ((Hero) attacker).subClass == HeroSubClass.PALADIN ? 6 : 2;</span>
+<span class="nc" id="L153">					defender.damage(Math.round(dmg * Enchantment.genericProcChanceMultiplier(attacker)), HolyWeapon.INSTANCE);</span>
+<span class="nc" id="L154">				}</span>
+
+			} else {
+<span class="nc bnc" id="L157" title="All 2 branches missed.">				if (enchantment != null) {</span>
+<span class="nc" id="L158">					damage = enchantment.proc(this, attacker, defender, damage);</span>
+<span class="nc bnc" id="L159" title="All 4 branches missed.">					if (defender.alignment == Char.Alignment.ALLY &amp;&amp; !wasAlly) {</span>
+<span class="nc" id="L160">						becameAlly = true;</span>
+					}
+				}
+
+<span class="nc bnc" id="L164" title="All 6 branches missed.">				if (defender.isAlive() &amp;&amp; !becameAlly &amp;&amp; trinityEnchant != null){</span>
+<span class="nc" id="L165">					damage = trinityEnchant.proc(this, attacker, defender, damage);</span>
+				}
+			}
+
+<span class="nc bnc" id="L169" title="All 4 branches missed.">			if (attacker instanceof Hero &amp;&amp; isEquipped((Hero) attacker) &amp;&amp;</span>
+<span class="nc bnc" id="L170" title="All 4 branches missed.">					attacker.buff(Smite.SmiteTracker.class) != null &amp;&amp; !becameAlly){</span>
+<span class="nc" id="L171">				defender.damage(Smite.bonusDmg((Hero) attacker, defender), Smite.INSTANCE);</span>
+			}
+		}
+		
+<span class="nc bnc" id="L175" title="All 4 branches missed.">		if (!levelKnown &amp;&amp; attacker == Dungeon.hero) {</span>
+<span class="nc" id="L176">			float uses = Math.min( availableUsesToID, Talent.itemIDSpeedFactor(Dungeon.hero, this) );</span>
+<span class="nc" id="L177">			availableUsesToID -= uses;</span>
+<span class="nc" id="L178">			usesLeftToID -= uses;</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">			if (usesLeftToID &lt;= 0) {</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">				if (ShardOfOblivion.passiveIDDisabled()){</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">					if (usesLeftToID &gt; -1){</span>
+<span class="nc" id="L182">						GLog.p(Messages.get(ShardOfOblivion.class, &quot;identify_ready&quot;), name());</span>
+					}
+<span class="nc" id="L184">					setIDReady();</span>
+				} else {
+<span class="nc" id="L186">					identify();</span>
+<span class="nc" id="L187">					GLog.p(Messages.get(Weapon.class, &quot;identify&quot;));</span>
+<span class="nc" id="L188">					Badges.validateItemLevelAquired(this);</span>
+				}
+			}
+		}
+
+<span class="nc" id="L193">		return damage;</span>
+	}
+	
+	public void onHeroGainExp( float levelPercent, Hero hero ){
+<span class="nc" id="L197">		levelPercent *= Talent.itemIDSpeedFactor(hero, this);</span>
+<span class="nc bnc" id="L198" title="All 6 branches missed.">		if (!levelKnown &amp;&amp; isEquipped(hero) &amp;&amp; availableUsesToID &lt;= USES_TO_ID/2f) {</span>
+			//gains enough uses to ID over 0.5 levels
+<span class="nc" id="L200">			availableUsesToID = Math.min(USES_TO_ID/2f, availableUsesToID + levelPercent * USES_TO_ID);</span>
+		}
+<span class="nc" id="L202">	}</span>
+	
+	private static final String USES_LEFT_TO_ID = &quot;uses_left_to_id&quot;;
+	private static final String AVAILABLE_USES  = &quot;available_uses&quot;;
+	private static final String ENCHANTMENT	    = &quot;enchantment&quot;;
+	private static final String ENCHANT_HARDENED = &quot;enchant_hardened&quot;;
+	private static final String CURSE_INFUSION_BONUS = &quot;curse_infusion_bonus&quot;;
+	private static final String MASTERY_POTION_BONUS = &quot;mastery_potion_bonus&quot;;
+	private static final String AUGMENT	        = &quot;augment&quot;;
+
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L214">		super.storeInBundle( bundle );</span>
+<span class="nc" id="L215">		bundle.put( USES_LEFT_TO_ID, usesLeftToID );</span>
+<span class="nc" id="L216">		bundle.put( AVAILABLE_USES, availableUsesToID );</span>
+<span class="nc" id="L217">		bundle.put( ENCHANTMENT, enchantment );</span>
+<span class="nc" id="L218">		bundle.put( ENCHANT_HARDENED, enchantHardened );</span>
+<span class="nc" id="L219">		bundle.put( CURSE_INFUSION_BONUS, curseInfusionBonus );</span>
+<span class="nc" id="L220">		bundle.put( MASTERY_POTION_BONUS, masteryPotionBonus );</span>
+<span class="nc" id="L221">		bundle.put( AUGMENT, augment );</span>
+<span class="nc" id="L222">	}</span>
+	
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L226">		super.restoreFromBundle( bundle );</span>
+<span class="nc" id="L227">		usesLeftToID = bundle.getFloat( USES_LEFT_TO_ID );</span>
+<span class="nc" id="L228">		availableUsesToID = bundle.getFloat( AVAILABLE_USES );</span>
+<span class="nc" id="L229">		enchantment = (Enchantment)bundle.get( ENCHANTMENT );</span>
+<span class="nc" id="L230">		enchantHardened = bundle.getBoolean( ENCHANT_HARDENED );</span>
+<span class="nc" id="L231">		curseInfusionBonus = bundle.getBoolean( CURSE_INFUSION_BONUS );</span>
+<span class="nc" id="L232">		masteryPotionBonus = bundle.getBoolean( MASTERY_POTION_BONUS );</span>
+
+<span class="nc" id="L234">		augment = bundle.getEnum(AUGMENT, Augment.class);</span>
+<span class="nc" id="L235">	}</span>
+	
+	@Override
+	public void reset() {
+<span class="nc" id="L239">		super.reset();</span>
+<span class="nc" id="L240">		usesLeftToID = USES_TO_ID;</span>
+<span class="nc" id="L241">		availableUsesToID = USES_TO_ID/2f;</span>
+<span class="nc" id="L242">	}</span>
+
+	@Override
+	public boolean collect(Bag container) {
+<span class="nc bnc" id="L246" title="All 2 branches missed.">		if(super.collect(container)){</span>
+<span class="nc bnc" id="L247" title="All 8 branches missed.">			if (Dungeon.hero != null &amp;&amp; Dungeon.hero.isAlive() &amp;&amp; isIdentified() &amp;&amp; enchantment != null){</span>
+<span class="nc" id="L248">				Catalog.setSeen(enchantment.getClass());</span>
+<span class="nc" id="L249">				Statistics.itemTypesDiscovered.add(enchantment.getClass());</span>
+			}
+<span class="nc" id="L251">			return true;</span>
+		} else {
+<span class="nc" id="L253">			return false;</span>
+		}
+	}
+
+	@Override
+	public Item identify(boolean byHero) {
+<span class="nc bnc" id="L259" title="All 8 branches missed.">		if (enchantment != null &amp;&amp; byHero &amp;&amp; Dungeon.hero != null &amp;&amp; Dungeon.hero.isAlive()){</span>
+<span class="nc" id="L260">			Catalog.setSeen(enchantment.getClass());</span>
+<span class="nc" id="L261">			Statistics.itemTypesDiscovered.add(enchantment.getClass());</span>
+		}
+<span class="nc" id="L263">		return super.identify(byHero);</span>
+	}
+
+	public void setIDReady(){
+<span class="nc" id="L267">		usesLeftToID = -1;</span>
+<span class="nc" id="L268">	}</span>
+
+	public boolean readyToIdentify(){
+<span class="nc bnc" id="L271" title="All 4 branches missed.">		return !isIdentified() &amp;&amp; usesLeftToID &lt;= 0;</span>
+	}
+	
+	@Override
+	public float accuracyFactor(Char owner, Char target) {
+		
+<span class="nc" id="L277">		int encumbrance = 0;</span>
+		
+<span class="nc bnc" id="L279" title="All 2 branches missed.">		if( owner instanceof Hero ){</span>
+<span class="nc" id="L280">			encumbrance = STRReq() - ((Hero)owner).STR();</span>
+		}
+
+<span class="nc" id="L283">		float ACC = this.ACC;</span>
+
+<span class="nc bnc" id="L285" title="All 4 branches missed.">		if (owner.buff(Wayward.WaywardBuff.class) != null &amp;&amp; enchantment instanceof Wayward){</span>
+<span class="nc" id="L286">			ACC /= 5;</span>
+		}
+
+<span class="nc bnc" id="L289" title="All 2 branches missed.">		return encumbrance &gt; 0 ? (float)(ACC / Math.pow( 1.5, encumbrance )) : ACC;</span>
+	}
+	
+	@Override
+	public float delayFactor( Char owner ) {
+<span class="nc" id="L294">		return baseDelay(owner) * (1f/speedMultiplier(owner));</span>
+	}
+
+	protected float baseDelay( Char owner ){
+<span class="nc" id="L298">		float delay = augment.delayFactor(this.DLY);</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">		if (owner instanceof Hero) {</span>
+<span class="nc" id="L300">			int encumbrance = STRReq() - ((Hero)owner).STR();</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">			if (encumbrance &gt; 0){</span>
+<span class="nc" id="L302">				delay *= Math.pow( 1.2, encumbrance );</span>
+			}
+		}
+
+<span class="nc" id="L306">		return delay;</span>
+	}
+
+	protected float speedMultiplier(Char owner ){
+<span class="nc" id="L310">		float multi = RingOfFuror.attackSpeedMultiplier(owner);</span>
+
+<span class="nc bnc" id="L312" title="All 2 branches missed.">		if (owner.buff(Scimitar.SwordDance.class) != null){</span>
+<span class="nc" id="L313">			multi += 0.6f;</span>
+		}
+
+<span class="nc" id="L316">		return multi;</span>
+	}
+
+	@Override
+	public int reachFactor(Char owner) {
+<span class="nc" id="L321">		int reach = RCH;</span>
+<span class="nc bnc" id="L322" title="All 4 branches missed.">		if (owner instanceof Hero &amp;&amp; RingOfForce.fightingUnarmed((Hero) owner)){</span>
+<span class="nc" id="L323">			reach = 1; //brawlers stance benefits from enchantments, but not innate reach</span>
+<span class="nc bnc" id="L324" title="All 2 branches missed.">			if (!RingOfForce.unarmedGetsWeaponEnchantment((Hero) owner)){</span>
+<span class="nc" id="L325">				return reach;</span>
+			}
+		}
+<span class="nc bnc" id="L328" title="All 4 branches missed.">		if (owner instanceof Hero &amp;&amp; owner.buff(AscendedForm.AscendBuff.class) != null){</span>
+<span class="nc" id="L329">			reach += 2;</span>
+		}
+<span class="nc bnc" id="L331" title="All 2 branches missed.">		if (hasEnchant(Projecting.class, owner)){</span>
+<span class="nc" id="L332">			return reach + Math.round(enchantment.procChanceMultiplier(owner));</span>
+		} else {
+<span class="nc" id="L334">			return reach;</span>
+		}
+	}
+
+	public int STRReq(){
+<span class="nc" id="L339">		return STRReq(level());</span>
+	}
+
+	public abstract int STRReq(int lvl);
+
+	protected static int STRReq(int tier, int lvl){
+<span class="nc" id="L345">		lvl = Math.max(0, lvl);</span>
+
+		//strength req decreases at +1,+3,+6,+10,etc.
+<span class="nc" id="L348">		return (8 + tier * 2) - (int)(Math.sqrt(8 * lvl + 1) - 1)/2;</span>
+	}
+
+	@Override
+	public int level() {
+<span class="nc" id="L353">		int level = super.level();</span>
+<span class="nc bnc" id="L354" title="All 2 branches missed.">		if (curseInfusionBonus) level += 1 + level/6;</span>
+<span class="nc" id="L355">		return level;</span>
+	}
+	
+	@Override
+	public Item upgrade() {
+<span class="nc" id="L360">		return upgrade(false);</span>
+	}
+	
+	public Item upgrade(boolean enchant ) {
+
+<span class="nc bnc" id="L365" title="All 2 branches missed.">		if (enchant){</span>
+<span class="nc bnc" id="L366" title="All 2 branches missed.">			if (enchantment == null){</span>
+<span class="nc" id="L367">				enchant(Enchantment.random());</span>
+			}
+<span class="nc bnc" id="L369" title="All 2 branches missed.">		} else if (enchantment != null) {</span>
+			//chance to lose harden buff is 10/20/40/80/100% when upgrading from +6/7/8/9/10
+<span class="nc bnc" id="L371" title="All 2 branches missed.">			if (enchantHardened){</span>
+<span class="nc bnc" id="L372" title="All 4 branches missed.">				if (level() &gt;= 6 &amp;&amp; Random.Float(10) &lt; Math.pow(2, level()-6)){</span>
+<span class="nc" id="L373">					enchantHardened = false;</span>
+				}
+
+			//chance to remove curse is a static 33%
+<span class="nc bnc" id="L377" title="All 2 branches missed.">			} else if (hasCurseEnchant()) {</span>
+<span class="nc bnc" id="L378" title="All 2 branches missed.">				if (Random.Int(3) == 0) enchant(null);</span>
+
+			//otherwise chance to lose enchant is 10/20/40/80/100% when upgrading from +4/5/6/7/8
+<span class="nc bnc" id="L381" title="All 4 branches missed.">			} else if (level() &gt;= 4 &amp;&amp; Random.Float(10) &lt; Math.pow(2, level()-4)){</span>
+<span class="nc" id="L382">				enchant(null);</span>
+			}
+		}
+		
+<span class="nc" id="L386">		cursed = false;</span>
+
+<span class="nc" id="L388">		return super.upgrade();</span>
+	}
+	
+	@Override
+	public String name() {
+<span class="nc bnc" id="L393" title="All 10 branches missed.">		if (isEquipped(Dungeon.hero) &amp;&amp; !hasCurseEnchant() &amp;&amp; Dungeon.hero.buff(HolyWeapon.HolyWepBuff.class) != null</span>
+			&amp;&amp; (Dungeon.hero.subClass != HeroSubClass.PALADIN || enchantment == null)){
+<span class="nc" id="L395">				return Messages.get(HolyWeapon.class, &quot;ench_name&quot;, super.name());</span>
+			} else {
+<span class="nc bnc" id="L397" title="All 6 branches missed.">				return enchantment != null &amp;&amp; (cursedKnown || !enchantment.curse()) ? enchantment.name(super.name()) : super.name();</span>
+
+		}
+	}
+	
+	@Override
+	public Item random() {
+		//+0: 75% (3/4)
+		//+1: 20% (4/20)
+		//+2: 5%  (1/20)
+<span class="nc" id="L407">		int n = 0;</span>
+<span class="nc bnc" id="L408" title="All 2 branches missed.">		if (Random.Int(4) == 0) {</span>
+<span class="nc" id="L409">			n++;</span>
+<span class="nc bnc" id="L410" title="All 2 branches missed.">			if (Random.Int(5) == 0) {</span>
+<span class="nc" id="L411">				n++;</span>
+			}
+		}
+<span class="nc" id="L414">		level(n);</span>
+
+		//we use a separate RNG here so that variance due to things like parchment scrap
+		//does not affect levelgen
+<span class="nc" id="L418">		Random.pushGenerator(Random.Long());</span>
+
+			//30% chance to be cursed
+			//10% chance to be enchanted
+<span class="nc" id="L422">			float effectRoll = Random.Float();</span>
+<span class="nc bnc" id="L423" title="All 2 branches missed.">			if (effectRoll &lt; 0.3f * ParchmentScrap.curseChanceMultiplier()) {</span>
+<span class="nc" id="L424">				enchant(Enchantment.randomCurse());</span>
+<span class="nc" id="L425">				cursed = true;</span>
+<span class="nc bnc" id="L426" title="All 2 branches missed.">			} else if (effectRoll &gt;= 1f - (0.1f * ParchmentScrap.enchantChanceMultiplier())){</span>
+<span class="nc" id="L427">				enchant();</span>
+			}
+
+<span class="nc" id="L430">		Random.popGenerator();</span>
+
+<span class="nc" id="L432">		return this;</span>
+	}
+	
+	public Weapon enchant( Enchantment ench ) {
+<span class="nc bnc" id="L436" title="All 4 branches missed.">		if (ench == null || !ench.curse()) curseInfusionBonus = false;</span>
+<span class="nc" id="L437">		enchantment = ench;</span>
+<span class="nc" id="L438">		updateQuickslot();</span>
+<span class="nc bnc" id="L439" title="All 6 branches missed.">		if (ench != null &amp;&amp; isIdentified() &amp;&amp; Dungeon.hero != null</span>
+<span class="nc bnc" id="L440" title="All 4 branches missed.">				&amp;&amp; Dungeon.hero.isAlive() &amp;&amp; Dungeon.hero.belongings.contains(this)){</span>
+<span class="nc" id="L441">			Catalog.setSeen(ench.getClass());</span>
+<span class="nc" id="L442">			Statistics.itemTypesDiscovered.add(ench.getClass());</span>
+		}
+<span class="nc" id="L444">		return this;</span>
+	}
+
+	public Weapon enchant() {
+
+<span class="nc bnc" id="L449" title="All 2 branches missed.">		Class&lt;? extends Enchantment&gt; oldEnchantment = enchantment != null ? enchantment.getClass() : null;</span>
+<span class="nc" id="L450">		Enchantment ench = Enchantment.random( oldEnchantment );</span>
+
+<span class="nc" id="L452">		return enchant( ench );</span>
+	}
+
+	public boolean hasEnchant(Class&lt;?extends Enchantment&gt; type, Char owner) {
+<span class="nc bnc" id="L456" title="All 2 branches missed.">		if (enchantment == null){</span>
+<span class="nc" id="L457">			return false;</span>
+<span class="nc bnc" id="L458" title="All 2 branches missed.">		} else if (owner.buff(MagicImmune.class) != null) {</span>
+<span class="nc" id="L459">			return false;</span>
+<span class="nc bnc" id="L460" title="All 4 branches missed.">		} else if (!enchantment.curse()</span>
+				&amp;&amp; owner instanceof Hero
+<span class="nc bnc" id="L462" title="All 2 branches missed.">				&amp;&amp; isEquipped((Hero) owner)</span>
+<span class="nc bnc" id="L463" title="All 4 branches missed.">				&amp;&amp; owner.buff(HolyWeapon.HolyWepBuff.class) != null</span>
+				&amp;&amp; ((Hero) owner).subClass != HeroSubClass.PALADIN) {
+<span class="nc" id="L465">			return false;</span>
+<span class="nc bnc" id="L466" title="All 2 branches missed.">		} else if (owner.buff(BodyForm.BodyFormBuff.class) != null</span>
+<span class="nc bnc" id="L467" title="All 2 branches missed.">				&amp;&amp; owner.buff(BodyForm.BodyFormBuff.class).enchant() != null</span>
+<span class="nc bnc" id="L468" title="All 2 branches missed.">				&amp;&amp; owner.buff(BodyForm.BodyFormBuff.class).enchant().getClass().equals(type)){</span>
+<span class="nc" id="L469">			return true;</span>
+		} else {
+<span class="nc bnc" id="L471" title="All 2 branches missed.">			return enchantment.getClass() == type;</span>
+		}
+	}
+	
+	//these are not used to process specific enchant effects, so magic immune doesn't affect them
+	public boolean hasGoodEnchant(){
+<span class="nc bnc" id="L477" title="All 4 branches missed.">		return enchantment != null &amp;&amp; !enchantment.curse();</span>
+	}
+
+	public boolean hasCurseEnchant(){
+<span class="nc bnc" id="L481" title="All 4 branches missed.">		return enchantment != null &amp;&amp; enchantment.curse();</span>
+	}
+
+<span class="fc" id="L484">	private static ItemSprite.Glowing HOLY = new ItemSprite.Glowing( 0xFFFF00 );</span>
+
+	@Override
+	public ItemSprite.Glowing glowing() {
+<span class="nc bnc" id="L488" title="All 10 branches missed.">		if (isEquipped(Dungeon.hero) &amp;&amp; !hasCurseEnchant() &amp;&amp; Dungeon.hero.buff(HolyWeapon.HolyWepBuff.class) != null</span>
+				&amp;&amp; (Dungeon.hero.subClass != HeroSubClass.PALADIN || enchantment == null)){
+<span class="nc" id="L490">			return HOLY;</span>
+		} else {
+<span class="nc bnc" id="L492" title="All 6 branches missed.">			return enchantment != null &amp;&amp; (cursedKnown || !enchantment.curse()) ? enchantment.glowing() : null;</span>
+		}
+	}
+
+<span class="nc" id="L496">	public static abstract class Enchantment implements Bundlable {</span>
+
+<span class="nc" id="L498">		public static final Class&lt;?&gt;[] common = new Class&lt;?&gt;[]{</span>
+				Blazing.class, Chilling.class, Kinetic.class, Shocking.class};
+
+<span class="nc" id="L501">		public static final Class&lt;?&gt;[] uncommon = new Class&lt;?&gt;[]{</span>
+				Blocking.class, Blooming.class, Elastic.class,
+				Lucky.class, Projecting.class, Unstable.class};
+
+<span class="nc" id="L505">		public static final Class&lt;?&gt;[] rare = new Class&lt;?&gt;[]{</span>
+				Corrupting.class, Grim.class, Vampiric.class};
+
+<span class="nc" id="L508">		public static final float[] typeChances = new float[]{</span>
+				50, //12.5% each
+				40, //6.67% each
+				10  //3.33% each
+		};
+
+<span class="nc" id="L514">		public static final Class&lt;?&gt;[] curses = new Class&lt;?&gt;[]{</span>
+				Annoying.class, Displacing.class, Dazzling.class, Explosive.class,
+				Sacrificial.class, Wayward.class, Polarized.class, Friendly.class
+		};
+		
+			
+		public abstract int proc( Weapon weapon, Char attacker, Char defender, int damage );
+
+		protected float procChanceMultiplier( Char attacker ){
+<span class="nc" id="L523">			return genericProcChanceMultiplier( attacker );</span>
+		}
+
+		public static float genericProcChanceMultiplier( Char attacker ){
+<span class="nc" id="L527">			float multi = RingOfArcana.enchantPowerMultiplier(attacker);</span>
+<span class="nc" id="L528">			Berserk rage = attacker.buff(Berserk.class);</span>
+<span class="nc bnc" id="L529" title="All 2 branches missed.">			if (rage != null) {</span>
+<span class="nc" id="L530">				multi = rage.enchantFactor(multi);</span>
+			}
+
+<span class="nc bnc" id="L533" title="All 2 branches missed.">			if (attacker.buff(RunicBlade.RunicSlashTracker.class) != null){</span>
+<span class="nc" id="L534">				multi += attacker.buff(RunicBlade.RunicSlashTracker.class).boost;</span>
+<span class="nc" id="L535">				attacker.buff(RunicBlade.RunicSlashTracker.class).detach();</span>
+			}
+
+<span class="nc bnc" id="L538" title="All 2 branches missed.">			if (attacker.buff(Smite.SmiteTracker.class) != null){</span>
+<span class="nc" id="L539">				multi += 3f;</span>
+			}
+
+<span class="nc bnc" id="L542" title="All 2 branches missed.">			if (attacker.buff(ElementalStrike.DirectedPowerTracker.class) != null){</span>
+<span class="nc" id="L543">				multi += attacker.buff(ElementalStrike.DirectedPowerTracker.class).enchBoost;</span>
+<span class="nc" id="L544">				attacker.buff(ElementalStrike.DirectedPowerTracker.class).detach();</span>
+			}
+
+<span class="nc bnc" id="L547" title="All 2 branches missed.">			if (attacker.buff(Talent.SpiritBladesTracker.class) != null</span>
+<span class="nc bnc" id="L548" title="All 2 branches missed.">					&amp;&amp; ((Hero)attacker).pointsInTalent(Talent.SPIRIT_BLADES) == 4){</span>
+<span class="nc" id="L549">				multi += 0.1f;</span>
+			}
+<span class="nc bnc" id="L551" title="All 2 branches missed.">			if (attacker.buff(Talent.StrikingWaveTracker.class) != null</span>
+<span class="nc bnc" id="L552" title="All 2 branches missed.">					&amp;&amp; ((Hero)attacker).pointsInTalent(Talent.STRIKING_WAVE) == 4){</span>
+<span class="nc" id="L553">				multi += 0.2f;</span>
+			}
+
+<span class="nc" id="L556">			return multi;</span>
+		}
+
+		public String name() {
+<span class="nc bnc" id="L560" title="All 2 branches missed.">			if (!curse())</span>
+<span class="nc" id="L561">				return name( Messages.get(this, &quot;enchant&quot;));</span>
+			else
+<span class="nc" id="L563">				return name( Messages.get(Item.class, &quot;curse&quot;));</span>
+		}
+
+		public String name( String weaponName ) {
+<span class="nc" id="L567">			return Messages.get(this, &quot;name&quot;, weaponName);</span>
+		}
+
+		public String desc() {
+<span class="nc" id="L571">			return Messages.get(this, &quot;desc&quot;);</span>
+		}
+
+		public boolean curse() {
+<span class="nc" id="L575">			return false;</span>
+		}
+
+		@Override
+		public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L580">		}</span>
+
+		@Override
+		public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L584">		}</span>
+		
+		public abstract ItemSprite.Glowing glowing();
+		
+		@SuppressWarnings(&quot;unchecked&quot;)
+		public static Enchantment random( Class&lt;? extends Enchantment&gt; ... toIgnore ) {
+<span class="nc bnc" id="L590" title="All 3 branches missed.">			switch(Random.chances(typeChances)){</span>
+				case 0: default:
+<span class="nc" id="L592">					return randomCommon( toIgnore );</span>
+				case 1:
+<span class="nc" id="L594">					return randomUncommon( toIgnore );</span>
+				case 2:
+<span class="nc" id="L596">					return randomRare( toIgnore );</span>
+			}
+		}
+		
+		@SuppressWarnings(&quot;unchecked&quot;)
+		public static Enchantment randomCommon( Class&lt;? extends Enchantment&gt; ... toIgnore ) {
+<span class="nc" id="L602">			ArrayList&lt;Class&lt;?&gt;&gt; enchants = new ArrayList&lt;&gt;(Arrays.asList(common));</span>
+<span class="nc" id="L603">			enchants.removeAll(Arrays.asList(toIgnore));</span>
+<span class="nc bnc" id="L604" title="All 2 branches missed.">			if (enchants.isEmpty()) {</span>
+<span class="nc" id="L605">				return random();</span>
+			} else {
+<span class="nc" id="L607">				return (Enchantment) Reflection.newInstance(Random.element(enchants));</span>
+			}
+		}
+		
+		@SuppressWarnings(&quot;unchecked&quot;)
+		public static Enchantment randomUncommon( Class&lt;? extends Enchantment&gt; ... toIgnore ) {
+<span class="nc" id="L613">			ArrayList&lt;Class&lt;?&gt;&gt; enchants = new ArrayList&lt;&gt;(Arrays.asList(uncommon));</span>
+<span class="nc" id="L614">			enchants.removeAll(Arrays.asList(toIgnore));</span>
+<span class="nc bnc" id="L615" title="All 2 branches missed.">			if (enchants.isEmpty()) {</span>
+<span class="nc" id="L616">				return random();</span>
+			} else {
+<span class="nc" id="L618">				return (Enchantment) Reflection.newInstance(Random.element(enchants));</span>
+			}
+		}
+		
+		@SuppressWarnings(&quot;unchecked&quot;)
+		public static Enchantment randomRare( Class&lt;? extends Enchantment&gt; ... toIgnore ) {
+<span class="nc" id="L624">			ArrayList&lt;Class&lt;?&gt;&gt; enchants = new ArrayList&lt;&gt;(Arrays.asList(rare));</span>
+<span class="nc" id="L625">			enchants.removeAll(Arrays.asList(toIgnore));</span>
+<span class="nc bnc" id="L626" title="All 2 branches missed.">			if (enchants.isEmpty()) {</span>
+<span class="nc" id="L627">				return random();</span>
+			} else {
+<span class="nc" id="L629">				return (Enchantment) Reflection.newInstance(Random.element(enchants));</span>
+			}
+		}
+
+		@SuppressWarnings(&quot;unchecked&quot;)
+		public static Enchantment randomCurse( Class&lt;? extends Enchantment&gt; ... toIgnore ){
+<span class="nc" id="L635">			ArrayList&lt;Class&lt;?&gt;&gt; enchants = new ArrayList&lt;&gt;(Arrays.asList(curses));</span>
+<span class="nc" id="L636">			enchants.removeAll(Arrays.asList(toIgnore));</span>
+<span class="nc bnc" id="L637" title="All 2 branches missed.">			if (enchants.isEmpty()) {</span>
+<span class="nc" id="L638">				return random();</span>
+			} else {
+<span class="nc" id="L640">				return (Enchantment) Reflection.newInstance(Random.element(enchants));</span>
+			}
+		}
+		
+	}
+
+	@Override
+	public void applyEffect(Hero hero) {
+		// 示例：添加攻击力提升（你可以根据实际逻辑调整）
+<span class="nc" id="L649">		hero.increaseAttack(5); </span>
+<span class="nc" id="L650">	}</span>
+
+	@Override
+	public void removeEffect(Hero hero) {
+<span class="nc" id="L654">		hero.increaseAttack(-5); </span>
+<span class="nc" id="L655">	}</span>
+
+	@Override
+	public String getName() {
+<span class="nc" id="L659">		return this.name();  // 复用现有名称方法</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

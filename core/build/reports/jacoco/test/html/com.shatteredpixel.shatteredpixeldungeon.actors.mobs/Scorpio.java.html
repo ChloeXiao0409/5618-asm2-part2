@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Scorpio.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">Scorpio.java</span></div><h1>Scorpio.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Cripple;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Light;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ScorpioSprite;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+<span class="nc" id="L39">public class Scorpio extends Mob {</span>
+	
+	{
+<span class="nc" id="L42">		spriteClass = ScorpioSprite.class;</span>
+		
+<span class="nc" id="L44">		HP = HT = 110;</span>
+<span class="nc" id="L45">		defenseSkill = 24;</span>
+<span class="nc" id="L46">		viewDistance = Light.DISTANCE;</span>
+		
+<span class="nc" id="L48">		EXP = 14;</span>
+<span class="nc" id="L49">		maxLvl = 27;</span>
+		
+<span class="nc" id="L51">		loot = Generator.Category.POTION;</span>
+<span class="nc" id="L52">		lootChance = 0.5f;</span>
+
+<span class="nc" id="L54">		properties.add(Property.DEMONIC);</span>
+<span class="nc" id="L55">	}</span>
+	
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L59">		return Random.NormalIntRange( 30, 40 );</span>
+	}
+	
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L64">		return 36;</span>
+	}
+	
+	@Override
+	public int drRoll() {
+<span class="nc" id="L69">		return super.drRoll() + Random.NormalIntRange(0, 16);</span>
+	}
+	
+	@Override
+	protected boolean canAttack( Char enemy ) {
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		return !Dungeon.level.adjacent( pos, enemy.pos )</span>
+<span class="nc bnc" id="L75" title="All 4 branches missed.">				&amp;&amp; (super.canAttack(enemy) || new Ballistica( pos, enemy.pos, Ballistica.PROJECTILE).collisionPos == enemy.pos);</span>
+	}
+	
+	@Override
+	public int attackProc( Char enemy, int damage ) {
+<span class="nc" id="L80">		damage = super.attackProc( enemy, damage );</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		if (Random.Int( 2 ) == 0) {</span>
+<span class="nc" id="L82">			Buff.prolong( enemy, Cripple.class, Cripple.DURATION );</span>
+		}
+		
+<span class="nc" id="L85">		return damage;</span>
+	}
+	
+	@Override
+	protected boolean getCloser( int target ) {
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		if (state == HUNTING) {</span>
+<span class="nc bnc" id="L91" title="All 4 branches missed.">			return enemySeen &amp;&amp; getFurther( target );</span>
+		} else {
+<span class="nc" id="L93">			return super.getCloser( target );</span>
+		}
+	}
+	
+	@Override
+	public void aggro(Char ch) {
+		//cannot be aggroed to something it can't see
+		//skip this check if FOV isn't initialized
+<span class="nc bnc" id="L101" title="All 4 branches missed.">		if (ch == null || fieldOfView == null</span>
+<span class="nc bnc" id="L102" title="All 4 branches missed.">				|| fieldOfView.length != Dungeon.level.length() || fieldOfView[ch.pos]) {</span>
+<span class="nc" id="L103">			super.aggro(ch);</span>
+		}
+<span class="nc" id="L105">	}</span>
+
+	@Override
+	public Item createLoot() {
+		Class&lt;?extends Potion&gt; loot;
+		do{
+<span class="nc" id="L111">			loot = (Class&lt;? extends Potion&gt;) Random.oneOf(Generator.Category.POTION.classes);</span>
+<span class="nc bnc" id="L112" title="All 4 branches missed.">		} while (loot == PotionOfHealing.class || loot == PotionOfStrength.class);</span>
+
+<span class="nc" id="L114">		return Reflection.newInstance(loot);</span>
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

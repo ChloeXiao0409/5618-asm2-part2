@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GameLog.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">GameLog.java</span></div><h1>GameLog.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.ui.Component;
+import com.watabou.utils.Signal;
+
+import java.util.ArrayList;
+import java.util.regex.Pattern;
+
+public class GameLog extends Component implements Signal.Listener&lt;String&gt; {
+
+	private static final int MAX_LINES = 3;
+
+<span class="nc" id="L38">	private static final Pattern PUNCTUATION = Pattern.compile( &quot;.*[.,;?! ]$&quot; );</span>
+
+	private RenderedTextBlock lastEntry;
+	private int lastColor;
+
+<span class="nc" id="L43">	private static ArrayList&lt;Entry&gt; entries = new ArrayList&lt;&gt;();</span>
+
+	public GameLog() {
+<span class="nc" id="L46">		super();</span>
+<span class="nc" id="L47">		GLog.update.replace( this );</span>
+
+<span class="nc" id="L49">		recreateLines();</span>
+<span class="nc" id="L50">	}</span>
+	
+<span class="nc" id="L52">	private static ArrayList&lt;String&gt; textsToAdd = new ArrayList&lt;&gt;();</span>
+	
+	@Override
+	public synchronized void update() {
+
+<span class="nc" id="L57">		synchronized (textsToAdd){</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">			if (!textsToAdd.isEmpty()){</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">				int maxLines = SPDSettings.interfaceSize() &gt; 0 ? 5 : 3;</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">				for (String text : textsToAdd){</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">					if (length != entries.size()){</span>
+<span class="nc" id="L62">						clear();</span>
+<span class="nc" id="L63">						recreateLines();</span>
+					}
+
+<span class="nc bnc" id="L66" title="All 2 branches missed.">					if (text.equals( GLog.NEW_LINE )){</span>
+<span class="nc" id="L67">						lastEntry = null;</span>
+<span class="nc" id="L68">						continue;</span>
+					}
+
+<span class="nc" id="L71">					int color = CharSprite.DEFAULT;</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">					if (text.startsWith( GLog.POSITIVE )) {</span>
+<span class="nc" id="L73">						text = text.substring( GLog.POSITIVE.length() );</span>
+<span class="nc" id="L74">						color = CharSprite.POSITIVE;</span>
+					} else
+<span class="nc bnc" id="L76" title="All 2 branches missed.">					if (text.startsWith( GLog.NEGATIVE )) {</span>
+<span class="nc" id="L77">						text = text.substring( GLog.NEGATIVE.length() );</span>
+<span class="nc" id="L78">						color = CharSprite.NEGATIVE;</span>
+					} else
+<span class="nc bnc" id="L80" title="All 2 branches missed.">					if (text.startsWith( GLog.WARNING )) {</span>
+<span class="nc" id="L81">						text = text.substring( GLog.WARNING.length() );</span>
+<span class="nc" id="L82">						color = CharSprite.WARNING;</span>
+					} else
+<span class="nc bnc" id="L84" title="All 2 branches missed.">					if (text.startsWith( GLog.HIGHLIGHT )) {</span>
+<span class="nc" id="L85">						text = text.substring( GLog.HIGHLIGHT.length() );</span>
+<span class="nc" id="L86">						color = CharSprite.NEUTRAL;</span>
+					}
+
+<span class="nc bnc" id="L89" title="All 6 branches missed.">					if (lastEntry != null &amp;&amp; color == lastColor &amp;&amp; lastEntry.nLines &lt; maxLines) {</span>
+
+<span class="nc" id="L91">						String lastMessage = lastEntry.text();</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">						lastEntry.text( lastMessage.length() == 0 ? text : lastMessage + &quot; &quot; + text );</span>
+
+<span class="nc" id="L94">						entries.get( entries.size() - 1 ).text = lastEntry.text();</span>
+
+<span class="nc" id="L96">					} else {</span>
+
+<span class="nc" id="L98">						lastEntry = PixelScene.renderTextBlock( text, 6 );</span>
+<span class="nc" id="L99">						lastEntry.hardlight( color );</span>
+<span class="nc" id="L100">						lastColor = color;</span>
+<span class="nc" id="L101">						add( lastEntry );</span>
+
+<span class="nc" id="L103">						entries.add( new Entry( text, color ) );</span>
+
+					}
+
+<span class="nc bnc" id="L107" title="All 2 branches missed.">					if (length &gt; 0) {</span>
+						int nLines;
+						do {
+<span class="nc" id="L110">							nLines = 0;</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">							for (int i = 0; i &lt; length-1; i++) {</span>
+<span class="nc" id="L112">								nLines += ((RenderedTextBlock) members.get(i)).nLines;</span>
+							}
+
+<span class="nc bnc" id="L115" title="All 2 branches missed.">							if (nLines &gt; maxLines) {</span>
+<span class="nc" id="L116">								RenderedTextBlock r = ((RenderedTextBlock) members.get(0));</span>
+<span class="nc" id="L117">								remove(r);</span>
+<span class="nc" id="L118">								r.destroy();</span>
+
+<span class="nc" id="L120">								entries.remove( 0 );</span>
+							}
+<span class="nc bnc" id="L122" title="All 2 branches missed.">						} while (nLines &gt; maxLines);</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">						if (entries.isEmpty()) {</span>
+<span class="nc" id="L124">							lastEntry = null;</span>
+						}
+					}
+<span class="nc" id="L127">				}</span>
+
+<span class="nc" id="L129">				layout();</span>
+<span class="nc" id="L130">				textsToAdd.clear();</span>
+			}
+<span class="nc" id="L132">		}</span>
+<span class="nc" id="L133">		super.update();</span>
+<span class="nc" id="L134">	}</span>
+	
+	private synchronized void recreateLines() {
+<span class="nc bnc" id="L137" title="All 2 branches missed.">		for (Entry entry : entries) {</span>
+<span class="nc" id="L138">			lastEntry = PixelScene.renderTextBlock( entry.text, 6 );</span>
+<span class="nc" id="L139">			lastEntry.hardlight( lastColor = entry.color );</span>
+<span class="nc" id="L140">			add( lastEntry );</span>
+<span class="nc" id="L141">		}</span>
+<span class="nc" id="L142">	}</span>
+
+	public synchronized void newLine() {
+<span class="nc" id="L145">		lastEntry = null;</span>
+<span class="nc" id="L146">	}</span>
+
+	@Override
+	public boolean onSignal( String text ) {
+<span class="nc" id="L150">		synchronized (textsToAdd) {</span>
+<span class="nc" id="L151">			textsToAdd.add(text);</span>
+<span class="nc" id="L152">		}</span>
+<span class="nc" id="L153">		return false;</span>
+	}
+
+	@Override
+	protected void layout() {
+<span class="nc" id="L158">		float pos = y;</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">		for (int i=length-1; i &gt;= 0; i--) {</span>
+<span class="nc" id="L160">			RenderedTextBlock entry = (RenderedTextBlock)members.get( i );</span>
+<span class="nc" id="L161">			entry.setHightlighting(false);</span>
+<span class="nc" id="L162">			entry.maxWidth((int)width);</span>
+<span class="nc" id="L163">			entry.setPos(x, pos-entry.height());</span>
+<span class="nc" id="L164">			pos -= entry.height()+2;</span>
+		}
+<span class="nc" id="L166">	}</span>
+
+	private static class Entry {
+		public String text;
+		public int color;
+<span class="nc" id="L171">		public Entry( String text, int color ) {</span>
+<span class="nc" id="L172">			this.text = text;</span>
+<span class="nc" id="L173">			this.color = color;</span>
+<span class="nc" id="L174">		}</span>
+	}
+
+	public static void wipe() {
+<span class="nc" id="L178">		synchronized (textsToAdd) {</span>
+<span class="nc" id="L179">			entries.clear();</span>
+<span class="nc" id="L180">			textsToAdd.clear();</span>
+<span class="nc" id="L181">		}</span>
+<span class="nc" id="L182">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

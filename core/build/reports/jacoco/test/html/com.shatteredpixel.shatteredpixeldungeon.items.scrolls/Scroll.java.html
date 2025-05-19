@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Scroll.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.scrolls</a> &gt; <span class="el_source">Scroll.java</span></div><h1>Scroll.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.scrolls;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Blindness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.ItemStatusHandler;
+import com.shatteredpixel.shatteredpixeldungeon.items.Recipe;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.UnstableSpellbook;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ExoticScroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfAntiMagic;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.Runestone;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfAggression;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfAugmentation;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfBlast;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfBlink;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfClairvoyance;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfDeepSleep;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfDetectMagic;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfEnchantment;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfFear;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfFlock;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfIntuition;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfShock;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.AlchemyScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+
+public abstract class Scroll extends Item {
+	
+	public static final String AC_READ	= &quot;READ&quot;;
+	
+	protected static final float TIME_TO_READ	= 1f;
+
+<span class="nc" id="L73">	private static final LinkedHashMap&lt;String, Integer&gt; runes = new LinkedHashMap&lt;String, Integer&gt;() {</span>
+		{
+<span class="nc" id="L75">			put(&quot;KAUNAN&quot;,ItemSpriteSheet.SCROLL_KAUNAN);</span>
+<span class="nc" id="L76">			put(&quot;SOWILO&quot;,ItemSpriteSheet.SCROLL_SOWILO);</span>
+<span class="nc" id="L77">			put(&quot;LAGUZ&quot;,ItemSpriteSheet.SCROLL_LAGUZ);</span>
+<span class="nc" id="L78">			put(&quot;YNGVI&quot;,ItemSpriteSheet.SCROLL_YNGVI);</span>
+<span class="nc" id="L79">			put(&quot;GYFU&quot;,ItemSpriteSheet.SCROLL_GYFU);</span>
+<span class="nc" id="L80">			put(&quot;RAIDO&quot;,ItemSpriteSheet.SCROLL_RAIDO);</span>
+<span class="nc" id="L81">			put(&quot;ISAZ&quot;,ItemSpriteSheet.SCROLL_ISAZ);</span>
+<span class="nc" id="L82">			put(&quot;MANNAZ&quot;,ItemSpriteSheet.SCROLL_MANNAZ);</span>
+<span class="nc" id="L83">			put(&quot;NAUDIZ&quot;,ItemSpriteSheet.SCROLL_NAUDIZ);</span>
+<span class="nc" id="L84">			put(&quot;BERKANAN&quot;,ItemSpriteSheet.SCROLL_BERKANAN);</span>
+<span class="nc" id="L85">			put(&quot;ODAL&quot;,ItemSpriteSheet.SCROLL_ODAL);</span>
+<span class="nc" id="L86">			put(&quot;TIWAZ&quot;,ItemSpriteSheet.SCROLL_TIWAZ);</span>
+<span class="nc" id="L87">		}</span>
+	};
+	
+	protected static ItemStatusHandler&lt;Scroll&gt; handler;
+	
+	protected String rune;
+
+	//affects how strongly on-scroll talents trigger from this scroll
+<span class="nc" id="L95">	protected float talentFactor = 1;</span>
+	//the chance (0-1) of whether on-scroll talents trigger from this potion
+<span class="nc" id="L97">	protected float talentChance = 1;</span>
+	
+	{
+<span class="nc" id="L100">		stackable = true;</span>
+<span class="nc" id="L101">		defaultAction = AC_READ;</span>
+	}
+	
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public static void initLabels() {
+<span class="nc" id="L106">		handler = new ItemStatusHandler&lt;&gt;( (Class&lt;? extends Scroll&gt;[])Generator.Category.SCROLL.classes, runes );</span>
+<span class="nc" id="L107">	}</span>
+
+	public static void clearLabels(){
+<span class="nc" id="L110">		handler = null;</span>
+<span class="nc" id="L111">	}</span>
+	
+	public static void save( Bundle bundle ) {
+<span class="nc" id="L114">		handler.save( bundle );</span>
+<span class="nc" id="L115">	}</span>
+
+	public static void saveSelectively( Bundle bundle, ArrayList&lt;Item&gt; items ) {
+<span class="nc" id="L118">		ArrayList&lt;Class&lt;?extends Item&gt;&gt; classes = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">		for (Item i : items){</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			if (i instanceof ExoticScroll){</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">				if (!classes.contains(ExoticScroll.exoToReg.get(i.getClass()))){</span>
+<span class="nc" id="L122">					classes.add(ExoticScroll.exoToReg.get(i.getClass()));</span>
+				}
+<span class="nc bnc" id="L124" title="All 2 branches missed.">			} else if (i instanceof Scroll){</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">				if (!classes.contains(i.getClass())){</span>
+<span class="nc" id="L126">					classes.add(i.getClass());</span>
+				}
+			}
+<span class="nc" id="L129">		}</span>
+<span class="nc" id="L130">		handler.saveClassesSelectively( bundle, classes );</span>
+<span class="nc" id="L131">	}</span>
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public static void restore( Bundle bundle ) {
+<span class="nc" id="L135">		handler = new ItemStatusHandler&lt;&gt;( (Class&lt;? extends Scroll&gt;[])Generator.Category.SCROLL.classes, runes, bundle );</span>
+<span class="nc" id="L136">	}</span>
+	
+	public Scroll() {
+<span class="nc" id="L139">		super();</span>
+<span class="nc" id="L140">		reset();</span>
+<span class="nc" id="L141">	}</span>
+	
+	//anonymous scrolls are always IDed, do not affect ID status,
+	//and their sprite is replaced by a placeholder if they are not known,
+	//useful for items that appear in UIs, or which are only spawned for their effects
+<span class="nc" id="L146">	protected boolean anonymous = false;</span>
+	public void anonymize(){
+<span class="nc bnc" id="L148" title="All 2 branches missed.">		if (!isKnown()) image = ItemSpriteSheet.SCROLL_HOLDER;</span>
+<span class="nc" id="L149">		anonymous = true;</span>
+<span class="nc" id="L150">	}</span>
+	
+	
+	@Override
+	public void reset(){
+<span class="nc" id="L155">		super.reset();</span>
+<span class="nc bnc" id="L156" title="All 4 branches missed.">		if (handler != null &amp;&amp; handler.contains(this)) {</span>
+<span class="nc" id="L157">			image = handler.image(this);</span>
+<span class="nc" id="L158">			rune = handler.label(this);</span>
+		} else {
+<span class="nc" id="L160">			image = ItemSpriteSheet.SCROLL_KAUNAN;</span>
+<span class="nc" id="L161">			rune = &quot;KAUNAN&quot;;</span>
+		}
+<span class="nc" id="L163">	}</span>
+	
+	@Override
+	public ArrayList&lt;String&gt; actions( Hero hero ) {
+<span class="nc" id="L167">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc" id="L168">		actions.add( AC_READ );</span>
+<span class="nc" id="L169">		return actions;</span>
+	}
+	
+	@Override
+	public void execute( Hero hero, String action ) {
+
+<span class="nc" id="L175">		super.execute( hero, action );</span>
+
+<span class="nc bnc" id="L177" title="All 2 branches missed.">		if (action.equals( AC_READ )) {</span>
+			
+<span class="nc bnc" id="L179" title="All 2 branches missed.">			if (hero.buff(MagicImmune.class) != null){</span>
+<span class="nc" id="L180">				GLog.w( Messages.get(this, &quot;no_magic&quot;) );</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">			} else if (hero.buff( Blindness.class ) != null) {</span>
+<span class="nc" id="L182">				GLog.w( Messages.get(this, &quot;blinded&quot;) );</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">			} else if (hero.buff(UnstableSpellbook.bookRecharge.class) != null</span>
+<span class="nc bnc" id="L184" title="All 6 branches missed.">					&amp;&amp; hero.buff(UnstableSpellbook.bookRecharge.class).isCursed()</span>
+					&amp;&amp; !(this instanceof ScrollOfRemoveCurse || this instanceof ScrollOfAntiMagic)){
+<span class="nc" id="L186">				GLog.n( Messages.get(this, &quot;cursed&quot;) );</span>
+			} else {
+<span class="nc" id="L188">				doRead();</span>
+			}
+			
+		}
+<span class="nc" id="L192">	}</span>
+	
+	public abstract void doRead();
+
+	public void readAnimation() {
+<span class="nc" id="L197">		Invisibility.dispel();</span>
+<span class="nc" id="L198">		curUser.spend( TIME_TO_READ );</span>
+<span class="nc" id="L199">		curUser.busy();</span>
+<span class="nc" id="L200">		((HeroSprite)curUser.sprite).read();</span>
+
+<span class="nc bnc" id="L202" title="All 2 branches missed.">		if (!anonymous) {</span>
+<span class="nc" id="L203">			Catalog.countUse(getClass());</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">			if (Random.Float() &lt; talentChance) {</span>
+<span class="nc" id="L205">				Talent.onScrollUsed(curUser, curUser.pos, talentFactor, getClass());</span>
+			}
+		}
+
+<span class="nc" id="L209">	}</span>
+	
+	public boolean isKnown() {
+<span class="nc bnc" id="L212" title="All 6 branches missed.">		return anonymous || (handler != null &amp;&amp; handler.isKnown( this ));</span>
+	}
+	
+	public void setKnown() {
+<span class="nc bnc" id="L216" title="All 2 branches missed.">		if (!anonymous) {</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">			if (!isKnown()) {</span>
+<span class="nc" id="L218">				handler.know(this);</span>
+<span class="nc" id="L219">				updateQuickslot();</span>
+			}
+			
+<span class="nc bnc" id="L222" title="All 2 branches missed.">			if (Dungeon.hero.isAlive()) {</span>
+<span class="nc" id="L223">				Catalog.setSeen(getClass());</span>
+<span class="nc" id="L224">				Statistics.itemTypesDiscovered.add(getClass());</span>
+			}
+		}
+<span class="nc" id="L227">	}</span>
+	
+	@Override
+	public Item identify( boolean byHero ) {
+<span class="nc" id="L231">		super.identify(byHero);</span>
+
+<span class="nc bnc" id="L233" title="All 2 branches missed.">		if (!isKnown()) {</span>
+<span class="nc" id="L234">			setKnown();</span>
+		}
+<span class="nc" id="L236">		return this;</span>
+	}
+	
+	@Override
+	public String name() {
+<span class="nc bnc" id="L241" title="All 2 branches missed.">		return isKnown() ? super.name() : Messages.get(this, rune);</span>
+	}
+
+	@Override
+	public String info() {
+		//skip custom notes if anonymized and un-Ided
+<span class="nc bnc" id="L247" title="All 6 branches missed.">		return (anonymous &amp;&amp; (handler == null || !handler.isKnown( this ))) ? desc() : super.info();</span>
+	}
+
+	@Override
+	public String desc() {
+<span class="nc bnc" id="L252" title="All 2 branches missed.">		return isKnown() ? super.desc() : Messages.get(this, &quot;unknown_desc&quot;);</span>
+	}
+	
+	@Override
+	public boolean isUpgradable() {
+<span class="nc" id="L257">		return false;</span>
+	}
+	
+	@Override
+	public boolean isIdentified() {
+<span class="nc" id="L262">		return isKnown();</span>
+	}
+	
+	public static HashSet&lt;Class&lt;? extends Scroll&gt;&gt; getKnown() {
+<span class="nc" id="L266">		return handler.known();</span>
+	}
+	
+	public static HashSet&lt;Class&lt;? extends Scroll&gt;&gt; getUnknown() {
+<span class="nc" id="L270">		return handler.unknown();</span>
+	}
+	
+	public static boolean allKnown() {
+<span class="nc bnc" id="L274" title="All 4 branches missed.">		return handler != null &amp;&amp; handler.known().size() == Generator.Category.SCROLL.classes.length;</span>
+	}
+	
+	@Override
+	public int value() {
+<span class="nc" id="L279">		return 30 * quantity;</span>
+	}
+
+	@Override
+	public int energyVal() {
+<span class="nc" id="L284">		return 6 * quantity;</span>
+	}
+	
+<span class="nc" id="L287">	public static class PlaceHolder extends Scroll {</span>
+		
+		{
+<span class="nc" id="L290">			image = ItemSpriteSheet.SCROLL_HOLDER;</span>
+<span class="nc" id="L291">		}</span>
+		
+		@Override
+		public boolean isSimilar(Item item) {
+<span class="nc bnc" id="L295" title="All 2 branches missed.">			return ExoticScroll.regToExo.containsKey(item.getClass())</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">					|| ExoticScroll.regToExo.containsValue(item.getClass());</span>
+		}
+		
+		@Override
+<span class="nc" id="L300">		public void doRead() {}</span>
+		
+		@Override
+		public String info() {
+<span class="nc" id="L304">			return &quot;&quot;;</span>
+		}
+	}
+	
+<span class="nc" id="L308">	public static class ScrollToStone extends Recipe {</span>
+		
+<span class="nc" id="L310">		private static HashMap&lt;Class&lt;?extends Scroll&gt;, Class&lt;?extends Runestone&gt;&gt; stones = new HashMap&lt;&gt;();</span>
+		static {
+<span class="nc" id="L312">			stones.put(ScrollOfIdentify.class,      StoneOfIntuition.class);</span>
+<span class="nc" id="L313">			stones.put(ScrollOfLullaby.class,       StoneOfDeepSleep.class);</span>
+<span class="nc" id="L314">			stones.put(ScrollOfMagicMapping.class,  StoneOfClairvoyance.class);</span>
+<span class="nc" id="L315">			stones.put(ScrollOfMirrorImage.class,   StoneOfFlock.class);</span>
+<span class="nc" id="L316">			stones.put(ScrollOfRetribution.class,   StoneOfBlast.class);</span>
+<span class="nc" id="L317">			stones.put(ScrollOfRage.class,          StoneOfAggression.class);</span>
+<span class="nc" id="L318">			stones.put(ScrollOfRecharging.class,    StoneOfShock.class);</span>
+<span class="nc" id="L319">			stones.put(ScrollOfRemoveCurse.class,   StoneOfDetectMagic.class);</span>
+<span class="nc" id="L320">			stones.put(ScrollOfTeleportation.class, StoneOfBlink.class);</span>
+<span class="nc" id="L321">			stones.put(ScrollOfTerror.class,        StoneOfFear.class);</span>
+<span class="nc" id="L322">			stones.put(ScrollOfTransmutation.class, StoneOfAugmentation.class);</span>
+<span class="nc" id="L323">			stones.put(ScrollOfUpgrade.class,       StoneOfEnchantment.class);</span>
+<span class="nc" id="L324">		}</span>
+		
+		@Override
+		public boolean testIngredients(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc bnc" id="L328" title="All 2 branches missed.">			if (ingredients.size() != 1</span>
+<span class="nc bnc" id="L329" title="All 2 branches missed.">					|| !(ingredients.get(0) instanceof Scroll)</span>
+<span class="nc bnc" id="L330" title="All 2 branches missed.">					|| !stones.containsKey(ingredients.get(0).getClass())){</span>
+<span class="nc" id="L331">				return false;</span>
+			}
+			
+<span class="nc" id="L334">			return true;</span>
+		}
+		
+		@Override
+		public int cost(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc" id="L339">			return 0;</span>
+		}
+		
+		@Override
+		public Item brew(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc bnc" id="L344" title="All 2 branches missed.">			if (!testIngredients(ingredients)) return null;</span>
+			
+<span class="nc" id="L346">			Scroll s = (Scroll) ingredients.get(0);</span>
+			
+<span class="nc" id="L348">			s.quantity(s.quantity() - 1);</span>
+<span class="nc bnc" id="L349" title="All 2 branches missed.">			if (ShatteredPixelDungeon.scene() instanceof AlchemyScene){</span>
+<span class="nc bnc" id="L350" title="All 2 branches missed.">				if (!s.isIdentified()){</span>
+<span class="nc" id="L351">					((AlchemyScene) ShatteredPixelDungeon.scene()).showIdentify(s);</span>
+				}
+			} else {
+<span class="nc" id="L354">				s.identify();</span>
+			}
+			
+<span class="nc" id="L357">			return Reflection.newInstance(stones.get(s.getClass())).quantity(2);</span>
+		}
+		
+		@Override
+		public Item sampleOutput(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc bnc" id="L362" title="All 2 branches missed.">			if (!testIngredients(ingredients)) return null;</span>
+			
+<span class="nc" id="L364">			Scroll s = (Scroll) ingredients.get(0);</span>
+
+<span class="nc bnc" id="L366" title="All 2 branches missed.">			if (!s.isKnown()){</span>
+<span class="nc" id="L367">				return new Runestone.PlaceHolder().quantity(2);</span>
+			} else {
+<span class="nc" id="L369">				return Reflection.newInstance(stones.get(s.getClass())).quantity(2);</span>
+			}
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

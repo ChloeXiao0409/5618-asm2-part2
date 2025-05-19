@@ -1,0 +1,857 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CharSprite.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.sprites</a> &gt; <span class="el_source">CharSprite.java</span></div><h1>CharSprite.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.sprites;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.effects.DarkBlock;
+import com.shatteredpixel.shatteredpixeldungeon.effects.EmoIcon;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.IceBlock;
+import com.shatteredpixel.shatteredpixeldungeon.effects.GlowBlock;
+import com.shatteredpixel.shatteredpixeldungeon.effects.ShieldHalo;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TorchHalo;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.FlameParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SnowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.ui.CharHealthIndicator;
+import com.watabou.glwrap.Matrix;
+import com.watabou.glwrap.Vertexbuffer;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.MovieClip;
+import com.watabou.noosa.NoosaScript;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.noosa.tweeners.AlphaTweener;
+import com.watabou.noosa.tweeners.PosTweener;
+import com.watabou.noosa.tweeners.Tweener;
+import com.watabou.utils.Callback;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+
+import java.nio.Buffer;
+import java.util.HashSet;
+
+public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip.Listener {
+	
+	// Color constants for floating text
+	public static final int DEFAULT		= 0xFFFFFF;
+	public static final int POSITIVE	= 0x00FF00;
+	public static final int NEGATIVE	= 0xFF0000;
+	public static final int WARNING		= 0xFF8800;
+	public static final int NEUTRAL		= 0xFFFF00;
+	
+	public static final float DEFAULT_MOVE_INTERVAL = 0.1f;
+<span class="nc" id="L73">	private static float moveInterval = DEFAULT_MOVE_INTERVAL;</span>
+	private static final float FLASH_INTERVAL	= 0.05f;
+
+	//the amount the sprite is raised from flat when viewed in a raised perspective
+<span class="nc" id="L77">	protected float perspectiveRaise    = 6 / 16f; //6 pixels</span>
+
+	//the width and height of the shadow are a percentage of sprite size
+	//offset is the number of pixels the shadow is moved down or up (handy for some animations)
+<span class="nc" id="L81">	protected boolean renderShadow  = false;</span>
+<span class="nc" id="L82">	protected float shadowWidth     = 1.2f;</span>
+<span class="nc" id="L83">	protected float shadowHeight    = 0.25f;</span>
+<span class="nc" id="L84">	protected float shadowOffset    = 0.25f;</span>
+
+<span class="nc" id="L86">	public enum State {</span>
+<span class="nc" id="L87">		BURNING, LEVITATING, INVISIBLE, PARALYSED, FROZEN, ILLUMINATED, CHILLED, DARKENED, MARKED, HEALING, SHIELDED, HEARTS, GLOWING, AURA</span>
+	}
+	
+	protected Animation idle;
+	protected Animation run;
+	protected Animation attack;
+	protected Animation operate;
+	protected Animation zap;
+	protected Animation die;
+	
+	protected Callback animCallback;
+	
+	protected PosTweener motion;
+	
+	protected Emitter burning;
+	protected Emitter chilled;
+	protected Emitter marked;
+	protected Emitter levitation;
+	protected Emitter healing;
+	protected Emitter hearts;
+	
+	protected IceBlock iceBlock;
+	protected DarkBlock darkBlock;
+	protected GlowBlock glowBlock;
+	protected TorchHalo light;
+	protected ShieldHalo shield;
+	protected AlphaTweener invisible;
+	protected Flare aura;
+	
+	protected EmoIcon emo;
+	protected CharHealthIndicator health;
+
+	private Tweener jumpTweener;
+	private Callback jumpCallback;
+
+<span class="nc" id="L122">	protected float flashTime = 0;</span>
+	
+<span class="nc" id="L124">	protected boolean sleeping = false;</span>
+
+	public Char ch;
+
+	//used to prevent the actor associated with this sprite from acting until movement completes
+<span class="nc" id="L129">	public volatile boolean isMoving = false;</span>
+	
+	public CharSprite() {
+<span class="nc" id="L132">		super();</span>
+<span class="nc" id="L133">		listener = this;</span>
+<span class="nc" id="L134">	}</span>
+	
+	@Override
+	public void play(Animation anim) {
+		//Shouldn't interrupt the dieing animation
+<span class="nc bnc" id="L139" title="All 4 branches missed.">		if (curAnim == null || curAnim != die) {</span>
+<span class="nc" id="L140">			super.play(anim);</span>
+		}
+<span class="nc" id="L142">	}</span>
+	
+	//intended to be used for placing a character in the game world
+	public void link( Char ch ) {
+<span class="nc" id="L146">		linkVisuals( ch );</span>
+		
+<span class="nc" id="L148">		this.ch = ch;</span>
+<span class="nc" id="L149">		ch.sprite = this;</span>
+		
+<span class="nc" id="L151">		place( ch.pos );</span>
+<span class="nc" id="L152">		turnTo( ch.pos, Random.Int( Dungeon.level.length() ) );</span>
+<span class="nc" id="L153">		renderShadow = true;</span>
+		
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		if (ch != Dungeon.hero) {</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">			if (health == null) {</span>
+<span class="nc" id="L157">				health = new CharHealthIndicator(ch);</span>
+			} else {
+<span class="nc" id="L159">				health.target(ch);</span>
+			}
+		}
+
+<span class="nc" id="L163">		ch.updateSpriteState();</span>
+<span class="nc" id="L164">	}</span>
+
+	@Override
+	public void destroy() {
+<span class="nc" id="L168">		super.destroy();</span>
+<span class="nc bnc" id="L169" title="All 4 branches missed.">		if (ch != null &amp;&amp; ch.sprite == this){</span>
+<span class="nc" id="L170">			ch.sprite = null;</span>
+		}
+<span class="nc" id="L172">	}</span>
+
+	//used for just updating a sprite based on a given character, not linking them or placing in the game
+	public void linkVisuals( Char ch ){
+		//do nothin by default
+<span class="nc" id="L177">	}</span>
+	
+	public PointF worldToCamera( int cell ) {
+		
+<span class="nc" id="L181">		final int csize = DungeonTilemap.SIZE;</span>
+		
+<span class="nc" id="L183">		return new PointF(</span>
+<span class="nc" id="L184">			PixelScene.align(Camera.main, ((cell % Dungeon.level.width()) + 0.5f) * csize - width() * 0.5f),</span>
+<span class="nc" id="L185">			PixelScene.align(Camera.main, ((cell / Dungeon.level.width()) + 1.0f) * csize - height() - csize * perspectiveRaise)</span>
+		);
+	}
+	
+	public void place( int cell ) {
+<span class="nc" id="L190">		point( worldToCamera( cell ) );</span>
+<span class="nc" id="L191">	}</span>
+	
+	public void showStatus( int color, String text, Object... args ) {
+<span class="nc" id="L194">		showStatusWithIcon(color, text, FloatingText.NO_ICON, args);</span>
+<span class="nc" id="L195">	}</span>
+
+	public void showStatusWithIcon( int color, String text, int icon, Object... args ) {
+<span class="nc bnc" id="L198" title="All 2 branches missed.">		if (visible) {</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">			if (args.length &gt; 0) {</span>
+<span class="nc" id="L200">				text = Messages.format( text, args );</span>
+			}
+<span class="nc" id="L202">			float x = destinationCenter().x;</span>
+<span class="nc" id="L203">			float y = destinationCenter().y - height()/2f;</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">			if (ch != null) {</span>
+<span class="nc" id="L205">				FloatingText.show( x, y, ch.pos, text, color, icon, true );</span>
+			} else {
+<span class="nc" id="L207">				FloatingText.show( x, y, -1, text, color, icon, true );</span>
+			}
+		}
+<span class="nc" id="L210">	}</span>
+	
+	public void idle() {
+<span class="nc" id="L213">		play(idle);</span>
+<span class="nc" id="L214">	}</span>
+	
+	public void move( int from, int to ) {
+<span class="nc" id="L217">		turnTo( from , to );</span>
+
+<span class="nc" id="L219">		play( run );</span>
+		
+<span class="nc" id="L221">		motion = new PosTweener( this, worldToCamera( to ), moveInterval );</span>
+<span class="nc" id="L222">		motion.listener = this;</span>
+<span class="nc" id="L223">		parent.add( motion );</span>
+
+<span class="nc" id="L225">		isMoving = true;</span>
+		
+<span class="nc bnc" id="L227" title="All 6 branches missed.">		if (visible &amp;&amp; Dungeon.level.water[from] &amp;&amp; !ch.flying) {</span>
+<span class="nc" id="L228">			GameScene.ripple( from );</span>
+		}
+
+<span class="nc" id="L231">	}</span>
+	
+	public static void setMoveInterval( float interval){
+<span class="nc" id="L234">		moveInterval = interval;</span>
+<span class="nc" id="L235">	}</span>
+	
+	//returns where the center of this sprite will be after it completes any motion in progress
+	public PointF destinationCenter(){
+<span class="nc" id="L239">		PosTweener motion = this.motion;</span>
+<span class="nc bnc" id="L240" title="All 4 branches missed.">		if (motion != null &amp;&amp; motion.elapsed &gt;= 0){</span>
+<span class="nc" id="L241">			return new PointF(motion.end.x + width()/2f, motion.end.y + height()/2f);</span>
+		} else {
+<span class="nc" id="L243">			return center();</span>
+		}
+	}
+	
+	public void interruptMotion() {
+<span class="nc bnc" id="L248" title="All 2 branches missed.">		if (motion != null) {</span>
+<span class="nc" id="L249">			motion.stop(false);</span>
+		}
+<span class="nc" id="L251">	}</span>
+	
+	public void attack( int cell ) {
+<span class="nc" id="L254">		attack( cell, null );</span>
+<span class="nc" id="L255">	}</span>
+	
+	public synchronized void attack( int cell, Callback callback ) {
+<span class="nc" id="L258">		animCallback = callback;</span>
+<span class="nc" id="L259">		turnTo( ch.pos, cell );</span>
+<span class="nc" id="L260">		play( attack );</span>
+<span class="nc" id="L261">	}</span>
+	
+	public void operate( int cell ) {
+<span class="nc" id="L264">		operate( cell, null );</span>
+<span class="nc" id="L265">	}</span>
+	
+	public synchronized void operate( int cell, Callback callback ) {
+<span class="nc" id="L268">		animCallback = callback;</span>
+<span class="nc" id="L269">		turnTo( ch.pos, cell );</span>
+<span class="nc" id="L270">		play( operate );</span>
+<span class="nc" id="L271">	}</span>
+	
+	public void zap( int cell ) {
+<span class="nc" id="L274">		zap( cell, null );</span>
+<span class="nc" id="L275">	}</span>
+	
+	public synchronized void zap( int cell, Callback callback ) {
+<span class="nc" id="L278">		animCallback = callback;</span>
+<span class="nc" id="L279">		turnTo( ch.pos, cell );</span>
+<span class="nc" id="L280">		play( zap );</span>
+<span class="nc" id="L281">	}</span>
+	
+	public void turnTo( int from, int to ) {
+<span class="nc" id="L284">		int fx = from % Dungeon.level.width();</span>
+<span class="nc" id="L285">		int tx = to % Dungeon.level.width();</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">		if (tx &gt; fx) {</span>
+<span class="nc" id="L287">			flipHorizontal = false;</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">		} else if (tx &lt; fx) {</span>
+<span class="nc" id="L289">			flipHorizontal = true;</span>
+		}
+<span class="nc" id="L291">	}</span>
+
+	public void jump( int from, int to, Callback callback ) {
+<span class="nc" id="L294">		float distance = Math.max( 1f, Dungeon.level.trueDistance( from, to ));</span>
+<span class="nc" id="L295">		jump( from, to, distance * 2, distance * 0.1f, callback );</span>
+<span class="nc" id="L296">	}</span>
+
+	public void jump( int from, int to, float height, float duration,  Callback callback ) {
+<span class="nc" id="L299">		jumpCallback = callback;</span>
+
+<span class="nc" id="L301">		jumpTweener = new JumpTweener( this, worldToCamera( to ), height, duration );</span>
+<span class="nc" id="L302">		jumpTweener.listener = this;</span>
+<span class="nc" id="L303">		parent.add( jumpTweener );</span>
+
+<span class="nc" id="L305">		turnTo( from, to );</span>
+<span class="nc" id="L306">	}</span>
+
+	public void die() {
+<span class="nc" id="L309">		sleeping = false;</span>
+<span class="nc" id="L310">		processStateRemoval( State.PARALYSED );</span>
+<span class="nc" id="L311">		play( die );</span>
+
+<span class="nc" id="L313">		hideEmo();</span>
+		
+<span class="nc bnc" id="L315" title="All 2 branches missed.">		if (health != null){</span>
+<span class="nc" id="L316">			health.killAndErase();</span>
+		}
+<span class="nc" id="L318">	}</span>
+	
+	public Emitter emitter() {
+<span class="nc" id="L321">		Emitter emitter = GameScene.emitter();</span>
+<span class="nc bnc" id="L322" title="All 2 branches missed.">		if (emitter != null) emitter.pos( this );</span>
+<span class="nc" id="L323">		return emitter;</span>
+	}
+	
+	public Emitter centerEmitter() {
+<span class="nc" id="L327">		Emitter emitter = GameScene.emitter();</span>
+<span class="nc bnc" id="L328" title="All 2 branches missed.">		if (emitter != null) emitter.pos( center() );</span>
+<span class="nc" id="L329">		return emitter;</span>
+	}
+	
+	public Emitter bottomEmitter() {
+<span class="nc" id="L333">		Emitter emitter = GameScene.emitter();</span>
+<span class="nc bnc" id="L334" title="All 2 branches missed.">		if (emitter != null) emitter.pos( x, y + height, width, 0 );</span>
+<span class="nc" id="L335">		return emitter;</span>
+	}
+	
+	public void burst( final int color, int n ) {
+<span class="nc bnc" id="L339" title="All 2 branches missed.">		if (visible) {</span>
+<span class="nc" id="L340">			Splash.at( center(), color, n );</span>
+		}
+<span class="nc" id="L342">	}</span>
+	
+	public void bloodBurstA( PointF from, int damage ) {
+<span class="nc bnc" id="L345" title="All 2 branches missed.">		if (visible) {</span>
+<span class="nc" id="L346">			PointF c = center();</span>
+<span class="nc" id="L347">			int n = (int)Math.min( 9 * Math.sqrt( (double)damage / ch.HT ), 9 );</span>
+<span class="nc" id="L348">			Splash.at( c, PointF.angle( from, c ), 3.1415926f / 2, blood(), n );</span>
+		}
+<span class="nc" id="L350">	}</span>
+
+	public int blood() {
+<span class="nc" id="L353">		return 0xFFBB0000;</span>
+	}
+	
+	public void flash() {
+<span class="nc" id="L357">		ra = ba = ga = 1f;</span>
+<span class="nc" id="L358">		flashTime = FLASH_INTERVAL;</span>
+<span class="nc" id="L359">	}</span>
+
+<span class="nc" id="L361">	private final HashSet&lt;State&gt; stateAdditions = new HashSet&lt;&gt;();</span>
+
+	public void add( State state ) {
+<span class="nc" id="L364">		synchronized (State.class) {</span>
+<span class="nc" id="L365">			stateRemovals.remove(state);</span>
+<span class="nc" id="L366">			stateAdditions.add(state);</span>
+<span class="nc" id="L367">		}</span>
+<span class="nc" id="L368">	}</span>
+
+<span class="nc" id="L370">	private int auraColor = 0;</span>
+
+	//Aura needs color data too
+	public void aura( int color ){
+<span class="nc" id="L374">		add(State.AURA);</span>
+<span class="nc" id="L375">		auraColor = color;</span>
+<span class="nc" id="L376">	}</span>
+
+	protected synchronized void processStateAddition( State state ) {
+<span class="nc bnc" id="L379" title="All 15 branches missed.">		switch (state) {</span>
+			case BURNING:
+<span class="nc bnc" id="L381" title="All 2 branches missed.">				if (burning != null) burning.on = false;</span>
+<span class="nc" id="L382">				burning = emitter();</span>
+<span class="nc" id="L383">				burning.pour(FlameParticle.FACTORY, 0.06f);</span>
+<span class="nc bnc" id="L384" title="All 2 branches missed.">				if (visible) {</span>
+<span class="nc" id="L385">					Sample.INSTANCE.play(Assets.Sounds.BURNING);</span>
+				}
+				break;
+			case LEVITATING:
+<span class="nc bnc" id="L389" title="All 2 branches missed.">				if (levitation != null) levitation.on = false;</span>
+<span class="nc" id="L390">				levitation = emitter();</span>
+<span class="nc" id="L391">				levitation.pour(Speck.factory(Speck.JET), 0.02f);</span>
+<span class="nc" id="L392">				break;</span>
+			case INVISIBLE:
+<span class="nc bnc" id="L394" title="All 2 branches missed.">				if (invisible != null) invisible.killAndErase();</span>
+<span class="nc" id="L395">				invisible = new AlphaTweener(this, 0.4f, 0.4f);</span>
+<span class="nc bnc" id="L396" title="All 2 branches missed.">				if (parent != null) {</span>
+<span class="nc" id="L397">					parent.add(invisible);</span>
+				} else
+<span class="nc" id="L399">					alpha(0.4f);</span>
+<span class="nc" id="L400">				break;</span>
+			case PARALYSED:
+<span class="nc" id="L402">				paused = true;</span>
+<span class="nc" id="L403">				break;</span>
+			case FROZEN:
+<span class="nc bnc" id="L405" title="All 2 branches missed.">				if (iceBlock != null) iceBlock.killAndErase();</span>
+<span class="nc" id="L406">				iceBlock = IceBlock.freeze(this);</span>
+<span class="nc" id="L407">				break;</span>
+			case ILLUMINATED:
+<span class="nc bnc" id="L409" title="All 2 branches missed.">				if (light != null) light.putOut();</span>
+<span class="nc" id="L410">				GameScene.effect(light = new TorchHalo(this));</span>
+<span class="nc" id="L411">				break;</span>
+			case CHILLED:
+<span class="nc bnc" id="L413" title="All 2 branches missed.">				if (chilled != null) chilled.on = false;</span>
+<span class="nc" id="L414">				chilled = emitter();</span>
+<span class="nc" id="L415">				chilled.pour(SnowParticle.FACTORY, 0.1f);</span>
+<span class="nc" id="L416">				break;</span>
+			case DARKENED:
+<span class="nc bnc" id="L418" title="All 2 branches missed.">				if (darkBlock != null) darkBlock.killAndErase();</span>
+<span class="nc" id="L419">				darkBlock = DarkBlock.darken(this);</span>
+<span class="nc" id="L420">				break;</span>
+			case MARKED:
+<span class="nc bnc" id="L422" title="All 2 branches missed.">				if (marked != null) marked.on = false;</span>
+<span class="nc" id="L423">				marked = emitter();</span>
+<span class="nc" id="L424">				marked.pour(ShadowParticle.UP, 0.1f);</span>
+<span class="nc" id="L425">				break;</span>
+			case HEALING:
+<span class="nc bnc" id="L427" title="All 2 branches missed.">				if (healing != null) healing.on = false;</span>
+<span class="nc" id="L428">				healing = emitter();</span>
+<span class="nc" id="L429">				healing.pour(Speck.factory(Speck.HEALING), 0.5f);</span>
+<span class="nc" id="L430">				break;</span>
+			case SHIELDED:
+<span class="nc bnc" id="L432" title="All 2 branches missed.">				if (shield != null) shield.killAndErase();</span>
+<span class="nc" id="L433">				GameScene.effect(shield = new ShieldHalo(this));</span>
+<span class="nc" id="L434">				break;</span>
+			case HEARTS:
+<span class="nc bnc" id="L436" title="All 2 branches missed.">				if (hearts != null) hearts.on = false;</span>
+<span class="nc" id="L437">				hearts = emitter();</span>
+<span class="nc" id="L438">				hearts.pour(Speck.factory(Speck.HEART), 0.5f);</span>
+<span class="nc" id="L439">				break;</span>
+			case GLOWING:
+<span class="nc bnc" id="L441" title="All 2 branches missed.">				if (glowBlock != null) glowBlock.killAndErase();</span>
+<span class="nc" id="L442">				glowBlock = GlowBlock.lighten(this);</span>
+<span class="nc" id="L443">				break;</span>
+			case AURA:
+<span class="nc bnc" id="L445" title="All 2 branches missed.">				if (aura != null)   aura.killAndErase();</span>
+<span class="nc" id="L446">				float size = Math.max(width(), height());</span>
+<span class="nc" id="L447">				size = Math.max(size+4, 16);</span>
+<span class="nc" id="L448">				aura = new Flare(5, size);</span>
+<span class="nc" id="L449">				aura.angularSpeed = 90;</span>
+<span class="nc" id="L450">				aura.color(auraColor, true);</span>
+<span class="nc" id="L451">				aura.visible = visible;</span>
+
+<span class="nc bnc" id="L453" title="All 2 branches missed.">				if (parent != null) {</span>
+<span class="nc" id="L454">					aura.show(this, 0);</span>
+				}
+				break;
+		}
+<span class="nc" id="L458">	}</span>
+
+<span class="nc" id="L460">	private final HashSet&lt;State&gt; stateRemovals = new HashSet&lt;&gt;();</span>
+
+	public void remove( State state ) {
+<span class="nc" id="L463">		synchronized (State.class) {</span>
+<span class="nc" id="L464">			stateAdditions.remove(state);</span>
+<span class="nc" id="L465">			stateRemovals.add(state);</span>
+<span class="nc" id="L466">		}</span>
+<span class="nc" id="L467">	}</span>
+
+	public void clearAura(){
+<span class="nc" id="L470">		remove(State.AURA);</span>
+<span class="nc" id="L471">	}</span>
+
+	protected synchronized void processStateRemoval( State state ) {
+<span class="nc bnc" id="L474" title="All 15 branches missed.">		switch (state) {</span>
+			case BURNING:
+<span class="nc bnc" id="L476" title="All 2 branches missed.">				if (burning != null) {</span>
+<span class="nc" id="L477">					burning.on = false;</span>
+<span class="nc" id="L478">					burning = null;</span>
+				}
+				break;
+			case LEVITATING:
+<span class="nc bnc" id="L482" title="All 2 branches missed.">				if (levitation != null) {</span>
+<span class="nc" id="L483">					levitation.on = false;</span>
+<span class="nc" id="L484">					levitation = null;</span>
+				}
+				break;
+			case INVISIBLE:
+<span class="nc bnc" id="L488" title="All 2 branches missed.">				if (invisible != null) {</span>
+<span class="nc" id="L489">					invisible.killAndErase();</span>
+<span class="nc" id="L490">					invisible = null;</span>
+				}
+<span class="nc" id="L492">				alpha(1f);</span>
+<span class="nc" id="L493">				break;</span>
+			case PARALYSED:
+<span class="nc" id="L495">				paused = false;</span>
+<span class="nc" id="L496">				break;</span>
+			case FROZEN:
+<span class="nc bnc" id="L498" title="All 2 branches missed.">				if (iceBlock != null) {</span>
+<span class="nc" id="L499">					iceBlock.melt();</span>
+<span class="nc" id="L500">					iceBlock = null;</span>
+				}
+				break;
+			case ILLUMINATED:
+<span class="nc bnc" id="L504" title="All 2 branches missed.">				if (light != null) {</span>
+<span class="nc" id="L505">					light.putOut();</span>
+<span class="nc" id="L506">					light = null;</span>
+				}
+				break;
+			case CHILLED:
+<span class="nc bnc" id="L510" title="All 2 branches missed.">				if (chilled != null) {</span>
+<span class="nc" id="L511">					chilled.on = false;</span>
+<span class="nc" id="L512">					chilled = null;</span>
+				}
+				break;
+			case DARKENED:
+<span class="nc bnc" id="L516" title="All 2 branches missed.">				if (darkBlock != null) {</span>
+<span class="nc" id="L517">					darkBlock.lighten();</span>
+<span class="nc" id="L518">					darkBlock = null;</span>
+				}
+				break;
+			case MARKED:
+<span class="nc bnc" id="L522" title="All 2 branches missed.">				if (marked != null) {</span>
+<span class="nc" id="L523">					marked.on = false;</span>
+<span class="nc" id="L524">					marked = null;</span>
+				}
+				break;
+			case HEALING:
+<span class="nc bnc" id="L528" title="All 2 branches missed.">				if (healing != null) {</span>
+<span class="nc" id="L529">					healing.on = false;</span>
+<span class="nc" id="L530">					healing = null;</span>
+				}
+				break;
+			case SHIELDED:
+<span class="nc bnc" id="L534" title="All 2 branches missed.">				if (shield != null) {</span>
+<span class="nc" id="L535">					shield.putOut();</span>
+				}
+				break;
+			case HEARTS:
+<span class="nc bnc" id="L539" title="All 2 branches missed.">				if (hearts != null) {</span>
+<span class="nc" id="L540">					hearts.on = false;</span>
+<span class="nc" id="L541">					hearts = null;</span>
+				}
+				break;
+			case GLOWING:
+<span class="nc bnc" id="L545" title="All 2 branches missed.">				if (glowBlock != null){</span>
+<span class="nc" id="L546">					glowBlock.darken();</span>
+<span class="nc" id="L547">					glowBlock = null;</span>
+				}
+				break;
+			case AURA:
+<span class="nc bnc" id="L551" title="All 2 branches missed.">				if (aura != null){</span>
+<span class="nc" id="L552">					aura.killAndErase();</span>
+<span class="nc" id="L553">					aura = null;</span>
+				}
+				break;
+		}
+<span class="nc" id="L557">	}</span>
+	
+	@Override
+	public void update() {
+<span class="nc bnc" id="L561" title="All 10 branches missed.">		if (paused &amp;&amp; ch != null &amp;&amp; curAnim != null &amp;&amp; !curAnim.looped &amp;&amp; !finished){</span>
+<span class="nc" id="L562">			listener.onComplete(curAnim);</span>
+<span class="nc" id="L563">			finished = true;</span>
+		}
+		
+<span class="nc" id="L566">		super.update();</span>
+		
+<span class="nc bnc" id="L568" title="All 4 branches missed.">		if (flashTime &gt; 0 &amp;&amp; (flashTime -= Game.elapsed) &lt;= 0) {</span>
+<span class="nc" id="L569">			resetColor();</span>
+		}
+
+<span class="nc" id="L572">		synchronized (State.class) {</span>
+<span class="nc bnc" id="L573" title="All 2 branches missed.">			for (State s : stateAdditions) {</span>
+<span class="nc" id="L574">				processStateAddition(s);</span>
+<span class="nc" id="L575">			}</span>
+<span class="nc" id="L576">			stateAdditions.clear();</span>
+<span class="nc bnc" id="L577" title="All 2 branches missed.">			for (State s : stateRemovals) {</span>
+<span class="nc" id="L578">				processStateRemoval(s);</span>
+<span class="nc" id="L579">			}</span>
+<span class="nc" id="L580">			stateRemovals.clear();</span>
+<span class="nc" id="L581">		}</span>
+
+<span class="nc bnc" id="L583" title="All 2 branches missed.">		if (burning != null) {</span>
+<span class="nc" id="L584">			burning.visible = visible;</span>
+		}
+<span class="nc bnc" id="L586" title="All 2 branches missed.">		if (levitation != null) {</span>
+<span class="nc" id="L587">			levitation.visible = visible;</span>
+		}
+<span class="nc bnc" id="L589" title="All 2 branches missed.">		if (iceBlock != null) {</span>
+<span class="nc" id="L590">			iceBlock.visible = visible;</span>
+		}
+<span class="nc bnc" id="L592" title="All 2 branches missed.">		if (light != null) {</span>
+<span class="nc" id="L593">			light.visible = visible;</span>
+		}
+<span class="nc bnc" id="L595" title="All 2 branches missed.">		if (chilled != null) {</span>
+<span class="nc" id="L596">			chilled.visible = visible;</span>
+		}
+<span class="nc bnc" id="L598" title="All 2 branches missed.">		if (darkBlock != null) {</span>
+<span class="nc" id="L599">			darkBlock.visible = visible;</span>
+		}
+<span class="nc bnc" id="L601" title="All 2 branches missed.">		if (marked != null) {</span>
+<span class="nc" id="L602">			marked.visible = visible;</span>
+		}
+<span class="nc bnc" id="L604" title="All 2 branches missed.">		if (healing != null) {</span>
+<span class="nc" id="L605">			healing.visible = visible;</span>
+		}
+<span class="nc bnc" id="L607" title="All 2 branches missed.">		if (hearts != null) {</span>
+<span class="nc" id="L608">			hearts.visible = visible;</span>
+		}
+		//shield fx updates its own visibility
+<span class="nc bnc" id="L611" title="All 2 branches missed.">		if (aura != null) {</span>
+<span class="nc bnc" id="L612" title="All 2 branches missed.">			if (aura.parent == null) {</span>
+<span class="nc" id="L613">				aura.show(this, 0);</span>
+			}
+<span class="nc" id="L615">			aura.visible = visible;</span>
+<span class="nc" id="L616">			aura.point(center());</span>
+		}
+<span class="nc bnc" id="L618" title="All 2 branches missed.">		if (glowBlock != null){</span>
+<span class="nc" id="L619">			glowBlock.visible =visible;</span>
+		}
+
+<span class="nc bnc" id="L622" title="All 2 branches missed.">		if (sleeping) {</span>
+<span class="nc" id="L623">			showSleep();</span>
+		} else {
+<span class="nc" id="L625">			hideSleep();</span>
+		}
+<span class="nc" id="L627">		synchronized (EmoIcon.class) {</span>
+<span class="nc bnc" id="L628" title="All 4 branches missed.">			if (emo != null &amp;&amp; emo.alive) {</span>
+<span class="nc" id="L629">				emo.visible = visible;</span>
+			}
+<span class="nc" id="L631">		}</span>
+<span class="nc" id="L632">	}</span>
+	
+	@Override
+	public void resetColor() {
+<span class="nc" id="L636">		super.resetColor();</span>
+<span class="nc bnc" id="L637" title="All 2 branches missed.">		if (invisible != null){</span>
+<span class="nc" id="L638">			alpha(0.4f);</span>
+		}
+<span class="nc" id="L640">	}</span>
+	
+	public void showSleep() {
+<span class="nc" id="L643">		synchronized (EmoIcon.class) {</span>
+<span class="nc bnc" id="L644" title="All 2 branches missed.">			if (!(emo instanceof EmoIcon.Sleep)) {</span>
+<span class="nc bnc" id="L645" title="All 2 branches missed.">				if (emo != null) {</span>
+<span class="nc" id="L646">					emo.killAndErase();</span>
+				}
+<span class="nc" id="L648">				emo = new EmoIcon.Sleep(this);</span>
+<span class="nc" id="L649">				emo.visible = visible;</span>
+			}
+<span class="nc" id="L651">		}</span>
+<span class="nc" id="L652">		idle();</span>
+<span class="nc" id="L653">	}</span>
+	
+	public void hideSleep() {
+<span class="nc" id="L656">		synchronized (EmoIcon.class) {</span>
+<span class="nc bnc" id="L657" title="All 2 branches missed.">			if (emo instanceof EmoIcon.Sleep) {</span>
+<span class="nc" id="L658">				emo.killAndErase();</span>
+<span class="nc" id="L659">				emo = null;</span>
+			}
+<span class="nc" id="L661">		}</span>
+<span class="nc" id="L662">	}</span>
+	
+	public void showAlert() {
+<span class="nc" id="L665">		synchronized (EmoIcon.class) {</span>
+<span class="nc bnc" id="L666" title="All 2 branches missed.">			if (!(emo instanceof EmoIcon.Alert)) {</span>
+<span class="nc bnc" id="L667" title="All 2 branches missed.">				if (emo != null) {</span>
+<span class="nc" id="L668">					emo.killAndErase();</span>
+				}
+<span class="nc" id="L670">				emo = new EmoIcon.Alert(this);</span>
+<span class="nc" id="L671">				emo.visible = visible;</span>
+			}
+<span class="nc" id="L673">		}</span>
+<span class="nc" id="L674">	}</span>
+	
+	public void hideAlert() {
+<span class="nc" id="L677">		synchronized (EmoIcon.class) {</span>
+<span class="nc bnc" id="L678" title="All 2 branches missed.">			if (emo instanceof EmoIcon.Alert) {</span>
+<span class="nc" id="L679">				emo.killAndErase();</span>
+<span class="nc" id="L680">				emo = null;</span>
+			}
+<span class="nc" id="L682">		}</span>
+<span class="nc" id="L683">	}</span>
+	
+	public void showLost() {
+<span class="nc" id="L686">		synchronized (EmoIcon.class) {</span>
+<span class="nc bnc" id="L687" title="All 2 branches missed.">			if (!(emo instanceof EmoIcon.Lost)) {</span>
+<span class="nc bnc" id="L688" title="All 2 branches missed.">				if (emo != null) {</span>
+<span class="nc" id="L689">					emo.killAndErase();</span>
+				}
+<span class="nc" id="L691">				emo = new EmoIcon.Lost(this);</span>
+<span class="nc" id="L692">				emo.visible = visible;</span>
+			}
+<span class="nc" id="L694">		}</span>
+<span class="nc" id="L695">	}</span>
+	
+	public void hideLost() {
+<span class="nc" id="L698">		synchronized (EmoIcon.class) {</span>
+<span class="nc bnc" id="L699" title="All 2 branches missed.">			if (emo instanceof EmoIcon.Lost) {</span>
+<span class="nc" id="L700">				emo.killAndErase();</span>
+<span class="nc" id="L701">				emo = null;</span>
+			}
+<span class="nc" id="L703">		}</span>
+<span class="nc" id="L704">	}</span>
+
+	public void hideEmo(){
+<span class="nc" id="L707">		synchronized (EmoIcon.class) {</span>
+<span class="nc bnc" id="L708" title="All 2 branches missed.">			if (emo != null) {</span>
+<span class="nc" id="L709">				emo.killAndErase();</span>
+<span class="nc" id="L710">				emo = null;</span>
+			}
+<span class="nc" id="L712">		}</span>
+<span class="nc" id="L713">	}</span>
+	
+	@Override
+	public void kill() {
+<span class="nc" id="L717">		super.kill();</span>
+		
+<span class="nc" id="L719">		hideEmo();</span>
+		
+<span class="nc bnc" id="L721" title="All 2 branches missed.">		for( State s : State.values()){</span>
+<span class="nc" id="L722">			processStateRemoval(s);</span>
+		}
+		
+<span class="nc bnc" id="L725" title="All 2 branches missed.">		if (health != null){</span>
+<span class="nc" id="L726">			health.killAndErase();</span>
+		}
+<span class="nc" id="L728">	}</span>
+
+<span class="nc" id="L730">	private float[] shadowMatrix = new float[16];</span>
+
+	@Override
+	protected void updateMatrix() {
+<span class="nc" id="L734">		super.updateMatrix();</span>
+<span class="nc" id="L735">		Matrix.copy(matrix, shadowMatrix);</span>
+<span class="nc" id="L736">		Matrix.translate(shadowMatrix,</span>
+				(width * (1f - shadowWidth)) / 2f,
+				(height * (1f - shadowHeight)) + shadowOffset);
+<span class="nc" id="L739">		Matrix.scale(shadowMatrix, shadowWidth, shadowHeight);</span>
+<span class="nc" id="L740">	}</span>
+
+	@Override
+	public void draw() {
+<span class="nc bnc" id="L744" title="All 6 branches missed.">		if (texture == null || (!dirty &amp;&amp; buffer == null))</span>
+<span class="nc" id="L745">			return;</span>
+
+<span class="nc bnc" id="L747" title="All 2 branches missed.">		if (renderShadow) {</span>
+<span class="nc bnc" id="L748" title="All 2 branches missed.">			if (dirty) {</span>
+<span class="nc" id="L749">				((Buffer)verticesBuffer).position(0);</span>
+<span class="nc" id="L750">				verticesBuffer.put(vertices);</span>
+<span class="nc bnc" id="L751" title="All 2 branches missed.">				if (buffer == null)</span>
+<span class="nc" id="L752">					buffer = new Vertexbuffer(verticesBuffer);</span>
+				else
+<span class="nc" id="L754">					buffer.updateVertices(verticesBuffer);</span>
+<span class="nc" id="L755">				dirty = false;</span>
+			}
+
+<span class="nc" id="L758">			NoosaScript script = script();</span>
+
+<span class="nc" id="L760">			texture.bind();</span>
+
+<span class="nc" id="L762">			script.camera(camera());</span>
+
+<span class="nc" id="L764">			updateMatrix();</span>
+
+<span class="nc" id="L766">			script.uModel.valueM4(shadowMatrix);</span>
+<span class="nc" id="L767">			script.lighting(</span>
+					0, 0, 0, am * .6f,
+					0, 0, 0, aa * .6f);
+
+<span class="nc" id="L771">			script.drawQuad(buffer);</span>
+		}
+
+<span class="nc" id="L774">		super.draw();</span>
+
+<span class="nc" id="L776">	}</span>
+
+	@Override
+	public void onComplete( Tweener tweener ) {
+<span class="nc bnc" id="L780" title="All 2 branches missed.">		if (tweener == jumpTweener) {</span>
+
+<span class="nc bnc" id="L782" title="All 6 branches missed.">			if (visible &amp;&amp; Dungeon.level.water[ch.pos] &amp;&amp; !ch.flying) {</span>
+<span class="nc" id="L783">				GameScene.ripple( ch.pos );</span>
+			}
+<span class="nc bnc" id="L785" title="All 2 branches missed.">			if (jumpCallback != null) {</span>
+<span class="nc" id="L786">				jumpCallback.call();</span>
+			}
+<span class="nc" id="L788">			GameScene.sortMobSprites();</span>
+
+<span class="nc bnc" id="L790" title="All 2 branches missed.">		} else if (tweener == motion) {</span>
+
+<span class="nc" id="L792">			synchronized (this) {</span>
+<span class="nc" id="L793">				isMoving = false;</span>
+
+<span class="nc" id="L795">				motion.killAndErase();</span>
+<span class="nc" id="L796">				motion = null;</span>
+<span class="nc" id="L797">				ch.onMotionComplete();</span>
+
+<span class="nc" id="L799">				GameScene.sortMobSprites();</span>
+<span class="nc" id="L800">				notifyAll();</span>
+<span class="nc" id="L801">			}</span>
+
+		}
+<span class="nc" id="L804">	}</span>
+
+	@Override
+	public synchronized void onComplete( Animation anim ) {
+		
+<span class="nc bnc" id="L809" title="All 2 branches missed.">		if (animCallback != null) {</span>
+<span class="nc" id="L810">			Callback executing = animCallback;</span>
+<span class="nc" id="L811">			animCallback = null;</span>
+<span class="nc" id="L812">			executing.call();</span>
+<span class="nc" id="L813">		} else {</span>
+			
+<span class="nc bnc" id="L815" title="All 2 branches missed.">			if (anim == attack) {</span>
+				
+<span class="nc" id="L817">				idle();</span>
+<span class="nc" id="L818">				ch.onAttackComplete();</span>
+				
+<span class="nc bnc" id="L820" title="All 2 branches missed.">			} else if (anim == operate) {</span>
+				
+<span class="nc" id="L822">				idle();</span>
+<span class="nc" id="L823">				ch.onOperateComplete();</span>
+				
+			}
+			
+		}
+<span class="nc" id="L828">	}</span>
+
+	private static class JumpTweener extends Tweener {
+
+		public CharSprite visual;
+
+		public PointF start;
+		public PointF end;
+
+		public float height;
+
+		public JumpTweener( CharSprite visual, PointF pos, float height, float time ) {
+<span class="nc" id="L840">			super( visual, time );</span>
+
+<span class="nc" id="L842">			this.visual = visual;</span>
+<span class="nc" id="L843">			start = visual.point();</span>
+<span class="nc" id="L844">			end = pos;</span>
+
+<span class="nc" id="L846">			this.height = height;</span>
+<span class="nc" id="L847">		}</span>
+
+		@Override
+		protected void updateValues( float progress ) {
+<span class="nc" id="L851">			float hVal = -height * 4 * progress * (1 - progress);</span>
+<span class="nc" id="L852">			visual.point( PointF.inter( start, end, progress ).offset( 0, hVal ) );</span>
+<span class="nc" id="L853">			visual.shadowOffset = 0.25f - hVal*0.8f;</span>
+<span class="nc" id="L854">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,382 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CustomNoteButton.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">CustomNoteButton.java</span></div><h1>CustomNoteButton.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndJournal;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndJournalItem;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndTextInput;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndTitledMessage;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+
+//this is contained in its own class as custom notes have a lot of messy window UI logic
+public class CustomNoteButton extends IconButton {
+
+	public CustomNoteButton () {
+<span class="nc" id="L51">		super(Icons.PLUS.get());</span>
+
+<span class="nc" id="L53">		width = 11;</span>
+<span class="nc" id="L54">		height = 11;</span>
+<span class="nc" id="L55">	}</span>
+
+	@Override
+	protected void onClick() {
+<span class="nc" id="L59">		super.onClick();</span>
+
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if (Notes.getRecords(Notes.CustomRecord.class).size() &gt;= Notes.customRecordLimit()){</span>
+<span class="nc" id="L62">			GameScene.show(new WndTitledMessage(Icons.INFO.get(),</span>
+<span class="nc" id="L63">					Messages.get(this, &quot;limit_title&quot;),</span>
+<span class="nc" id="L64">					Messages.get(this, &quot;limit_text&quot;)));</span>
+<span class="nc" id="L65">			return;</span>
+		}
+
+<span class="nc" id="L68">		GameScene.show(new WndNoteTypeSelect());</span>
+
+<span class="nc" id="L70">	}</span>
+
+	@Override
+	protected String hoverText() {
+<span class="nc" id="L74">		return Messages.get(this, &quot;title&quot;);</span>
+	}
+
+	private static WndNoteTypeSelect NOTE_SELECT_INSTANCE;
+
+	private class WndNoteTypeSelect extends WndOptions {
+
+<span class="nc" id="L81">		public WndNoteTypeSelect(){</span>
+<span class="nc" id="L82">			super(Icons.SCROLL_COLOR.get(),</span>
+<span class="nc" id="L83">					Messages.get(CustomNoteButton.class, &quot;title&quot;),</span>
+<span class="nc" id="L84">					Messages.get(CustomNoteButton.class, &quot;desc&quot;),</span>
+<span class="nc" id="L85">					Messages.get(CustomNoteButton.class, &quot;new_text&quot;),</span>
+<span class="nc" id="L86">					Messages.get(CustomNoteButton.class, &quot;new_floor&quot;),</span>
+<span class="nc" id="L87">					Messages.get(CustomNoteButton.class, &quot;new_inv&quot;),</span>
+<span class="nc" id="L88">					Messages.get(CustomNoteButton.class, &quot;new_type&quot;));</span>
+<span class="nc" id="L89">			NOTE_SELECT_INSTANCE = this;</span>
+<span class="nc" id="L90">		}</span>
+
+		@Override
+		protected void onSelect(int index) {
+<span class="nc bnc" id="L94" title="All 2 branches missed.">			if (index == 0){</span>
+<span class="nc" id="L95">				Notes.CustomRecord custom = new Notes.CustomRecord(&quot;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L96">				addNote(null, custom,</span>
+<span class="nc" id="L97">						Messages.get(CustomNoteButton.class, &quot;new_text&quot;),</span>
+<span class="nc" id="L98">						Messages.get(CustomNoteButton.class, &quot;new_text_title&quot;));</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">			} else if (index == 1){</span>
+<span class="nc" id="L100">				GameScene.show(new WndDepthSelect());</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">			} else if (index == 2){</span>
+<span class="nc" id="L102">				GameScene.selectItem(itemSelector);</span>
+			} else {
+<span class="nc" id="L104">				GameScene.show(new WndItemtypeSelect());</span>
+			}
+<span class="nc" id="L106">		}</span>
+
+		@Override
+		public void hide() {
+			//do nothing, prevents window closing when user steps back in note creation process
+<span class="nc" id="L111">		}</span>
+
+		@Override
+		public void onBackPressed() {
+<span class="nc" id="L115">			super.hide(); //actually hide in this case</span>
+<span class="nc" id="L116">			NOTE_SELECT_INSTANCE = null;</span>
+<span class="nc" id="L117">		}</span>
+	}
+
+	private class WndDepthSelect extends WndTitledMessage {
+
+<span class="nc" id="L122">		public WndDepthSelect(){</span>
+<span class="nc" id="L123">			super(Icons.STAIRS.get(),</span>
+<span class="nc" id="L124">					Messages.get(CustomNoteButton.class, &quot;new_floor&quot;),</span>
+<span class="nc" id="L125">					Messages.get(CustomNoteButton.class, &quot;new_floor_prompt&quot;));</span>
+
+<span class="nc" id="L127">			int top = height+2;</span>
+<span class="nc" id="L128">			int left = 0;</span>
+
+<span class="nc bnc" id="L130" title="All 2 branches missed.">			for (int i = Statistics.deepestFloor; i &gt; 0; i --){</span>
+<span class="nc bnc" id="L131" title="All 4 branches missed.">				if (i % 5 == 0 &amp;&amp; left &gt; 0){</span>
+<span class="nc" id="L132">					left = 0;</span>
+<span class="nc" id="L133">					top += 17;</span>
+				}
+<span class="nc" id="L135">				int finalI = i;</span>
+<span class="nc" id="L136">				RedButton btnDepth = new RedButton(Integer.toString(finalI)){</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L139">						addNote(WndDepthSelect.this, new Notes.CustomRecord(finalI, &quot;&quot;, &quot;&quot;),</span>
+<span class="nc" id="L140">								Messages.get(CustomNoteButton.class, &quot;new_floor&quot;),</span>
+<span class="nc" id="L141">								Messages.get(CustomNoteButton.class, &quot;new_floor_title&quot;, finalI));</span>
+<span class="nc" id="L142">					}</span>
+				};
+<span class="nc" id="L144">				btnDepth.setRect(left, top, 23, 16);</span>
+<span class="nc" id="L145">				left += 24;</span>
+<span class="nc" id="L146">				add(btnDepth);</span>
+			}
+
+<span class="nc bnc" id="L149" title="All 2 branches missed.">			resize(width, top + (left == 0 ? 0 : 16));</span>
+
+<span class="nc" id="L151">		}</span>
+
+	}
+
+<span class="nc" id="L155">	private WndBag.ItemSelector itemSelector = new WndBag.ItemSelector() {</span>
+
+		@Override
+		public String textPrompt() {
+<span class="nc" id="L159">			return	Messages.get(CustomNoteButton.class, &quot;new_inv_prompt&quot;);</span>
+		}
+
+		@Override
+		public boolean hideAfterSelecting() {
+<span class="nc" id="L164">			return false;</span>
+		}
+
+		@Override
+		public boolean itemSelectable(Item item) {
+<span class="nc bnc" id="L169" title="All 2 branches missed.">			if (item instanceof EquipableItem){</span>
+<span class="nc bnc" id="L170" title="All 4 branches missed.">				if (item instanceof Ring &amp;&amp; Notes.findCustomRecord(item.getClass()) != null){</span>
+<span class="nc" id="L171">					return false;</span>
+				}
+<span class="nc bnc" id="L173" title="All 2 branches missed.">				return ((EquipableItem) item).customNoteID == -1</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">						|| Notes.findCustomRecord(((EquipableItem) item).customNoteID) == null;</span>
+			} else {
+<span class="nc bnc" id="L176" title="All 2 branches missed.">				return Notes.findCustomRecord(item.getClass()) == null;</span>
+			}
+		}
+
+		@Override
+		public void onSelect( Item item ) {
+<span class="nc bnc" id="L182" title="All 2 branches missed.">			if (item != null){</span>
+<span class="nc" id="L183">				Notes.CustomRecord custom = new Notes.CustomRecord(item, &quot;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L184">				custom.assignID();</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">				if (item instanceof EquipableItem){</span>
+<span class="nc" id="L186">					((EquipableItem) item).customNoteID = custom.ID();</span>
+				}
+
+<span class="nc" id="L189">				addNote(null, custom,</span>
+<span class="nc" id="L190">						Messages.get(CustomNoteButton.class, &quot;new_inv&quot;),</span>
+<span class="nc" id="L191">						Messages.get(CustomNoteButton.class, &quot;new_item_title&quot;, Messages.titleCase(item.name())));</span>
+			}
+<span class="nc" id="L193">		}</span>
+	};
+
+	private static class WndItemtypeSelect extends WndTitledMessage {
+
+		public WndItemtypeSelect() {
+<span class="nc" id="L199">			super(Icons.SCROLL_COLOR.get(),</span>
+<span class="nc" id="L200">					Messages.get(CustomNoteButton.class, &quot;new_type&quot;),</span>
+<span class="nc" id="L201">					Messages.get(CustomNoteButton.class, &quot;new_type_prompt&quot;));</span>
+
+<span class="nc" id="L203">			int top = height + 2;</span>
+<span class="nc" id="L204">			int left = 0;</span>
+
+<span class="nc" id="L206">			ArrayList&lt;Item&gt; items = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">			for (Class&lt;?&gt; potionCls : Generator.Category.POTION.classes) {</span>
+<span class="nc" id="L208">				items.add((Item) Reflection.newInstance(potionCls));</span>
+			}
+<span class="nc bnc" id="L210" title="All 2 branches missed.">			for (Class&lt;?&gt; potionCls : Generator.Category.SCROLL.classes) {</span>
+<span class="nc" id="L211">				items.add((Item) Reflection.newInstance(potionCls));</span>
+			}
+<span class="nc bnc" id="L213" title="All 2 branches missed.">			for (Class&lt;?&gt; potionCls : Generator.Category.RING.classes) {</span>
+<span class="nc" id="L214">				items.add((Item) Reflection.newInstance(potionCls));</span>
+			}
+<span class="nc" id="L216">			Collections.sort(items, itemVisualcomparator);</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">			for (Item item : items) {</span>
+<span class="nc" id="L218">				ItemButton itemButton = new ItemButton(){</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L221">						addNote(WndItemtypeSelect.this, new Notes.CustomRecord(item, &quot;&quot;, &quot;&quot;),</span>
+<span class="nc" id="L222">								Messages.get(CustomNoteButton.class, &quot;new_type&quot;),</span>
+<span class="nc" id="L223">								Messages.get(CustomNoteButton.class, &quot;new_item_title&quot;, Messages.titleCase(item.name())));</span>
+<span class="nc" id="L224">					}</span>
+				};
+<span class="nc" id="L226">				itemButton.item(item);</span>
+<span class="nc" id="L227">				itemButton.setRect(left, top, 19, 19);</span>
+<span class="nc" id="L228">				add(itemButton);</span>
+
+<span class="nc bnc" id="L230" title="All 2 branches missed.">				if (Notes.findCustomRecord(item.getClass()) != null){</span>
+<span class="nc" id="L231">					itemButton.slot.enable(false);</span>
+				}
+
+<span class="nc" id="L234">				left += 20;</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">				if (left &gt;= width - 19){</span>
+<span class="nc" id="L236">					top += 20;</span>
+<span class="nc" id="L237">					left = 0;</span>
+				}
+<span class="nc" id="L239">			}</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">			if (left &gt; 0){</span>
+<span class="nc" id="L241">				top += 20;</span>
+<span class="nc" id="L242">				left = 0;</span>
+			}
+
+<span class="nc" id="L245">			resize(width, top);</span>
+<span class="nc" id="L246">		}</span>
+	}
+
+	//items are sorted first sorted potions -&gt; scrolls -&gt; rings, and then based on their sprites.
+<span class="nc" id="L250">	private static Comparator&lt;Item&gt; itemVisualcomparator = new Comparator&lt;Item&gt;() {</span>
+		@Override
+		public int compare(Item i1, Item i2) {
+<span class="nc" id="L253">			int i1Idx = i1.image();</span>
+<span class="nc" id="L254">			int i2Idx = i2.image();</span>
+
+<span class="nc bnc" id="L256" title="All 2 branches missed.">			if (i1 instanceof Scroll)   i1Idx += 1000;</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">			if (i1 instanceof Ring)     i1Idx += 2000;</span>
+
+<span class="nc bnc" id="L259" title="All 2 branches missed.">			if (i2 instanceof Scroll)   i2Idx += 1000;</span>
+<span class="nc bnc" id="L260" title="All 2 branches missed.">			if (i2 instanceof Ring)     i2Idx += 2000;</span>
+
+<span class="nc" id="L262">			return i1Idx - i2Idx;</span>
+		}
+	};
+
+	public static class CustomNoteWindow extends WndJournalItem {
+
+		public CustomNoteWindow(Notes.CustomRecord rec) {
+<span class="nc" id="L269">			super(rec.icon(), rec.title(), rec.desc());</span>
+
+<span class="nc" id="L271">			RedButton title = new RedButton( Messages.get(CustomNoteWindow.class, &quot;edit_title&quot;) ){</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L274">					GameScene.show(new WndTextInput(Messages.get(CustomNoteWindow.class, &quot;edit_title&quot;),</span>
+							&quot;&quot;,
+<span class="nc" id="L276">							rec.title(),</span>
+							50,
+							false,
+<span class="nc" id="L279">							Messages.get(CustomNoteWindow.class, &quot;confirm&quot;),</span>
+<span class="nc" id="L280">							Messages.get(CustomNoteWindow.class, &quot;cancel&quot;)){</span>
+						@Override
+						public void onSelect(boolean positive, String text) {
+<span class="nc bnc" id="L283" title="All 4 branches missed.">							if (positive &amp;&amp; !text.isEmpty()){</span>
+<span class="nc" id="L284">								rec.editText(text, rec.desc());</span>
+<span class="nc" id="L285">								CustomNoteWindow.this.hide();</span>
+<span class="nc" id="L286">								ShatteredPixelDungeon.scene().addToFront(new CustomNoteWindow(rec));</span>
+							}
+<span class="nc" id="L288">						}</span>
+					});
+<span class="nc" id="L290">				}</span>
+			};
+<span class="nc" id="L292">			add(title);</span>
+<span class="nc" id="L293">			title.setRect(0, Math.min(height+2, PixelScene.uiCamera.height-50), width/2-1, 16);</span>
+
+<span class="nc bnc" id="L295" title="All 2 branches missed.">			String editBodyText = rec.desc().isEmpty() ? Messages.get(CustomNoteWindow.class, &quot;add_text&quot;) : Messages.get(CustomNoteWindow.class, &quot;edit_text&quot;);</span>
+<span class="nc" id="L296">			RedButton body = new RedButton(editBodyText){</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L299">					GameScene.show(new WndTextInput(editBodyText,</span>
+							&quot;&quot;,
+<span class="nc" id="L301">							rec.desc(),</span>
+							500,
+							true,
+<span class="nc" id="L304">							Messages.get(CustomNoteWindow.class, &quot;confirm&quot;),</span>
+<span class="nc" id="L305">							Messages.get(CustomNoteWindow.class, &quot;cancel&quot;)){</span>
+						@Override
+						public void onSelect(boolean positive, String text) {
+<span class="nc bnc" id="L308" title="All 2 branches missed.">							if (positive){</span>
+<span class="nc" id="L309">								rec.editText(rec.title(), text);</span>
+<span class="nc" id="L310">								CustomNoteWindow.this.hide();</span>
+<span class="nc" id="L311">								ShatteredPixelDungeon.scene().addToFront(new CustomNoteWindow(rec));</span>
+							}
+<span class="nc" id="L313">						}</span>
+					});
+<span class="nc" id="L315">				}</span>
+			};
+<span class="nc" id="L317">			add(body);</span>
+<span class="nc" id="L318">			body.setRect(title.right()+2, title.top(), width/2-1, 16);</span>
+
+<span class="nc" id="L320">			RedButton delete = new RedButton( Messages.get(CustomNoteWindow.class, &quot;delete&quot;) ){</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L323">					GameScene.show(new WndOptions(Icons.WARNING.get(),</span>
+<span class="nc" id="L324">							Messages.get(CustomNoteWindow.class, &quot;delete&quot;),</span>
+<span class="nc" id="L325">							Messages.get(CustomNoteWindow.class, &quot;delete_warn&quot;),</span>
+<span class="nc" id="L326">							Messages.get(CustomNoteWindow.class, &quot;confirm&quot;),</span>
+<span class="nc" id="L327">							Messages.get(CustomNoteWindow.class, &quot;cancel&quot;)){</span>
+						@Override
+						protected void onSelect(int index) {
+<span class="nc bnc" id="L330" title="All 2 branches missed.">							if (index == 0){</span>
+<span class="nc" id="L331">								Notes.remove(rec);</span>
+<span class="nc" id="L332">								CustomNoteWindow.this.hide();</span>
+<span class="nc" id="L333">								ShatteredPixelDungeon.scene().addToFront(new WndJournal());</span>
+							}
+<span class="nc" id="L335">						}</span>
+					});
+<span class="nc" id="L337">				}</span>
+			};
+<span class="nc" id="L339">			add(delete);</span>
+<span class="nc" id="L340">			delete.setRect(0, title.bottom()+1, width, 16);</span>
+
+<span class="nc" id="L342">			resize(width, (int)delete.bottom());</span>
+<span class="nc" id="L343">		}</span>
+
+		@Override
+		protected boolean useHighlighting() {
+<span class="nc" id="L347">			return false;</span>
+		}
+	}
+
+	private static void addNote(Window parentWindow, Notes.CustomRecord note, String promptTitle, String prompttext){
+<span class="nc" id="L352">		GameScene.show(new WndTextInput(promptTitle,</span>
+				prompttext,
+				&quot;&quot;,
+				50,
+				false,
+<span class="nc" id="L357">				Messages.get(CustomNoteWindow.class, &quot;confirm&quot;),</span>
+<span class="nc" id="L358">				Messages.get(CustomNoteWindow.class, &quot;cancel&quot;)){</span>
+			@Override
+			public void onSelect(boolean positive, String text) {
+<span class="nc bnc" id="L361" title="All 4 branches missed.">				if (positive &amp;&amp; !text.isEmpty()){</span>
+<span class="nc" id="L362">					Notes.add(note);</span>
+<span class="nc" id="L363">					note.editText(text, &quot;&quot;);</span>
+<span class="nc bnc" id="L364" title="All 2 branches missed.">					if (parentWindow != null) {</span>
+<span class="nc" id="L365">						parentWindow.hide();</span>
+					}
+<span class="nc bnc" id="L367" title="All 2 branches missed.">					if (WndBag.INSTANCE != null) {</span>
+<span class="nc" id="L368">						WndBag.INSTANCE.hide();</span>
+					}
+<span class="nc bnc" id="L370" title="All 2 branches missed.">					if (NOTE_SELECT_INSTANCE != null){</span>
+<span class="nc" id="L371">						NOTE_SELECT_INSTANCE.onBackPressed();</span>
+					}
+<span class="nc" id="L373">					hide();</span>
+<span class="nc" id="L374">					ShatteredPixelDungeon.scene().addToFront(new WndJournal());</span>
+<span class="nc" id="L375">					ShatteredPixelDungeon.scene().addToFront(new CustomNoteWindow(note));</span>
+				}
+<span class="nc" id="L377">			}</span>
+		});
+<span class="nc" id="L379">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

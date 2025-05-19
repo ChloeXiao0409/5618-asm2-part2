@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WndClericSpells.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.windows</a> &gt; <span class="el_source">WndClericSpells.java</span></div><h1>WndClericSpells.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.windows;
+
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.ClericSpell;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.ui.IconButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RightClickMenu;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.input.PointerEvent;
+import com.watabou.noosa.ColorBlock;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.NinePatch;
+import com.watabou.utils.DeviceCompat;
+import com.watabou.utils.PointF;
+
+import java.util.ArrayList;
+
+public class WndClericSpells extends Window {
+
+	protected static final int WIDTH    = 120;
+
+<span class="nc" id="L56">	public static int BTN_SIZE = 20;</span>
+
+<span class="nc" id="L58">	public WndClericSpells(HolyTome tome, Hero cleric, boolean info){</span>
+
+		IconTitle title;
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if (!info){</span>
+<span class="nc" id="L62">			title = new IconTitle(new ItemSprite(tome), Messages.titleCase(Messages.get(this, &quot;cast_title&quot;)));</span>
+		} else {
+<span class="nc" id="L64">			title = new IconTitle(Icons.INFO.get(), Messages.titleCase(Messages.get(this, &quot;info_title&quot;)));</span>
+		}
+
+<span class="nc" id="L67">		title.setRect(0, 0, WIDTH, 0);</span>
+<span class="nc" id="L68">		add(title);</span>
+
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		IconButton btnInfo = new IconButton(info ? new ItemSprite(tome) : Icons.INFO.get()){</span>
+			@Override
+			protected void onClick() {
+<span class="nc bnc" id="L73" title="All 2 branches missed.">				GameScene.show(new WndClericSpells(tome, cleric, !info));</span>
+<span class="nc" id="L74">				hide();</span>
+<span class="nc" id="L75">			}</span>
+		};
+<span class="nc" id="L77">		btnInfo.setRect(WIDTH-16, 0, 16, 16);</span>
+<span class="nc" id="L78">		add(btnInfo);</span>
+
+		RenderedTextBlock msg;
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		if (info){</span>
+<span class="nc" id="L82">			msg = PixelScene.renderTextBlock( Messages.get( this, &quot;info_desc&quot;), 6);</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		} else if (DeviceCompat.isDesktop()){</span>
+<span class="nc" id="L84">			msg = PixelScene.renderTextBlock( Messages.get( this, &quot;cast_desc_desktop&quot;), 6);</span>
+		} else {
+<span class="nc" id="L86">			msg = PixelScene.renderTextBlock( Messages.get( this, &quot;cast_desc_mobile&quot;), 6);</span>
+		}
+<span class="nc" id="L88">		msg.maxWidth(WIDTH);</span>
+<span class="nc" id="L89">		msg.setPos(0, title.bottom()+4);</span>
+<span class="nc" id="L90">		add(msg);</span>
+
+<span class="nc" id="L92">		int top = (int)msg.bottom()+4;</span>
+
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		for (int i = 1; i &lt;= Talent.MAX_TALENT_TIERS; i++) {</span>
+
+<span class="nc" id="L96">			ArrayList&lt;ClericSpell&gt; spells = ClericSpell.getSpellList(cleric, i);</span>
+
+<span class="nc bnc" id="L98" title="All 4 branches missed.">			if (!spells.isEmpty() &amp;&amp; i != 1){</span>
+<span class="nc" id="L99">				top += BTN_SIZE + 2;</span>
+<span class="nc" id="L100">				ColorBlock sep = new ColorBlock(WIDTH, 1, 0xFF000000);</span>
+<span class="nc" id="L101">				sep.y = top;</span>
+<span class="nc" id="L102">				add(sep);</span>
+<span class="nc" id="L103">				top += 3;</span>
+			}
+
+<span class="nc" id="L106">			ArrayList&lt;IconButton&gt; spellBtns = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L108" title="All 2 branches missed.">			for (ClericSpell spell : spells) {</span>
+<span class="nc" id="L109">				IconButton spellBtn = new SpellButton(spell, tome, info);</span>
+<span class="nc" id="L110">				add(spellBtn);</span>
+<span class="nc" id="L111">				spellBtns.add(spellBtn);</span>
+<span class="nc" id="L112">			}</span>
+
+<span class="nc" id="L114">			int left = 2 + (WIDTH - spellBtns.size() * (BTN_SIZE + 4)) / 2;</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">			for (IconButton btn : spellBtns) {</span>
+<span class="nc" id="L116">				btn.setRect(left, top, BTN_SIZE, BTN_SIZE);</span>
+<span class="nc" id="L117">				left += btn.width() + 4;</span>
+<span class="nc" id="L118">			}</span>
+
+		}
+
+<span class="nc" id="L122">		resize(WIDTH, top + BTN_SIZE);</span>
+
+		//if we are on mobile, offset the window down to just above the toolbar
+<span class="nc bnc" id="L125" title="All 2 branches missed.">		if (SPDSettings.interfaceSize() != 2){</span>
+<span class="nc" id="L126">			offset(0, (int) (GameScene.uiCamera.height/2 - 30 - height/2));</span>
+		}
+
+<span class="nc" id="L129">	}</span>
+
+	public class SpellButton extends IconButton {
+
+		ClericSpell spell;
+		HolyTome tome;
+		boolean info;
+
+		NinePatch bg;
+
+<span class="nc" id="L139">		public SpellButton(ClericSpell spell, HolyTome tome, boolean info){</span>
+<span class="nc" id="L140">			super(new HeroIcon(spell));</span>
+
+<span class="nc" id="L142">			this.spell = spell;</span>
+<span class="nc" id="L143">			this.tome = tome;</span>
+<span class="nc" id="L144">			this.info = info;</span>
+
+<span class="nc bnc" id="L146" title="All 2 branches missed.">			if (!tome.canCast(Dungeon.hero, spell)){</span>
+<span class="nc" id="L147">				icon.alpha( 0.3f );</span>
+			}
+
+<span class="nc" id="L150">			bg = Chrome.get(Chrome.Type.TOAST);</span>
+<span class="nc" id="L151">			addToBack(bg);</span>
+<span class="nc" id="L152">		}</span>
+
+		@Override
+		protected void onPointerUp() {
+<span class="nc" id="L156">			super.onPointerUp();</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">			if (!tome.canCast(Dungeon.hero, spell)){</span>
+<span class="nc" id="L158">				icon.alpha( 0.3f );</span>
+			}
+<span class="nc" id="L160">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L164">			super.layout();</span>
+
+<span class="nc bnc" id="L166" title="All 2 branches missed.">			if (bg != null) {</span>
+<span class="nc" id="L167">				bg.size(width, height);</span>
+<span class="nc" id="L168">				bg.x = x;</span>
+<span class="nc" id="L169">				bg.y = y;</span>
+			}
+<span class="nc" id="L171">		}</span>
+
+		@Override
+		protected void onClick() {
+<span class="nc bnc" id="L175" title="All 2 branches missed.">			if (info){</span>
+<span class="nc" id="L176">				GameScene.show(new WndTitledMessage(new HeroIcon(spell), Messages.titleCase(spell.name()), spell.desc()));</span>
+			} else {
+<span class="nc" id="L178">				hide();</span>
+
+
+<span class="nc bnc" id="L181" title="All 2 branches missed.">				if(!tome.canCast(Dungeon.hero, spell)){</span>
+<span class="nc" id="L182">					GLog.w(Messages.get(HolyTome.class, &quot;no_spell&quot;));</span>
+				} else {
+<span class="nc" id="L184">					spell.onCast(tome, Dungeon.hero);</span>
+
+<span class="nc bnc" id="L186" title="All 4 branches missed.">					if (spell.targetingFlags() != -1 &amp;&amp; Dungeon.quickslot.contains(tome)){</span>
+<span class="nc" id="L187">						tome.targetingSpell = spell;</span>
+<span class="nc" id="L188">						QuickSlotButton.useTargeting(Dungeon.quickslot.getSlot(tome));</span>
+					}
+				}
+
+			}
+<span class="nc" id="L193">		}</span>
+
+		@Override
+		protected boolean onLongClick() {
+<span class="nc" id="L197">			hide();</span>
+<span class="nc" id="L198">			tome.setQuickSpell(spell);</span>
+<span class="nc" id="L199">			return true;</span>
+		}
+
+		@Override
+		protected void onRightClick() {
+<span class="nc" id="L204">			super.onRightClick();</span>
+<span class="nc" id="L205">			RightClickMenu r = new RightClickMenu(new Image(icon),</span>
+<span class="nc" id="L206">					Messages.titleCase(spell.name()),</span>
+<span class="nc" id="L207">					Messages.get(WndClericSpells.class, &quot;cast&quot;),</span>
+<span class="nc" id="L208">					Messages.get(WndClericSpells.class, &quot;info&quot;),</span>
+<span class="nc" id="L209">					Messages.get(WndClericSpells.class, &quot;quick_cast&quot;)){</span>
+				@Override
+				public void onSelect(int index) {
+<span class="nc bnc" id="L212" title="All 4 branches missed.">					switch (index){</span>
+						default:
+							//do nothing
+<span class="nc" id="L215">							break;</span>
+						case 0:
+<span class="nc" id="L217">							hide();</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">							if(!tome.canCast(Dungeon.hero, spell)){</span>
+<span class="nc" id="L219">								GLog.w(Messages.get(HolyTome.class, &quot;no_spell&quot;));</span>
+							} else {
+<span class="nc" id="L221">								spell.onCast(tome, Dungeon.hero);</span>
+
+<span class="nc bnc" id="L223" title="All 4 branches missed.">								if (spell.targetingFlags() != -1 &amp;&amp; Dungeon.quickslot.contains(tome)){</span>
+<span class="nc" id="L224">									tome.targetingSpell = spell;</span>
+<span class="nc" id="L225">									QuickSlotButton.useTargeting(Dungeon.quickslot.getSlot(tome));</span>
+								}
+							}
+							break;
+						case 1:
+<span class="nc" id="L230">							GameScene.show(new WndTitledMessage(new HeroIcon(spell), Messages.titleCase(spell.name()), spell.desc()));</span>
+<span class="nc" id="L231">							break;</span>
+						case 2:
+<span class="nc" id="L233">							hide();</span>
+<span class="nc" id="L234">							tome.setQuickSpell(spell);</span>
+							break;
+					}
+<span class="nc" id="L237">				}</span>
+			};
+<span class="nc" id="L239">			parent.addToFront(r);</span>
+<span class="nc" id="L240">			r.camera = camera();</span>
+<span class="nc" id="L241">			PointF mousePos = PointerEvent.currentHoverPos();</span>
+<span class="nc" id="L242">			mousePos = camera.screenToCamera((int)mousePos.x, (int)mousePos.y);</span>
+<span class="nc" id="L243">			r.setPos(mousePos.x-3, mousePos.y-3);</span>
+<span class="nc" id="L244">		}</span>
+
+		@Override
+		protected String hoverText() {
+<span class="nc" id="L248">			return &quot;_&quot; + Messages.titleCase(spell.name()) + &quot;_\n&quot; + spell.shortDesc();</span>
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

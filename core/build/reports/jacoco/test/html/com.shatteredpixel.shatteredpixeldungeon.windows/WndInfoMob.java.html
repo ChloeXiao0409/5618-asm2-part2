@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WndInfoMob.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.windows</a> &gt; <span class="el_source">WndInfoMob.java</span></div><h1>WndInfoMob.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.windows;
+
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HealthBar;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.watabou.noosa.ui.Component;
+
+public class WndInfoMob extends WndTitledMessage {
+	
+	public WndInfoMob( Mob mob ) {
+
+<span class="nc" id="L37">		super( new MobTitle( mob ), mob.info() );</span>
+		
+<span class="nc" id="L39">	}</span>
+	
+	private static class MobTitle extends Component {
+
+		private static final int GAP	= 2;
+		
+		private CharSprite image;
+		private RenderedTextBlock name;
+		private HealthBar health;
+		private BuffIndicator buffs;
+		
+<span class="nc" id="L50">		public MobTitle( Mob mob ) {</span>
+			
+<span class="nc" id="L52">			name = PixelScene.renderTextBlock( Messages.titleCase( mob.name() ), 9 );</span>
+<span class="nc" id="L53">			name.hardlight( TITLE_COLOR );</span>
+<span class="nc" id="L54">			add( name );</span>
+			
+<span class="nc" id="L56">			image = mob.sprite();</span>
+<span class="nc" id="L57">			add( image );</span>
+
+<span class="nc" id="L59">			health = new HealthBar();</span>
+<span class="nc" id="L60">			health.level(mob);</span>
+<span class="nc" id="L61">			add( health );</span>
+
+<span class="nc" id="L63">			buffs = new BuffIndicator( mob, false );</span>
+<span class="nc" id="L64">			add( buffs );</span>
+<span class="nc" id="L65">		}</span>
+		
+		@Override
+		protected void layout() {
+			
+<span class="nc" id="L70">			image.x = 0;</span>
+<span class="nc" id="L71">			image.y = Math.max( 0, name.height() + health.height() - image.height() );</span>
+
+<span class="nc" id="L73">			float w = width - image.width() - GAP;</span>
+<span class="nc" id="L74">			int extraBuffSpace = 0;</span>
+
+			//Tries to make space for up to 11 visible buffs
+			do {
+<span class="nc" id="L78">				name.maxWidth((int)w - extraBuffSpace);</span>
+<span class="nc" id="L79">				buffs.setSize(w - name.width() - 8, 8);</span>
+<span class="nc" id="L80">				extraBuffSpace += 8;</span>
+<span class="nc bnc" id="L81" title="All 4 branches missed.">			} while (extraBuffSpace &lt;= 40 &amp;&amp; !buffs.allBuffsVisible());</span>
+
+<span class="nc" id="L83">			name.setPos(x + image.width() + GAP,</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">					image.height() &gt; name.height() ? y +(image.height() - name.height()) / 2 : y);</span>
+
+<span class="nc" id="L86">			health.setRect(image.width() + GAP, name.bottom() + GAP, w, health.height());</span>
+
+<span class="nc" id="L88">			buffs.setPos(name.right(), name.bottom() - BuffIndicator.SIZE_SMALL-2);</span>
+
+<span class="nc" id="L90">			height = Math.max(image.y + image.height(), health.bottom());</span>
+<span class="nc" id="L91">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MineLargeRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest</a> &gt; <span class="el_source">MineLargeRoom.java</span></div><h1>MineLargeRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest;
+
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.CrystalGuardian;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.FungalSentry;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GnollGuard;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GnollSapper;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Blacksmith;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret.SecretRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.CaveRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.GnollRockfallTrap;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L43">public class MineLargeRoom extends CaveRoom {</span>
+
+	@Override
+	public float[] sizeCatProbs() {
+<span class="nc" id="L47">		return new float[]{0, 1, 0};</span>
+	}
+
+	@Override
+	public int minHeight() {
+<span class="nc" id="L52">		return 11;</span>
+	}
+
+	@Override
+	public int minWidth() {
+<span class="nc" id="L57">		return 11;</span>
+	}
+
+	@Override
+	protected float fill() {
+<span class="nc" id="L62">		return 0.55f;</span>
+	}
+
+	@Override
+	public int mobSpawnWeight() {
+		//These rooms always spawn their own enemies
+		// so don't amp up regular enemy spawns too
+<span class="nc" id="L69">		return 1;</span>
+	}
+
+	@Override
+	public void paint(Level level) {
+<span class="nc" id="L74">		super.paint(level);</span>
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		if (Blacksmith.Quest.Type() == Blacksmith.Quest.CRYSTAL){</span>
+<span class="nc" id="L77">			Painter.fillEllipse(level, this, 3, Terrain.MINE_CRYSTAL);</span>
+<span class="nc" id="L78">			Painter.fillEllipse(level, this, 4, Terrain.EMPTY);</span>
+
+<span class="nc" id="L80">			Point p = random(5);</span>
+<span class="nc" id="L81">			ArrayList&lt;Integer&gt; internalcells = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L82">			findInternalCells(level, level.pointToCell(p), internalcells);</span>
+
+			//we want to ensure that every internal cell has no way out, even diagonally
+<span class="nc bnc" id="L85" title="All 2 branches missed.">			for (int i : internalcells){</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">				for (int j : PathFinder.CIRCLE8){</span>
+<span class="nc bnc" id="L87" title="All 4 branches missed.">					if (!internalcells.contains(i+j) &amp;&amp; level.map[i+j] != Terrain.MINE_CRYSTAL){</span>
+<span class="nc" id="L88">						level.map[i] = Terrain.MINE_CRYSTAL;</span>
+<span class="nc" id="L89">						break;</span>
+					}
+				}
+<span class="nc" id="L92">			}</span>
+
+<span class="nc bnc" id="L94" title="All 2 branches missed.">			for (int i = 0; i &lt; width()*height()/4; i ++){</span>
+<span class="nc" id="L95">				Point r = random(1);</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">				if (level.map[level.pointToCell(r)] != Terrain.WALL) {</span>
+<span class="nc" id="L97">					Painter.set(level, r, Terrain.MINE_CRYSTAL);</span>
+				}
+			}
+
+<span class="nc" id="L101">			CrystalGuardian m = new CrystalGuardian();</span>
+<span class="nc" id="L102">			m.pos = level.pointToCell(p);</span>
+<span class="nc" id="L103">			level.mobs.add(m);</span>
+<span class="nc" id="L104">			Painter.set(level, p, Terrain.EMPTY);</span>
+
+<span class="nc bnc" id="L106" title="All 2 branches missed.">		} else if (Blacksmith.Quest.Type() == Blacksmith.Quest.GNOLL){</span>
+<span class="nc" id="L107">			Painter.fillEllipse(level, this, 3, Terrain.EMPTY);</span>
+
+			//connections to non-secret rooms have a 9/10 chance to become empty, otherwise wall
+<span class="nc bnc" id="L110" title="All 2 branches missed.">			for (Room n : connected.keySet()){</span>
+<span class="nc bnc" id="L111" title="All 4 branches missed.">				if (!(n instanceof SecretRoom) &amp;&amp; connected.get(n).type == Door.Type.REGULAR){</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">					if (Random.Int(10) == 0){</span>
+<span class="nc" id="L113">						connected.get(n).set(Door.Type.EMPTY);</span>
+					} else {
+<span class="nc" id="L115">						connected.get(n).set(Door.Type.WALL);</span>
+					}
+<span class="nc" id="L117">					connected.get(n).lockTypeChanges(true);</span>
+				}
+<span class="nc" id="L119">			}</span>
+
+<span class="nc" id="L121">			ArrayList&lt;Door&gt; doors = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">			for (Door d : connected.values()){</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">				if (d.type == Door.Type.WALL){</span>
+<span class="nc" id="L124">					doors.add(d);</span>
+				}
+<span class="nc" id="L126">			}</span>
+
+<span class="nc" id="L128">			int sapperPos = level.pointToCell(random(5));</span>
+<span class="nc" id="L129">			GnollSapper s = new GnollSapper();</span>
+<span class="nc" id="L130">			s.pos = sapperPos;</span>
+<span class="nc" id="L131">			s.spawnPos = s.pos;</span>
+<span class="nc" id="L132">			level.mobs.add(s);</span>
+
+			int guardPos;
+			do {
+<span class="nc" id="L136">				guardPos = sapperPos+PathFinder.NEIGHBOURS8[Random.Int(8)];</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">			} while (level.map[guardPos] != Terrain.EMPTY);</span>
+<span class="nc" id="L138">			GnollGuard g = new GnollGuard();</span>
+<span class="nc" id="L139">			g.pos = guardPos;</span>
+<span class="nc" id="L140">			level.mobs.add(g);</span>
+<span class="nc" id="L141">			s.linkPartner(g);</span>
+
+<span class="nc bnc" id="L143" title="All 2 branches missed.">			int barricades = Random.Int(2) == 0 ? 2 : 1;</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">			for (int i = 0; i &lt; barricades; i ++){</span>
+<span class="nc" id="L145">				int barricadePos = sapperPos+PathFinder.NEIGHBOURS8[Random.Int(8)];</span>
+<span class="nc bnc" id="L146" title="All 4 branches missed.">				if (level.map[barricadePos] == Terrain.EMPTY &amp;&amp; barricadePos != guardPos){</span>
+<span class="nc" id="L147">					Painter.set(level, barricadePos, Terrain.BARRICADE);</span>
+				} else {
+<span class="nc" id="L149">					i--;</span>
+				}
+			}
+
+<span class="nc bnc" id="L153" title="All 2 branches missed.">			int traps = square() &gt; 150 ? 3 : 2;</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">			for (int i = 0; i &lt; traps; i ++){</span>
+				Point r;
+				do {
+<span class="nc" id="L157">					r = random(2);</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">				} while (level.map[level.pointToCell(r)] != Terrain.EMPTY</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">						|| level.pointToCell(r) == sapperPos</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">						|| level.pointToCell(r) == guardPos);</span>
+<span class="nc" id="L161">				Painter.set(level, r, Terrain.TRAP);</span>
+<span class="nc" id="L162">				level.setTrap(new GnollRockfallTrap().reveal(), level.pointToCell(r));</span>
+			}
+
+<span class="nc bnc" id="L165" title="All 2 branches missed.">			for (Point p : getPoints()){</span>
+<span class="nc" id="L166">				int cell = level.pointToCell(p);</span>
+<span class="nc bnc" id="L167" title="All 6 branches missed.">				if (level.map[cell] == Terrain.EMPTY</span>
+						&amp;&amp; cell != sapperPos
+						&amp;&amp; cell != guardPos){
+<span class="nc" id="L170">					float dist = 1000;</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">					for (Door d : doors){</span>
+<span class="nc" id="L172">						dist = Math.min(dist, Point.distance(p, d));</span>
+<span class="nc" id="L173">					}</span>
+<span class="nc" id="L174">					dist = GameMath.gate(1f, dist-0.5f, 4f);</span>
+<span class="nc" id="L175">					float val = Random.Float((float) Math.pow(dist, 2));</span>
+<span class="nc bnc" id="L176" title="All 4 branches missed.">					if (val &lt;= 0.75f || dist &lt;= 1) {</span>
+<span class="nc" id="L177">						Painter.set(level, cell, Terrain.MINE_BOULDER);</span>
+<span class="nc bnc" id="L178" title="All 4 branches missed.">					} else if (val &lt;= 5f &amp;&amp; dist &lt;= 3){</span>
+<span class="nc" id="L179">						Painter.set(level, cell, Terrain.EMPTY_DECO);</span>
+					}
+				}
+<span class="nc" id="L182">			}</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">		} else if (Blacksmith.Quest.Type() == Blacksmith.Quest.FUNGI){</span>
+
+<span class="nc bnc" id="L185" title="All 2 branches missed.">			for (Point p : getPoints()){</span>
+<span class="nc" id="L186">				int cell = level.pointToCell(p);</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">				if (level.map[cell] == Terrain.EMPTY){</span>
+<span class="nc" id="L188">					level.map[cell] = Terrain.HIGH_GRASS;</span>
+				}
+<span class="nc" id="L190">			}</span>
+
+<span class="nc" id="L192">			Painter.fillEllipse(level, this, 3, Terrain.GRASS);</span>
+
+<span class="nc bnc" id="L194" title="All 2 branches missed.">			for (int i = 0; i &lt; width() * height() / 6; i++) {</span>
+<span class="nc" id="L195">				Point r = random(1);</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">				if (level.map[level.pointToCell(r)] != Terrain.WALL) {</span>
+<span class="nc" id="L197">					Painter.set(level, r, Terrain.HIGH_GRASS);</span>
+				}
+			}
+
+<span class="nc" id="L201">			Point p = center();</span>
+<span class="nc" id="L202">			FungalSentry m = new FungalSentry();</span>
+<span class="nc" id="L203">			m.pos = level.pointToCell(p);</span>
+<span class="nc" id="L204">			level.mobs.add(m);</span>
+<span class="nc" id="L205">			Painter.set(level, p, Terrain.GRASS);</span>
+
+			//no high grass directly above the sentry
+<span class="nc" id="L208">			p.y--;</span>
+<span class="nc" id="L209">			Painter.set(level, p, Terrain.GRASS);</span>
+
+<span class="nc" id="L211">		} else {</span>
+<span class="nc" id="L212">			Painter.fillEllipse(level, this, 3, Terrain.EMPTY);</span>
+		}
+
+<span class="nc" id="L215">	}</span>
+
+	private void findInternalCells(Level level, int cell, ArrayList&lt;Integer&gt; internalCells){
+<span class="nc bnc" id="L218" title="All 2 branches missed.">		for (int i : PathFinder.NEIGHBOURS4){</span>
+<span class="nc bnc" id="L219" title="All 4 branches missed.">			if (!internalCells.contains(cell+i) &amp;&amp; level.map[cell+i] != Terrain.MINE_CRYSTAL){</span>
+<span class="nc" id="L220">				internalCells.add(cell+i);</span>
+<span class="nc" id="L221">				findInternalCells(level, cell+i, internalCells);</span>
+			}
+		}
+<span class="nc" id="L224">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

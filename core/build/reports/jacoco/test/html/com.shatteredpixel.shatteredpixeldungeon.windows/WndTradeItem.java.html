@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WndTradeItem.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.windows</a> &gt; <span class="el_source">WndTradeItem.java</span></div><h1>WndTradeItem.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.windows;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Shopkeeper;
+import com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem;
+import com.shatteredpixel.shatteredpixeldungeon.items.Gold;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.MasterThievesArmband;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
+
+public class WndTradeItem extends WndInfoItem {
+
+	private static final float GAP		= 2;
+	private static final int BTN_HEIGHT	= 18;
+
+	private WndBag owner;
+
+<span class="nc" id="L49">	private boolean selling = false;</span>
+
+	//selling
+	public WndTradeItem( final Item item, WndBag owner ) {
+
+<span class="nc" id="L54">		super(item);</span>
+
+<span class="nc" id="L56">		selling = true;</span>
+
+<span class="nc" id="L58">		this.owner = owner;</span>
+
+<span class="nc" id="L60">		float pos = height;</span>
+
+		//find the shopkeeper in the current level
+<span class="nc" id="L63">		Shopkeeper shop = null;</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">		for (Char ch : Actor.chars()){</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">			if (ch instanceof Shopkeeper){</span>
+<span class="nc" id="L66">				shop = (Shopkeeper) ch;</span>
+<span class="nc" id="L67">				break;</span>
+			}
+<span class="nc" id="L69">		}</span>
+<span class="nc" id="L70">		final Shopkeeper finalShop = shop;</span>
+
+<span class="nc bnc" id="L72" title="All 2 branches missed.">		if (item.quantity() == 1) {</span>
+
+<span class="nc" id="L74">			RedButton btnSell = new RedButton( Messages.get(this, &quot;sell&quot;, item.value()) ) {</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L77">					sell( item, finalShop);</span>
+<span class="nc" id="L78">					hide();</span>
+<span class="nc" id="L79">				}</span>
+			};
+<span class="nc" id="L81">			btnSell.setRect( 0, pos + GAP, width, BTN_HEIGHT );</span>
+<span class="nc" id="L82">			btnSell.icon(new ItemSprite(ItemSpriteSheet.GOLD));</span>
+<span class="nc" id="L83">			add( btnSell );</span>
+
+<span class="nc" id="L85">			pos = btnSell.bottom();</span>
+
+<span class="nc" id="L87">		} else {</span>
+
+<span class="nc" id="L89">			int priceAll= item.value();</span>
+<span class="nc" id="L90">			RedButton btnSell1 = new RedButton( Messages.get(this, &quot;sell_1&quot;, priceAll / item.quantity()) ) {</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L93">					sellOne( item, finalShop );</span>
+<span class="nc" id="L94">					hide();</span>
+<span class="nc" id="L95">				}</span>
+			};
+<span class="nc" id="L97">			btnSell1.setRect( 0, pos + GAP, width, BTN_HEIGHT );</span>
+<span class="nc" id="L98">			btnSell1.icon(new ItemSprite(ItemSpriteSheet.GOLD));</span>
+<span class="nc" id="L99">			add( btnSell1 );</span>
+<span class="nc" id="L100">			RedButton btnSellAll = new RedButton( Messages.get(this, &quot;sell_all&quot;, priceAll ) ) {</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L103">					sell( item, finalShop );</span>
+<span class="nc" id="L104">					hide();</span>
+<span class="nc" id="L105">				}</span>
+			};
+<span class="nc" id="L107">			btnSellAll.setRect( 0, btnSell1.bottom() + 1, width, BTN_HEIGHT );</span>
+<span class="nc" id="L108">			btnSellAll.icon(new ItemSprite(ItemSpriteSheet.GOLD));</span>
+<span class="nc" id="L109">			add( btnSellAll );</span>
+
+<span class="nc" id="L111">			pos = btnSellAll.bottom();</span>
+
+		}
+
+<span class="nc" id="L115">		resize( width, (int)pos );</span>
+<span class="nc" id="L116">	}</span>
+
+	//buying
+	public WndTradeItem( final Heap heap ) {
+
+<span class="nc" id="L121">		super(heap);</span>
+
+<span class="nc" id="L123">		selling = false;</span>
+
+<span class="nc" id="L125">		Item item = heap.peek();</span>
+
+<span class="nc" id="L127">		float pos = height;</span>
+
+<span class="nc" id="L129">		final int price = Shopkeeper.sellPrice( item );</span>
+
+<span class="nc" id="L131">		RedButton btnBuy = new RedButton( Messages.get(this, &quot;buy&quot;, price) ) {</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L134">				hide();</span>
+<span class="nc" id="L135">				buy( heap );</span>
+<span class="nc" id="L136">			}</span>
+		};
+<span class="nc" id="L138">		btnBuy.setRect( 0, pos + GAP, width, BTN_HEIGHT );</span>
+<span class="nc" id="L139">		btnBuy.icon(new ItemSprite(ItemSpriteSheet.GOLD));</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">		btnBuy.enable( price &lt;= Dungeon.gold );</span>
+<span class="nc" id="L141">		add( btnBuy );</span>
+
+<span class="nc" id="L143">		pos = btnBuy.bottom();</span>
+
+<span class="nc" id="L145">		final MasterThievesArmband.Thievery thievery = Dungeon.hero.buff(MasterThievesArmband.Thievery.class);</span>
+<span class="nc bnc" id="L146" title="All 6 branches missed.">		if (thievery != null &amp;&amp; !thievery.isCursed() &amp;&amp; thievery.chargesToUse(item) &gt; 0) {</span>
+<span class="nc" id="L147">			final float chance = thievery.stealChance(item);</span>
+<span class="nc" id="L148">			final int chargesToUse = thievery.chargesToUse(item);</span>
+<span class="nc" id="L149">			RedButton btnSteal = new RedButton(Messages.get(this, &quot;steal&quot;, Math.min(100, (int) (chance * 100)), chargesToUse), 6) {</span>
+				@Override
+				protected void onClick() {
+<span class="nc bnc" id="L152" title="All 2 branches missed.">					if (chance &gt;= 1){</span>
+<span class="nc" id="L153">						thievery.steal(item);</span>
+<span class="nc" id="L154">						Hero hero = Dungeon.hero;</span>
+<span class="nc" id="L155">						Item item = heap.pickUp();</span>
+<span class="nc" id="L156">						hide();</span>
+
+<span class="nc bnc" id="L158" title="All 2 branches missed.">						if (!item.doPickUp(hero)) {</span>
+<span class="nc" id="L159">							Dungeon.level.drop(item, heap.pos).sprite.drop();</span>
+						}
+<span class="nc" id="L161">					} else {</span>
+<span class="nc" id="L162">						GameScene.show(new WndOptions(new ItemSprite(ItemSpriteSheet.ARTIFACT_ARMBAND),</span>
+<span class="nc" id="L163">								Messages.titleCase(Messages.get(MasterThievesArmband.class, &quot;name&quot;)),</span>
+<span class="nc" id="L164">								Messages.get(WndTradeItem.class, &quot;steal_warn&quot;),</span>
+<span class="nc" id="L165">								Messages.get(WndTradeItem.class, &quot;steal_warn_yes&quot;),</span>
+<span class="nc" id="L166">								Messages.get(WndTradeItem.class, &quot;steal_warn_no&quot;)){</span>
+							@Override
+							protected void onSelect(int index) {
+<span class="nc" id="L169">								super.onSelect(index);</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">								if (index == 0){</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">									if (thievery.steal(item)) {</span>
+<span class="nc" id="L172">										Hero hero = Dungeon.hero;</span>
+<span class="nc" id="L173">										Item item = heap.pickUp();</span>
+<span class="nc" id="L174">										WndTradeItem.this.hide();</span>
+
+<span class="nc bnc" id="L176" title="All 2 branches missed.">										if (!item.doPickUp(hero)) {</span>
+<span class="nc" id="L177">											Dungeon.level.drop(item, heap.pos).sprite.drop();</span>
+										}
+<span class="nc" id="L179">									} else {</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">										for (Mob mob : Dungeon.level.mobs) {</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">											if (mob instanceof Shopkeeper) {</span>
+<span class="nc" id="L182">												mob.yell(Messages.get(mob, &quot;thief&quot;));</span>
+<span class="nc" id="L183">												((Shopkeeper) mob).flee();</span>
+<span class="nc" id="L184">												break;</span>
+											}
+<span class="nc" id="L186">										}</span>
+<span class="nc" id="L187">										WndTradeItem.this.hide();</span>
+									}
+								}
+<span class="nc" id="L190">							}</span>
+						});
+					}
+<span class="nc" id="L193">				}</span>
+			};
+<span class="nc" id="L195">			btnSteal.setRect(0, pos + 1, width, BTN_HEIGHT);</span>
+<span class="nc" id="L196">			btnSteal.icon(new ItemSprite(ItemSpriteSheet.ARTIFACT_ARMBAND));</span>
+<span class="nc" id="L197">			add(btnSteal);</span>
+
+<span class="nc" id="L199">			pos = btnSteal.bottom();</span>
+
+		}
+
+<span class="nc" id="L203">		resize(width, (int) pos);</span>
+<span class="nc" id="L204">	}</span>
+	
+	@Override
+	public void hide() {
+		
+<span class="nc" id="L209">		super.hide();</span>
+		
+<span class="nc bnc" id="L211" title="All 2 branches missed.">		if (owner != null) {</span>
+<span class="nc" id="L212">			owner.hide();</span>
+		}
+<span class="nc bnc" id="L214" title="All 2 branches missed.">		if (selling) Shopkeeper.sell();</span>
+<span class="nc" id="L215">	}</span>
+
+	public static void sell( Item item ) {
+<span class="nc" id="L218">		sell(item, null);</span>
+<span class="nc" id="L219">	}</span>
+
+	public static void sell( Item item, Shopkeeper shop ) {
+		
+<span class="nc" id="L223">		Hero hero = Dungeon.hero;</span>
+		
+<span class="nc bnc" id="L225" title="All 4 branches missed.">		if (item.isEquipped( hero ) &amp;&amp; !((EquipableItem)item).doUnequip( hero, false )) {</span>
+<span class="nc" id="L226">			return;</span>
+		}
+<span class="nc" id="L228">		item.detachAll( hero.belongings.backpack );</span>
+
+		//selling items in the sell interface doesn't spend time
+<span class="nc" id="L231">		hero.spend(-hero.cooldown());</span>
+
+<span class="nc" id="L233">		new Gold( item.value() ).doPickUp( hero );</span>
+
+<span class="nc bnc" id="L235" title="All 2 branches missed.">		if (shop != null){</span>
+<span class="nc" id="L236">			shop.buybackItems.add(item);</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">			while (shop.buybackItems.size() &gt; Shopkeeper.MAX_BUYBACK_HISTORY){</span>
+<span class="nc" id="L238">				shop.buybackItems.remove(0);</span>
+			}
+		}
+<span class="nc" id="L241">	}</span>
+
+	public static void sellOne( Item item ) {
+<span class="nc" id="L244">		sellOne( item, null );</span>
+<span class="nc" id="L245">	}</span>
+
+	public static void sellOne( Item item, Shopkeeper shop ) {
+		
+<span class="nc bnc" id="L249" title="All 2 branches missed.">		if (item.quantity() &lt;= 1) {</span>
+<span class="nc" id="L250">			sell( item, shop );</span>
+		} else {
+			
+<span class="nc" id="L253">			Hero hero = Dungeon.hero;</span>
+			
+<span class="nc" id="L255">			item = item.detach( hero.belongings.backpack );</span>
+
+			//selling items in the sell interface doesn't spend time
+<span class="nc" id="L258">			hero.spend(-hero.cooldown());</span>
+
+<span class="nc" id="L260">			new Gold( item.value() ).doPickUp( hero );</span>
+
+<span class="nc bnc" id="L262" title="All 2 branches missed.">			if (shop != null){</span>
+<span class="nc" id="L263">				shop.buybackItems.add(item);</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">				while (shop.buybackItems.size() &gt; Shopkeeper.MAX_BUYBACK_HISTORY){</span>
+<span class="nc" id="L265">					shop.buybackItems.remove(0);</span>
+				}
+			}
+		}
+<span class="nc" id="L269">	}</span>
+	
+	private void buy( Heap heap ) {
+		
+<span class="nc" id="L273">		Item item = heap.pickUp();</span>
+<span class="nc bnc" id="L274" title="All 2 branches missed.">		if (item == null) return;</span>
+		
+<span class="nc" id="L276">		int price = Shopkeeper.sellPrice( item );</span>
+<span class="nc" id="L277">		Dungeon.gold -= price;</span>
+<span class="nc" id="L278">		Catalog.countUses(Gold.class, price);</span>
+		
+<span class="nc bnc" id="L280" title="All 2 branches missed.">		if (!item.doPickUp( Dungeon.hero )) {</span>
+<span class="nc" id="L281">			Dungeon.level.drop( item, heap.pos ).sprite.drop();</span>
+		}
+<span class="nc" id="L283">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

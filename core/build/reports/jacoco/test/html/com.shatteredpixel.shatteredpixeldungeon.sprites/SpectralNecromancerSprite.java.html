@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SpectralNecromancerSprite.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.sprites</a> &gt; <span class="el_source">SpectralNecromancerSprite.java</span></div><h1>SpectralNecromancerSprite.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.sprites;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Necromancer;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
+import com.watabou.noosa.TextureFilm;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+
+public class SpectralNecromancerSprite extends MobSprite {
+
+	private Animation charging;
+	private Emitter summoningParticles;
+
+	public SpectralNecromancerSprite(){
+<span class="nc" id="L40">		super();</span>
+
+<span class="nc" id="L42">		texture( Assets.Sprites.NECRO );</span>
+<span class="nc" id="L43">		TextureFilm film = new TextureFilm( texture, 16, 16 );</span>
+
+<span class="nc" id="L45">		int c = 16;</span>
+
+<span class="nc" id="L47">		idle = new Animation( 1, true );</span>
+<span class="nc" id="L48">		idle.frames( film, c+0, c+0, c+0, c+1, c+0, c+0, c+0, c+0, c+1 );</span>
+
+<span class="nc" id="L50">		run = new Animation( 8, true );</span>
+<span class="nc" id="L51">		run.frames( film, c+0, c+0, c+0, c+2, c+3, c+4 );</span>
+
+<span class="nc" id="L53">		zap = new Animation( 10, false );</span>
+<span class="nc" id="L54">		zap.frames( film, c+5, c+6, c+7, c+8 );</span>
+
+<span class="nc" id="L56">		charging = new Animation( 5, true );</span>
+<span class="nc" id="L57">		charging.frames( film, c+7, c+8 );</span>
+
+<span class="nc" id="L59">		die = new Animation( 10, false );</span>
+<span class="nc" id="L60">		die.frames( film, c+9, c+10, c+11, c+12 );</span>
+
+<span class="nc" id="L62">		attack = zap.clone();</span>
+
+<span class="nc" id="L64">		idle();</span>
+<span class="nc" id="L65">	}</span>
+
+	@Override
+	public void link(Char ch) {
+<span class="nc" id="L69">		super.link(ch);</span>
+<span class="nc bnc" id="L70" title="All 4 branches missed.">		if (ch instanceof Necromancer &amp;&amp; ((Necromancer) ch).summoning){</span>
+<span class="nc" id="L71">			zap(((Necromancer) ch).summoningPos);</span>
+		}
+<span class="nc" id="L73">	}</span>
+
+	@Override
+	public void update() {
+<span class="nc" id="L77">		super.update();</span>
+<span class="nc bnc" id="L78" title="All 4 branches missed.">		if (summoningParticles != null &amp;&amp; ((Necromancer) ch).summoningPos != -1){</span>
+<span class="nc" id="L79">			summoningParticles.visible = Dungeon.level.heroFOV[((Necromancer) ch).summoningPos];</span>
+		}
+<span class="nc" id="L81">	}</span>
+
+	@Override
+	public void die() {
+<span class="nc" id="L85">		super.die();</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		if (summoningParticles != null){</span>
+<span class="nc" id="L87">			summoningParticles.on = false;</span>
+<span class="nc" id="L88">			summoningParticles = null;</span>
+		}
+<span class="nc" id="L90">	}</span>
+
+	@Override
+	public void kill() {
+<span class="nc" id="L94">		super.kill();</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		if (summoningParticles != null){</span>
+<span class="nc" id="L96">			summoningParticles.on = false;</span>
+<span class="nc" id="L97">			summoningParticles = null;</span>
+		}
+<span class="nc" id="L99">	}</span>
+
+	public void cancelSummoning(){
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if (summoningParticles != null){</span>
+<span class="nc" id="L103">			summoningParticles.on = false;</span>
+<span class="nc" id="L104">			summoningParticles = null;</span>
+		}
+<span class="nc" id="L106">	}</span>
+
+	public void finishSummoning(){
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		if (summoningParticles.visible) {</span>
+<span class="nc" id="L110">			Sample.INSTANCE.play(Assets.Sounds.CURSED);</span>
+<span class="nc" id="L111">			summoningParticles.burst(ShadowParticle.CURSE, 5);</span>
+		} else {
+<span class="nc" id="L113">			summoningParticles.on = false;</span>
+		}
+<span class="nc" id="L115">		summoningParticles = null;</span>
+<span class="nc" id="L116">		idle();</span>
+<span class="nc" id="L117">	}</span>
+
+	public void charge(){
+<span class="nc" id="L120">		play(charging);</span>
+<span class="nc" id="L121">	}</span>
+
+	@Override
+	public void zap(int cell) {
+<span class="nc" id="L125">		super.zap(cell);</span>
+<span class="nc bnc" id="L126" title="All 4 branches missed.">		if (ch instanceof Necromancer &amp;&amp; ((Necromancer) ch).summoning){</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">			if (summoningParticles != null){</span>
+<span class="nc" id="L128">				summoningParticles.on = false;</span>
+			}
+<span class="nc" id="L130">			summoningParticles = CellEmitter.get(((Necromancer) ch).summoningPos);</span>
+<span class="nc" id="L131">			summoningParticles.pour(ShadowParticle.MISSILE, 0.1f);</span>
+<span class="nc" id="L132">			summoningParticles.visible = Dungeon.level.heroFOV[((Necromancer) ch).summoningPos];</span>
+<span class="nc bnc" id="L133" title="All 4 branches missed.">			if (visible || summoningParticles.visible ) Sample.INSTANCE.play( Assets.Sounds.CHARGEUP, 1f, 0.8f );</span>
+		}
+<span class="nc" id="L135">	}</span>
+
+	@Override
+	public void onComplete(Animation anim) {
+<span class="nc" id="L139">		super.onComplete(anim);</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">		if (anim == zap){</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">			if (ch instanceof Necromancer){</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">				if (((Necromancer) ch).summoning){</span>
+<span class="nc" id="L143">					charge();</span>
+				} else {
+<span class="nc" id="L145">					((Necromancer)ch).onZapComplete();</span>
+<span class="nc" id="L146">					idle();</span>
+				}
+			} else {
+<span class="nc" id="L149">				idle();</span>
+			}
+		}
+<span class="nc" id="L152">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

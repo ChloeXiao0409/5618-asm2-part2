@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RegularBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.builders</a> &gt; <span class="el_source">RegularBuilder.java</span></div><h1>RegularBuilder.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.builders;
+
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.connection.ConnectionRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.connection.MazeConnectionRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret.SecretRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.ShopRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.StandardRoom;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+
+//Introduces the concept of a main path, and branches
+// with tunnels padding rooms placed in them
+<span class="nc" id="L37">public abstract class RegularBuilder extends Builder {</span>
+	
+	// *** Parameter values for level building logic ***
+	// note that implementations do not have to use al of these variables
+	
+<span class="nc" id="L42">	protected float pathVariance = 45f;</span>
+	
+	public RegularBuilder setPathVariance( float var ){
+<span class="nc" id="L45">		pathVariance = var;</span>
+<span class="nc" id="L46">		return this;</span>
+	}
+	
+	//path length is the percentage of pathable rooms that are on the main path
+<span class="nc" id="L50">	protected float pathLength = 0.25f;</span>
+	//The chance weights for extra rooms to be added to the path
+<span class="nc" id="L52">	protected float[] pathLenJitterChances = new float[]{0, 0, 0, 1};</span>
+	//default is 25% of multi connection rooms, plus 3
+	
+	public RegularBuilder setPathLength( float len, float[] jitter ){
+<span class="nc" id="L56">		pathLength = len;</span>
+<span class="nc" id="L57">		pathLenJitterChances = jitter;</span>
+<span class="nc" id="L58">		return this;</span>
+	}
+	
+<span class="nc" id="L61">	protected float[] pathTunnelChances = new float[]{2, 2, 1};</span>
+<span class="nc" id="L62">	protected float[] branchTunnelChances = new float[]{1, 1, 0};</span>
+	
+	public RegularBuilder setTunnelLength( float[] path, float[] branch){
+<span class="nc" id="L65">		pathTunnelChances = path;</span>
+<span class="nc" id="L66">		branchTunnelChances = branch;</span>
+<span class="nc" id="L67">		return this;</span>
+	}
+
+	//each adjacency is processed twice, so this gives a ~50% chance to connect two adjacent rooms
+<span class="nc" id="L71">	protected float extraConnectionChance = 0.30f;</span>
+	
+	public RegularBuilder setExtraConnectionChance( float chance ){
+<span class="nc" id="L74">		extraConnectionChance = chance;</span>
+<span class="nc" id="L75">		return this;</span>
+	}
+	
+	// *** Room Setup ***
+	
+<span class="nc" id="L80">	protected Room entrance = null;</span>
+<span class="nc" id="L81">	protected Room exit = null;</span>
+<span class="nc" id="L82">	protected Room shop = null;</span>
+
+<span class="nc" id="L84">	protected ArrayList&lt;Room&gt; mainPathRooms = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L86">	protected ArrayList&lt;Room&gt; multiConnections = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L87">	protected ArrayList&lt;Room&gt; singleConnections = new ArrayList&lt;&gt;();</span>
+	
+	protected void setupRooms(ArrayList&lt;Room&gt; rooms){
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		for(Room r : rooms){</span>
+<span class="nc" id="L91">			r.setEmpty();</span>
+<span class="nc" id="L92">		}</span>
+		
+<span class="nc" id="L94">		entrance = exit = shop = null;</span>
+<span class="nc" id="L95">		mainPathRooms.clear();</span>
+<span class="nc" id="L96">		singleConnections.clear();</span>
+<span class="nc" id="L97">		multiConnections.clear();</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">		for (Room r : rooms){</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">			if (r.isEntrance()){</span>
+<span class="nc" id="L100">				entrance = r;</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">			} else if (r.isExit()) {</span>
+<span class="nc" id="L102">				exit = r;</span>
+<span class="nc bnc" id="L103" title="All 4 branches missed.">			} else if (r instanceof ShopRoom &amp;&amp; r.maxConnections(Room.ALL) == 1){</span>
+<span class="nc" id="L104">				shop = r;</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">			} else if (r.maxConnections(Room.ALL) &gt; 1){</span>
+<span class="nc" id="L106">				multiConnections.add(r);</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">			} else if (r.maxConnections(Room.ALL) == 1){</span>
+<span class="nc" id="L108">				singleConnections.add(r);</span>
+			}
+<span class="nc" id="L110">		}</span>
+
+		//this weights larger rooms to be much more likely to appear in the main loop, by placing them earlier in the multiconnections list
+<span class="nc" id="L113">		weightRooms(multiConnections);</span>
+<span class="nc" id="L114">		Random.shuffle(multiConnections);</span>
+<span class="nc" id="L115">		multiConnections = new ArrayList&lt;&gt;(new LinkedHashSet&lt;&gt;(multiConnections));</span>
+		//shuffle one more time to ensure that the actual ordering of the path doesn't put big rooms early
+<span class="nc" id="L117">		Random.shuffle(multiConnections);</span>
+
+<span class="nc" id="L119">		int roomsOnMainPath = (int)(multiConnections.size()*pathLength) + Random.chances(pathLenJitterChances);</span>
+
+<span class="nc bnc" id="L121" title="All 4 branches missed.">		while (roomsOnMainPath &gt; 0 &amp;&amp; !multiConnections.isEmpty()){</span>
+<span class="nc" id="L122">			Room r = multiConnections.remove(0);</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">			if (r instanceof StandardRoom){</span>
+<span class="nc" id="L124">				roomsOnMainPath -= ((StandardRoom) r).sizeFactor();</span>
+			} else {
+<span class="nc" id="L126">				roomsOnMainPath--;</span>
+			}
+<span class="nc" id="L128">			mainPathRooms.add(r);</span>
+<span class="nc" id="L129">		}</span>
+<span class="nc" id="L130">	}</span>
+	
+	// *** Branch Placement ***
+	
+	protected void weightRooms(ArrayList&lt;Room&gt; rooms){
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		for (Room r : rooms.toArray(new Room[0])){</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">			if (r instanceof StandardRoom){</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">				for (int i = 1; i &lt; ((StandardRoom) r).connectionWeight(); i++)</span>
+<span class="nc" id="L138">					rooms.add(r);</span>
+			}
+		}
+<span class="nc" id="L141">	}</span>
+	
+	//places the rooms in roomsToBranch into branches from rooms in branchable.
+	//note that the three arrays should be separate, they may contain the same rooms however
+	protected boolean createBranches(ArrayList&lt;Room&gt; rooms, ArrayList&lt;Room&gt; branchable,
+	                                     ArrayList&lt;Room&gt; roomsToBranch, float[] connChances){
+		
+<span class="nc" id="L148">		int i = 0;</span>
+		float angle;
+		int tries;
+		Room curr;
+<span class="nc" id="L152">		ArrayList&lt;Room&gt; connectingRoomsThisBranch = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L153">		int failedBranchAttempts = 0;</span>
+<span class="nc" id="L154">		float[] connectionChances = connChances.clone();</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		while (i &lt; roomsToBranch.size()){</span>
+
+<span class="nc bnc" id="L157" title="All 2 branches missed.">			if (failedBranchAttempts &gt; 100){</span>
+<span class="nc" id="L158">				return false;</span>
+			}
+			
+<span class="nc" id="L161">			Room r = roomsToBranch.get(i);</span>
+			
+<span class="nc" id="L163">			connectingRoomsThisBranch.clear();</span>
+			
+			do {
+<span class="nc" id="L166">				curr = Random.element(branchable);</span>
+<span class="nc bnc" id="L167" title="All 4 branches missed.">			} while( r instanceof SecretRoom &amp;&amp; curr instanceof ConnectionRoom);</span>
+			
+<span class="nc" id="L169">			int connectingRooms = Random.chances(connectionChances);</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">			if (connectingRooms == -1){</span>
+<span class="nc" id="L171">				connectionChances = connChances.clone();</span>
+<span class="nc" id="L172">				connectingRooms = Random.chances(connectionChances);</span>
+			}
+<span class="nc" id="L174">			connectionChances[connectingRooms]--;</span>
+			
+<span class="nc bnc" id="L176" title="All 2 branches missed.">			for (int j = 0; j &lt; connectingRooms; j++){</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">				ConnectionRoom t = r instanceof SecretRoom ? new MazeConnectionRoom() : ConnectionRoom.createRoom();</span>
+<span class="nc" id="L178">				tries = 3;</span>
+				
+				do {
+<span class="nc" id="L181">					angle = placeRoom(rooms, curr, t, randomBranchAngle(curr));</span>
+<span class="nc" id="L182">					tries--;</span>
+<span class="nc bnc" id="L183" title="All 4 branches missed.">				} while (angle == -1 &amp;&amp; tries &gt; 0);</span>
+				
+<span class="nc bnc" id="L185" title="All 2 branches missed.">				if (angle == -1) {</span>
+<span class="nc" id="L186">					t.clearConnections();</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">					for (Room c : connectingRoomsThisBranch){</span>
+<span class="nc" id="L188">						c.clearConnections();</span>
+<span class="nc" id="L189">						rooms.remove(c);</span>
+<span class="nc" id="L190">					}</span>
+<span class="nc" id="L191">					connectingRoomsThisBranch.clear();</span>
+<span class="nc" id="L192">					break;</span>
+				} else {
+<span class="nc" id="L194">					connectingRoomsThisBranch.add(t);</span>
+<span class="nc" id="L195">					rooms.add(t);</span>
+				}
+				
+<span class="nc" id="L198">				curr = t;</span>
+			}
+			
+<span class="nc bnc" id="L201" title="All 2 branches missed.">			if (connectingRoomsThisBranch.size() != connectingRooms){</span>
+<span class="nc" id="L202">				failedBranchAttempts++;</span>
+<span class="nc" id="L203">				continue;</span>
+			}
+			
+<span class="nc" id="L206">			tries = 10;</span>
+			
+			do {
+<span class="nc" id="L209">				angle = placeRoom(rooms, curr, r, randomBranchAngle(curr));</span>
+<span class="nc" id="L210">				tries--;</span>
+<span class="nc bnc" id="L211" title="All 4 branches missed.">			} while (angle == -1 &amp;&amp; tries &gt; 0);</span>
+			
+<span class="nc bnc" id="L213" title="All 2 branches missed.">			if (angle == -1){</span>
+<span class="nc" id="L214">				r.clearConnections();</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">				for (Room t : connectingRoomsThisBranch){</span>
+<span class="nc" id="L216">					t.clearConnections();</span>
+<span class="nc" id="L217">					rooms.remove(t);</span>
+<span class="nc" id="L218">				}</span>
+<span class="nc" id="L219">				connectingRoomsThisBranch.clear();</span>
+<span class="nc" id="L220">				failedBranchAttempts++;</span>
+<span class="nc" id="L221">				continue;</span>
+			}
+			
+<span class="nc bnc" id="L224" title="All 2 branches missed.">			for (int j = 0; j &lt;connectingRoomsThisBranch.size(); j++){</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">				if (Random.Int(3) &lt;= 1) branchable.add(connectingRoomsThisBranch.get(j));</span>
+			}
+<span class="nc bnc" id="L227" title="All 4 branches missed.">			if (r.maxConnections(Room.ALL) &gt; 1 &amp;&amp; Random.Int(3) == 0) {</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">				if (r instanceof StandardRoom){</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">					for (int j = 0; j &lt; ((StandardRoom) r).connectionWeight(); j++){</span>
+<span class="nc" id="L230">						branchable.add(r);</span>
+					}
+				} else {
+<span class="nc" id="L233">					branchable.add(r);</span>
+				}
+			}
+			
+<span class="nc" id="L237">			i++;</span>
+<span class="nc" id="L238">		}</span>
+
+<span class="nc" id="L240">		return true;</span>
+	}
+	
+	protected float randomBranchAngle( Room r ){
+<span class="nc" id="L244">		return Random.Float(360f);</span>
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

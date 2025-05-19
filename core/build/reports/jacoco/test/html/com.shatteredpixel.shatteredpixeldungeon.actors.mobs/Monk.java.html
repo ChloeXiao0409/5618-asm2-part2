@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Monk.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">Monk.java</span></div><h1>Monk.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Imp;
+import com.shatteredpixel.shatteredpixeldungeon.items.food.Food;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.MonkSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L37">public class Monk extends Mob {</span>
+	
+	{
+<span class="nc" id="L40">		spriteClass = MonkSprite.class;</span>
+		
+<span class="nc" id="L42">		HP = HT = 70;</span>
+<span class="nc" id="L43">		defenseSkill = 30;</span>
+		
+<span class="nc" id="L45">		EXP = 11;</span>
+<span class="nc" id="L46">		maxLvl = 21;</span>
+		
+<span class="nc" id="L48">		loot = Food.class;</span>
+<span class="nc" id="L49">		lootChance = 0.083f;</span>
+
+<span class="nc" id="L51">		properties.add(Property.UNDEAD);</span>
+	}
+	
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L56">		return Random.NormalIntRange( 12, 25 );</span>
+	}
+	
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L61">		return 30;</span>
+	}
+	
+	@Override
+	public float attackDelay() {
+<span class="nc" id="L66">		return super.attackDelay()*0.5f;</span>
+	}
+	
+	@Override
+	public int drRoll() {
+<span class="nc" id="L71">		return super.drRoll() + Random.NormalIntRange(0, 2);</span>
+	}
+	
+	@Override
+	public void rollToDropLoot() {
+<span class="nc" id="L76">		Imp.Quest.process( this );</span>
+		
+<span class="nc" id="L78">		super.rollToDropLoot();</span>
+<span class="nc" id="L79">	}</span>
+	
+<span class="nc" id="L81">	protected float focusCooldown = 0;</span>
+	
+	@Override
+	protected boolean act() {
+<span class="nc" id="L85">		boolean result = super.act();</span>
+<span class="nc bnc" id="L86" title="All 6 branches missed.">		if (buff(Focus.class) == null &amp;&amp; state == HUNTING &amp;&amp; focusCooldown &lt;= 0) {</span>
+<span class="nc" id="L87">			Buff.affect( this, Focus.class );</span>
+		}
+<span class="nc" id="L89">		return result;</span>
+	}
+	
+	@Override
+	protected void spend( float time ) {
+<span class="nc" id="L94">		focusCooldown -= time;</span>
+<span class="nc" id="L95">		super.spend( time );</span>
+<span class="nc" id="L96">	}</span>
+	
+	@Override
+	public void move( int step, boolean travelling) {
+		// moving reduces cooldown by an additional 0.67, giving a total reduction of 1.67f.
+		// basically monks will become focused notably faster if you kite them.
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if (travelling) focusCooldown -= 0.67f;</span>
+<span class="nc" id="L103">		super.move( step, travelling);</span>
+<span class="nc" id="L104">	}</span>
+	
+	@Override
+	public int defenseSkill( Char enemy ) {
+<span class="nc bnc" id="L108" title="All 6 branches missed.">		if (buff(Focus.class) != null &amp;&amp; paralysed == 0 &amp;&amp; state != SLEEPING){</span>
+<span class="nc" id="L109">			return INFINITE_EVASION;</span>
+		}
+<span class="nc" id="L111">		return super.defenseSkill( enemy );</span>
+	}
+	
+	@Override
+	public String defenseVerb() {
+<span class="nc" id="L116">		Focus f = buff(Focus.class);</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		if (f == null) {</span>
+<span class="nc" id="L118">			return super.defenseVerb();</span>
+		} else {
+<span class="nc" id="L120">			f.detach();</span>
+<span class="nc bnc" id="L121" title="All 4 branches missed.">			if (sprite != null &amp;&amp; sprite.visible) {</span>
+<span class="nc" id="L122">				Sample.INSTANCE.play(Assets.Sounds.HIT_PARRY, 1, Random.Float(0.96f, 1.05f));</span>
+			}
+<span class="nc" id="L124">			focusCooldown = Random.NormalFloat( 6, 7 );</span>
+<span class="nc" id="L125">			return Messages.get(this, &quot;parried&quot;);</span>
+		}
+	}
+	
+<span class="nc" id="L129">	private static String FOCUS_COOLDOWN = &quot;focus_cooldown&quot;;</span>
+	
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L133">		super.storeInBundle( bundle );</span>
+<span class="nc" id="L134">		bundle.put( FOCUS_COOLDOWN, focusCooldown );</span>
+<span class="nc" id="L135">	}</span>
+	
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L139">		super.restoreFromBundle( bundle );</span>
+<span class="nc" id="L140">		focusCooldown = bundle.getInt( FOCUS_COOLDOWN );</span>
+<span class="nc" id="L141">	}</span>
+	
+<span class="nc" id="L143">	public static class Focus extends Buff {</span>
+		
+		{
+<span class="nc" id="L146">			type = buffType.POSITIVE;</span>
+<span class="nc" id="L147">			announced = true;</span>
+<span class="nc" id="L148">		}</span>
+		
+		@Override
+		public int icon() {
+<span class="nc" id="L152">			return BuffIndicator.MIND_VISION;</span>
+		}
+
+		@Override
+		public void tintIcon(Image icon) {
+<span class="nc" id="L157">			icon.hardlight(0.25f, 1.5f, 1f);</span>
+<span class="nc" id="L158">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

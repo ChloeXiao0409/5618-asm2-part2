@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WndTextInput.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.windows</a> &gt; <span class="el_source">WndTextInput.java</span></div><h1>WndTextInput.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.windows;
+
+import com.badlogic.gdx.Gdx;
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.watabou.input.PointerEvent;
+import com.watabou.noosa.TextInput;
+
+public class WndTextInput extends Window {
+
+	private static final int WIDTH = 135;
+	private static final int W_LAND_EXTRA = 220; //extra width is sometimes used in landscape
+	private static final int MARGIN = 1;
+	private static final int BUTTON_HEIGHT = 16;
+
+	protected TextInput textBox;
+
+	protected RedButton btnCopy;
+	protected RedButton btnPaste;
+
+	public WndTextInput(final String title, final String body, final String initialValue, final int maxLength,
+	                           final boolean multiLine, final String posTxt, final String negTxt) {
+<span class="nc" id="L48">		super();</span>
+
+		//need to offset to give space for the soft keyboard
+<span class="nc bnc" id="L51" title="All 2 branches missed.">		if (PixelScene.landscape()) {</span>
+<span class="nc" id="L52">			offset(0, -45);</span>
+		} else {
+<span class="nc bnc" id="L54" title="All 2 branches missed.">			offset(0, multiLine ? -60 : -45);</span>
+		}
+
+		final int width;
+<span class="nc bnc" id="L58" title="All 6 branches missed.">		if (PixelScene.landscape() &amp;&amp; (multiLine || body != null)) {</span>
+<span class="nc" id="L59">			width = W_LAND_EXTRA; //more space for landscape users</span>
+		} else {
+<span class="nc" id="L61">			width = WIDTH;</span>
+		}
+
+<span class="nc" id="L64">		float pos = 2;</span>
+
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (title != null) {</span>
+<span class="nc" id="L67">			final RenderedTextBlock txtTitle = PixelScene.renderTextBlock(title, 9);</span>
+<span class="nc" id="L68">			txtTitle.maxWidth(width);</span>
+<span class="nc" id="L69">			txtTitle.hardlight(Window.TITLE_COLOR);</span>
+<span class="nc" id="L70">			txtTitle.setPos((width - txtTitle.width()) / 2, 2);</span>
+<span class="nc" id="L71">			add(txtTitle);</span>
+
+<span class="nc" id="L73">			pos = txtTitle.bottom() + 4 * MARGIN;</span>
+		}
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		if (body != null) {</span>
+<span class="nc" id="L77">			final RenderedTextBlock txtBody = PixelScene.renderTextBlock(body, 6);</span>
+<span class="nc" id="L78">			txtBody.maxWidth(width);</span>
+<span class="nc" id="L79">			txtBody.setPos(0, pos);</span>
+<span class="nc" id="L80">			add(txtBody);</span>
+
+<span class="nc" id="L82">			pos = txtBody.bottom() + 2 * MARGIN;</span>
+		}
+
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		int textSize = (int)PixelScene.uiCamera.zoom * (multiLine ? 6 : 9);</span>
+<span class="nc" id="L86">		textBox = new TextInput(Chrome.get(Chrome.Type.TOAST_WHITE), multiLine, textSize){</span>
+			@Override
+			public void enterPressed() {
+				//triggers positive action on enter pressed, only with non-multiline though.
+<span class="nc" id="L90">				onSelect(true, getText());</span>
+<span class="nc" id="L91">				hide();</span>
+<span class="nc" id="L92">			}</span>
+
+			@Override
+			public void onChanged() {
+<span class="nc" id="L96">				super.onChanged();</span>
+<span class="nc bnc" id="L97" title="All 4 branches missed.">				if (btnCopy != null) btnCopy.enable(!getText().isEmpty());</span>
+<span class="nc" id="L98">			}</span>
+
+			@Override
+			public void onClipBoardUpdate() {
+<span class="nc" id="L102">				super.onClipBoardUpdate();</span>
+<span class="nc" id="L103">				btnPaste.enable(Gdx.app.getClipboard().hasContents());</span>
+<span class="nc" id="L104">			}</span>
+		};
+<span class="nc bnc" id="L106" title="All 2 branches missed.">		if (initialValue != null) textBox.setText(initialValue);</span>
+<span class="nc" id="L107">		textBox.setMaxLength(maxLength);</span>
+
+		//sets different height depending on whether this is a single or multi line input.
+		final float inputHeight;
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		if (multiLine) {</span>
+<span class="nc" id="L112">			inputHeight = 64; //~8 lines of text</span>
+		} else {
+<span class="nc" id="L114">			inputHeight = 16;</span>
+		}
+
+<span class="nc" id="L117">		float textBoxWidth = width-3*MARGIN-BUTTON_HEIGHT;</span>
+
+<span class="nc" id="L119">		add(textBox);</span>
+<span class="nc" id="L120">		textBox.setRect(MARGIN, pos, textBoxWidth, inputHeight);</span>
+
+<span class="nc" id="L122">		btnCopy = new RedButton(&quot;&quot;){</span>
+			@Override
+			protected void onPointerDown() {
+<span class="nc" id="L125">				super.onPointerDown();</span>
+<span class="nc" id="L126">				PointerEvent.clearKeyboardThisPress = false;</span>
+<span class="nc" id="L127">			}</span>
+
+			@Override
+			protected void onPointerUp() {
+<span class="nc" id="L131">				super.onPointerUp();</span>
+<span class="nc" id="L132">				PointerEvent.clearKeyboardThisPress = false;</span>
+<span class="nc" id="L133">			}</span>
+
+			@Override
+			protected void onClick() {
+<span class="nc" id="L137">				super.onClick();</span>
+<span class="nc" id="L138">				textBox.copyToClipboard();</span>
+<span class="nc" id="L139">			}</span>
+		};
+<span class="nc" id="L141">		btnCopy.icon(Icons.COPY.get());</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">		btnCopy.enable(!textBox.getText().isEmpty());</span>
+<span class="nc" id="L143">		add(btnCopy);</span>
+
+<span class="nc" id="L145">		btnPaste = new RedButton(&quot;&quot;){</span>
+			@Override
+			protected void onPointerDown() {
+<span class="nc" id="L148">				super.onPointerDown();</span>
+<span class="nc" id="L149">				PointerEvent.clearKeyboardThisPress = false;</span>
+<span class="nc" id="L150">			}</span>
+
+			@Override
+			protected void onPointerUp() {
+<span class="nc" id="L154">				super.onPointerUp();</span>
+<span class="nc" id="L155">				PointerEvent.clearKeyboardThisPress = false;</span>
+<span class="nc" id="L156">			}</span>
+
+			@Override
+			protected void onClick() {
+<span class="nc" id="L160">				super.onClick();</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">				if (Gdx.app.getClipboard().hasContents()) {</span>
+<span class="nc" id="L162">					textBox.pasteFromClipboard();</span>
+				} else {
+<span class="nc" id="L164">					enable(false);</span>
+				}
+<span class="nc" id="L166">			}</span>
+
+		};
+<span class="nc" id="L169">		btnPaste.icon(Icons.PASTE.get());</span>
+<span class="nc" id="L170">		btnPaste.enable(Gdx.app.getClipboard().hasContents());</span>
+<span class="nc" id="L171">		add(btnPaste);</span>
+
+<span class="nc" id="L173">		btnCopy.setRect(textBoxWidth + 2*MARGIN, pos, BUTTON_HEIGHT, BUTTON_HEIGHT);</span>
+<span class="nc" id="L174">		btnPaste.setRect(textBoxWidth + 2*MARGIN, btnCopy.bottom()+MARGIN, BUTTON_HEIGHT, BUTTON_HEIGHT);</span>
+
+<span class="nc" id="L176">		pos += inputHeight + MARGIN;</span>
+
+<span class="nc" id="L178">		final RedButton positiveBtn = new RedButton(posTxt) {</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L181">				onSelect(true, textBox.getText());</span>
+<span class="nc" id="L182">				hide();</span>
+<span class="nc" id="L183">			}</span>
+		};
+
+		final RedButton negativeBtn;
+<span class="nc bnc" id="L187" title="All 2 branches missed.">		if (negTxt != null) {</span>
+<span class="nc" id="L188">			negativeBtn = new RedButton(negTxt) {</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L191">					onSelect(false, textBox.getText());</span>
+<span class="nc" id="L192">					hide();</span>
+<span class="nc" id="L193">				}</span>
+			};
+		} else {
+<span class="nc" id="L196">			negativeBtn = null;</span>
+		}
+
+<span class="nc bnc" id="L199" title="All 2 branches missed.">		float btnWidth = multiLine ? width-2*MARGIN : textBoxWidth;</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">		if (negTxt != null) {</span>
+<span class="nc" id="L201">			positiveBtn.setRect(MARGIN, pos, (btnWidth - MARGIN) / 2, BUTTON_HEIGHT);</span>
+<span class="nc" id="L202">			add(positiveBtn);</span>
+<span class="nc" id="L203">			negativeBtn.setRect(positiveBtn.right() + MARGIN, pos, (btnWidth - MARGIN) / 2, BUTTON_HEIGHT);</span>
+<span class="nc" id="L204">			add(negativeBtn);</span>
+		} else {
+<span class="nc" id="L206">			positiveBtn.setRect(MARGIN, pos, btnWidth, BUTTON_HEIGHT);</span>
+<span class="nc" id="L207">			add(positiveBtn);</span>
+		}
+
+<span class="nc" id="L210">		pos += BUTTON_HEIGHT;</span>
+
+		//need to resize first before laying out the text box, as it depends on the window's camera
+<span class="nc" id="L213">		resize(width, (int) pos);</span>
+
+<span class="nc" id="L215">		textBox.setRect(MARGIN, textBox.top(), textBoxWidth, inputHeight);</span>
+
+<span class="nc" id="L217">		PointerEvent.clearKeyboardThisPress = false;</span>
+
+<span class="nc" id="L219">	}</span>
+
+	@Override
+	public void offset(int xOffset, int yOffset) {
+<span class="nc" id="L223">		super.offset(xOffset, yOffset);</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">		if (textBox != null){</span>
+<span class="nc" id="L225">			textBox.setRect(textBox.left(), textBox.top(), textBox.width(), textBox.height());</span>
+		}
+<span class="nc" id="L227">	}</span>
+
+<span class="nc" id="L229">	public void onSelect(boolean positive, String text){ }</span>
+
+	@Override
+	public void onBackPressed() {
+		//Do nothing, prevents accidentally losing writing
+<span class="nc" id="L234">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

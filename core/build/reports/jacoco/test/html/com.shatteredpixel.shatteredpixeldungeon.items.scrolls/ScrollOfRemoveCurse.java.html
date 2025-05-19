@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScrollOfRemoveCurse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.scrolls</a> &gt; <span class="el_source">ScrollOfRemoveCurse.java</span></div><h1>ScrollOfRemoveCurse.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.scrolls;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Degrade;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.TormentedSpirit;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.PathFinder;
+
+<span class="nc" id="L45">public class ScrollOfRemoveCurse extends InventoryScroll {</span>
+
+	{
+<span class="nc" id="L48">		icon = ItemSpriteSheet.Icons.SCROLL_REMCURSE;</span>
+<span class="nc" id="L49">		preferredBag = Belongings.Backpack.class;</span>
+<span class="nc" id="L50">	}</span>
+
+	@Override
+	public void doRead() {
+
+<span class="nc" id="L55">		TormentedSpirit spirit = null;</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">		for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">			if (Actor.findChar(curUser.pos+i) instanceof TormentedSpirit){</span>
+<span class="nc" id="L58">				spirit = (TormentedSpirit) Actor.findChar(curUser.pos+i);</span>
+			}
+		}
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if (spirit != null){</span>
+<span class="nc" id="L62">			identify();</span>
+<span class="nc" id="L63">			Sample.INSTANCE.play( Assets.Sounds.READ );</span>
+<span class="nc" id="L64">			readAnimation();</span>
+
+<span class="nc" id="L66">			new Flare( 6, 32 ).show( curUser.sprite, 2f );</span>
+
+<span class="nc bnc" id="L68" title="All 2 branches missed.">			if (curUser.buff(Degrade.class) != null) {</span>
+<span class="nc" id="L69">				Degrade.detach(curUser, Degrade.class);</span>
+			}
+
+<span class="nc" id="L72">			detach(curUser.belongings.backpack);</span>
+<span class="nc" id="L73">			GLog.p(Messages.get(this, &quot;spirit&quot;));</span>
+<span class="nc" id="L74">			spirit.cleanse();</span>
+		} else {
+<span class="nc" id="L76">			super.doRead();</span>
+		}
+<span class="nc" id="L78">	}</span>
+
+	@Override
+	protected boolean usableOnItem(Item item) {
+<span class="nc" id="L82">		return uncursable(item);</span>
+	}
+
+	public static boolean uncursable( Item item ){
+<span class="nc bnc" id="L86" title="All 4 branches missed.">		if (item.isEquipped(Dungeon.hero) &amp;&amp; Dungeon.hero.buff(Degrade.class) != null) {</span>
+<span class="nc" id="L87">			return true;</span>
+<span class="nc bnc" id="L88" title="All 10 branches missed.">		} if ((item instanceof EquipableItem || item instanceof Wand) &amp;&amp; ((!item.isIdentified() &amp;&amp; !item.cursedKnown) || item.cursed)){</span>
+<span class="nc" id="L89">			return true;</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		} else if (item instanceof Weapon){</span>
+<span class="nc" id="L91">			return ((Weapon)item).hasCurseEnchant();</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		} else if (item instanceof Armor){</span>
+<span class="nc" id="L93">			return ((Armor)item).hasCurseGlyph();</span>
+		} else {
+<span class="nc" id="L95">			return false;</span>
+		}
+	}
+
+	@Override
+	protected void onItemSelected(Item item) {
+<span class="nc" id="L101">		new Flare( 6, 32 ).show( curUser.sprite, 2f );</span>
+
+<span class="nc" id="L103">		boolean procced = uncurse( curUser, item );</span>
+
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		if (curUser.buff(Degrade.class) != null) {</span>
+<span class="nc" id="L106">			Degrade.detach(curUser, Degrade.class);</span>
+<span class="nc" id="L107">			procced = true;</span>
+		}
+
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		if (procced) {</span>
+<span class="nc" id="L111">			GLog.p( Messages.get(this, &quot;cleansed&quot;) );</span>
+		} else {
+<span class="nc" id="L113">			GLog.i( Messages.get(this, &quot;not_cleansed&quot;) );</span>
+		}
+<span class="nc" id="L115">	}</span>
+
+	public static boolean uncurse( Hero hero, Item... items ) {
+		
+<span class="nc" id="L119">		boolean procced = false;</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">		for (Item item : items) {</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">			if (item != null) {</span>
+<span class="nc" id="L122">				item.cursedKnown = true;</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">				if (item.cursed) {</span>
+<span class="nc" id="L124">					procced = true;</span>
+<span class="nc" id="L125">					item.cursed = false;</span>
+				}
+			}
+<span class="nc bnc" id="L128" title="All 2 branches missed.">			if (item instanceof Weapon){</span>
+<span class="nc" id="L129">				Weapon w = (Weapon) item;</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">				if (w.hasCurseEnchant()){</span>
+<span class="nc" id="L131">					w.enchant(null);</span>
+<span class="nc" id="L132">					procced = true;</span>
+				}
+			}
+<span class="nc bnc" id="L135" title="All 2 branches missed.">			if (item instanceof Armor){</span>
+<span class="nc" id="L136">				Armor a = (Armor) item;</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">				if (a.hasCurseGlyph()){</span>
+<span class="nc" id="L138">					a.inscribe(null);</span>
+<span class="nc" id="L139">					procced = true;</span>
+				}
+			}
+<span class="nc bnc" id="L142" title="All 2 branches missed.">			if (item instanceof Wand){</span>
+<span class="nc" id="L143">				((Wand) item).updateLevel();</span>
+			}
+		}
+		
+<span class="nc bnc" id="L147" title="All 2 branches missed.">		if (procced) {</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">			if (hero != null) {</span>
+<span class="nc" id="L149">				hero.sprite.emitter().start(ShadowParticle.UP, 0.05f, 10);</span>
+<span class="nc" id="L150">				hero.updateHT(false); //for ring of might</span>
+<span class="nc" id="L151">				updateQuickslot();</span>
+			}
+
+<span class="nc" id="L154">			Badges.validateClericUnlock();</span>
+		}
+		
+<span class="nc" id="L157">		return procced;</span>
+	}
+	
+	@Override
+	public int value() {
+<span class="nc bnc" id="L162" title="All 2 branches missed.">		return isKnown() ? 30 * quantity : super.value();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RunicBlade.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee</a> &gt; <span class="el_source">RunicBlade.java</span></div><h1>RunicBlade.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.AttackIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Callback;
+
+<span class="nc" id="L39">public class RunicBlade extends MeleeWeapon {</span>
+
+	{
+<span class="nc" id="L42">		image = ItemSpriteSheet.RUNIC_BLADE;</span>
+<span class="nc" id="L43">		hitSound = Assets.Sounds.HIT_SLASH;</span>
+<span class="nc" id="L44">		hitSoundPitch = 1f;</span>
+
+<span class="nc" id="L46">		tier = 4;</span>
+<span class="nc" id="L47">	}</span>
+
+	//Essentially it's a tier 4 weapon, with tier 3 base max damage, and tier 5 scaling.
+	//equal to tier 4 in damage at +5
+
+	@Override
+	public int max(int lvl) {
+<span class="nc" id="L54">		return  5*(tier) +                	//20 base, down from 25</span>
+<span class="nc" id="L55">				Math.round(lvl*(tier+2));	//+6 per level, up from +5</span>
+	}
+
+	@Override
+	public String targetingPrompt() {
+<span class="nc" id="L60">		return Messages.get(this, &quot;prompt&quot;);</span>
+	}
+
+	@Override
+	protected void duelistAbility(Hero hero, Integer target) {
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		if (target == null) {</span>
+<span class="nc" id="L66">			return;</span>
+		}
+
+<span class="nc" id="L69">		Char enemy = Actor.findChar(target);</span>
+<span class="nc bnc" id="L70" title="All 8 branches missed.">		if (enemy == null || enemy == hero || hero.isCharmedBy(enemy) || !Dungeon.level.heroFOV[target]) {</span>
+<span class="nc" id="L71">			GLog.w(Messages.get(this, &quot;ability_no_target&quot;));</span>
+<span class="nc" id="L72">			return;</span>
+		}
+
+		//we apply here because of projecting
+<span class="nc" id="L76">		RunicSlashTracker tracker = Buff.affect(hero, RunicSlashTracker.class);</span>
+<span class="nc" id="L77">		tracker.boost = 3f + 0.50f*buffedLvl();</span>
+<span class="nc" id="L78">		hero.belongings.abilityWeapon = this;</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if (!hero.canAttack(enemy)){</span>
+<span class="nc" id="L80">			GLog.w(Messages.get(this, &quot;ability_target_range&quot;));</span>
+<span class="nc" id="L81">			tracker.detach();</span>
+<span class="nc" id="L82">			hero.belongings.abilityWeapon = null;</span>
+<span class="nc" id="L83">			return;</span>
+		}
+<span class="nc" id="L85">		hero.belongings.abilityWeapon = null;</span>
+
+<span class="nc" id="L87">		hero.sprite.attack(enemy.pos, new Callback() {</span>
+			@Override
+			public void call() {
+<span class="nc" id="L90">				beforeAbilityUsed(hero, enemy);</span>
+<span class="nc" id="L91">				AttackIndicator.target(enemy);</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">				if (hero.attack(enemy, 1f, 0, Char.INFINITE_ACCURACY)){</span>
+<span class="nc" id="L93">					Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">					if (!enemy.isAlive()){</span>
+<span class="nc" id="L95">						onAbilityKill(hero, enemy);</span>
+					}
+				}
+<span class="nc" id="L98">				tracker.detach();</span>
+<span class="nc" id="L99">				Invisibility.dispel();</span>
+<span class="nc" id="L100">				hero.spendAndNext(hero.attackDelay());</span>
+<span class="nc" id="L101">				afterAbilityUsed(hero);</span>
+<span class="nc" id="L102">			}</span>
+		});
+<span class="nc" id="L104">	}</span>
+
+	@Override
+	public String abilityInfo() {
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		if (levelKnown){</span>
+<span class="nc" id="L109">			return Messages.get(this, &quot;ability_desc&quot;, 300+50*buffedLvl());</span>
+		} else {
+<span class="nc" id="L111">			return Messages.get(this, &quot;typical_ability_desc&quot;, 300);</span>
+		}
+	}
+
+	@Override
+	public String upgradeAbilityStat(int level) {
+<span class="nc" id="L117">		return &quot;+&quot; + (300+50*level) + &quot;%&quot;;</span>
+	}
+
+
+<span class="nc" id="L121">	public static class RunicSlashTracker extends FlavourBuff{</span>
+
+<span class="nc" id="L123">		public float boost = 2f;</span>
+
+	};
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

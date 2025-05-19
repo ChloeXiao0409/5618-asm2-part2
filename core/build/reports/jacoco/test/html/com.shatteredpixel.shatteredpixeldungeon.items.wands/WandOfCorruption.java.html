@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WandOfCorruption.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.wands</a> &gt; <span class="el_source">WandOfCorruption.java</span></div><h1>WandOfCorruption.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.wands;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AllyBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Amok;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AscensionChallenge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Bleeding;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Blindness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Charm;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Chill;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Corrosion;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Corruption;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Cripple;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Daze;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Doom;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Dread;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Drowsy;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Hex;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicalSleep;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Ooze;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Poison;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Roots;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Slow;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.SoulMark;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Terror;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Vertigo;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Vulnerable;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Weakness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Bee;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DwarfKing;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Piranha;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Statue;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Swarm;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Wraith;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Callback;
+import com.watabou.utils.Random;
+
+import java.util.HashMap;
+
+<span class="nc" id="L79">public class WandOfCorruption extends Wand {</span>
+
+	{
+<span class="nc" id="L82">		image = ItemSpriteSheet.WAND_CORRUPTION;</span>
+<span class="nc" id="L83">	}</span>
+	
+	//Note that some debuffs here have a 0% chance to be applied.
+	// This is because the wand of corruption considers them to be a certain level of harmful
+	// for the purposes of reducing resistance, but does not actually apply them itself
+	
+	private static final float MINOR_DEBUFF_WEAKEN = 1/4f;
+<span class="nc" id="L90">	private static final HashMap&lt;Class&lt;? extends Buff&gt;, Float&gt; MINOR_DEBUFFS = new HashMap&lt;&gt;();</span>
+	static{
+<span class="nc" id="L92">		MINOR_DEBUFFS.put(Weakness.class,       2f);</span>
+<span class="nc" id="L93">		MINOR_DEBUFFS.put(Vulnerable.class,     2f);</span>
+<span class="nc" id="L94">		MINOR_DEBUFFS.put(Cripple.class,        1f);</span>
+<span class="nc" id="L95">		MINOR_DEBUFFS.put(Blindness.class,      1f);</span>
+<span class="nc" id="L96">		MINOR_DEBUFFS.put(Terror.class,         1f);</span>
+
+<span class="nc" id="L98">		MINOR_DEBUFFS.put(Chill.class,          0f);</span>
+<span class="nc" id="L99">		MINOR_DEBUFFS.put(Ooze.class,           0f);</span>
+<span class="nc" id="L100">		MINOR_DEBUFFS.put(Roots.class,          0f);</span>
+<span class="nc" id="L101">		MINOR_DEBUFFS.put(Vertigo.class,        0f);</span>
+<span class="nc" id="L102">		MINOR_DEBUFFS.put(Drowsy.class,         0f);</span>
+<span class="nc" id="L103">		MINOR_DEBUFFS.put(Bleeding.class,       0f);</span>
+<span class="nc" id="L104">		MINOR_DEBUFFS.put(Burning.class,        0f);</span>
+<span class="nc" id="L105">		MINOR_DEBUFFS.put(Poison.class,         0f);</span>
+	}
+
+	private static final float MAJOR_DEBUFF_WEAKEN = 1/2f;
+<span class="nc" id="L109">	private static final HashMap&lt;Class&lt;? extends Buff&gt;, Float&gt; MAJOR_DEBUFFS = new HashMap&lt;&gt;();</span>
+	static{
+<span class="nc" id="L111">		MAJOR_DEBUFFS.put(Amok.class,           3f);</span>
+<span class="nc" id="L112">		MAJOR_DEBUFFS.put(Slow.class,           2f);</span>
+<span class="nc" id="L113">		MAJOR_DEBUFFS.put(Hex.class,            2f);</span>
+<span class="nc" id="L114">		MAJOR_DEBUFFS.put(Paralysis.class,      1f);</span>
+
+<span class="nc" id="L116">		MAJOR_DEBUFFS.put(Daze.class,           0f);</span>
+<span class="nc" id="L117">		MAJOR_DEBUFFS.put(Dread.class,          0f);</span>
+<span class="nc" id="L118">		MAJOR_DEBUFFS.put(Charm.class,          0f);</span>
+<span class="nc" id="L119">		MAJOR_DEBUFFS.put(MagicalSleep.class,   0f);</span>
+<span class="nc" id="L120">		MAJOR_DEBUFFS.put(SoulMark.class,       0f);</span>
+<span class="nc" id="L121">		MAJOR_DEBUFFS.put(Corrosion.class,      0f);</span>
+<span class="nc" id="L122">		MAJOR_DEBUFFS.put(Frost.class,          0f);</span>
+<span class="nc" id="L123">		MAJOR_DEBUFFS.put(Doom.class,           0f);</span>
+<span class="nc" id="L124">	}</span>
+	
+	@Override
+	public void onZap(Ballistica bolt) {
+<span class="nc" id="L128">		Char ch = Actor.findChar(bolt.collisionPos);</span>
+
+<span class="nc bnc" id="L130" title="All 2 branches missed.">		if (ch != null){</span>
+			
+<span class="nc bnc" id="L132" title="All 2 branches missed.">			if (!(ch instanceof Mob)){</span>
+<span class="nc" id="L133">				return;</span>
+			}
+
+<span class="nc" id="L136">			Mob enemy = (Mob) ch;</span>
+
+<span class="nc bnc" id="L138" title="All 2 branches missed.">			if (enemy instanceof DwarfKing){</span>
+<span class="nc" id="L139">				Statistics.qualifiedForBossChallengeBadge = false;</span>
+			}
+
+<span class="nc" id="L142">			float corruptingPower = 3 + buffedLvl()/3f;</span>
+			
+			//base enemy resistance is usually based on their exp, but in special cases it is based on other criteria
+			float enemyResist;
+<span class="nc bnc" id="L146" title="All 4 branches missed.">			if (ch instanceof Mimic || ch instanceof Statue){</span>
+<span class="nc" id="L147">				enemyResist = 1 + Dungeon.depth;</span>
+<span class="nc bnc" id="L148" title="All 4 branches missed.">			} else if (ch instanceof Piranha || ch instanceof Bee) {</span>
+<span class="nc" id="L149">				enemyResist = 1 + Dungeon.depth/2f;</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">			} else if (ch instanceof Wraith) {</span>
+				//divide by 5 as wraiths are always at full HP and are therefore ~5x harder to corrupt
+<span class="nc" id="L152">				enemyResist = (1f + Dungeon.scalingDepth()/4f) / 5f;</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">			} else if (ch instanceof Swarm){</span>
+				//child swarms don't give exp, so we force this here.
+<span class="nc" id="L155">				enemyResist = 1 + AscensionChallenge.AscensionCorruptResist(enemy);</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">				if (enemyResist == 1) enemyResist = 1 + 3;</span>
+			} else {
+<span class="nc" id="L158">				enemyResist = 1 + AscensionChallenge.AscensionCorruptResist(enemy);</span>
+			}
+			
+			//100% health: 5x resist   75%: 3.25x resist   50%: 2x resist   25%: 1.25x resist
+<span class="nc" id="L162">			enemyResist *= 1 + 4*Math.pow(enemy.HP/(float)enemy.HT, 2);</span>
+			
+			//debuffs placed on the enemy reduce their resistance
+<span class="nc bnc" id="L165" title="All 2 branches missed.">			for (Buff buff : enemy.buffs()){</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">				if (MAJOR_DEBUFFS.containsKey(buff.getClass()))         enemyResist *= (1f-MAJOR_DEBUFF_WEAKEN);</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">				else if (MINOR_DEBUFFS.containsKey(buff.getClass()))    enemyResist *= (1f-MINOR_DEBUFF_WEAKEN);</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">				else if (buff.type == Buff.buffType.NEGATIVE)           enemyResist *= (1f-MINOR_DEBUFF_WEAKEN);</span>
+<span class="nc" id="L169">			}</span>
+			
+			//cannot re-corrupt or doom an enemy, so give them a major debuff instead
+<span class="nc bnc" id="L172" title="All 4 branches missed.">			if(enemy.buff(Corruption.class) != null || enemy.buff(Doom.class) != null){</span>
+<span class="nc" id="L173">				corruptingPower = enemyResist - 0.001f;</span>
+			}
+			
+<span class="nc bnc" id="L176" title="All 2 branches missed.">			if (corruptingPower &gt; enemyResist){</span>
+<span class="nc" id="L177">				corruptEnemy( enemy );</span>
+			} else {
+<span class="nc" id="L179">				float debuffChance = corruptingPower / enemyResist;</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">				if (Random.Float() &lt; debuffChance){</span>
+<span class="nc" id="L181">					debuffEnemy( enemy, MAJOR_DEBUFFS);</span>
+				} else {
+<span class="nc" id="L183">					debuffEnemy( enemy, MINOR_DEBUFFS);</span>
+				}
+			}
+
+<span class="nc" id="L187">			wandProc(ch, chargesPerCast());</span>
+<span class="nc" id="L188">			Sample.INSTANCE.play( Assets.Sounds.HIT_MAGIC, 1, 0.8f * Random.Float(0.87f, 1.15f) );</span>
+			
+<span class="nc" id="L190">		} else {</span>
+<span class="nc" id="L191">			Dungeon.level.pressCell(bolt.collisionPos);</span>
+		}
+<span class="nc" id="L193">	}</span>
+	
+	private void debuffEnemy( Mob enemy, HashMap&lt;Class&lt;? extends Buff&gt;, Float&gt; category ){
+		
+		//do not consider buffs which are already assigned, or that the enemy is immune to.
+<span class="nc" id="L198">		HashMap&lt;Class&lt;? extends Buff&gt;, Float&gt; debuffs = new HashMap&lt;&gt;(category);</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">		for (Buff existing : enemy.buffs()){</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">			if (debuffs.containsKey(existing.getClass())) {</span>
+<span class="nc" id="L201">				debuffs.put(existing.getClass(), 0f);</span>
+			}
+<span class="nc" id="L203">		}</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">		for (Class&lt;?extends Buff&gt; toAssign : debuffs.keySet()){</span>
+<span class="nc bnc" id="L205" title="All 4 branches missed.">			 if (debuffs.get(toAssign) &gt; 0 &amp;&amp; enemy.isImmune(toAssign)){</span>
+<span class="nc" id="L206">			 	debuffs.put(toAssign, 0f);</span>
+			 }
+<span class="nc" id="L208">		}</span>
+		
+		//all buffs with a &gt; 0 chance are flavor buffs
+<span class="nc" id="L211">		Class&lt;?extends FlavourBuff&gt; debuffCls = (Class&lt;? extends FlavourBuff&gt;) Random.chances(debuffs);</span>
+		
+<span class="nc bnc" id="L213" title="All 2 branches missed.">		if (debuffCls != null){</span>
+<span class="nc" id="L214">			Buff.append(enemy, debuffCls, 6 + buffedLvl()*3);</span>
+		} else {
+			//if no debuff can be applied (all are present), then go up one tier
+<span class="nc bnc" id="L217" title="All 2 branches missed.">			if (category == MINOR_DEBUFFS)          debuffEnemy( enemy, MAJOR_DEBUFFS);</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">			else if (category == MAJOR_DEBUFFS)     corruptEnemy( enemy );</span>
+		}
+<span class="nc" id="L220">	}</span>
+	
+	private void corruptEnemy( Mob enemy ){
+		//cannot re-corrupt or doom an enemy, so give them a major debuff instead
+<span class="nc bnc" id="L224" title="All 4 branches missed.">		if(enemy.buff(Corruption.class) != null || enemy.buff(Doom.class) != null){</span>
+<span class="nc" id="L225">			GLog.w( Messages.get(this, &quot;already_corrupted&quot;) );</span>
+<span class="nc" id="L226">			return;</span>
+		}
+		
+<span class="nc bnc" id="L229" title="All 2 branches missed.">		if (!enemy.isImmune(Corruption.class)){</span>
+<span class="nc" id="L230">			Corruption.corruptionHeal(enemy);</span>
+
+<span class="nc" id="L232">			AllyBuff.affectAndLoot(enemy, curUser, Corruption.class);</span>
+		} else {
+<span class="nc" id="L234">			Buff.affect(enemy, Doom.class);</span>
+		}
+<span class="nc" id="L236">	}</span>
+
+	@Override
+	public void onHit(MagesStaff staff, Char attacker, Char defender, int damage) {
+<span class="nc" id="L240">		int level = Math.max( 0, buffedLvl() );</span>
+
+		// lvl 0 - 16%
+		// lvl 1 - 28.5%
+		// lvl 2 - 37.5%
+<span class="nc" id="L245">		float procChance = (level+1f)/(level+6f) * procChanceMultiplier(attacker);</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">		if (Random.Float() &lt; procChance) {</span>
+
+<span class="nc" id="L248">			float powerMulti = Math.max(1f, procChance);</span>
+
+<span class="nc" id="L250">			Buff.prolong( defender, Amok.class, Math.round((4+level*2) * powerMulti));</span>
+		}
+<span class="nc" id="L252">	}</span>
+
+	@Override
+	public String upgradeStat1(int level) {
+<span class="nc" id="L256">		return Messages.decimalFormat(&quot;#.##&quot;, 3f + level/3f);</span>
+	}
+
+	@Override
+	public String upgradeStat2(int level) {
+<span class="nc" id="L261">		return Integer.toString(6 + 3*level);</span>
+	}
+
+	@Override
+	public void fx(Ballistica bolt, Callback callback) {
+<span class="nc" id="L266">		MagicMissile.boltFromChar( curUser.sprite.parent,</span>
+				MagicMissile.SHADOW,
+				curUser.sprite,
+<span class="nc" id="L269">				bolt.collisionPos,</span>
+				callback);
+<span class="nc" id="L271">		Sample.INSTANCE.play( Assets.Sounds.ZAP );</span>
+<span class="nc" id="L272">	}</span>
+
+	@Override
+	public void staffFx(MagesStaff.StaffParticle particle) {
+<span class="nc" id="L276">		particle.color( 0 );</span>
+<span class="nc" id="L277">		particle.am = 0.6f;</span>
+<span class="nc" id="L278">		particle.setLifespan(2f);</span>
+<span class="nc" id="L279">		particle.speed.set(0, 5);</span>
+<span class="nc" id="L280">		particle.setSize( 0.5f, 2f);</span>
+<span class="nc" id="L281">		particle.shuffleXY(1f);</span>
+<span class="nc" id="L282">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

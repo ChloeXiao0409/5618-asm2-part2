@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FogOfWar.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.tiles</a> &gt; <span class="el_source">FogOfWar.java</span></div><h1>FogOfWar.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.tiles;
+
+import com.badlogic.gdx.graphics.Pixmap;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.watabou.gltextures.TextureCache;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.NoosaScript;
+import com.watabou.noosa.NoosaScriptNoLighting;
+import com.watabou.utils.Rect;
+
+import java.util.ArrayList;
+
+public class FogOfWar extends Image {
+
+	//first index is visibility type, second is brightness level
+<span class="nc" id="L38">	private static final int FOG_COLORS[][] = new int[][]{{</span>
+			//visible
+			0x00000000, //-1 brightness
+			0x00000000, //0  brightness
+			0x00000000, //1  brightness
+			}, {
+			//visited
+			0xCC000000,
+			0x99000000,
+			0x55000000
+			}, {
+			//mapped
+			0xCC112244,
+			0x99193366,
+			0x55224488
+			}, {
+			//invisible
+			0xFF000000,
+			0xFF000000,
+			0xFF000000
+			}};
+
+	private static final int VISIBLE    =   0;
+	private static final int VISITED    =   1;
+	private static final int MAPPED     =   2;
+	private static final int INVISIBLE  =   3;
+
+	private int mapWidth;
+	private int mapHeight;
+	private int mapLength;
+	
+	private int pWidth;
+	private int pHeight;
+	
+	private int width2;
+	private int height2;
+
+	private volatile ArrayList&lt;Rect&gt; toUpdate;
+	private volatile ArrayList&lt;Rect&gt; updating;
+
+	//should be divisible by 2
+	private static final int PIX_PER_TILE = 2;
+
+	/*
+	TODO currently the center of each fox pixel is aligned with the inside of a cell
+	might be possible to create a better fog effect by aligning them with edges of a cell,
+	similar to the existing fog effect in vanilla (although probably with more precision)
+	the advantage here is that it may be possible to totally eliminate the tile blocking map
+	*/
+	
+	public FogOfWar( int mapWidth, int mapHeight ) {
+
+<span class="nc" id="L90">		super();</span>
+
+<span class="nc" id="L92">		this.mapWidth = mapWidth;</span>
+<span class="nc" id="L93">		this.mapHeight = mapHeight;</span>
+<span class="nc" id="L94">		mapLength = mapHeight * mapWidth;</span>
+
+<span class="nc" id="L96">		pWidth = mapWidth * PIX_PER_TILE;</span>
+<span class="nc" id="L97">		pHeight = mapHeight * PIX_PER_TILE;</span>
+
+<span class="nc" id="L99">		width2 = 1;</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">		while (width2 &lt; pWidth) {</span>
+<span class="nc" id="L101">			width2 &lt;&lt;= 1;</span>
+		}
+
+<span class="nc" id="L104">		height2 = 1;</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		while (height2 &lt; pHeight) {</span>
+<span class="nc" id="L106">			height2 &lt;&lt;= 1;</span>
+		}
+
+<span class="nc" id="L109">		float size = DungeonTilemap.SIZE / PIX_PER_TILE;</span>
+<span class="nc" id="L110">		width = width2 * size;</span>
+<span class="nc" id="L111">		height = height2 * size;</span>
+
+<span class="nc" id="L113">		String key = &quot;FogOfWar&quot; + width2 + &quot;x&quot; + height2;</span>
+<span class="nc" id="L114">		texture(TextureCache.create(key, width2, height2));</span>
+
+		//sets contents to all black
+<span class="nc" id="L117">		texture.bitmap.setColor( 0x000000FF );</span>
+<span class="nc" id="L118">		texture.bitmap.fill();</span>
+
+<span class="nc" id="L120">		texture.bind();</span>
+
+<span class="nc" id="L122">		scale.set( size, size );</span>
+
+<span class="nc" id="L124">		toUpdate = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L125">		toUpdate.add(new Rect(0, 0, mapWidth, mapHeight));</span>
+<span class="nc" id="L126">	}</span>
+
+	public synchronized void updateFog(){
+<span class="nc" id="L129">		toUpdate.clear();</span>
+<span class="nc" id="L130">		toUpdate.add(new Rect(0, 0, mapWidth, mapHeight));</span>
+<span class="nc" id="L131">	}</span>
+	
+	public synchronized void updateFog(Rect update){
+<span class="nc bnc" id="L134" title="All 2 branches missed.">		for (Rect r : toUpdate.toArray(new Rect[0])){</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">			if (!r.intersect(update).isEmpty()){</span>
+<span class="nc" id="L136">				toUpdate.remove(r);</span>
+<span class="nc" id="L137">				toUpdate.add(r.union(update));</span>
+<span class="nc" id="L138">				return;</span>
+			}
+		}
+<span class="nc" id="L141">		toUpdate.add(update);</span>
+<span class="nc" id="L142">	}</span>
+
+	public synchronized void updateFog( int cell, int radius ){
+<span class="nc" id="L145">		Rect update = new Rect(</span>
+				(cell % mapWidth) - radius,
+				(cell / mapWidth) - radius,
+				(cell % mapWidth) - radius + 1 + 2*radius,
+				(cell / mapWidth) - radius + 1 + 2*radius);
+<span class="nc" id="L150">		update.left = Math.max(0, update.left);</span>
+<span class="nc" id="L151">		update.top = Math.max(0, update.top);</span>
+<span class="nc" id="L152">		update.right = Math.min(mapWidth, update.right);</span>
+<span class="nc" id="L153">		update.bottom = Math.min(mapHeight, update.bottom);</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		if (update.isEmpty()) return;</span>
+<span class="nc" id="L155">		updateFog( update );</span>
+<span class="nc" id="L156">	}</span>
+
+	public synchronized void updateFogArea(int x, int y, int w, int h){
+<span class="nc" id="L159">		updateFog(new Rect(x, y, x + w, y + h));</span>
+<span class="nc" id="L160">	}</span>
+
+	private synchronized void moveToUpdating(){
+<span class="nc" id="L163">		updating = toUpdate;</span>
+<span class="nc" id="L164">		toUpdate = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L165">	}</span>
+
+	private boolean[] visible;
+	private boolean[] visited;
+	private boolean[] mapped;
+	private int brightness;
+	
+	private void updateTexture( boolean[] visible, boolean[] visited, boolean[] mapped ) {
+<span class="nc" id="L173">		this.visible = visible;</span>
+<span class="nc" id="L174">		this.visited = visited;</span>
+<span class="nc" id="L175">		this.mapped = mapped;</span>
+<span class="nc" id="L176">		this.brightness = SPDSettings.brightness() + 1;</span>
+
+<span class="nc" id="L178">		moveToUpdating();</span>
+		
+<span class="nc" id="L180">		boolean fullUpdate = false;</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">		if (updating.size() == 1){</span>
+<span class="nc" id="L182">			Rect update = updating.get(0);</span>
+<span class="nc bnc" id="L183" title="All 4 branches missed.">			if (update.height() == mapHeight &amp;&amp; update.width() == mapWidth){</span>
+<span class="nc" id="L184">				fullUpdate = true;</span>
+			}
+		}
+
+<span class="nc" id="L188">		Pixmap fog = texture.bitmap;</span>
+<span class="nc" id="L189">		fog.setBlending(Pixmap.Blending.None);</span>
+
+		int cell;
+		
+<span class="nc bnc" id="L193" title="All 2 branches missed.">		for (Rect update : updating) {</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">			for (int i = update.top; i &lt; update.bottom; i++) {</span>
+<span class="nc" id="L195">				cell = mapWidth * i + update.left;</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">				for (int j = update.left; j &lt; update.right; j++) {</span>
+					
+<span class="nc bnc" id="L198" title="All 2 branches missed.">					if (cell &gt;= Dungeon.level.length()) continue; //do nothing</span>
+					
+<span class="nc bnc" id="L200" title="All 8 branches missed.">					if (!Dungeon.level.discoverable[cell]</span>
+							|| (!visible[cell] &amp;&amp; !visited[cell] &amp;&amp; !mapped[cell])) {
+						//we skip filling cells here if it isn't a full update
+						// because they must already be dark
+<span class="nc bnc" id="L204" title="All 2 branches missed.">						if (fullUpdate)</span>
+<span class="nc" id="L205">							fillCell(fog, j, i, FOG_COLORS[INVISIBLE][brightness]);</span>
+<span class="nc" id="L206">						cell++;</span>
+<span class="nc" id="L207">						continue;</span>
+					}
+					
+					//wall tiles
+<span class="nc bnc" id="L211" title="All 2 branches missed.">					if (wall(cell)) {</span>
+						
+						//always dark if nothing is beneath them
+<span class="nc bnc" id="L214" title="All 2 branches missed.">						if (cell + mapWidth &gt;= mapLength) {</span>
+<span class="nc" id="L215">							fillCell(fog, j, i, FOG_COLORS[INVISIBLE][brightness]);</span>
+							
+						//internal wall tiles, need to check both the left and right side,
+						// to account for only one half of them being seen
+<span class="nc bnc" id="L219" title="All 2 branches missed.">						} else if (wall(cell + mapWidth)) {</span>
+							
+							//left side
+<span class="nc bnc" id="L222" title="All 2 branches missed.">							if (cell % mapWidth != 0) {</span>
+								
+								//picks the darkest fog between current tile, left, and below-left(if left is a wall).
+<span class="nc bnc" id="L225" title="All 2 branches missed.">								if (wall(cell - 1)) {</span>
+									
+									//if below-left is also a wall, then we should be dark no matter what.
+<span class="nc bnc" id="L228" title="All 2 branches missed.">									if (wall(cell + mapWidth - 1)) {</span>
+<span class="nc" id="L229">										fillLeft(fog, j, i, FOG_COLORS[INVISIBLE][brightness]);</span>
+									} else {
+<span class="nc" id="L231">										fillLeft(fog, j, i, FOG_COLORS[Math.max(getCellFog(cell), Math.max(getCellFog(cell + mapWidth - 1), getCellFog(cell - 1)))][brightness]);</span>
+									}
+									
+								} else {
+<span class="nc" id="L235">									fillLeft(fog, j, i, FOG_COLORS[Math.max(getCellFog(cell), getCellFog(cell - 1))][brightness]);</span>
+								}
+								
+							} else {
+<span class="nc" id="L239">								fillLeft(fog, j, i, FOG_COLORS[INVISIBLE][brightness]);</span>
+							}
+							
+							//right side
+<span class="nc bnc" id="L243" title="All 2 branches missed.">							if ((cell + 1) % mapWidth != 0) {</span>
+								
+								//picks the darkest fog between current tile, right, and below-right(if right is a wall).
+<span class="nc bnc" id="L246" title="All 2 branches missed.">								if (wall(cell + 1)) {</span>
+									
+									//if below-right is also a wall, then we should be dark no matter what.
+<span class="nc bnc" id="L249" title="All 2 branches missed.">									if (wall(cell + mapWidth + 1)) {</span>
+<span class="nc" id="L250">										fillRight(fog, j, i, FOG_COLORS[INVISIBLE][brightness]);</span>
+									} else {
+<span class="nc" id="L252">										fillRight(fog, j, i, FOG_COLORS[Math.max(getCellFog(cell), Math.max(getCellFog(cell + mapWidth + 1), getCellFog(cell + 1)))][brightness]);</span>
+									}
+									
+								} else {
+<span class="nc" id="L256">									fillRight(fog, j, i, FOG_COLORS[Math.max(getCellFog(cell), getCellFog(cell + 1))][brightness]);</span>
+								}
+								
+							} else {
+<span class="nc" id="L260">								fillRight(fog, j, i, FOG_COLORS[INVISIBLE][brightness]);</span>
+							}
+							
+						//camera-facing wall tiles
+						//darkest between themselves and the tile below them
+						} else {
+<span class="nc" id="L266">							fillCell(fog, j, i, FOG_COLORS[Math.max(getCellFog(cell), getCellFog(cell + mapWidth))][brightness]);</span>
+						}
+						
+					//other tiles, just their direct value
+					} else {
+<span class="nc" id="L271">						fillCell(fog, j, i, FOG_COLORS[getCellFog(cell)][brightness]);</span>
+					}
+					
+<span class="nc" id="L274">					cell++;</span>
+				}
+			}
+			
+<span class="nc" id="L278">		}</span>
+		
+<span class="nc" id="L280">		texture.bitmap(fog);</span>
+
+<span class="nc" id="L282">	}</span>
+	
+	private boolean wall(int cell) {
+<span class="nc" id="L285">		return DungeonTileSheet.wallStitcheable(Dungeon.level.map[cell]);</span>
+	}
+
+	private int getCellFog( int cell ){
+
+<span class="nc bnc" id="L290" title="All 2 branches missed.">		if (visible[cell]) {</span>
+<span class="nc" id="L291">			return VISIBLE;</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">		} else if (visited[cell]) {</span>
+<span class="nc" id="L293">			return VISITED;</span>
+<span class="nc bnc" id="L294" title="All 2 branches missed.">		} else if (mapped[cell] ) {</span>
+<span class="nc" id="L295">			return MAPPED;</span>
+		} else {
+<span class="nc" id="L297">			return INVISIBLE;</span>
+		}
+	}
+	
+	private void fillLeft( Pixmap fog, int x, int y, int color){
+<span class="nc" id="L302">		fog.setColor((color &lt;&lt; 8) | (color &gt;&gt;&gt; 24));</span>
+<span class="nc" id="L303">		fog.fillRectangle(x * PIX_PER_TILE, y*PIX_PER_TILE, PIX_PER_TILE/2, PIX_PER_TILE);</span>
+<span class="nc" id="L304">	}</span>
+	
+	private void fillRight( Pixmap fog, int x, int y, int color){
+<span class="nc" id="L307">		fog.setColor((color &lt;&lt; 8) | (color &gt;&gt;&gt; 24));</span>
+<span class="nc" id="L308">		fog.fillRectangle(x * PIX_PER_TILE + PIX_PER_TILE/2, y*PIX_PER_TILE, PIX_PER_TILE/2, PIX_PER_TILE);</span>
+<span class="nc" id="L309">	}</span>
+
+	private void fillCell( Pixmap fog, int x, int y, int color){
+<span class="nc" id="L312">		fog.setColor((color &lt;&lt; 8) | (color &gt;&gt;&gt; 24));</span>
+<span class="nc" id="L313">		fog.fillRectangle(x * PIX_PER_TILE, y*PIX_PER_TILE, PIX_PER_TILE, PIX_PER_TILE);</span>
+<span class="nc" id="L314">	}</span>
+
+	@Override
+	protected NoosaScript script() {
+<span class="nc" id="L318">		return NoosaScriptNoLighting.get();</span>
+	}
+
+	@Override
+	public void draw() {
+
+<span class="nc bnc" id="L324" title="All 2 branches missed.">		if (!toUpdate.isEmpty()){</span>
+<span class="nc" id="L325">			updateTexture(Dungeon.level.heroFOV, Dungeon.level.visited, Dungeon.level.mapped);</span>
+		}
+
+<span class="nc" id="L328">		super.draw();</span>
+<span class="nc" id="L329">	}</span>
+	
+	@Override
+	public void destroy() {
+<span class="nc" id="L333">		super.destroy();</span>
+<span class="nc bnc" id="L334" title="All 2 branches missed.">		if (texture != null){</span>
+<span class="nc" id="L335">			TextureCache.remove(FogOfWar.class);</span>
+		}
+<span class="nc" id="L337">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

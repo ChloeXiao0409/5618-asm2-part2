@@ -1,0 +1,567 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Potion.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.potions</a> &gt; <span class="el_source">Potion.java</span></div><h1>Potion.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.potions;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Fire;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Ooze;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.ItemStatusHandler;
+import com.shatteredpixel.shatteredpixeldungeon.items.Recipe;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.brews.AquaBrew;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs.ElixirOfHoneyedHealing;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.ExoticPotion;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfCleansing;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfCorrosiveGas;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfShroudingFog;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfSnapFreeze;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfStormClouds;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Blindweed;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Earthroot;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Fadeleaf;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Icecap;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Mageroyal;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Rotberry;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Sorrowmoss;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Starflower;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Stormvine;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Sungrass;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Swiftthistle;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndUseItem;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+
+public class Potion extends Item {
+
+	public static final String AC_DRINK = &quot;DRINK&quot;;
+	
+	//used internally for potions that can be drunk or thrown
+	public static final String AC_CHOOSE = &quot;CHOOSE&quot;;
+
+	private static final float TIME_TO_DRINK = 1f;
+
+<span class="nc" id="L90">	private static final LinkedHashMap&lt;String, Integer&gt; colors = new LinkedHashMap&lt;String, Integer&gt;() {</span>
+		{
+<span class="nc" id="L92">			put(&quot;crimson&quot;,ItemSpriteSheet.POTION_CRIMSON);</span>
+<span class="nc" id="L93">			put(&quot;amber&quot;,ItemSpriteSheet.POTION_AMBER);</span>
+<span class="nc" id="L94">			put(&quot;golden&quot;,ItemSpriteSheet.POTION_GOLDEN);</span>
+<span class="nc" id="L95">			put(&quot;jade&quot;,ItemSpriteSheet.POTION_JADE);</span>
+<span class="nc" id="L96">			put(&quot;turquoise&quot;,ItemSpriteSheet.POTION_TURQUOISE);</span>
+<span class="nc" id="L97">			put(&quot;azure&quot;,ItemSpriteSheet.POTION_AZURE);</span>
+<span class="nc" id="L98">			put(&quot;indigo&quot;,ItemSpriteSheet.POTION_INDIGO);</span>
+<span class="nc" id="L99">			put(&quot;magenta&quot;,ItemSpriteSheet.POTION_MAGENTA);</span>
+<span class="nc" id="L100">			put(&quot;bistre&quot;,ItemSpriteSheet.POTION_BISTRE);</span>
+<span class="nc" id="L101">			put(&quot;charcoal&quot;,ItemSpriteSheet.POTION_CHARCOAL);</span>
+<span class="nc" id="L102">			put(&quot;silver&quot;,ItemSpriteSheet.POTION_SILVER);</span>
+<span class="nc" id="L103">			put(&quot;ivory&quot;,ItemSpriteSheet.POTION_IVORY);</span>
+<span class="nc" id="L104">		}</span>
+	};
+
+<span class="nc" id="L107">	protected static final HashSet&lt;Class&lt;?extends Potion&gt;&gt; mustThrowPots = new HashSet&lt;&gt;();</span>
+	static{
+<span class="nc" id="L109">		mustThrowPots.add(PotionOfToxicGas.class);</span>
+<span class="nc" id="L110">		mustThrowPots.add(PotionOfLiquidFlame.class);</span>
+<span class="nc" id="L111">		mustThrowPots.add(PotionOfParalyticGas.class);</span>
+<span class="nc" id="L112">		mustThrowPots.add(PotionOfFrost.class);</span>
+		
+		//exotic
+<span class="nc" id="L115">		mustThrowPots.add(PotionOfCorrosiveGas.class);</span>
+<span class="nc" id="L116">		mustThrowPots.add(PotionOfSnapFreeze.class);</span>
+<span class="nc" id="L117">		mustThrowPots.add(PotionOfShroudingFog.class);</span>
+<span class="nc" id="L118">		mustThrowPots.add(PotionOfStormClouds.class);</span>
+		
+		//also all brews except unstable, hardcoded
+	}
+	
+<span class="nc" id="L123">	protected static final HashSet&lt;Class&lt;?extends Potion&gt;&gt; canThrowPots = new HashSet&lt;&gt;();</span>
+	static{
+<span class="nc" id="L125">		canThrowPots.add(PotionOfPurity.class);</span>
+<span class="nc" id="L126">		canThrowPots.add(PotionOfLevitation.class);</span>
+		
+		//exotic
+<span class="nc" id="L129">		canThrowPots.add(PotionOfCleansing.class);</span>
+		
+		//elixirs
+<span class="nc" id="L132">		canThrowPots.add(ElixirOfHoneyedHealing.class);</span>
+<span class="nc" id="L133">	}</span>
+	
+	protected static ItemStatusHandler&lt;Potion&gt; handler;
+	
+	protected String color;
+
+	//affects how strongly on-potion talents trigger from this potion
+<span class="nc" id="L140">	protected float talentFactor = 1;</span>
+	//the chance (0-1) of whether on-potion talents trigger from this potion
+<span class="nc" id="L142">	protected float talentChance = 1;</span>
+	
+	{
+<span class="nc" id="L145">		stackable = true;</span>
+<span class="nc" id="L146">		defaultAction = AC_DRINK;</span>
+	}
+	
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public static void initColors() {
+<span class="nc" id="L151">		handler = new ItemStatusHandler&lt;&gt;( (Class&lt;? extends Potion&gt;[])Generator.Category.POTION.classes, colors );</span>
+<span class="nc" id="L152">	}</span>
+
+	public static void clearColors() {
+<span class="nc" id="L155">		handler = null;</span>
+<span class="nc" id="L156">	}</span>
+	
+	public static void save( Bundle bundle ) {
+<span class="nc" id="L159">		handler.save( bundle );</span>
+<span class="nc" id="L160">	}</span>
+
+	public static void saveSelectively( Bundle bundle, ArrayList&lt;Item&gt; items ) {
+<span class="nc" id="L163">		ArrayList&lt;Class&lt;?extends Item&gt;&gt; classes = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">		for (Item i : items){</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">			if (i instanceof ExoticPotion){</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">				if (!classes.contains(ExoticPotion.exoToReg.get(i.getClass()))){</span>
+<span class="nc" id="L167">					classes.add(ExoticPotion.exoToReg.get(i.getClass()));</span>
+				}
+<span class="nc bnc" id="L169" title="All 2 branches missed.">			} else if (i instanceof Potion){</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">				if (!classes.contains(i.getClass())){</span>
+<span class="nc" id="L171">					classes.add(i.getClass());</span>
+				}
+			}
+<span class="nc" id="L174">		}</span>
+<span class="nc" id="L175">		handler.saveClassesSelectively( bundle, classes );</span>
+<span class="nc" id="L176">	}</span>
+	
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public static void restore( Bundle bundle ) {
+<span class="nc" id="L180">		handler = new ItemStatusHandler&lt;&gt;( (Class&lt;? extends Potion&gt;[])Generator.Category.POTION.classes, colors, bundle );</span>
+<span class="nc" id="L181">	}</span>
+	
+	public Potion() {
+<span class="nc" id="L184">		super();</span>
+<span class="nc" id="L185">		reset();</span>
+<span class="nc" id="L186">	}</span>
+	
+	//anonymous potions are always IDed, do not affect ID status,
+	//and their sprite is replaced by a placeholder if they are not known,
+	//useful for items that appear in UIs, or which are only spawned for their effects
+<span class="nc" id="L191">	protected boolean anonymous = false;</span>
+	public void anonymize(){
+<span class="nc bnc" id="L193" title="All 2 branches missed.">		if (!isKnown()) image = ItemSpriteSheet.POTION_HOLDER;</span>
+<span class="nc" id="L194">		anonymous = true;</span>
+<span class="nc" id="L195">	}</span>
+
+	@Override
+	public void reset(){
+<span class="nc" id="L199">		super.reset();</span>
+<span class="nc bnc" id="L200" title="All 4 branches missed.">		if (handler != null &amp;&amp; handler.contains(this)) {</span>
+<span class="nc" id="L201">			image = handler.image(this);</span>
+<span class="nc" id="L202">			color = handler.label(this);</span>
+		} else {
+<span class="nc" id="L204">			image = ItemSpriteSheet.POTION_CRIMSON;</span>
+<span class="nc" id="L205">			color = &quot;crimson&quot;;</span>
+		}
+<span class="nc" id="L207">	}</span>
+
+	@Override
+	public String defaultAction() {
+<span class="nc bnc" id="L211" title="All 4 branches missed.">		if (isKnown() &amp;&amp; mustThrowPots.contains(this.getClass())) {</span>
+<span class="nc" id="L212">			return AC_THROW;</span>
+<span class="nc bnc" id="L213" title="All 4 branches missed.">		} else if (isKnown() &amp;&amp;canThrowPots.contains(this.getClass())){</span>
+<span class="nc" id="L214">			return AC_CHOOSE;</span>
+		} else {
+<span class="nc" id="L216">			return AC_DRINK;</span>
+		}
+	}
+	
+	@Override
+	public ArrayList&lt;String&gt; actions( Hero hero ) {
+<span class="nc" id="L222">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc" id="L223">		actions.add( AC_DRINK );</span>
+<span class="nc" id="L224">		return actions;</span>
+	}
+	
+	@Override
+	public void execute( final Hero hero, String action ) {
+
+<span class="nc" id="L230">		super.execute( hero, action );</span>
+		
+<span class="nc bnc" id="L232" title="All 2 branches missed.">		if (action.equals( AC_CHOOSE )){</span>
+			
+<span class="nc" id="L234">			GameScene.show(new WndUseItem(null, this) );</span>
+			
+<span class="nc bnc" id="L236" title="All 2 branches missed.">		} else if (action.equals( AC_DRINK )) {</span>
+			
+<span class="nc bnc" id="L238" title="All 4 branches missed.">			if (isKnown() &amp;&amp; mustThrowPots.contains(getClass())) {</span>
+				
+<span class="nc" id="L240">					GameScene.show(</span>
+						new WndOptions(new ItemSprite(this),
+<span class="nc" id="L242">								Messages.get(Potion.class, &quot;harmful&quot;),</span>
+<span class="nc" id="L243">								Messages.get(Potion.class, &quot;sure_drink&quot;),</span>
+<span class="nc" id="L244">								Messages.get(Potion.class, &quot;yes&quot;), Messages.get(Potion.class, &quot;no&quot;) ) {</span>
+							@Override
+							protected void onSelect(int index) {
+<span class="nc bnc" id="L247" title="All 2 branches missed.">								if (index == 0) {</span>
+<span class="nc" id="L248">									drink( hero );</span>
+								}
+<span class="nc" id="L250">							}</span>
+						}
+					);
+					
+				} else {
+<span class="nc" id="L255">					drink( hero );</span>
+				}
+			
+		}
+<span class="nc" id="L259">	}</span>
+	
+	@Override
+	public void doThrow( final Hero hero ) {
+
+<span class="nc bnc" id="L264" title="All 2 branches missed.">		if (isKnown()</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">				&amp;&amp; !mustThrowPots.contains(this.getClass())</span>
+<span class="nc bnc" id="L266" title="All 2 branches missed.">				&amp;&amp; !canThrowPots.contains(this.getClass())) {</span>
+		
+<span class="nc" id="L268">			GameScene.show(</span>
+				new WndOptions(new ItemSprite(this),
+<span class="nc" id="L270">						Messages.get(Potion.class, &quot;beneficial&quot;),</span>
+<span class="nc" id="L271">						Messages.get(Potion.class, &quot;sure_throw&quot;),</span>
+<span class="nc" id="L272">						Messages.get(Potion.class, &quot;yes&quot;), Messages.get(Potion.class, &quot;no&quot;) ) {</span>
+					@Override
+					protected void onSelect(int index) {
+<span class="nc bnc" id="L275" title="All 2 branches missed.">						if (index == 0) {</span>
+<span class="nc" id="L276">							Potion.super.doThrow( hero );</span>
+						}
+<span class="nc" id="L278">					}</span>
+				}
+			);
+			
+		} else {
+<span class="nc" id="L283">			super.doThrow( hero );</span>
+		}
+<span class="nc" id="L285">	}</span>
+	
+	protected void drink( Hero hero ) {
+		
+<span class="nc" id="L289">		detach( hero.belongings.backpack );</span>
+		
+<span class="nc" id="L291">		hero.spend( TIME_TO_DRINK );</span>
+<span class="nc" id="L292">		hero.busy();</span>
+<span class="nc" id="L293">		apply( hero );</span>
+		
+<span class="nc" id="L295">		Sample.INSTANCE.play( Assets.Sounds.DRINK );</span>
+		
+<span class="nc" id="L297">		hero.sprite.operate( hero.pos );</span>
+
+<span class="nc bnc" id="L299" title="All 2 branches missed.">		if (!anonymous) {</span>
+<span class="nc" id="L300">			Catalog.countUse(getClass());</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">			if (Random.Float() &lt; talentChance) {</span>
+<span class="nc" id="L302">				Talent.onPotionUsed(curUser, curUser.pos, talentFactor);</span>
+			}
+		}
+<span class="nc" id="L305">	}</span>
+	
+	@Override
+	protected void onThrow( int cell ) {
+<span class="nc bnc" id="L309" title="All 4 branches missed.">		if (Dungeon.level.map[cell] == Terrain.WELL || Dungeon.level.pit[cell]) {</span>
+			
+<span class="nc" id="L311">			super.onThrow( cell );</span>
+			
+		} else  {
+
+			//aqua brew and storm clouds specifically don't press cells, so they can disarm traps
+<span class="nc bnc" id="L316" title="All 4 branches missed.">			if (!(this instanceof AquaBrew) &amp;&amp; !(this instanceof PotionOfStormClouds)){</span>
+<span class="nc" id="L317">				Dungeon.level.pressCell( cell );</span>
+			}
+<span class="nc" id="L319">			shatter( cell );</span>
+
+<span class="nc bnc" id="L321" title="All 2 branches missed.">			if (!anonymous) {</span>
+<span class="nc" id="L322">				Catalog.countUse(getClass());</span>
+<span class="nc bnc" id="L323" title="All 2 branches missed.">				if (Random.Float() &lt; talentChance) {</span>
+<span class="nc" id="L324">					Talent.onPotionUsed(curUser, cell, talentFactor);</span>
+				}
+			}
+			
+		}
+<span class="nc" id="L329">	}</span>
+	
+	public void apply( Hero hero ) {
+<span class="nc" id="L332">		shatter( hero.pos );</span>
+<span class="nc" id="L333">	}</span>
+	
+	public void shatter( int cell ) {
+<span class="nc" id="L336">		splash( cell );</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">		if (Dungeon.level.heroFOV[cell]) {</span>
+<span class="nc" id="L338">			GLog.i( Messages.get(Potion.class, &quot;shatter&quot;) );</span>
+<span class="nc" id="L339">			Sample.INSTANCE.play( Assets.Sounds.SHATTER );</span>
+		}
+<span class="nc" id="L341">	}</span>
+
+	@Override
+	public void cast( final Hero user, int dst ) {
+<span class="nc" id="L345">			super.cast(user, dst);</span>
+<span class="nc" id="L346">	}</span>
+	
+	public boolean isKnown() {
+<span class="nc bnc" id="L349" title="All 6 branches missed.">		return anonymous || (handler != null &amp;&amp; handler.isKnown( this ));</span>
+	}
+	
+	public void setKnown() {
+<span class="nc bnc" id="L353" title="All 2 branches missed.">		if (!anonymous) {</span>
+<span class="nc bnc" id="L354" title="All 2 branches missed.">			if (!isKnown()) {</span>
+<span class="nc" id="L355">				handler.know(this);</span>
+<span class="nc" id="L356">				updateQuickslot();</span>
+			}
+			
+<span class="nc bnc" id="L359" title="All 2 branches missed.">			if (Dungeon.hero.isAlive()) {</span>
+<span class="nc" id="L360">				Catalog.setSeen(getClass());</span>
+<span class="nc" id="L361">				Statistics.itemTypesDiscovered.add(getClass());</span>
+			}
+		}
+<span class="nc" id="L364">	}</span>
+	
+	@Override
+	public Item identify( boolean byHero ) {
+<span class="nc" id="L368">		super.identify(byHero);</span>
+
+<span class="nc bnc" id="L370" title="All 2 branches missed.">		if (!isKnown()) {</span>
+<span class="nc" id="L371">			setKnown();</span>
+		}
+<span class="nc" id="L373">		return this;</span>
+	}
+	
+	@Override
+	public String name() {
+<span class="nc bnc" id="L378" title="All 2 branches missed.">		return isKnown() ? super.name() : Messages.get(this, color);</span>
+	}
+
+	@Override
+	public String info() {
+		//skip custom notes if anonymized and un-Ided
+<span class="nc bnc" id="L384" title="All 6 branches missed.">		return (anonymous &amp;&amp; (handler == null || !handler.isKnown( this ))) ? desc() : super.info();</span>
+	}
+
+	@Override
+	public String desc() {
+<span class="nc bnc" id="L389" title="All 2 branches missed.">		return isKnown() ? super.desc() : Messages.get(this, &quot;unknown_desc&quot;);</span>
+	}
+	
+	@Override
+	public boolean isIdentified() {
+<span class="nc" id="L394">		return isKnown();</span>
+	}
+	
+	@Override
+	public boolean isUpgradable() {
+<span class="nc" id="L399">		return false;</span>
+	}
+	
+	public static HashSet&lt;Class&lt;? extends Potion&gt;&gt; getKnown() {
+<span class="nc" id="L403">		return handler.known();</span>
+	}
+	
+	public static HashSet&lt;Class&lt;? extends Potion&gt;&gt; getUnknown() {
+<span class="nc" id="L407">		return handler.unknown();</span>
+	}
+	
+	public static boolean allKnown() {
+<span class="nc bnc" id="L411" title="All 4 branches missed.">		return handler != null &amp;&amp; handler.known().size() == Generator.Category.POTION.classes.length;</span>
+	}
+	
+	protected int splashColor(){
+<span class="nc bnc" id="L415" title="All 2 branches missed.">		return anonymous ? 0x00AAFF : ItemSprite.pick( image, 5, 9 );</span>
+	}
+	
+	protected void splash( int cell ) {
+<span class="nc" id="L419">		Fire fire = (Fire)Dungeon.level.blobs.get( Fire.class );</span>
+<span class="nc bnc" id="L420" title="All 2 branches missed.">		if (fire != null) {</span>
+<span class="nc" id="L421">			fire.clear(cell);</span>
+		}
+
+<span class="nc" id="L424">		Char ch = Actor.findChar(cell);</span>
+<span class="nc bnc" id="L425" title="All 4 branches missed.">		if (ch != null &amp;&amp; ch.alignment == Char.Alignment.ALLY) {</span>
+<span class="nc" id="L426">			Buff.detach(ch, Burning.class);</span>
+<span class="nc" id="L427">			Buff.detach(ch, Ooze.class);</span>
+		}
+
+<span class="nc bnc" id="L430" title="All 2 branches missed.">		if (Dungeon.level.heroFOV[cell]) {</span>
+<span class="nc bnc" id="L431" title="All 2 branches missed.">			if (ch != null) {</span>
+<span class="nc" id="L432">				Splash.at(ch.sprite.center(), splashColor(), 5);</span>
+			} else {
+<span class="nc" id="L434">				Splash.at(cell, splashColor(), 5);</span>
+			}
+		}
+<span class="nc" id="L437">	}</span>
+	
+	@Override
+	public int value() {
+<span class="nc" id="L441">		return 30 * quantity;</span>
+	}
+
+	@Override
+	public int energyVal() {
+<span class="nc" id="L446">		return 6 * quantity;</span>
+	}
+
+<span class="nc" id="L449">	public static class PlaceHolder extends Potion {</span>
+		
+		{
+<span class="nc" id="L452">			image = ItemSpriteSheet.POTION_HOLDER;</span>
+<span class="nc" id="L453">		}</span>
+		
+		@Override
+		public boolean isSimilar(Item item) {
+<span class="nc bnc" id="L457" title="All 2 branches missed.">			return ExoticPotion.regToExo.containsKey(item.getClass())</span>
+<span class="nc bnc" id="L458" title="All 2 branches missed.">					|| ExoticPotion.regToExo.containsValue(item.getClass());</span>
+		}
+		
+		@Override
+		public String info() {
+<span class="nc" id="L463">			return &quot;&quot;;</span>
+		}
+	}
+	
+<span class="nc" id="L467">	public static class SeedToPotion extends Recipe {</span>
+		
+<span class="nc" id="L469">		public static HashMap&lt;Class&lt;?extends Plant.Seed&gt;, Class&lt;?extends Potion&gt;&gt; types = new HashMap&lt;&gt;();</span>
+		static {
+<span class="nc" id="L471">			types.put(Blindweed.Seed.class,     PotionOfInvisibility.class);</span>
+<span class="nc" id="L472">			types.put(Mageroyal.Seed.class,     PotionOfPurity.class);</span>
+<span class="nc" id="L473">			types.put(Earthroot.Seed.class,     PotionOfParalyticGas.class);</span>
+<span class="nc" id="L474">			types.put(Fadeleaf.Seed.class,      PotionOfMindVision.class);</span>
+<span class="nc" id="L475">			types.put(Firebloom.Seed.class,     PotionOfLiquidFlame.class);</span>
+<span class="nc" id="L476">			types.put(Icecap.Seed.class,        PotionOfFrost.class);</span>
+<span class="nc" id="L477">			types.put(Rotberry.Seed.class,      PotionOfStrength.class);</span>
+<span class="nc" id="L478">			types.put(Sorrowmoss.Seed.class,    PotionOfToxicGas.class);</span>
+<span class="nc" id="L479">			types.put(Starflower.Seed.class,    PotionOfExperience.class);</span>
+<span class="nc" id="L480">			types.put(Stormvine.Seed.class,     PotionOfLevitation.class);</span>
+<span class="nc" id="L481">			types.put(Sungrass.Seed.class,      PotionOfHealing.class);</span>
+<span class="nc" id="L482">			types.put(Swiftthistle.Seed.class,  PotionOfHaste.class);</span>
+<span class="nc" id="L483">		}</span>
+		
+		@Override
+		public boolean testIngredients(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc bnc" id="L487" title="All 2 branches missed.">			if (ingredients.size() != 3) {</span>
+<span class="nc" id="L488">				return false;</span>
+			}
+			
+<span class="nc bnc" id="L491" title="All 2 branches missed.">			for (Item ingredient : ingredients){</span>
+<span class="nc bnc" id="L492" title="All 2 branches missed.">				if (!(ingredient instanceof Plant.Seed</span>
+<span class="nc bnc" id="L493" title="All 2 branches missed.">						&amp;&amp; ingredient.quantity() &gt;= 1</span>
+<span class="nc bnc" id="L494" title="All 2 branches missed.">						&amp;&amp; types.containsKey(ingredient.getClass()))){</span>
+<span class="nc" id="L495">					return false;</span>
+				}
+<span class="nc" id="L497">			}</span>
+<span class="nc" id="L498">			return true;</span>
+		}
+		
+		@Override
+		public int cost(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc" id="L503">			return 0;</span>
+		}
+		
+		@Override
+		public Item brew(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc bnc" id="L508" title="All 2 branches missed.">			if (!testIngredients(ingredients)) return null;</span>
+			
+<span class="nc bnc" id="L510" title="All 2 branches missed.">			for (Item ingredient : ingredients){</span>
+<span class="nc" id="L511">				ingredient.quantity(ingredient.quantity() - 1);</span>
+<span class="nc" id="L512">			}</span>
+			
+<span class="nc" id="L514">			ArrayList&lt;Class&lt;?extends Plant.Seed&gt;&gt; seeds = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L515" title="All 2 branches missed.">			for (Item i : ingredients) {</span>
+<span class="nc bnc" id="L516" title="All 2 branches missed.">				if (!seeds.contains(i.getClass())) {</span>
+<span class="nc" id="L517">					seeds.add((Class&lt;? extends Plant.Seed&gt;) i.getClass());</span>
+				}
+<span class="nc" id="L519">			}</span>
+			
+			Potion result;
+			
+<span class="nc bnc" id="L523" title="All 4 branches missed.">			if ( (seeds.size() == 2 &amp;&amp; Random.Int(4) == 0)</span>
+<span class="nc bnc" id="L524" title="All 4 branches missed.">					|| (seeds.size() == 3 &amp;&amp; Random.Int(2) == 0)) {</span>
+				
+<span class="nc" id="L526">				result = (Potion) Generator.randomUsingDefaults( Generator.Category.POTION );</span>
+				
+			} else {
+<span class="nc" id="L529">				result = Reflection.newInstance(types.get(Random.element(ingredients).getClass()));</span>
+				
+			}
+			
+<span class="nc bnc" id="L533" title="All 2 branches missed.">			if (seeds.size() == 1){</span>
+<span class="nc" id="L534">				result.identify();</span>
+			}
+
+<span class="nc bnc" id="L537" title="All 2 branches missed.">			while (result instanceof PotionOfHealing</span>
+<span class="nc bnc" id="L538" title="All 2 branches missed.">					&amp;&amp; Random.Int(10) &lt; Dungeon.LimitedDrops.COOKING_HP.count) {</span>
+
+<span class="nc" id="L540">				result = (Potion) Generator.randomUsingDefaults(Generator.Category.POTION);</span>
+			}
+			
+<span class="nc bnc" id="L543" title="All 2 branches missed.">			if (result instanceof PotionOfHealing) {</span>
+<span class="nc" id="L544">				Dungeon.LimitedDrops.COOKING_HP.count++;</span>
+			}
+			
+<span class="nc" id="L547">			return result;</span>
+		}
+		
+		@Override
+		public Item sampleOutput(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc" id="L552">			return new WndBag.Placeholder(ItemSpriteSheet.POTION_HOLDER){</span>
+
+				@Override
+				public String name() {
+<span class="nc" id="L556">					return Messages.get(Potion.SeedToPotion.class, &quot;name&quot;);</span>
+				}
+				
+				@Override
+				public String info() {
+<span class="nc" id="L561">					return &quot;&quot;;</span>
+				}
+			};
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

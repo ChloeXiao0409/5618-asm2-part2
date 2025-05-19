@@ -1,0 +1,478 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HallsBossLevel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels</a> &gt; <span class="el_source">HallsBossLevel.java</span></div><h1>HallsBossLevel.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Bones;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AscensionChallenge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.YogDzewa;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.FlameParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Amulet;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Group;
+import com.watabou.noosa.Tilemap;
+import com.watabou.noosa.audio.Music;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L62">public class HallsBossLevel extends Level {</span>
+
+	{
+<span class="nc" id="L65">		color1 = 0x801500;</span>
+<span class="nc" id="L66">		color2 = 0xa68521;</span>
+
+<span class="nc" id="L68">		viewDistance = Math.min(4, viewDistance);</span>
+<span class="nc" id="L69">	}</span>
+
+	private static final int WIDTH = 32;
+	private static final int HEIGHT = 32;
+
+	private static final int ROOM_LEFT		= WIDTH / 2 - 4;
+	private static final int ROOM_RIGHT		= WIDTH / 2 + 4;
+	private static final int ROOM_TOP		= 8;
+	private static final int ROOM_BOTTOM	= ROOM_TOP + 8;
+
+	@Override
+	public void playLevelMusic() {
+<span class="nc bnc" id="L81" title="All 4 branches missed.">		if (locked &amp;&amp; BossHealthBar.isAssigned()){</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">			if (BossHealthBar.isBleeding()){</span>
+<span class="nc" id="L83">				Music.INSTANCE.play(Assets.Music.HALLS_BOSS_FINALE, true);</span>
+			} else {
+<span class="nc" id="L85">				Music.INSTANCE.play(Assets.Music.HALLS_BOSS, true);</span>
+			}
+		//if exit isn't unlocked
+<span class="nc bnc" id="L88" title="All 4 branches missed.">		} else if (map[exit()] != Terrain.EXIT || Statistics.amuletObtained){</span>
+<span class="nc" id="L89">			Music.INSTANCE.end();</span>
+		} else {
+<span class="nc" id="L91">			Music.INSTANCE.playTracks(HallsLevel.HALLS_TRACK_LIST, HallsLevel.HALLS_TRACK_CHANCES, false);</span>
+		}
+<span class="nc" id="L93">	}</span>
+
+	@Override
+	public String tilesTex() {
+<span class="nc" id="L97">		return Assets.Environment.TILES_HALLS;</span>
+	}
+
+	@Override
+	public String waterTex() {
+<span class="nc" id="L102">		return Assets.Environment.WATER_HALLS;</span>
+	}
+
+	@Override
+	protected boolean build() {
+
+<span class="nc" id="L108">		setSize(WIDTH, HEIGHT);</span>
+
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		for (int i = 0; i &lt; 5; i++) {</span>
+
+			int top;
+			int bottom;
+
+<span class="nc bnc" id="L115" title="All 4 branches missed.">			if (i == 0 || i == 4){</span>
+<span class="nc" id="L116">				top = Random.IntRange(ROOM_TOP-1, ROOM_TOP+3);</span>
+<span class="nc" id="L117">				bottom = Random.IntRange(ROOM_BOTTOM+2, ROOM_BOTTOM+6);</span>
+<span class="nc bnc" id="L118" title="All 4 branches missed.">			} else if (i == 1 || i == 3){</span>
+<span class="nc" id="L119">				top = Random.IntRange(ROOM_TOP-5, ROOM_TOP-1);</span>
+<span class="nc" id="L120">				bottom = Random.IntRange(ROOM_BOTTOM+6, ROOM_BOTTOM+10);</span>
+			} else {
+<span class="nc" id="L122">				top = Random.IntRange(ROOM_TOP-6, ROOM_TOP-3);</span>
+<span class="nc" id="L123">				bottom = Random.IntRange(ROOM_BOTTOM+8, ROOM_BOTTOM+12);</span>
+			}
+
+<span class="nc" id="L126">			Painter.fill(this, 4 + i * 5, top, 5, bottom - top + 1, Terrain.EMPTY);</span>
+
+<span class="nc bnc" id="L128" title="All 2 branches missed.">			if (i == 2) {</span>
+<span class="nc" id="L129">				int entrance = (6 + i * 5) + (bottom - 1) * width();</span>
+<span class="nc" id="L130">				transitions.add(new LevelTransition(this, entrance, LevelTransition.Type.REGULAR_ENTRANCE));</span>
+			}
+
+		}
+
+<span class="nc" id="L135">		boolean[] patch = Patch.generate(width, height, 0.20f, 0, true);</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		for (int i = 0; i &lt; length(); i++) {</span>
+<span class="nc bnc" id="L137" title="All 4 branches missed.">			if (map[i] == Terrain.EMPTY &amp;&amp; patch[i]) {</span>
+<span class="nc" id="L138">				map[i] = Terrain.STATUE;</span>
+			}
+		}
+
+<span class="nc" id="L142">		map[entrance()] = Terrain.ENTRANCE;</span>
+
+<span class="nc" id="L144">		Painter.fill(this, ROOM_LEFT-1, ROOM_TOP-1, 11, 11, Terrain.EMPTY );</span>
+
+<span class="nc" id="L146">		patch = Patch.generate(width, height, 0.30f, 3, true);</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">		for (int i = 0; i &lt; length(); i++) {</span>
+<span class="nc bnc" id="L148" title="All 6 branches missed.">			if ((map[i] == Terrain.EMPTY || map[i] == Terrain.STATUE) &amp;&amp; patch[i]) {</span>
+<span class="nc" id="L149">				map[i] = Terrain.WATER;</span>
+			}
+		}
+
+<span class="nc bnc" id="L153" title="All 2 branches missed.">		for (int i = 0; i &lt; length(); i++) {</span>
+<span class="nc bnc" id="L154" title="All 4 branches missed.">			if (map[i] == Terrain.EMPTY &amp;&amp; Random.Int(4) == 0) {</span>
+<span class="nc" id="L155">				map[i] = Terrain.EMPTY_DECO;</span>
+			}
+		}
+
+<span class="nc" id="L159">		Painter.fill(this, ROOM_LEFT, ROOM_TOP, 9, 9, Terrain.EMPTY_SP );</span>
+
+<span class="nc" id="L161">		Painter.fill(this, ROOM_LEFT, ROOM_TOP, 9, 2, Terrain.WALL_DECO );</span>
+<span class="nc" id="L162">		Painter.fill(this, ROOM_LEFT, ROOM_BOTTOM-1, 2, 2, Terrain.WALL_DECO );</span>
+<span class="nc" id="L163">		Painter.fill(this, ROOM_RIGHT-1, ROOM_BOTTOM-1, 2, 2, Terrain.WALL_DECO );</span>
+
+<span class="nc" id="L165">		Painter.fill(this, ROOM_LEFT+3, ROOM_TOP+2, 3, 4, Terrain.EMPTY );</span>
+
+<span class="nc" id="L167">		int exitCell = width/2 + ((ROOM_TOP+1) * width);</span>
+<span class="nc" id="L168">		LevelTransition exit = new LevelTransition(this, exitCell, LevelTransition.Type.REGULAR_EXIT);</span>
+<span class="nc" id="L169">		exit.top--;</span>
+<span class="nc" id="L170">		exit.left--;</span>
+<span class="nc" id="L171">		exit.right++;</span>
+<span class="nc" id="L172">		transitions.add(exit);</span>
+
+<span class="nc" id="L174">		CustomTilemap vis = new CenterPieceVisuals();</span>
+<span class="nc" id="L175">		vis.pos(ROOM_LEFT, ROOM_TOP+1);</span>
+<span class="nc" id="L176">		customTiles.add(vis);</span>
+
+<span class="nc" id="L178">		vis = new CenterPieceWalls();</span>
+<span class="nc" id="L179">		vis.pos(ROOM_LEFT, ROOM_TOP);</span>
+<span class="nc" id="L180">		customWalls.add(vis);</span>
+
+		//basic version of building flag maps for the pathfinder test
+<span class="nc bnc" id="L183" title="All 2 branches missed.">		for (int i = 0; i &lt; length; i++){</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">			passable[i]	= ( Terrain.flags[map[i]] &amp; Terrain.PASSABLE) != 0;</span>
+		}
+
+		//ensures a path to the exit exists
+<span class="nc bnc" id="L188" title="All 2 branches missed.">		return (PathFinder.getStep(entrance(), exit(), passable) != -1);</span>
+	}
+
+	@Override
+	protected void createMobs() {
+<span class="nc" id="L193">	}</span>
+
+	public Actor addRespawner() {
+<span class="nc" id="L196">		return null;</span>
+	}
+
+	@Override
+	protected void createItems() {
+<span class="nc" id="L201">		Random.pushGenerator(Random.Long());</span>
+<span class="nc" id="L202">			ArrayList&lt;Item&gt; bonesItems = Bones.get();</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">			if (bonesItems != null) {</span>
+				int pos;
+				do {
+<span class="nc" id="L206">					pos = randomRespawnCell(null);</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">				} while (pos == entrance());</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">				for (Item i : bonesItems) {</span>
+<span class="nc" id="L209">					drop(i, pos).setHauntedIfCursed().type = Heap.Type.REMAINS;</span>
+<span class="nc" id="L210">				}</span>
+			}
+<span class="nc" id="L212">		Random.popGenerator();</span>
+<span class="nc" id="L213">	}</span>
+
+	@Override
+	public int randomRespawnCell( Char ch ) {
+<span class="nc" id="L217">		ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">		for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc" id="L219">			int cell = entrance() + i;</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">			if (passable[cell]</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">					&amp;&amp; Actor.findChar(cell) == null</span>
+<span class="nc bnc" id="L222" title="All 4 branches missed.">					&amp;&amp; (!Char.hasProp(ch, Char.Property.LARGE) || openSpace[cell])){</span>
+<span class="nc" id="L223">				candidates.add(cell);</span>
+			}
+		}
+
+<span class="nc bnc" id="L227" title="All 2 branches missed.">		if (candidates.isEmpty()){</span>
+<span class="nc" id="L228">			return -1;</span>
+		} else {
+<span class="nc" id="L230">			return Random.element(candidates);</span>
+		}
+	}
+
+	@Override
+	public void occupyCell( Char ch ) {
+<span class="nc bnc" id="L236" title="All 6 branches missed.">		if (map[entrance()] == Terrain.ENTRANCE &amp;&amp; map[exit()] != Terrain.EXIT</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">				&amp;&amp; ch == Dungeon.hero &amp;&amp; Dungeon.level.distance(ch.pos, entrance()) &gt;= 2) {</span>
+<span class="nc" id="L238">			seal();</span>
+		}
+
+<span class="nc" id="L241">		super.occupyCell( ch );</span>
+<span class="nc" id="L242">	}</span>
+
+	@Override
+	public void seal() {
+<span class="nc" id="L246">		super.seal();</span>
+<span class="nc" id="L247">		Statistics.qualifiedForBossChallengeBadge = true;</span>
+<span class="nc" id="L248">		int entrance = entrance();</span>
+<span class="nc" id="L249">		set( entrance, Terrain.EMPTY_SP );</span>
+<span class="nc" id="L250">		GameScene.updateMap( entrance );</span>
+<span class="nc" id="L251">		CellEmitter.get( entrance ).start( FlameParticle.FACTORY, 0.1f, 10 );</span>
+
+<span class="nc" id="L253">		Dungeon.observe();</span>
+
+<span class="nc" id="L255">		YogDzewa boss = new YogDzewa();</span>
+<span class="nc" id="L256">		boss.pos = exit() + width*3;</span>
+
+		//push any char that is already here away
+<span class="nc bnc" id="L259" title="All 2 branches missed.">		if (Actor.findChar(boss.pos) != null){</span>
+<span class="nc" id="L260">			ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L262" title="All 2 branches missed.">				if (Actor.findChar(boss.pos + i) == null){</span>
+<span class="nc" id="L263">					candidates.add(boss.pos + i);</span>
+				}
+			}
+<span class="nc" id="L266">			Char ch = Actor.findChar(boss.pos);</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">			if (!candidates.isEmpty()){</span>
+<span class="nc" id="L268">				ch.pos = Random.element(candidates);</span>
+			} else {
+<span class="nc" id="L270">				ch.pos = boss.pos+2*width;</span>
+			}
+<span class="nc" id="L272">			Actor.add(new Pushing(ch, boss.pos, ch.pos));</span>
+		}
+
+<span class="nc" id="L275">		GameScene.add( boss );</span>
+<span class="nc" id="L276">	}</span>
+
+	@Override
+	public void unseal() {
+<span class="nc" id="L280">		super.unseal();</span>
+<span class="nc" id="L281">		set( entrance(), Terrain.ENTRANCE );</span>
+<span class="nc" id="L282">		GameScene.updateMap( entrance() );</span>
+
+<span class="nc" id="L284">		set( exit(), Terrain.EXIT );</span>
+<span class="nc" id="L285">		GameScene.updateMap( exit() );</span>
+
+<span class="nc" id="L287">		CellEmitter.get(exit()-1).burst(ShadowParticle.UP, 25);</span>
+<span class="nc" id="L288">		CellEmitter.get(exit()).burst(ShadowParticle.UP, 100);</span>
+<span class="nc" id="L289">		CellEmitter.get(exit()+1).burst(ShadowParticle.UP, 25);</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">		for( CustomTilemap t : customTiles){</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">			if (t instanceof CenterPieceVisuals){</span>
+<span class="nc" id="L292">				((CenterPieceVisuals) t).updateState();</span>
+			}
+<span class="nc" id="L294">		}</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">		for( CustomTilemap t : customWalls){</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">			if (t instanceof CenterPieceWalls){</span>
+<span class="nc" id="L297">				((CenterPieceWalls) t).updateState();</span>
+			}
+<span class="nc" id="L299">		}</span>
+
+<span class="nc" id="L301">		Dungeon.observe();</span>
+
+<span class="nc" id="L303">		Game.runOnRenderThread(new Callback() {</span>
+			@Override
+			public void call() {
+<span class="nc" id="L306">				Music.INSTANCE.fadeOut(5f, new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L309">						Music.INSTANCE.play(Assets.Music.THEME_FINALE, true);</span>
+<span class="nc" id="L310">					}</span>
+				});
+<span class="nc" id="L312">			}</span>
+		});
+<span class="nc" id="L314">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L318">		super.restoreFromBundle(bundle);</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">		for (Mob m : mobs){</span>
+<span class="nc bnc" id="L320" title="All 2 branches missed.">			if (m instanceof YogDzewa){</span>
+<span class="nc" id="L321">				((YogDzewa) m).updateVisibility(this);</span>
+			}
+<span class="nc" id="L323">		}</span>
+<span class="nc" id="L324">	}</span>
+
+	@Override
+	public boolean activateTransition(Hero hero, LevelTransition transition) {
+<span class="nc bnc" id="L328" title="All 2 branches missed.">		if (transition.type == LevelTransition.Type.REGULAR_ENTRANCE</span>
+<span class="nc bnc" id="L329" title="All 2 branches missed.">				&amp;&amp; hero.belongings.getItem(Amulet.class) != null</span>
+<span class="nc bnc" id="L330" title="All 2 branches missed.">				&amp;&amp; hero.buff(AscensionChallenge.class) == null) {</span>
+
+<span class="nc" id="L332">			Game.runOnRenderThread(new Callback() {</span>
+				@Override
+				public void call() {
+<span class="nc" id="L335">					GameScene.show( new WndOptions( new ItemSprite(ItemSpriteSheet.AMULET),</span>
+<span class="nc" id="L336">							Messages.get(Amulet.class, &quot;ascent_title&quot;),</span>
+<span class="nc" id="L337">							Messages.get(Amulet.class, &quot;ascent_desc&quot;),</span>
+<span class="nc" id="L338">							Messages.get(Amulet.class, &quot;ascent_yes&quot;),</span>
+<span class="nc" id="L339">							Messages.get(Amulet.class, &quot;ascent_no&quot;)){</span>
+						@Override
+						protected void onSelect(int index) {
+<span class="nc bnc" id="L342" title="All 2 branches missed.">							if (index == 0){</span>
+<span class="nc" id="L343">								Buff.affect(hero, AscensionChallenge.class);</span>
+<span class="nc" id="L344">								Statistics.highestAscent = 25;</span>
+<span class="nc" id="L345">								HallsBossLevel.super.activateTransition(hero, transition);</span>
+							}
+<span class="nc" id="L347">						}</span>
+					} );
+<span class="nc" id="L349">				}</span>
+			});
+<span class="nc" id="L351">			return false;</span>
+
+		} else {
+<span class="nc" id="L354">			return super.activateTransition(hero, transition);</span>
+		}
+	}
+
+	@Override
+	public String tileName( int tile ) {
+<span class="nc bnc" id="L360" title="All 5 branches missed.">		switch (tile) {</span>
+			case Terrain.WATER:
+<span class="nc" id="L362">				return Messages.get(HallsLevel.class, &quot;water_name&quot;);</span>
+			case Terrain.GRASS:
+<span class="nc" id="L364">				return Messages.get(HallsLevel.class, &quot;grass_name&quot;);</span>
+			case Terrain.HIGH_GRASS:
+<span class="nc" id="L366">				return Messages.get(HallsLevel.class, &quot;high_grass_name&quot;);</span>
+			case Terrain.STATUE:
+			case Terrain.STATUE_SP:
+<span class="nc" id="L369">				return Messages.get(HallsLevel.class, &quot;statue_name&quot;);</span>
+			default:
+<span class="nc" id="L371">				return super.tileName( tile );</span>
+		}
+	}
+
+	@Override
+	public String tileDesc(int tile) {
+<span class="nc bnc" id="L377" title="All 4 branches missed.">		switch (tile) {</span>
+			case Terrain.WATER:
+<span class="nc" id="L379">				return Messages.get(HallsLevel.class, &quot;water_desc&quot;);</span>
+			case Terrain.STATUE:
+			case Terrain.STATUE_SP:
+<span class="nc" id="L382">				return Messages.get(HallsLevel.class, &quot;statue_desc&quot;);</span>
+			case Terrain.BOOKSHELF:
+<span class="nc" id="L384">				return Messages.get(HallsLevel.class, &quot;bookshelf_desc&quot;);</span>
+			default:
+<span class="nc" id="L386">				return super.tileDesc( tile );</span>
+		}
+	}
+
+	@Override
+	public Group addVisuals () {
+<span class="nc" id="L392">		super.addVisuals();</span>
+<span class="nc" id="L393">		HallsLevel.addHallsVisuals( this, visuals );</span>
+<span class="nc" id="L394">		return visuals;</span>
+	}
+
+<span class="nc" id="L397">	public static class CenterPieceVisuals extends CustomTilemap {</span>
+
+		{
+<span class="nc" id="L400">			texture = Assets.Environment.HALLS_SP;</span>
+
+<span class="nc" id="L402">			tileW = 9;</span>
+<span class="nc" id="L403">			tileH = 8;</span>
+<span class="nc" id="L404">		}</span>
+
+<span class="nc" id="L406">		private static final int[] map = new int[]{</span>
+				 8,  9, 10, 11, 11, 11, 12, 13, 14,
+				16, 17, 18, 27, 19, 27, 20, 21, 22,
+				24, 25, 26, 19, 19, 19, 28, 29, 30,
+				24, 25, 26, 19, 19, 19, 28, 29, 30,
+				24, 25, 26, 19, 19, 19, 28, 29, 30,
+				24, 25, 34, 35, 35, 35, 34, 29, 30,
+				40, 41, 36, 36, 36, 36, 36, 40, 41,
+				48, 49, 36, 36, 36, 36, 36, 48, 49
+		};
+
+		@Override
+		public Tilemap create() {
+<span class="nc" id="L419">			Tilemap v = super.create();</span>
+<span class="nc" id="L420">			updateState();</span>
+<span class="nc" id="L421">			return v;</span>
+		}
+
+		private void updateState(){
+<span class="nc bnc" id="L425" title="All 2 branches missed.">			if (vis != null){</span>
+<span class="nc" id="L426">				int[] data = map.clone();</span>
+<span class="nc bnc" id="L427" title="All 2 branches missed.">				if (Dungeon.level.map[Dungeon.level.exit()] == Terrain.EXIT) {</span>
+<span class="nc" id="L428">					data[4] = 19;</span>
+<span class="nc" id="L429">					data[12] = data[14] = 31;</span>
+				}
+<span class="nc" id="L431">				vis.map(data, tileW);</span>
+			}
+<span class="nc" id="L433">		}</span>
+	}
+
+<span class="nc" id="L436">	public static class CenterPieceWalls extends CustomTilemap {</span>
+
+		{
+<span class="nc" id="L439">			texture = Assets.Environment.HALLS_SP;</span>
+
+<span class="nc" id="L441">			tileW = 9;</span>
+<span class="nc" id="L442">			tileH = 9;</span>
+<span class="nc" id="L443">		}</span>
+
+<span class="nc" id="L445">		private static final int[] map = new int[]{</span>
+				-1, -1, -1, -1, -1, -1, -1, -1, -1,
+				-1, -1, -1, -1, -1, -1, -1, -1, -1,
+				-1, -1, -1, -1, -1, -1, -1, -1, -1,
+				-1, -1, -1, -1, -1, -1, -1, -1, -1,
+				-1, -1, -1, -1, -1, -1, -1, -1, -1,
+				-1, -1, -1, -1, -1, -1, -1, -1, -1,
+				32, 33, -1, -1, -1, -1, -1, 32, 33,
+				40, 41, -1, -1, -1, -1, -1, 40, 41,
+		};
+
+		@Override
+		public Tilemap create() {
+<span class="nc" id="L458">			Tilemap v = super.create();</span>
+<span class="nc" id="L459">			updateState();</span>
+<span class="nc" id="L460">			return v;</span>
+		}
+
+		private void updateState(){
+<span class="nc bnc" id="L464" title="All 2 branches missed.">			if (vis != null){</span>
+<span class="nc" id="L465">				int[] data = map.clone();</span>
+<span class="nc bnc" id="L466" title="All 2 branches missed.">				if (Dungeon.level.map[Dungeon.level.exit()] == Terrain.EXIT) {</span>
+<span class="nc" id="L467">					data[3] = 1;</span>
+<span class="nc" id="L468">					data[4] = 0;</span>
+<span class="nc" id="L469">					data[5] = 2;</span>
+<span class="nc" id="L470">					data[13] = 23;</span>
+				}
+<span class="nc" id="L472">				vis.map(data, tileW);</span>
+			}
+<span class="nc" id="L474">		}</span>
+
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BadgesList.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">BadgesList.java</span></div><h1>BadgesList.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.effects.BadgeBanner;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBadge;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.ui.Component;
+
+import java.util.ArrayList;
+
+public class BadgesList extends ScrollPane {
+
+<span class="nc" id="L38">	private ArrayList&lt;ListItem&gt; items = new ArrayList&lt;&gt;();</span>
+	
+	public BadgesList( boolean global ) {
+<span class="nc" id="L41">		super( new Component() );</span>
+		
+<span class="nc bnc" id="L43" title="All 2 branches missed.">		for (Badges.Badge badge : Badges.filterReplacedBadges( global )) {</span>
+			
+<span class="nc bnc" id="L45" title="All 2 branches missed.">			if (badge.type == Badges.BadgeType.HIDDEN) {</span>
+<span class="nc" id="L46">				continue;</span>
+			}
+			
+<span class="nc" id="L49">			ListItem item = new ListItem( badge );</span>
+<span class="nc" id="L50">			content.add( item );</span>
+<span class="nc" id="L51">			items.add( item );</span>
+<span class="nc" id="L52">		}</span>
+<span class="nc" id="L53">	}</span>
+	
+	@Override
+	protected void layout() {
+		
+<span class="nc" id="L58">		float pos = 0;</span>
+		
+<span class="nc" id="L60">		int size = items.size();</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		for (int i=0; i &lt; size; i++) {</span>
+<span class="nc" id="L62">			items.get( i ).setRect( 0, pos, width, ListItem.HEIGHT );</span>
+<span class="nc" id="L63">			pos += ListItem.HEIGHT;</span>
+		}
+		
+<span class="nc" id="L66">		content.setSize( width, pos );</span>
+
+<span class="nc" id="L68">		super.layout();</span>
+<span class="nc" id="L69">	}</span>
+	
+	@Override
+	public void onClick( float x, float y ) {
+<span class="nc" id="L73">		int size = items.size();</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		for (int i=0; i &lt; size; i++) {</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">			if (items.get( i ).onClick( x, y )) {</span>
+<span class="nc" id="L76">				break;</span>
+			}
+		}
+<span class="nc" id="L79">	}</span>
+
+	private class ListItem extends Component {
+		
+		private static final float HEIGHT	= 18;
+		
+		private Badges.Badge badge;
+		
+		private Image icon;
+		private RenderedTextBlock label;
+		
+<span class="nc" id="L90">		public ListItem( Badges.Badge badge ) {</span>
+<span class="nc" id="L91">			super();</span>
+			
+<span class="nc" id="L93">			this.badge = badge;</span>
+<span class="nc" id="L94">			icon.copy( BadgeBanner.image( badge.image ));</span>
+<span class="nc" id="L95">			label.text( badge.title() );</span>
+<span class="nc" id="L96">		}</span>
+		
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L100">			icon = new Image();</span>
+<span class="nc" id="L101">			add( icon );</span>
+			
+<span class="nc" id="L103">			label = PixelScene.renderTextBlock( 6 );</span>
+<span class="nc" id="L104">			add( label );</span>
+<span class="nc" id="L105">		}</span>
+		
+		@Override
+		protected void layout() {
+<span class="nc" id="L109">			icon.x = x;</span>
+<span class="nc" id="L110">			icon.y = y + (height - icon.height) / 2;</span>
+<span class="nc" id="L111">			PixelScene.align(icon);</span>
+			
+<span class="nc" id="L113">			label.setPos(</span>
+					icon.x + icon.width + 2,
+<span class="nc" id="L115">					y + (height - label.height()) / 2</span>
+			);
+<span class="nc" id="L117">			PixelScene.align(label);</span>
+<span class="nc" id="L118">		}</span>
+		
+		public boolean onClick( float x, float y ) {
+<span class="nc bnc" id="L121" title="All 2 branches missed.">			if (inside( x, y )) {</span>
+<span class="nc" id="L122">				Sample.INSTANCE.play( Assets.Sounds.CLICK, 0.7f, 0.7f, 1.2f );</span>
+<span class="nc" id="L123">				Game.scene().addToFront( new WndBadge( badge, true ) );</span>
+<span class="nc" id="L124">				return true;</span>
+			} else {
+<span class="nc" id="L126">				return false;</span>
+			}
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

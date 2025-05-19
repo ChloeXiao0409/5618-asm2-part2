@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MasterThievesArmband.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.artifacts</a> &gt; <span class="el_source">MasterThievesArmband.java</span></div><h1>MasterThievesArmband.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Blindness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.CounterBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Cripple;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Shopkeeper;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Surprise;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Callback;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L55">public class MasterThievesArmband extends Artifact {</span>
+
+	{
+<span class="nc" id="L58">		image = ItemSpriteSheet.ARTIFACT_ARMBAND;</span>
+
+<span class="nc" id="L60">		levelCap = 10;</span>
+
+<span class="nc" id="L62">		charge = 0;</span>
+<span class="nc" id="L63">		partialCharge = 0;</span>
+<span class="nc" id="L64">		chargeCap = 5+level()/2;</span>
+
+<span class="nc" id="L66">		defaultAction = AC_STEAL;</span>
+	}
+
+	public static final String AC_STEAL = &quot;STEAL&quot;;
+
+	@Override
+	public ArrayList&lt;String&gt; actions(Hero hero) {
+<span class="nc" id="L73">		ArrayList&lt;String&gt; actions = super.actions(hero);</span>
+<span class="nc bnc" id="L74" title="All 4 branches missed.">		if (isEquipped(hero)</span>
+				&amp;&amp; charge &gt; 0
+<span class="nc bnc" id="L76" title="All 4 branches missed.">				&amp;&amp; hero.buff(MagicImmune.class) == null</span>
+				&amp;&amp; !cursed) {
+<span class="nc" id="L78">			actions.add(AC_STEAL);</span>
+		}
+<span class="nc" id="L80">		return actions;</span>
+	}
+
+	@Override
+	public void execute(Hero hero, String action) {
+<span class="nc" id="L85">		super.execute(hero, action);</span>
+
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		if (hero.buff(MagicImmune.class) != null) return;</span>
+
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		if (action.equals(AC_STEAL)){</span>
+
+<span class="nc" id="L91">			curUser = hero;</span>
+
+<span class="nc bnc" id="L93" title="All 2 branches missed.">			if (!isEquipped( hero )) {</span>
+<span class="nc" id="L94">				GLog.i( Messages.get(Artifact.class, &quot;need_to_equip&quot;) );</span>
+<span class="nc" id="L95">				usesTargeting = false;</span>
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">			} else if (charge &lt; 1) {</span>
+<span class="nc" id="L98">				GLog.i( Messages.get(this, &quot;no_charge&quot;) );</span>
+<span class="nc" id="L99">				usesTargeting = false;</span>
+
+<span class="nc bnc" id="L101" title="All 2 branches missed.">			} else if (cursed) {</span>
+<span class="nc" id="L102">				GLog.w( Messages.get(this, &quot;cursed&quot;) );</span>
+<span class="nc" id="L103">				usesTargeting = false;</span>
+
+			} else {
+<span class="nc" id="L106">				usesTargeting = true;</span>
+<span class="nc" id="L107">				GameScene.selectCell(targeter);</span>
+			}
+
+		}
+<span class="nc" id="L111">	}</span>
+
+<span class="nc" id="L113">	public CellSelector.Listener targeter = new CellSelector.Listener(){</span>
+
+		@Override
+		public void onSelect(Integer target) {
+
+<span class="nc bnc" id="L118" title="All 2 branches missed.">			if (target == null) {</span>
+<span class="nc" id="L119">				return;</span>
+<span class="nc bnc" id="L120" title="All 4 branches missed.">			} else if (!Dungeon.level.adjacent(curUser.pos, target) || Actor.findChar(target) == null){</span>
+<span class="nc" id="L121">				GLog.w( Messages.get(MasterThievesArmband.class, &quot;no_target&quot;) );</span>
+			} else {
+<span class="nc" id="L123">				Char ch = Actor.findChar(target);</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">				if (ch instanceof Shopkeeper){</span>
+<span class="nc" id="L125">					GLog.w( Messages.get(MasterThievesArmband.class, &quot;steal_shopkeeper&quot;) );</span>
+<span class="nc bnc" id="L126" title="All 6 branches missed.">				} else if (ch.alignment != Char.Alignment.ENEMY</span>
+						&amp;&amp; !(ch instanceof Mimic &amp;&amp; ch.alignment == Char.Alignment.NEUTRAL)){
+<span class="nc" id="L128">					GLog.w( Messages.get(MasterThievesArmband.class, &quot;no_target&quot;) );</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">				} else if (ch instanceof Mob) {</span>
+<span class="nc" id="L130">					curUser.busy();</span>
+<span class="nc" id="L131">					curUser.sprite.attack(target, new Callback() {</span>
+						@Override
+						public void call() {
+<span class="nc" id="L134">							Sample.INSTANCE.play(Assets.Sounds.HIT);</span>
+
+<span class="nc" id="L136">							boolean surprised = ((Mob) ch).surprisedBy(curUser, false);</span>
+<span class="nc" id="L137">							float lootMultiplier = 1f + 0.1f*level();</span>
+<span class="nc" id="L138">							int debuffDuration = 3 + level()/2;</span>
+
+<span class="nc" id="L140">							Invisibility.dispel(curUser);</span>
+
+<span class="nc bnc" id="L142" title="All 2 branches missed.">							if (surprised){</span>
+<span class="nc" id="L143">								lootMultiplier += 0.5f;</span>
+<span class="nc" id="L144">								Surprise.hit(ch);</span>
+<span class="nc" id="L145">								Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);</span>
+<span class="nc" id="L146">								debuffDuration += 2;</span>
+<span class="nc" id="L147">								exp += 2;</span>
+							}
+
+<span class="nc" id="L150">							float lootChance = ((Mob) ch).lootChance() * lootMultiplier;</span>
+
+<span class="nc bnc" id="L152" title="All 2 branches missed.">							if (Dungeon.hero.lvl &gt; ((Mob) ch).maxLvl + 2) {</span>
+<span class="nc" id="L153">								lootChance = 0;</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">							} else if (ch.buff(StolenTracker.class) != null){</span>
+<span class="nc" id="L155">								lootChance = 0;</span>
+							}
+
+<span class="nc bnc" id="L158" title="All 2 branches missed.">							if (lootChance == 0){</span>
+<span class="nc" id="L159">								GLog.w(Messages.get(MasterThievesArmband.class, &quot;no_steal&quot;));</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">							} else if (Random.Float() &lt;= lootChance){</span>
+<span class="nc" id="L161">								Item loot = ((Mob) ch).createLoot();</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">								if (Challenges.isItemBlocked(loot)){</span>
+<span class="nc" id="L163">									GLog.i(Messages.get(MasterThievesArmband.class, &quot;failed_steal&quot;));</span>
+<span class="nc" id="L164">									Buff.affect(ch, StolenTracker.class).setItemStolen(false);</span>
+								} else {
+<span class="nc bnc" id="L166" title="All 2 branches missed.">									if (loot.doPickUp(curUser)) {</span>
+										//item collection happens instantly
+<span class="nc" id="L168">										curUser.spend(-TIME_TO_PICK_UP);</span>
+									} else {
+<span class="nc" id="L170">										Dungeon.level.drop(loot, curUser.pos).sprite.drop();</span>
+									}
+<span class="nc" id="L172">									GLog.i(Messages.get(MasterThievesArmband.class, &quot;stole_item&quot;, loot.name()));</span>
+<span class="nc" id="L173">									Buff.affect(ch, StolenTracker.class).setItemStolen(true);</span>
+								}
+<span class="nc" id="L175">							} else {</span>
+<span class="nc" id="L176">								GLog.i(Messages.get(MasterThievesArmband.class, &quot;failed_steal&quot;));</span>
+<span class="nc" id="L177">								Buff.affect(ch, StolenTracker.class).setItemStolen(false);</span>
+							}
+
+<span class="nc" id="L180">							Buff.prolong(ch, Blindness.class, debuffDuration);</span>
+<span class="nc" id="L181">							Buff.prolong(ch, Cripple.class, debuffDuration);</span>
+
+<span class="nc" id="L183">							artifactProc(ch, visiblyUpgraded(), 1);</span>
+
+<span class="nc" id="L185">							charge--;</span>
+<span class="nc" id="L186">							exp += 3;</span>
+<span class="nc" id="L187">							Talent.onArtifactUsed(Dungeon.hero);</span>
+<span class="nc bnc" id="L188" title="All 4 branches missed.">							while (exp &gt;= (10 + Math.round(3.33f * level())) &amp;&amp; level() &lt; levelCap) {</span>
+<span class="nc" id="L189">								exp -= 10 + Math.round(3.33f * level());</span>
+<span class="nc" id="L190">								Catalog.countUse(MasterThievesArmband.class);</span>
+<span class="nc" id="L191">								GLog.p(Messages.get(MasterThievesArmband.class, &quot;level_up&quot;));</span>
+<span class="nc" id="L192">								upgrade();</span>
+							}
+<span class="nc" id="L194">							Item.updateQuickslot();</span>
+<span class="nc" id="L195">							curUser.next();</span>
+<span class="nc" id="L196">						}</span>
+					});
+
+				}
+			}
+
+<span class="nc" id="L202">		}</span>
+
+		@Override
+		public String prompt() {
+<span class="nc" id="L206">			return Messages.get(MasterThievesArmband.class, &quot;prompt&quot;);</span>
+		}
+	};
+
+	//counter of 0 for attempt but no success, 1 for success
+<span class="nc" id="L211">	public static class StolenTracker extends CounterBuff {</span>
+<span class="nc" id="L212">		{ revivePersists = true; }</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">		public void setItemStolen(boolean stolen){ if (stolen) countUp(1); }</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">		public boolean itemWasStolen(){ return count() &gt; 0; }</span>
+	}
+
+	@Override
+	protected ArtifactBuff passiveBuff() {
+<span class="nc" id="L219">		return new Thievery();</span>
+	}
+	
+	@Override
+	public void charge(Hero target, float amount) {
+<span class="nc bnc" id="L224" title="All 4 branches missed.">		if (cursed || target.buff(MagicImmune.class) != null) return;</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">		if (charge &lt; chargeCap) {</span>
+<span class="nc" id="L226">			partialCharge += 0.1f * amount;</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">			while (partialCharge &gt;= 1f) {</span>
+<span class="nc" id="L228">				charge++;</span>
+<span class="nc" id="L229">				partialCharge--;</span>
+			}
+<span class="nc bnc" id="L231" title="All 2 branches missed.">			if (charge &gt;= chargeCap) {</span>
+<span class="nc" id="L232">				GLog.p(Messages.get(MasterThievesArmband.class, &quot;full&quot;));</span>
+<span class="nc" id="L233">				partialCharge = 0;</span>
+<span class="nc" id="L234">				charge = chargeCap;</span>
+			}
+<span class="nc" id="L236">			updateQuickslot();</span>
+		}
+<span class="nc" id="L238">	}</span>
+
+	@Override
+	public Item upgrade() {
+<span class="nc" id="L242">		chargeCap = 5 + (level()+1)/2;</span>
+<span class="nc" id="L243">		return super.upgrade();</span>
+	}
+
+	@Override
+	public String desc() {
+<span class="nc" id="L248">		String desc = super.desc();</span>
+
+<span class="nc bnc" id="L250" title="All 2 branches missed.">		if ( isEquipped (Dungeon.hero) ){</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">			if (cursed){</span>
+<span class="nc" id="L252">				desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_cursed&quot;);</span>
+			} else {
+<span class="nc" id="L254">				desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_worn&quot;);</span>
+			}
+		}
+
+<span class="nc" id="L258">		return desc;</span>
+	}
+
+<span class="nc" id="L261">	public class Thievery extends ArtifactBuff {</span>
+
+		@Override
+		public boolean act() {
+<span class="nc bnc" id="L265" title="All 6 branches missed.">			if (cursed &amp;&amp; Dungeon.gold &gt; 0 &amp;&amp; Random.Int(5) == 0){</span>
+<span class="nc" id="L266">				Dungeon.gold--;</span>
+<span class="nc" id="L267">				updateQuickslot();</span>
+			}
+
+<span class="nc" id="L270">			spend(TICK);</span>
+<span class="nc" id="L271">			return true;</span>
+		}
+
+		public void gainCharge(float levelPortion) {
+<span class="nc bnc" id="L275" title="All 4 branches missed.">			if (cursed || target.buff(MagicImmune.class) != null) return;</span>
+
+<span class="nc bnc" id="L277" title="All 2 branches missed.">			if (charge &lt; chargeCap){</span>
+<span class="nc" id="L278">				float chargeGain = 3f * levelPortion;</span>
+<span class="nc" id="L279">				chargeGain *= RingOfEnergy.artifactChargeMultiplier(target);</span>
+
+<span class="nc" id="L281">				partialCharge += chargeGain;</span>
+<span class="nc bnc" id="L282" title="All 2 branches missed.">				while (partialCharge &gt; 1f){</span>
+<span class="nc" id="L283">					partialCharge--;</span>
+<span class="nc" id="L284">					charge++;</span>
+<span class="nc" id="L285">					updateQuickslot();</span>
+
+<span class="nc bnc" id="L287" title="All 2 branches missed.">					if (charge == chargeCap){</span>
+<span class="nc" id="L288">						GLog.p( Messages.get(MasterThievesArmband.class, &quot;full&quot;) );</span>
+<span class="nc" id="L289">						partialCharge = 0;</span>
+					}
+				}
+
+<span class="nc" id="L293">			} else {</span>
+<span class="nc" id="L294">				partialCharge = 0f;</span>
+			}
+<span class="nc" id="L296">		}</span>
+		
+		public boolean steal(Item item){
+<span class="nc" id="L299">			int chargesUsed = chargesToUse(item);</span>
+<span class="nc" id="L300">			float stealChance = stealChance(item);</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">			if (Random.Float() &gt; stealChance){</span>
+<span class="nc" id="L302">				return false;</span>
+			} else {
+<span class="nc" id="L304">				charge -= chargesUsed;</span>
+<span class="nc" id="L305">				exp += 4 * chargesUsed;</span>
+<span class="nc" id="L306">				GLog.i(Messages.get(MasterThievesArmband.class, &quot;stole_item&quot;, item.name()));</span>
+
+<span class="nc" id="L308">				Talent.onArtifactUsed(Dungeon.hero);</span>
+<span class="nc bnc" id="L309" title="All 4 branches missed.">				while (exp &gt;= (10 + Math.round(3.33f * level())) &amp;&amp; level() &lt; levelCap) {</span>
+<span class="nc" id="L310">					exp -= 10 + Math.round(3.33f * level());</span>
+<span class="nc" id="L311">					Catalog.countUse(MasterThievesArmband.class);</span>
+<span class="nc" id="L312">					GLog.p(Messages.get(MasterThievesArmband.class, &quot;level_up&quot;));</span>
+<span class="nc" id="L313">					upgrade();</span>
+				}
+<span class="nc" id="L315">				updateQuickslot();</span>
+<span class="nc" id="L316">				return true;</span>
+			}
+		}
+
+		public float stealChance(Item item){
+<span class="nc" id="L321">			int chargesUsed = chargesToUse(item);</span>
+<span class="nc" id="L322">			float val = chargesUsed * (10 + level()/2f);</span>
+<span class="nc" id="L323">			return Math.min(1f, val/item.value());</span>
+		}
+
+		public int chargesToUse(Item item){
+<span class="nc" id="L327">			int value = item.value();</span>
+<span class="nc" id="L328">			float valUsing = 0;</span>
+<span class="nc" id="L329">			int chargesUsed = 0;</span>
+<span class="nc bnc" id="L330" title="All 4 branches missed.">			while (valUsing &lt; value &amp;&amp; chargesUsed &lt; charge){</span>
+<span class="nc" id="L331">				valUsing += 10 + level()/2f;</span>
+<span class="nc" id="L332">				chargesUsed++;</span>
+			}
+<span class="nc" id="L334">			return chargesUsed;</span>
+		}
+	}
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

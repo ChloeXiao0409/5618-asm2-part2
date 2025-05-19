@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Stone.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs</a> &gt; <span class="el_source">Stone.java</span></div><h1>Stone.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs;
+
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.watabou.utils.GameMath;
+
+<span class="nc" id="L29">public class Stone extends Armor.Glyph {</span>
+
+<span class="nc" id="L31">	private static ItemSprite.Glowing GREY = new ItemSprite.Glowing( 0x222222 );</span>
+
+	@Override
+	public int proc(Armor armor, Char attacker, Char defender, int damage) {
+		
+<span class="nc" id="L36">		testing = true;</span>
+<span class="nc" id="L37">		float evasion = defender.defenseSkill(attacker);</span>
+<span class="nc" id="L38">		float accuracy = attacker.attackSkill(defender);</span>
+<span class="nc" id="L39">		testing = false;</span>
+
+<span class="nc" id="L41">		evasion *= genericProcChanceMultiplier(defender);</span>
+		
+		float hitChance;
+<span class="nc bnc" id="L44" title="All 2 branches missed.">		if (evasion &gt;= accuracy){</span>
+<span class="nc" id="L45">			hitChance = (accuracy/evasion)/2f;</span>
+		} else {
+<span class="nc" id="L47">			hitChance = 1f - (evasion/accuracy)/2f;</span>
+		}
+		
+		//75% of dodge chance is applied as damage reduction
+		// we clamp in case accuracy or evasion were negative
+<span class="nc" id="L52">		hitChance = GameMath.gate(0.25f, (1f + 3f*hitChance)/4f, 1f);</span>
+		
+<span class="nc" id="L54">		damage = (int)Math.ceil(damage * hitChance);</span>
+		
+<span class="nc" id="L56">		return damage;</span>
+	}
+	
+<span class="nc" id="L59">	private static boolean testing = false;</span>
+	
+	public static boolean testingEvasion(){
+<span class="nc" id="L62">		return testing;</span>
+	}
+
+	@Override
+	public ItemSprite.Glowing glowing() {
+<span class="nc" id="L67">		return GREY;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DisintegrationTrap.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.traps</a> &gt; <span class="el_source">DisintegrationTrap.java</span></div><h1>DisintegrationTrap.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.traps;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Beam;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L40">public class DisintegrationTrap extends Trap {</span>
+
+	{
+<span class="nc" id="L43">		color = VIOLET;</span>
+<span class="nc" id="L44">		shape = CROSSHAIR;</span>
+		
+<span class="nc" id="L46">		canBeHidden = false;</span>
+<span class="nc" id="L47">		avoidsHallways = true;</span>
+<span class="nc" id="L48">	}</span>
+
+	@Override
+	public void activate() {
+<span class="nc" id="L52">		Char target = Actor.findChar(pos);</span>
+
+		//find the closest char that can be aimed at
+		//can't target beyond view distance, with a min of 6 (torch range)
+<span class="nc" id="L56">		int range = Math.max(6, Dungeon.level.viewDistance);</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		if (target == null){</span>
+<span class="nc" id="L58">			float closestDist = Float.MAX_VALUE;</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">			for (Char ch : Actor.chars()){</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">				if (!ch.isAlive()) continue;</span>
+<span class="nc" id="L61">				float curDist = Dungeon.level.trueDistance(pos, ch.pos);</span>
+				//invis targets are considered to be at max range
+<span class="nc bnc" id="L63" title="All 2 branches missed.">				if (ch.invisible &gt; 0) curDist = Math.max(curDist, range);</span>
+<span class="nc" id="L64">				Ballistica bolt = new Ballistica(pos, ch.pos, Ballistica.PROJECTILE);</span>
+<span class="nc bnc" id="L65" title="All 8 branches missed.">				if (bolt.collisionPos == ch.pos</span>
+						&amp;&amp; ( curDist &lt; closestDist || (curDist == closestDist &amp;&amp; target instanceof Hero))){
+<span class="nc" id="L67">					target = ch;</span>
+<span class="nc" id="L68">					closestDist = curDist;</span>
+				}
+<span class="nc" id="L70">			}</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">			if (closestDist &gt; range){</span>
+<span class="nc" id="L72">				target = null;</span>
+			}
+		}
+		
+<span class="nc" id="L76">		Heap heap = Dungeon.level.heaps.get(pos);</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">		if (heap != null) heap.explode();</span>
+		
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if (target != null) {</span>
+<span class="nc bnc" id="L80" title="All 4 branches missed.">			if (Dungeon.level.heroFOV[pos] || Dungeon.level.heroFOV[target.pos]) {</span>
+<span class="nc" id="L81">				Sample.INSTANCE.play(Assets.Sounds.RAY);</span>
+<span class="nc" id="L82">				ShatteredPixelDungeon.scene().add(new Beam.DeathRay(DungeonTilemap.tileCenterToWorld(pos), target.sprite.center()));</span>
+			}
+<span class="nc" id="L84">			target.damage( Random.NormalIntRange(30, 50) + scalingDepth(), this );</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">			if (target == Dungeon.hero){</span>
+<span class="nc" id="L86">				Hero hero = (Hero)target;</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">				if (!hero.isAlive()){</span>
+<span class="nc" id="L88">					Badges.validateDeathFromGrimOrDisintTrap();</span>
+<span class="nc" id="L89">					Dungeon.fail( this );</span>
+<span class="nc" id="L90">					GLog.n( Messages.get(this, &quot;ondeath&quot;) );</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">					if (reclaimed) Badges.validateDeathFromFriendlyMagic();</span>
+				}
+			}
+		}
+
+<span class="nc" id="L96">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImpShopRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard</a> &gt; <span class="el_source">ImpShopRoom.java</span></div><h1>ImpShopRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard;
+
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Imp;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.ImpShopkeeper;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.ShopRoom;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Point;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+//shops probably shouldn't extend special room, because of cases like this.
+<span class="nc" id="L40">public class ImpShopRoom extends ShopRoom {</span>
+
+<span class="nc" id="L42">	private boolean impSpawned = false;</span>
+
+	//force a certain size here to guarantee enough room for 48 items, and the same center space
+	@Override
+	public int minWidth() {
+<span class="nc" id="L47">		return 9;</span>
+	}
+	public int minHeight() {
+<span class="nc" id="L50">		return 9;</span>
+	}
+<span class="nc" id="L52">	public int maxWidth() { return 9; }</span>
+<span class="nc" id="L53">	public int maxHeight() { return 9; }</span>
+
+	@Override
+	public int maxConnections(int direction) {
+<span class="nc" id="L57">		return 2;</span>
+	}
+
+	@Override
+	public void paint(Level level) {
+		//this room isn't actually filled in until the city boss is defeated, at the earliest
+		//but we want to decide the items as part of levelgen
+<span class="nc bnc" id="L64" title="All 2 branches missed.">		if (itemsToSpawn == null) {</span>
+<span class="nc" id="L65">			itemsToSpawn = generateItems();</span>
+		}
+<span class="nc" id="L67">	}</span>
+
+	@Override
+	protected void placeShopkeeper(Level level) {
+
+<span class="nc" id="L72">		int pos = level.pointToCell(center());</span>
+
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		for (Point p : getPoints()){</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">			if (level.map[level.pointToCell(p)] == Terrain.PEDESTAL){</span>
+<span class="nc" id="L76">				pos = level.pointToCell(p);</span>
+<span class="nc" id="L77">				break;</span>
+			}
+<span class="nc" id="L79">		}</span>
+
+<span class="nc" id="L81">		Mob shopkeeper = new ImpShopkeeper();</span>
+<span class="nc" id="L82">		shopkeeper.pos = pos;</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if (ShatteredPixelDungeon.scene() instanceof GameScene) {</span>
+<span class="nc" id="L84">			GameScene.add(shopkeeper);</span>
+		} else {
+<span class="nc" id="L86">			level.mobs.add(shopkeeper);</span>
+		}
+
+<span class="nc" id="L89">	}</span>
+
+	//fix for connections not being bundled normally
+	@Override
+	public Door entrance() {
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		return connected.isEmpty() ? new Door((left+right)/2 + 1, bottom-1) : super.entrance();</span>
+	}
+
+	public void spawnShop(Level level){
+<span class="nc" id="L98">		impSpawned = true;</span>
+<span class="nc" id="L99">		placeShopkeeper(level);</span>
+<span class="nc" id="L100">		placeItems(level);</span>
+<span class="nc" id="L101">	}</span>
+
+	public boolean shopSpawned(){
+<span class="nc" id="L104">		return impSpawned;</span>
+	}
+
+	private static final String IMP = &quot;imp_spawned&quot;;
+	private static final String ITEMS = &quot;items&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L112">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L113">		bundle.put(IMP, impSpawned);</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">		if (itemsToSpawn != null) bundle.put(ITEMS, itemsToSpawn);</span>
+<span class="nc" id="L115">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L119">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L120">		impSpawned = bundle.getBoolean(IMP);</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">		if (bundle.contains( ITEMS )) {</span>
+<span class="nc" id="L122">			itemsToSpawn = new ArrayList&lt;&gt;((Collection&lt;Item&gt;) ((Collection&lt;?&gt;) bundle.getCollection(ITEMS)));</span>
+		}
+<span class="nc" id="L124">	}</span>
+
+	@Override
+	public void onLevelLoad(Level level) {
+<span class="nc" id="L128">		super.onLevelLoad(level);</span>
+
+<span class="nc bnc" id="L130" title="All 4 branches missed.">		if (Imp.Quest.isCompleted() &amp;&amp; !impSpawned){</span>
+<span class="nc" id="L131">			spawnShop(level);</span>
+		}
+<span class="nc" id="L133">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,500 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WandOfWarding.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.wands</a> &gt; <span class="el_source">WandOfWarding.java</span></div><h1>WandOfWarding.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.wands;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AllyBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Dread;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Sleep;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Terror;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Vertigo;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.Stasis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.NPC;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Bestiary;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.WardSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L57">public class WandOfWarding extends Wand {</span>
+
+	{
+<span class="nc" id="L60">		image = ItemSpriteSheet.WAND_WARDING;</span>
+<span class="nc" id="L61">		usesTargeting = false; //player usually targets wards or spaces, not enemies</span>
+	}
+
+	@Override
+	public int collisionProperties(int target) {
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (cursed)                                 return super.collisionProperties(target);</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">		else if (!Dungeon.level.heroFOV[target])    return Ballistica.PROJECTILE;</span>
+<span class="nc" id="L68">		else                                        return Ballistica.STOP_TARGET;</span>
+	}
+
+<span class="nc" id="L71">	private boolean wardAvailable = true;</span>
+	
+	@Override
+	public boolean tryToZap(Hero owner, int target) {
+		
+<span class="nc" id="L76">		int currentWardEnergy = 0;</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">		for (Char ch : Actor.chars()){</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">			if (ch instanceof Ward){</span>
+<span class="nc" id="L79">				currentWardEnergy += ((Ward) ch).tier;</span>
+			}
+<span class="nc" id="L81">		}</span>
+
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if (Stasis.getStasisAlly() instanceof Ward){</span>
+<span class="nc" id="L84">			currentWardEnergy += ((Ward) Stasis.getStasisAlly()).tier;</span>
+		}
+		
+<span class="nc" id="L87">		int maxWardEnergy = 0;</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		for (Buff buff : curUser.buffs()){</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">			if (buff instanceof Wand.Charger){</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">				if (((Charger) buff).wand() instanceof WandOfWarding){</span>
+<span class="nc" id="L91">					maxWardEnergy += 2 + ((Charger) buff).wand().level();</span>
+				}
+			}
+<span class="nc" id="L94">		}</span>
+		
+<span class="nc bnc" id="L96" title="All 2 branches missed.">		wardAvailable = (currentWardEnergy &lt; maxWardEnergy);</span>
+		
+<span class="nc" id="L98">		Char ch = Actor.findChar(target);</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		if (ch instanceof Ward){</span>
+<span class="nc bnc" id="L100" title="All 4 branches missed.">			if (!wardAvailable &amp;&amp; ((Ward) ch).tier &lt;= 3){</span>
+<span class="nc" id="L101">				GLog.w( Messages.get(this, &quot;no_more_wards&quot;));</span>
+<span class="nc" id="L102">				return false;</span>
+			}
+		} else {
+<span class="nc bnc" id="L105" title="All 2 branches missed.">			if ((currentWardEnergy + 1) &gt; maxWardEnergy){</span>
+<span class="nc" id="L106">				GLog.w( Messages.get(this, &quot;no_more_wards&quot;));</span>
+<span class="nc" id="L107">				return false;</span>
+			}
+		}
+		
+<span class="nc" id="L111">		return super.tryToZap(owner, target);</span>
+	}
+	
+	@Override
+	public void onZap(Ballistica bolt) {
+
+<span class="nc" id="L117">		int target = bolt.collisionPos;</span>
+<span class="nc" id="L118">		Char ch = Actor.findChar(target);</span>
+<span class="nc bnc" id="L119" title="All 4 branches missed.">		if (ch != null &amp;&amp; !(ch instanceof Ward)){</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			if (bolt.dist &gt; 1) target = bolt.path.get(bolt.dist-1);</span>
+
+<span class="nc" id="L122">			ch = Actor.findChar(target);</span>
+<span class="nc bnc" id="L123" title="All 4 branches missed.">			if (ch != null &amp;&amp; !(ch instanceof Ward)){</span>
+<span class="nc" id="L124">				GLog.w( Messages.get(this, &quot;bad_location&quot;));</span>
+<span class="nc" id="L125">				Dungeon.level.pressCell(bolt.collisionPos);</span>
+<span class="nc" id="L126">				return;</span>
+			}
+		}
+
+<span class="nc bnc" id="L130" title="All 2 branches missed.">		if (ch != null){</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">			if (ch instanceof Ward){</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">				if (wardAvailable) {</span>
+<span class="nc" id="L133">					((Ward) ch).upgrade( buffedLvl() );</span>
+				} else {
+<span class="nc" id="L135">					((Ward) ch).wandHeal( buffedLvl() );</span>
+				}
+<span class="nc" id="L137">				ch.sprite.emitter().burst(MagicMissile.WardParticle.UP, ((Ward) ch).tier);</span>
+			} else {
+<span class="nc" id="L139">				GLog.w( Messages.get(this, &quot;bad_location&quot;));</span>
+<span class="nc" id="L140">				Dungeon.level.pressCell(target);</span>
+			}
+			
+<span class="nc bnc" id="L143" title="All 2 branches missed.">		} else if (!Dungeon.level.passable[target]){</span>
+<span class="nc" id="L144">			GLog.w( Messages.get(this, &quot;bad_location&quot;));</span>
+<span class="nc" id="L145">			Dungeon.level.pressCell(target);</span>
+
+		} else {
+<span class="nc" id="L148">			Ward ward = new Ward();</span>
+<span class="nc" id="L149">			ward.pos = target;</span>
+<span class="nc" id="L150">			ward.wandLevel = buffedLvl();</span>
+<span class="nc" id="L151">			GameScene.add(ward, 1f);</span>
+<span class="nc" id="L152">			Dungeon.level.occupyCell(ward);</span>
+<span class="nc" id="L153">			ward.sprite.emitter().burst(MagicMissile.WardParticle.UP, ward.tier);</span>
+<span class="nc" id="L154">			Dungeon.level.pressCell(target);</span>
+
+		}
+<span class="nc" id="L157">	}</span>
+
+	@Override
+	public void fx(Ballistica bolt, Callback callback) {
+<span class="nc" id="L161">		MagicMissile m = MagicMissile.boltFromChar(curUser.sprite.parent,</span>
+				MagicMissile.WARD,
+				curUser.sprite,
+<span class="nc" id="L164">				bolt.collisionPos,</span>
+				callback);
+		
+<span class="nc bnc" id="L167" title="All 2 branches missed.">		if (bolt.dist &gt; 10){</span>
+<span class="nc" id="L168">			m.setSpeed(bolt.dist*20);</span>
+		}
+<span class="nc" id="L170">		Sample.INSTANCE.play(Assets.Sounds.ZAP);</span>
+<span class="nc" id="L171">	}</span>
+
+	@Override
+	public void onHit(MagesStaff staff, Char attacker, Char defender, int damage) {
+<span class="nc" id="L175">		int level = Math.max( 0, staff.buffedLvl() );</span>
+
+		// lvl 0 - 20%
+		// lvl 1 - 33%
+		// lvl 2 - 43%
+<span class="nc" id="L180">		float procChance = (level+1f)/(level+5f) * procChanceMultiplier(attacker);</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">		if (Random.Float() &lt; procChance) {</span>
+
+<span class="nc" id="L183">			float powerMulti = Math.max(1f, procChance);</span>
+
+<span class="nc bnc" id="L185" title="All 2 branches missed.">			for (Char ch : Actor.chars()){</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">				if (ch instanceof Ward){</span>
+<span class="nc" id="L187">					((Ward) ch).wandHeal(staff.buffedLvl(), powerMulti);</span>
+<span class="nc" id="L188">					ch.sprite.emitter().burst(MagicMissile.WardParticle.UP, ((Ward) ch).tier);</span>
+				}
+<span class="nc" id="L190">			}</span>
+		}
+<span class="nc" id="L192">	}</span>
+
+	@Override
+	public void staffFx(MagesStaff.StaffParticle particle) {
+<span class="nc" id="L196">		particle.color( 0x8822FF );</span>
+<span class="nc" id="L197">		particle.am = 0.3f;</span>
+<span class="nc" id="L198">		particle.setLifespan(3f);</span>
+<span class="nc" id="L199">		particle.speed.polar(Random.Float(PointF.PI2), 0.3f);</span>
+<span class="nc" id="L200">		particle.setSize( 1f, 2f);</span>
+<span class="nc" id="L201">		particle.radiateXY(2.5f);</span>
+<span class="nc" id="L202">	}</span>
+
+	@Override
+	public String statsDesc() {
+<span class="nc bnc" id="L206" title="All 2 branches missed.">		if (levelKnown)</span>
+<span class="nc" id="L207">			return Messages.get(this, &quot;stats_desc&quot;, level()+2);</span>
+		else
+<span class="nc" id="L209">			return Messages.get(this, &quot;stats_desc&quot;, 2);</span>
+	}
+
+	@Override
+	public String upgradeStat1(int level) {
+<span class="nc" id="L214">		return 2+level + &quot;-&quot; + (8+4*level);</span>
+	}
+
+	@Override
+	public String upgradeStat2(int level) {
+<span class="nc" id="L219">		return Integer.toString(level+2);</span>
+	}
+
+<span class="nc" id="L222">	public static class Ward extends NPC {</span>
+
+<span class="nc" id="L224">		public int tier = 1;</span>
+<span class="nc" id="L225">		private int wandLevel = 1;</span>
+
+<span class="nc" id="L227">		public int totalZaps = 0;</span>
+
+		{
+<span class="nc" id="L230">			spriteClass = WardSprite.class;</span>
+
+<span class="nc" id="L232">			alignment = Alignment.ALLY;</span>
+
+<span class="nc" id="L234">			properties.add(Property.IMMOVABLE);</span>
+<span class="nc" id="L235">			properties.add(Property.INORGANIC);</span>
+
+<span class="nc" id="L237">			viewDistance = 4;</span>
+<span class="nc" id="L238">			state = WANDERING;</span>
+		}
+
+		@Override
+		public String name() {
+<span class="nc" id="L243">			return Messages.get(this, &quot;name_&quot; + tier );</span>
+		}
+
+		public void upgrade(int wandLevel ){
+<span class="nc bnc" id="L247" title="All 2 branches missed.">			if (this.wandLevel &lt; wandLevel){</span>
+<span class="nc" id="L248">				this.wandLevel = wandLevel;</span>
+			}
+
+<span class="nc bnc" id="L251" title="All 5 branches missed.">			switch (tier){</span>
+				case 1: case 2: default:
+<span class="nc" id="L253">					break; //do nothing</span>
+				case 3:
+<span class="nc" id="L255">					HT = 35;</span>
+<span class="nc" id="L256">					HP = 15 + (5-totalZaps)*4;</span>
+<span class="nc" id="L257">					break;</span>
+				case 4:
+<span class="nc" id="L259">					HT = 54;</span>
+<span class="nc" id="L260">					HP += 19;</span>
+<span class="nc" id="L261">					break;</span>
+				case 5:
+<span class="nc" id="L263">					HT = 84;</span>
+<span class="nc" id="L264">					HP += 30;</span>
+<span class="nc" id="L265">					break;</span>
+				case 6:
+<span class="nc" id="L267">					wandHeal(wandLevel);</span>
+					break;
+			}
+
+<span class="nc bnc" id="L271" title="All 4 branches missed.">			if (Actor.chars().contains(this) &amp;&amp; tier &gt;= 3){</span>
+<span class="nc" id="L272">				Bestiary.setSeen(WardSentry.class);</span>
+			}
+
+<span class="nc bnc" id="L275" title="All 2 branches missed.">			if (tier &lt; 6){</span>
+<span class="nc" id="L276">				tier++;</span>
+<span class="nc" id="L277">				viewDistance++;</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">				if (sprite != null){</span>
+<span class="nc" id="L279">					((WardSprite)sprite).updateTier(tier);</span>
+<span class="nc" id="L280">					sprite.place(pos);</span>
+				}
+<span class="nc" id="L282">				GameScene.updateFog(pos, viewDistance+1);</span>
+			}
+
+<span class="nc" id="L285">		}</span>
+
+		//this class is used so that wards and sentries can have two entries in the Bestiary
+<span class="nc" id="L288">		public static class WardSentry extends Ward{};</span>
+
+		public void wandHeal( int wandLevel ){
+<span class="nc" id="L291">			wandHeal( wandLevel, 1f );</span>
+<span class="nc" id="L292">		}</span>
+
+		public void wandHeal( int wandLevel, float healFactor ){
+<span class="nc bnc" id="L295" title="All 2 branches missed.">			if (this.wandLevel &lt; wandLevel){</span>
+<span class="nc" id="L296">				this.wandLevel = wandLevel;</span>
+			}
+
+			int heal;
+<span class="nc bnc" id="L300" title="All 4 branches missed.">			switch(tier){</span>
+				default:
+<span class="nc" id="L302">					return;</span>
+				case 4:
+<span class="nc" id="L304">					heal = Math.round(9 * healFactor);</span>
+<span class="nc" id="L305">					break;</span>
+				case 5:
+<span class="nc" id="L307">					heal = Math.round(12 * healFactor);</span>
+<span class="nc" id="L308">					break;</span>
+				case 6:
+<span class="nc" id="L310">					heal = Math.round(16 * healFactor);</span>
+					break;
+			}
+
+<span class="nc" id="L314">			HP = Math.min(HT, HP+heal);</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">			if (sprite != null) sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(heal), FloatingText.HEALING);</span>
+
+<span class="nc" id="L317">		}</span>
+
+		@Override
+		public int defenseSkill(Char enemy) {
+<span class="nc bnc" id="L321" title="All 2 branches missed.">			if (tier &gt; 3){</span>
+<span class="nc" id="L322">				defenseSkill = 4 + Dungeon.scalingDepth();</span>
+			}
+<span class="nc" id="L324">			return super.defenseSkill(enemy);</span>
+		}
+
+		@Override
+		public int drRoll() {
+<span class="nc" id="L329">			int dr = super.drRoll();</span>
+<span class="nc bnc" id="L330" title="All 2 branches missed.">			if (tier &gt; 3){</span>
+<span class="nc" id="L331">				return dr + Math.round(Random.NormalIntRange(0, 3 + Dungeon.scalingDepth()/2) / (7f - tier));</span>
+			} else {
+<span class="nc" id="L333">				return dr;</span>
+			}
+		}
+
+		@Override
+		protected boolean canAttack( Char enemy ) {
+<span class="nc bnc" id="L339" title="All 2 branches missed.">			return new Ballistica( pos, enemy.pos, Ballistica.MAGIC_BOLT).collisionPos == enemy.pos;</span>
+		}
+
+		@Override
+		protected boolean doAttack(Char enemy) {
+<span class="nc bnc" id="L344" title="All 4 branches missed.">			boolean visible = fieldOfView[pos] || fieldOfView[enemy.pos];</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">			if (visible) {</span>
+<span class="nc" id="L346">				sprite.zap( enemy.pos );</span>
+			} else {
+<span class="nc" id="L348">				zap();</span>
+			}
+
+<span class="nc bnc" id="L351" title="All 2 branches missed.">			return !visible;</span>
+		}
+
+		private void zap() {
+<span class="nc" id="L355">			spend( 1f );</span>
+
+			//always hits
+<span class="nc" id="L358">			int dmg = Hero.heroDamageIntRange( 2 + wandLevel, 8 + 4*wandLevel );</span>
+<span class="nc" id="L359">			Char enemy = this.enemy;</span>
+<span class="nc" id="L360">			enemy.damage( dmg, this );</span>
+<span class="nc bnc" id="L361" title="All 2 branches missed.">			if (enemy.isAlive()){</span>
+<span class="nc" id="L362">				Wand.wandProc(enemy, wandLevel, 1);</span>
+			}
+
+<span class="nc bnc" id="L365" title="All 4 branches missed.">			if (!enemy.isAlive() &amp;&amp; enemy == Dungeon.hero) {</span>
+<span class="nc" id="L366">				Badges.validateDeathFromFriendlyMagic();</span>
+<span class="nc" id="L367">				GLog.n(Messages.capitalize(Messages.get( this, &quot;kill&quot;, name() )));</span>
+<span class="nc" id="L368">				Dungeon.fail( WandOfWarding.class );</span>
+			}
+
+<span class="nc" id="L371">			totalZaps++;</span>
+<span class="nc bnc" id="L372" title="All 4 branches missed.">			switch(tier){</span>
+				case 1: case 2: case 3: default:
+<span class="nc bnc" id="L374" title="All 2 branches missed.">					if (totalZaps &gt;= (2*tier-1)){</span>
+<span class="nc" id="L375">						die(this);</span>
+					}
+					break;
+				case 4:
+<span class="nc" id="L379">					damage(5, this);</span>
+<span class="nc" id="L380">					break;</span>
+				case 5:
+<span class="nc" id="L382">					damage(6, this);</span>
+<span class="nc" id="L383">					break;</span>
+				case 6:
+<span class="nc" id="L385">					damage(7, this);</span>
+					break;
+			}
+<span class="nc" id="L388">		}</span>
+
+		public void onZapComplete() {
+<span class="nc" id="L391">			zap();</span>
+<span class="nc" id="L392">			next();</span>
+<span class="nc" id="L393">		}</span>
+
+		@Override
+		protected boolean getCloser(int target) {
+<span class="nc" id="L397">			return false;</span>
+		}
+
+		@Override
+		protected boolean getFurther(int target) {
+<span class="nc" id="L402">			return false;</span>
+		}
+
+		@Override
+		public CharSprite sprite() {
+<span class="nc" id="L407">			WardSprite sprite = (WardSprite) super.sprite();</span>
+<span class="nc" id="L408">			sprite.linkVisuals(this);</span>
+<span class="nc" id="L409">			return sprite;</span>
+		}
+
+		@Override
+		public void updateSpriteState() {
+<span class="nc" id="L414">			super.updateSpriteState();</span>
+<span class="nc" id="L415">			((WardSprite)sprite).updateTier(tier);</span>
+<span class="nc" id="L416">			sprite.place(pos);</span>
+<span class="nc" id="L417">		}</span>
+		
+		@Override
+		public void destroy() {
+<span class="nc" id="L421">			super.destroy();</span>
+<span class="nc" id="L422">			Dungeon.observe();</span>
+<span class="nc" id="L423">			GameScene.updateFog(pos, viewDistance+1);</span>
+<span class="nc" id="L424">		}</span>
+		
+		@Override
+		public boolean canInteract(Char c) {
+<span class="nc" id="L428">			return true;</span>
+		}
+
+		@Override
+		public boolean interact( Char c ) {
+<span class="nc bnc" id="L433" title="All 2 branches missed.">			if (c != Dungeon.hero){</span>
+<span class="nc" id="L434">				return true;</span>
+			}
+<span class="nc" id="L436">			Game.runOnRenderThread(new Callback() {</span>
+				@Override
+				public void call() {
+<span class="nc" id="L439">					GameScene.show(new WndOptions( sprite(),</span>
+<span class="nc" id="L440">							Messages.get(Ward.this, &quot;dismiss_title&quot;),</span>
+<span class="nc" id="L441">							Messages.get(Ward.this, &quot;dismiss_body&quot;),</span>
+<span class="nc" id="L442">							Messages.get(Ward.this, &quot;dismiss_confirm&quot;),</span>
+<span class="nc" id="L443">							Messages.get(Ward.this, &quot;dismiss_cancel&quot;) ){</span>
+						@Override
+						protected void onSelect(int index) {
+<span class="nc bnc" id="L446" title="All 2 branches missed.">							if (index == 0){</span>
+<span class="nc" id="L447">								die(null);</span>
+							}
+<span class="nc" id="L449">						}</span>
+					});
+<span class="nc" id="L451">				}</span>
+			});
+<span class="nc" id="L453">			return true;</span>
+		}
+
+		@Override
+		public String description() {
+<span class="nc bnc" id="L458" title="All 2 branches missed.">			if (!Actor.chars().contains(this)){</span>
+				//for viewing in the journal
+<span class="nc bnc" id="L460" title="All 2 branches missed.">				if (tier &lt; 4){</span>
+<span class="nc" id="L461">					return Messages.get(this, &quot;desc_generic_ward&quot;);</span>
+				} else {
+<span class="nc" id="L463">					return Messages.get(this, &quot;desc_generic_sentry&quot;);</span>
+				}
+			} else {
+<span class="nc" id="L466">				return Messages.get(this, &quot;desc_&quot; + tier, 2 + wandLevel, 8 + 4 * wandLevel, tier);</span>
+			}
+		}
+		
+		{
+<span class="nc" id="L471">			immunities.add( Sleep.class );</span>
+<span class="nc" id="L472">			immunities.add( Terror.class );</span>
+<span class="nc" id="L473">			immunities.add( Dread.class );</span>
+<span class="nc" id="L474">			immunities.add( Vertigo.class );</span>
+<span class="nc" id="L475">			immunities.add( AllyBuff.class );</span>
+<span class="nc" id="L476">		}</span>
+
+		private static final String TIER = &quot;tier&quot;;
+		private static final String WAND_LEVEL = &quot;wand_level&quot;;
+		private static final String TOTAL_ZAPS = &quot;total_zaps&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L484">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L485">			bundle.put(TIER, tier);</span>
+<span class="nc" id="L486">			bundle.put(WAND_LEVEL, wandLevel);</span>
+<span class="nc" id="L487">			bundle.put(TOTAL_ZAPS, totalZaps);</span>
+<span class="nc" id="L488">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L492">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L493">			tier = bundle.getInt(TIER);</span>
+<span class="nc" id="L494">			viewDistance = 3 + tier;</span>
+<span class="nc" id="L495">			wandLevel = bundle.getInt(WAND_LEVEL);</span>
+<span class="nc" id="L496">			totalZaps = bundle.getInt(TOTAL_ZAPS);</span>
+<span class="nc" id="L497">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

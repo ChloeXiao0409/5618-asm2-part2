@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CausticBrew.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.potions.brews</a> &gt; <span class="el_source">CausticBrew.java</span></div><h1>CausticBrew.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.potions.brews;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Ooze;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfToxicGas;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.GooBlob;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.watabou.utils.BArray;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.PathFinder;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L42">public class CausticBrew extends Brew {</span>
+	
+	{
+<span class="nc" id="L45">		image = ItemSpriteSheet.BREW_CAUSTIC;</span>
+<span class="nc" id="L46">	}</span>
+	
+	@Override
+	public void shatter(int cell) {
+
+<span class="nc" id="L51">		splash( cell );</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">		if (Dungeon.level.heroFOV[cell]) {</span>
+<span class="nc" id="L53">			Sample.INSTANCE.play( Assets.Sounds.SHATTER );</span>
+		}
+		
+<span class="nc" id="L56">		PathFinder.buildDistanceMap( cell, BArray.not( Dungeon.level.solid, null ), 3 );</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		for (int i = 0; i &lt; PathFinder.distance.length; i++) {</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">			if (PathFinder.distance[i] &lt; Integer.MAX_VALUE) {</span>
+<span class="nc" id="L59">				Splash.at( i, 0x000000, 5);</span>
+<span class="nc" id="L60">				Char ch = Actor.findChar(i);</span>
+				
+<span class="nc bnc" id="L62" title="All 2 branches missed.">				if (ch != null){</span>
+<span class="nc" id="L63">					Buff.affect(ch, Ooze.class).set( Ooze.DURATION );</span>
+				}
+			}
+		}
+<span class="nc" id="L67">	}</span>
+	
+<span class="nc" id="L69">	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe.SimpleRecipe {</span>
+		
+		{
+<span class="nc" id="L72">			inputs =  new Class[]{PotionOfToxicGas.class, GooBlob.class};</span>
+<span class="nc" id="L73">			inQuantity = new int[]{1, 1};</span>
+			
+<span class="nc" id="L75">			cost = 1;</span>
+			
+<span class="nc" id="L77">			output = CausticBrew.class;</span>
+<span class="nc" id="L78">			outQuantity = 1;</span>
+<span class="nc" id="L79">		}</span>
+
+		@Override
+		public Item brew(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc" id="L83">			Catalog.countUse(GooBlob.class);</span>
+<span class="nc" id="L84">			return super.brew(ingredients);</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

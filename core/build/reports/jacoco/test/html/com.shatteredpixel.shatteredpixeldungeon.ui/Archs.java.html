@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Archs.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">Archs.java</span></div><h1>Archs.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.watabou.gltextures.TextureCache;
+import com.watabou.glwrap.Blending;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.NoosaScript;
+import com.watabou.noosa.NoosaScriptNoLighting;
+import com.watabou.noosa.SkinnedBlock;
+import com.watabou.noosa.ui.Component;
+
+<span class="nc" id="L34">public class Archs extends Component {</span>
+
+	private static final float SCROLL_SPEED	= 20f;
+
+	private SkinnedBlock arcsBg;
+	private SkinnedBlock arcsFg;
+	private Image darkness;
+
+<span class="nc" id="L42">	private static float offsB = 0;</span>
+<span class="nc" id="L43">	private static float offsF = 0;</span>
+
+<span class="nc" id="L45">	public boolean reversed = false;</span>
+
+	@Override
+	protected void createChildren() {
+<span class="nc" id="L49">		arcsBg = new SkinnedBlock( 1, 1, Assets.Interfaces.ARCS_BG ){</span>
+			@Override
+			protected NoosaScript script() {
+<span class="nc" id="L52">				return NoosaScriptNoLighting.get();</span>
+			}
+
+			@Override
+			public void draw() {
+				//arch bg has no alpha component, this improves performance
+<span class="nc" id="L58">				Blending.disable();</span>
+<span class="nc" id="L59">				super.draw();</span>
+<span class="nc" id="L60">				Blending.enable();</span>
+<span class="nc" id="L61">			}</span>
+		};
+<span class="nc" id="L63">		arcsBg.autoAdjust = true;</span>
+<span class="nc" id="L64">		arcsBg.offsetTo( 0,  offsB );</span>
+<span class="nc" id="L65">		add( arcsBg );</span>
+
+<span class="nc" id="L67">		arcsFg = new SkinnedBlock( 1, 1, Assets.Interfaces.ARCS_FG ){</span>
+			@Override
+			protected NoosaScript script() {
+<span class="nc" id="L70">				return NoosaScriptNoLighting.get();</span>
+			}
+		};
+<span class="nc" id="L73">		arcsFg.autoAdjust = true;</span>
+<span class="nc" id="L74">		arcsFg.offsetTo( 0,  offsF );</span>
+<span class="nc" id="L75">		add( arcsFg );</span>
+
+<span class="nc" id="L77">		darkness= new Image(TextureCache.createGradient(0x00000000, 0x22000000, 0x55000000, 0x99000000, 0xEE000000));</span>
+<span class="nc" id="L78">		darkness.angle = 90;</span>
+<span class="nc" id="L79">		add(darkness);</span>
+<span class="nc" id="L80">	}</span>
+
+	@Override
+	protected void layout() {
+<span class="nc" id="L84">		arcsBg.size( width, height );</span>
+<span class="nc" id="L85">		arcsBg.offset( arcsBg.texture.width / 4 - (width % arcsBg.texture.width) / 2, 0 );</span>
+
+<span class="nc" id="L87">		arcsFg.size( width, height );</span>
+<span class="nc" id="L88">		arcsFg.offset( arcsFg.texture.width / 4 - (width % arcsFg.texture.width) / 2, 0 );</span>
+
+<span class="nc" id="L90">		darkness.x = width;</span>
+<span class="nc" id="L91">		darkness.scale.x = height/5f;</span>
+<span class="nc" id="L92">		darkness.scale.y = width;</span>
+<span class="nc" id="L93">	}</span>
+
+	@Override
+	public void update() {
+
+<span class="nc" id="L98">		super.update();</span>
+
+<span class="nc" id="L100">		float shift = Game.elapsed * SCROLL_SPEED;</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (reversed) {</span>
+<span class="nc" id="L102">			shift = -shift;</span>
+		}
+
+<span class="nc" id="L105">		arcsBg.offset( 0, shift );</span>
+<span class="nc" id="L106">		arcsFg.offset( 0, shift * 2 );</span>
+
+<span class="nc" id="L108">		offsB = arcsBg.offsetY();</span>
+<span class="nc" id="L109">		offsF = arcsFg.offsetY();</span>
+<span class="nc" id="L110">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

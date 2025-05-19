@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RingOfForce.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.rings</a> &gt; <span class="el_source">RingOfForce.java</span></div><h1>RingOfForce.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.rings;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MonkEnergy;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.AttackIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.Bundle;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L40">public class RingOfForce extends Ring {</span>
+
+	{
+<span class="nc" id="L43">		icon = ItemSpriteSheet.Icons.RING_FORCE;</span>
+<span class="nc" id="L44">		buffClass = Force.class;</span>
+<span class="nc" id="L45">	}</span>
+
+	@Override
+	protected RingBuff buff( ) {
+<span class="nc" id="L49">		return new Force();</span>
+	}
+	
+	public static int armedDamageBonus( Char ch ){
+<span class="nc" id="L53">		return getBuffedBonus( ch, Force.class);</span>
+	}
+
+	@Override
+	public boolean doUnequip(Hero hero, boolean collect, boolean single) {
+<span class="nc bnc" id="L58" title="All 2 branches missed.">		if (super.doUnequip(hero, collect, single)){</span>
+<span class="nc bnc" id="L59" title="All 4 branches missed.">			if (hero.buff(BrawlersStance.class) != null &amp;&amp; hero.buff(Force.class) == null){</span>
+				//clear brawler's stance if no ring of force is equipped
+<span class="nc" id="L61">				hero.buff(BrawlersStance.class).active = false;</span>
+			}
+<span class="nc" id="L63">			return true;</span>
+		} else {
+<span class="nc" id="L65">			return false;</span>
+		}
+	}
+	
+	// *** Weapon-like properties ***
+
+	private static float tier(int str){
+<span class="nc" id="L72">		float tier = Math.max(1, (str - 8)/2f);</span>
+		//each str point after 18 is half as effective
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		if (tier &gt; 5){</span>
+<span class="nc" id="L75">			tier = 5 + (tier - 5) / 2f;</span>
+		}
+<span class="nc" id="L77">		return tier;</span>
+	}
+
+	public static int damageRoll( Hero hero ){
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		if (hero.buff(Force.class) != null</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">				&amp;&amp; hero.buff(MonkEnergy.MonkAbility.UnarmedAbilityTracker.class) == null) {</span>
+<span class="nc" id="L83">			int level = getBuffedBonus(hero, Force.class);</span>
+<span class="nc" id="L84">			float tier = tier(hero.STR());</span>
+<span class="nc" id="L85">			int dmg = Hero.heroDamageIntRange(min(level, tier), max(level, tier));</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">			if (hero.buff(BrawlersStance.class) != null</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">				&amp;&amp; hero.buff(BrawlersStance.class).active){</span>
+				// 3+tier base dmg, roughly +60%-&gt;45% dmg at T1-&gt;5
+				// lvl*((4+2*tier)/8) scaling, +50% dmg
+<span class="nc" id="L90">				dmg += Math.round(3+tier+(level*((4+2*tier)/8f)));</span>
+			}
+<span class="nc" id="L92">			return dmg;</span>
+		} else {
+			//attack without any ring of force influence
+<span class="nc" id="L95">			return Hero.heroDamageIntRange(1, Math.max(hero.STR()-8, 1));</span>
+		}
+	}
+
+	//same as equivalent tier weapon
+	private static int min(int lvl, float tier){
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (lvl &lt;= 0) tier = 1; //tier is forced to 1 if cursed</span>
+
+<span class="nc" id="L103">		return Math.max( 0, Math.round(</span>
+				tier +  //base
+				lvl     //level scaling
+		));
+	}
+
+	//same as equivalent tier weapon
+	private static int max(int lvl, float tier){
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		if (lvl &lt;= 0) tier = 1; //tier is forced to 1 if cursed</span>
+
+<span class="nc" id="L113">		return Math.max( 0, Math.round(</span>
+				5*(tier+1) +    //base
+				lvl*(tier+1)    //level scaling
+		));
+	}
+
+	@Override
+	public String statsInfo() {
+<span class="nc bnc" id="L121" title="All 2 branches missed.">		float tier = tier(Dungeon.hero != null ? Dungeon.hero.STR() : 10);</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">		if (isIdentified()) {</span>
+<span class="nc" id="L123">			int level = soloBuffedBonus();</span>
+<span class="nc" id="L124">			String info = Messages.get(this, &quot;stats&quot;, min(level, tier), max(level, tier), level);</span>
+<span class="nc bnc" id="L125" title="All 4 branches missed.">			if (isEquipped(Dungeon.hero) &amp;&amp; soloBuffedBonus() != combinedBuffedBonus(Dungeon.hero)){</span>
+<span class="nc" id="L126">				level = combinedBuffedBonus(Dungeon.hero);</span>
+<span class="nc" id="L127">				info += &quot;\n\n&quot; + Messages.get(this, &quot;combined_stats&quot;, min(level, tier), max(level, tier), level);</span>
+			}
+<span class="nc" id="L129">			return info;</span>
+		} else {
+<span class="nc" id="L131">			return Messages.get(this, &quot;typical_stats&quot;, min(1, tier), max(1, tier), 1);</span>
+		}
+	}
+
+	@Override
+	public String upgradeStat1(int level) {
+<span class="nc bnc" id="L137" title="All 4 branches missed.">		if (cursed &amp;&amp; cursedKnown) level = Math.min(-1, level-3);</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">		float tier = tier(Dungeon.hero != null ? Dungeon.hero.STR() : 10);</span>
+<span class="nc" id="L139">		return min(level+1, tier) + &quot;-&quot; + max(level+1, tier);</span>
+	}
+
+	@Override
+	public String upgradeStat2(int level) {
+<span class="nc bnc" id="L144" title="All 4 branches missed.">		if (cursed &amp;&amp; cursedKnown) level = Math.min(-1, level-3);</span>
+<span class="nc" id="L145">		return Integer.toString(level+1);</span>
+	}
+
+	@Override
+	public String upgradeStat3(int level) {
+<span class="nc bnc" id="L150" title="All 4 branches missed.">		if (cursed &amp;&amp; cursedKnown) level = Math.min(-1, level-3);</span>
+<span class="nc bnc" id="L151" title="All 4 branches missed.">		if (Dungeon.hero != null &amp;&amp; Dungeon.hero.heroClass == HeroClass.DUELIST){</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">			float tier = tier(Dungeon.hero != null ? Dungeon.hero.STR() : 10);</span>
+<span class="nc" id="L153">			int bonus = Math.round(3+tier+(level*((4+2*tier)/8f)));</span>
+<span class="nc" id="L154">			return (min(level+1, tier) + bonus) + &quot;-&quot; + (max(level+1, tier) + bonus);</span>
+		} else {
+<span class="nc" id="L156">			return null;</span>
+		}
+	}
+
+<span class="nc" id="L160">	public class Force extends RingBuff {</span>
+	}
+
+	//Duelist stuff
+
+<span class="nc" id="L165">	public static String AC_ABILITY = &quot;ABILITY&quot;;</span>
+
+	@Override
+	public void activate(Char ch) {
+<span class="nc" id="L169">		super.activate(ch);</span>
+<span class="nc bnc" id="L170" title="All 4 branches missed.">		if (ch instanceof Hero &amp;&amp; ((Hero) ch).heroClass == HeroClass.DUELIST){</span>
+<span class="nc" id="L171">			Buff.affect(ch, MeleeWeapon.Charger.class);</span>
+		}
+<span class="nc" id="L173">	}</span>
+
+	@Override
+	public String defaultAction() {
+<span class="nc bnc" id="L177" title="All 4 branches missed.">		if (Dungeon.hero != null &amp;&amp; Dungeon.hero.heroClass == HeroClass.DUELIST){</span>
+<span class="nc" id="L178">			return AC_ABILITY;</span>
+		} else {
+<span class="nc" id="L180">			return super.defaultAction();</span>
+		}
+	}
+
+	@Override
+	public ArrayList&lt;String&gt; actions(Hero hero) {
+<span class="nc" id="L186">		ArrayList&lt;String&gt; actions = super.actions(hero);</span>
+<span class="nc bnc" id="L187" title="All 4 branches missed.">		if (isEquipped(hero) &amp;&amp; hero.heroClass == HeroClass.DUELIST){</span>
+<span class="nc" id="L188">			actions.add(AC_ABILITY);</span>
+		}
+<span class="nc" id="L190">		return actions;</span>
+	}
+
+	@Override
+	public String actionName(String action, Hero hero) {
+<span class="nc bnc" id="L195" title="All 2 branches missed.">		if (action.equals(AC_ABILITY)){</span>
+<span class="nc" id="L196">			return Messages.upperCase(Messages.get(this, &quot;ability_name&quot;));</span>
+		} else {
+<span class="nc" id="L198">			return super.actionName(action, hero);</span>
+		}
+	}
+
+	@Override
+	public void execute(Hero hero, String action) {
+<span class="nc bnc" id="L204" title="All 2 branches missed.">		if (action.equals(AC_ABILITY)){</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">			if (hero.buff(BrawlersStance.class) != null){</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">				if (!hero.buff(BrawlersStance.class).active){</span>
+<span class="nc" id="L207">					hero.buff(BrawlersStance.class).reset();</span>
+				} else {
+<span class="nc" id="L209">					hero.buff(BrawlersStance.class).active = false;</span>
+				}
+<span class="nc" id="L211">				BuffIndicator.refreshHero();</span>
+<span class="nc" id="L212">				AttackIndicator.updateState();</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">			} else if (!isEquipped(hero)) {</span>
+<span class="nc" id="L214">				GLog.w(Messages.get(MeleeWeapon.class, &quot;ability_need_equip&quot;));</span>
+
+			} else {
+<span class="nc" id="L217">				Buff.affect(hero, BrawlersStance.class).reset();</span>
+<span class="nc" id="L218">				AttackIndicator.updateState();</span>
+			}
+		} else {
+<span class="nc" id="L221">			super.execute(hero, action);</span>
+		}
+<span class="nc" id="L223">	}</span>
+
+	@Override
+	public String info() {
+<span class="nc" id="L227">		String info = super.info();</span>
+
+<span class="nc bnc" id="L229" title="All 6 branches missed.">		if (Dungeon.hero != null &amp;&amp; Dungeon.hero.heroClass == HeroClass.DUELIST</span>
+<span class="nc bnc" id="L230" title="All 4 branches missed.">			&amp;&amp; (anonymous || isIdentified() || isEquipped(Dungeon.hero))){</span>
+			//0 if unidentified, solo level if unequipped, combined level if equipped
+<span class="nc bnc" id="L232" title="All 4 branches missed.">			int level = isIdentified() ? (isEquipped(Dungeon.hero) ? getBuffedBonus(Dungeon.hero, Force.class) : soloBuffedBonus()) : 0;</span>
+<span class="nc" id="L233">			float tier = tier(Dungeon.hero.STR());</span>
+<span class="nc" id="L234">			int dmgBoost = Math.round(3+tier+(level*((4+2*tier)/8f)));</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">			if (isIdentified()) {</span>
+<span class="nc" id="L236">				info += &quot;\n\n&quot; + Messages.get(this, &quot;ability_desc&quot;, min(level, tier)+dmgBoost, max(level, tier)+dmgBoost);</span>
+			} else {
+<span class="nc" id="L238">				info += &quot;\n\n&quot; + Messages.get(this, &quot;typical_ability_desc&quot;,  min(level, tier)+dmgBoost, max(level, tier)+dmgBoost);</span>
+			}
+		}
+
+<span class="nc" id="L242">		return info;</span>
+	}
+
+	public static boolean fightingUnarmed( Hero hero ){
+<span class="nc bnc" id="L246" title="All 2 branches missed.">		if (hero.belongings.attackingWeapon() == null</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">			|| hero.buff(MonkEnergy.MonkAbility.UnarmedAbilityTracker.class) != null){</span>
+<span class="nc" id="L248">			return true;</span>
+		}
+<span class="nc bnc" id="L250" title="All 4 branches missed.">		if (hero.belongings.thrownWeapon != null || hero.belongings.abilityWeapon != null){</span>
+<span class="nc" id="L251">			return false;</span>
+		}
+<span class="nc" id="L253">		BrawlersStance stance = hero.buff(BrawlersStance.class);</span>
+<span class="nc bnc" id="L254" title="All 4 branches missed.">		if (stance != null &amp;&amp; stance.active){</span>
+			//clear the buff if no ring of force is equipped
+<span class="nc bnc" id="L256" title="All 2 branches missed.">			if (hero.buff(RingOfForce.Force.class) == null){</span>
+<span class="nc" id="L257">				stance.active = false;</span>
+<span class="nc" id="L258">				AttackIndicator.updateState();</span>
+<span class="nc" id="L259">				return false;</span>
+			} else {
+<span class="nc" id="L261">				return true;</span>
+			}
+		}
+<span class="nc" id="L264">		return false;</span>
+	}
+
+	public static boolean unarmedGetsWeaponEnchantment( Hero hero ){
+<span class="nc bnc" id="L268" title="All 2 branches missed.">		if (hero.belongings.attackingWeapon() == null){</span>
+<span class="nc" id="L269">			return false;</span>
+		}
+<span class="nc bnc" id="L271" title="All 2 branches missed.">		if (hero.buff(MonkEnergy.MonkAbility.UnarmedAbilityTracker.class) != null){</span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">			return hero.buff(MonkEnergy.MonkAbility.FlurryEmpowerTracker.class) != null;</span>
+		}
+<span class="nc" id="L274">		BrawlersStance stance = hero.buff(BrawlersStance.class);</span>
+<span class="nc bnc" id="L275" title="All 4 branches missed.">		if (stance != null &amp;&amp; stance.active){</span>
+<span class="nc" id="L276">			return true;</span>
+		}
+<span class="nc" id="L278">		return false;</span>
+	}
+
+	public static boolean unarmedGetsWeaponAugment(Hero hero ){
+<span class="nc bnc" id="L282" title="All 2 branches missed.">		if (hero.belongings.attackingWeapon() == null</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">			|| hero.buff(MonkEnergy.MonkAbility.UnarmedAbilityTracker.class) != null){</span>
+<span class="nc" id="L284">			return false;</span>
+		}
+<span class="nc" id="L286">		BrawlersStance stance = hero.buff(BrawlersStance.class);</span>
+<span class="nc bnc" id="L287" title="All 4 branches missed.">		if (stance != null &amp;&amp; stance.active){</span>
+<span class="nc" id="L288">			return true;</span>
+		}
+<span class="nc" id="L290">		return false;</span>
+	}
+
+<span class="nc" id="L293">	public static class BrawlersStance extends Buff {</span>
+
+		{
+<span class="nc" id="L296">			announced = true;</span>
+<span class="nc" id="L297">			type = buffType.POSITIVE;</span>
+<span class="nc" id="L298">		}</span>
+
+		//buff must be active for at least 50 turns, to discourage micro-managing for max charges
+		public boolean active;
+		private int minTurnsLeft;
+
+		public void reset(){
+<span class="nc" id="L305">			active = true;</span>
+<span class="nc" id="L306">			minTurnsLeft = 50;</span>
+<span class="nc" id="L307">		}</span>
+
+		@Override
+		public int icon() {
+<span class="nc bnc" id="L311" title="All 2 branches missed.">			return active ? BuffIndicator.DUEL_BRAWL : BuffIndicator.NONE;</span>
+		}
+
+		@Override
+		public boolean act() {
+<span class="nc" id="L316">			minTurnsLeft --;</span>
+
+<span class="nc bnc" id="L318" title="All 4 branches missed.">			if (!active &amp;&amp; minTurnsLeft &lt;= 0){</span>
+<span class="nc" id="L319">				detach();</span>
+			}
+
+<span class="nc" id="L322">			spend(TICK);</span>
+<span class="nc" id="L323">			return true;</span>
+		}
+
+		public static final String ACTIVE = &quot;active&quot;;
+		public static final String MIN_TURNS_LEFT = &quot;min_turns_left&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L331">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L332">			bundle.put(ACTIVE, active);</span>
+<span class="nc" id="L333">			bundle.put(MIN_TURNS_LEFT, minTurnsLeft);</span>
+<span class="nc" id="L334">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L338">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L339">			active = bundle.getBoolean(ACTIVE);</span>
+<span class="nc" id="L340">			minTurnsLeft = bundle.getInt(MIN_TURNS_LEFT);</span>
+<span class="nc" id="L341">		}</span>
+	}
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Document.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.journal</a> &gt; <span class="el_source">Document.java</span></div><h1>Document.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.journal;
+
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfIdentify;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.watabou.noosa.Image;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.DeviceCompat;
+
+import java.util.Collection;
+import java.util.LinkedHashMap;
+
+<span class="nc" id="L37">public enum Document {</span>
+	
+<span class="nc" id="L39">	ADVENTURERS_GUIDE(ItemSpriteSheet.GUIDE_PAGE, false),</span>
+<span class="nc" id="L40">	ALCHEMY_GUIDE(ItemSpriteSheet.ALCH_PAGE, false),</span>
+
+<span class="nc" id="L42">	INTROS(Icons.STAIRS, true),</span>
+<span class="nc" id="L43">	SEWERS_GUARD(ItemSpriteSheet.SEWER_PAGE, true),</span>
+<span class="nc" id="L44">	PRISON_WARDEN(ItemSpriteSheet.PRISON_PAGE, true),</span>
+<span class="nc" id="L45">	CAVES_EXPLORER(ItemSpriteSheet.CAVES_PAGE, true),</span>
+<span class="nc" id="L46">	CITY_WARLOCK(ItemSpriteSheet.CITY_PAGE, true),</span>
+<span class="nc" id="L47">	HALLS_KING(ItemSpriteSheet.HALLS_PAGE, true);</span>
+	
+<span class="nc" id="L49">	Document( int sprite, boolean lore ){</span>
+<span class="nc" id="L50">		pageIcon = null;</span>
+<span class="nc" id="L51">		pageSprite = sprite;</span>
+<span class="nc" id="L52">		loreDocument = lore;</span>
+<span class="nc" id="L53">	}</span>
+
+<span class="nc" id="L55">	Document( Icons icon, boolean lore ){</span>
+<span class="nc" id="L56">		pageIcon = icon;</span>
+<span class="nc" id="L57">		pageSprite = 0;</span>
+<span class="nc" id="L58">		loreDocument = lore;</span>
+<span class="nc" id="L59">	}</span>
+
+	public static final int NOT_FOUND = 0;
+	public static final int FOUND = 1;
+	public static final int READ = 2;
+<span class="nc" id="L64">	private LinkedHashMap&lt;String, Integer&gt; pagesStates = new LinkedHashMap&lt;&gt;();</span>
+	
+	public boolean findPage( String page ) {
+<span class="nc bnc" id="L67" title="All 4 branches missed.">		if (pagesStates.containsKey(page) &amp;&amp; pagesStates.get(page) == NOT_FOUND){</span>
+<span class="nc" id="L68">			pagesStates.put(page, FOUND);</span>
+<span class="nc" id="L69">			Journal.saveNeeded = true;</span>
+<span class="nc" id="L70">			Badges.validateCatalogBadges();</span>
+<span class="nc" id="L71">			return true;</span>
+		}
+<span class="nc" id="L73">		return false;</span>
+	}
+
+	public boolean findPage( int pageIdx ) {
+<span class="nc" id="L77">		return findPage( pagesStates.keySet().toArray(new String[0])[pageIdx] );</span>
+	}
+
+	public boolean deletePage( String page ){
+<span class="nc bnc" id="L81" title="All 4 branches missed.">		if (pagesStates.containsKey(page) &amp;&amp; pagesStates.get(page) != NOT_FOUND){</span>
+<span class="nc" id="L82">			pagesStates.put(page, NOT_FOUND);</span>
+<span class="nc" id="L83">			Journal.saveNeeded = true;</span>
+<span class="nc" id="L84">			return true;</span>
+		}
+<span class="nc" id="L86">		return false;</span>
+	}
+
+	public boolean deletePage( int pageIdx ) {
+<span class="nc" id="L90">		return deletePage( pagesStates.keySet().toArray(new String[0])[pageIdx] );</span>
+	}
+
+	public boolean unreadPage( String page ){
+<span class="nc bnc" id="L94" title="All 4 branches missed.">		if (pagesStates.containsKey(page) &amp;&amp; pagesStates.get(page) == READ){</span>
+<span class="nc" id="L95">			pagesStates.put(page, FOUND);</span>
+<span class="nc" id="L96">			Journal.saveNeeded = true;</span>
+<span class="nc" id="L97">			return true;</span>
+		}
+<span class="nc" id="L99">		return false;</span>
+	}
+
+	public boolean unreadPage( int pageIdx ) {
+<span class="nc" id="L103">		return deletePage( pagesStates.keySet().toArray(new String[0])[pageIdx] );</span>
+	}
+
+	public boolean isPageFound( String page ){
+<span class="nc bnc" id="L107" title="All 4 branches missed.">		return pagesStates.containsKey(page) &amp;&amp; pagesStates.get(page) &gt; NOT_FOUND;</span>
+	}
+
+	public boolean isPageFound( int pageIdx ){
+<span class="nc" id="L111">		return isPageFound( pagesStates.keySet().toArray(new String[0])[pageIdx] );</span>
+	}
+
+	public boolean anyPagesFound(){
+<span class="nc bnc" id="L115" title="All 2 branches missed.">		for( Integer val : pagesStates.values()){</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">			if (val != NOT_FOUND){</span>
+<span class="nc" id="L117">				return true;</span>
+			}
+<span class="nc" id="L119">		}</span>
+<span class="nc" id="L120">		return false;</span>
+	}
+
+	public boolean allPagesFound(){
+<span class="nc bnc" id="L124" title="All 2 branches missed.">		for( Integer val : pagesStates.values()){</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">			if (val == NOT_FOUND){</span>
+<span class="nc" id="L126">				return false;</span>
+			}
+<span class="nc" id="L128">		}</span>
+<span class="nc" id="L129">		return true;</span>
+	}
+
+	public boolean readPage( String page ) {
+<span class="nc bnc" id="L133" title="All 2 branches missed.">		if (pagesStates.containsKey(page)){</span>
+<span class="nc" id="L134">			pagesStates.put(page, READ);</span>
+<span class="nc" id="L135">			Journal.saveNeeded = true;</span>
+<span class="nc" id="L136">			Badges.validateCatalogBadges();</span>
+<span class="nc" id="L137">			return true;</span>
+		}
+<span class="nc" id="L139">		return false;</span>
+	}
+
+	public boolean readPage( int pageIdx ) {
+<span class="nc" id="L143">		return readPage( pagesStates.keySet().toArray(new String[0])[pageIdx] );</span>
+	}
+
+	public boolean isPageRead( String page ){
+<span class="nc bnc" id="L147" title="All 4 branches missed.">		return pagesStates.containsKey(page) &amp;&amp; pagesStates.get(page) == READ;</span>
+	}
+
+	public boolean isPageRead( int pageIdx ){
+<span class="nc" id="L151">		return isPageRead( pagesStates.keySet().toArray(new String[0])[pageIdx] );</span>
+	}
+
+	public Collection&lt;String&gt; pageNames(){
+<span class="nc" id="L155">		return pagesStates.keySet();</span>
+	}
+
+	public int pageIdx(String name){
+<span class="nc" id="L159">		int i = 0;</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">		for( String page : pagesStates.keySet()){</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">			if (page.equals(name)){</span>
+<span class="nc" id="L162">				return i;</span>
+			}
+<span class="nc" id="L164">			i++;</span>
+<span class="nc" id="L165">		}</span>
+<span class="nc" id="L166">		return -1;</span>
+	}
+
+	private int pageSprite;
+	private Icons pageIcon;
+	public Image pageSprite(){
+<span class="nc" id="L172">		return pageSprite(&quot;&quot;);</span>
+	}
+
+	public Image pageSprite(String page){
+<span class="nc bnc" id="L176" title="All 6 branches missed.">		if (page.isEmpty() || !isPageFound(page) || this != ADVENTURERS_GUIDE){</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">			if (pageIcon != null){</span>
+<span class="nc" id="L178">				return Icons.get(pageIcon);</span>
+			} else {
+<span class="nc" id="L180">				return new ItemSprite(pageSprite);</span>
+			}
+		} else {
+			//special per-page visuals for guidebook
+<span class="nc bnc" id="L184" title="All 14 branches missed.">			switch (page){</span>
+				case Document.GUIDE_INTRO: default:
+<span class="nc" id="L186">					return new ItemSprite(ItemSpriteSheet.MASTERY);</span>
+				case &quot;Examining&quot;:
+<span class="nc" id="L188">					return Icons.get(Icons.MAGNIFY);</span>
+				case &quot;Surprise_Attacks&quot;:
+<span class="nc" id="L190">					return Icons.get(Icons.SNAKE);</span>
+				case &quot;Identifying&quot;:
+<span class="nc" id="L192">					return new ItemSprite( new ScrollOfIdentify() );</span>
+				case &quot;Food&quot;:
+<span class="nc" id="L194">					return new ItemSprite( ItemSpriteSheet.PASTY );</span>
+				case &quot;Alchemy&quot;:
+<span class="nc" id="L196">					return new ItemSprite( ItemSpriteSheet.TRINKET_CATA );</span>
+				case &quot;Dieing&quot;:
+<span class="nc" id="L198">					return new ItemSprite( ItemSpriteSheet.TOMB );</span>
+				case Document.GUIDE_SEARCHING:
+<span class="nc" id="L200">					return Icons.get(Icons.MAGNIFY);</span>
+				case &quot;Strength&quot;:
+<span class="nc" id="L202">					return new ItemSprite( ItemSpriteSheet.GREATAXE );</span>
+				case &quot;Upgrades&quot;:
+<span class="nc" id="L204">					return new ItemSprite( ItemSpriteSheet.RING_EMERALD );</span>
+				case &quot;Looting&quot;:
+<span class="nc" id="L206">					return new ItemSprite( ItemSpriteSheet.CRYSTAL_KEY );</span>
+				case &quot;Levelling&quot;:
+<span class="nc" id="L208">					return Icons.get(Icons.TALENT);</span>
+				case &quot;Positioning&quot;:
+<span class="nc" id="L210">					return new ItemSprite( ItemSpriteSheet.SPIRIT_BOW );</span>
+				case &quot;Magic&quot;:
+<span class="nc" id="L212">					return new ItemSprite( ItemSpriteSheet.WAND_FIREBOLT );</span>
+			}
+		}
+	}
+
+	private boolean loreDocument;
+	public boolean isLoreDoc(){
+<span class="nc" id="L219">		return loreDocument;</span>
+	}
+	
+	public String title(){
+<span class="nc" id="L223">		return Messages.get( this, name() + &quot;.title&quot;);</span>
+	}
+	
+	public String pageTitle( String page ){
+<span class="nc" id="L227">		return Messages.get( this, name() + &quot;.&quot; + page + &quot;.title&quot;);</span>
+	}
+	
+	public String pageTitle( int pageIdx ){
+<span class="nc" id="L231">		return pageTitle( pagesStates.keySet().toArray(new String[0])[pageIdx] );</span>
+	}
+	
+	public String pageBody( String page ){
+<span class="nc" id="L235">		return Messages.get( this, name() + &quot;.&quot; + page + &quot;.body&quot;);</span>
+	}
+	
+	public String pageBody( int pageIdx ){
+<span class="nc" id="L239">		return pageBody( pagesStates.keySet().toArray(new String[0])[pageIdx] );</span>
+	}
+
+	public static final String GUIDE_INTRO          = &quot;Intro&quot;;
+	public static final String GUIDE_EXAMINING      = &quot;Examining&quot;;
+	public static final String GUIDE_SURPRISE_ATKS  = &quot;Surprise_Attacks&quot;;
+	public static final String GUIDE_IDING          = &quot;Identifying&quot;;
+	public static final String GUIDE_FOOD           = &quot;Food&quot;;
+	public static final String GUIDE_ALCHEMY        = &quot;Alchemy&quot;;
+	public static final String GUIDE_DIEING         = &quot;Dieing&quot;;
+
+	public static final String GUIDE_SEARCHING      = &quot;Searching&quot;;
+
+	public static final String KING_ATTRITION       = &quot;attrition&quot;;
+
+	//pages and default states
+	static {
+<span class="nc" id="L256">		boolean debug = DeviceCompat.isDebug();</span>
+		//hero gets these when guidebook is collected
+<span class="nc bnc" id="L258" title="All 2 branches missed.">		ADVENTURERS_GUIDE.pagesStates.put(GUIDE_INTRO,          debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">		ADVENTURERS_GUIDE.pagesStates.put(GUIDE_EXAMINING,      debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L260" title="All 2 branches missed.">		ADVENTURERS_GUIDE.pagesStates.put(GUIDE_SURPRISE_ATKS,  debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">		ADVENTURERS_GUIDE.pagesStates.put(GUIDE_IDING,          debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L262" title="All 2 branches missed.">		ADVENTURERS_GUIDE.pagesStates.put(GUIDE_FOOD,           debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">		ADVENTURERS_GUIDE.pagesStates.put(GUIDE_ALCHEMY,        debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">		ADVENTURERS_GUIDE.pagesStates.put(GUIDE_DIEING,         debug ? READ : NOT_FOUND);</span>
+		//given in sewers
+<span class="nc bnc" id="L266" title="All 2 branches missed.">		ADVENTURERS_GUIDE.pagesStates.put(GUIDE_SEARCHING,      debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">		ADVENTURERS_GUIDE.pagesStates.put(&quot;Strength&quot;,           debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">		ADVENTURERS_GUIDE.pagesStates.put(&quot;Upgrades&quot;,           debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">		ADVENTURERS_GUIDE.pagesStates.put(&quot;Looting&quot;,            debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L270" title="All 2 branches missed.">		ADVENTURERS_GUIDE.pagesStates.put(&quot;Levelling&quot;,          debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">		ADVENTURERS_GUIDE.pagesStates.put(&quot;Positioning&quot;,        debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">		ADVENTURERS_GUIDE.pagesStates.put(&quot;Magic&quot;,              debug ? READ : NOT_FOUND);</span>
+		
+		//given in sewers
+<span class="nc bnc" id="L275" title="All 2 branches missed.">		ALCHEMY_GUIDE.pagesStates.put(&quot;Potions&quot;,                debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">		ALCHEMY_GUIDE.pagesStates.put(&quot;Stones&quot;,                 debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">		ALCHEMY_GUIDE.pagesStates.put(&quot;Energy_Food&quot;,            debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">		ALCHEMY_GUIDE.pagesStates.put(&quot;Exotic_Potions&quot;,         debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">		ALCHEMY_GUIDE.pagesStates.put(&quot;Exotic_Scrolls&quot;,         debug ? READ : NOT_FOUND);</span>
+		//given in prison
+<span class="nc bnc" id="L281" title="All 2 branches missed.">		ALCHEMY_GUIDE.pagesStates.put(&quot;Bombs&quot;,                  debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L282" title="All 2 branches missed.">		ALCHEMY_GUIDE.pagesStates.put(&quot;Weapons&quot;,                debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">		ALCHEMY_GUIDE.pagesStates.put(&quot;Brews_Elixirs&quot;,          debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">		ALCHEMY_GUIDE.pagesStates.put(&quot;Spells&quot;,                 debug ? READ : NOT_FOUND);</span>
+
+<span class="nc" id="L286">		INTROS.pagesStates.put(&quot;Dungeon&quot;,                       READ);</span>
+<span class="nc bnc" id="L287" title="All 2 branches missed.">		INTROS.pagesStates.put(&quot;Sewers&quot;,                        debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">		INTROS.pagesStates.put(&quot;Prison&quot;,                        debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">		INTROS.pagesStates.put(&quot;Caves&quot;,                         debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">		INTROS.pagesStates.put(&quot;City&quot;,                          debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">		INTROS.pagesStates.put(&quot;Halls&quot;,                         debug ? READ : NOT_FOUND);</span>
+
+<span class="nc bnc" id="L293" title="All 2 branches missed.">		SEWERS_GUARD.pagesStates.put(&quot;new_position&quot;,            debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L294" title="All 2 branches missed.">		SEWERS_GUARD.pagesStates.put(&quot;dangerous&quot;,               debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">		SEWERS_GUARD.pagesStates.put(&quot;crabs&quot;,                   debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">		SEWERS_GUARD.pagesStates.put(&quot;guild&quot;,                   debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L297" title="All 2 branches missed.">		SEWERS_GUARD.pagesStates.put(&quot;lost&quot;,                    debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L298" title="All 2 branches missed.">		SEWERS_GUARD.pagesStates.put(&quot;not_worth&quot;,               debug ? READ : NOT_FOUND);</span>
+
+<span class="nc bnc" id="L300" title="All 2 branches missed.">		PRISON_WARDEN.pagesStates.put(&quot;journal&quot;,                debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">		PRISON_WARDEN.pagesStates.put(&quot;recruits&quot;,               debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L302" title="All 2 branches missed.">		PRISON_WARDEN.pagesStates.put(&quot;mines&quot;,                  debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L303" title="All 2 branches missed.">		PRISON_WARDEN.pagesStates.put(&quot;rotberry&quot;,               debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L304" title="All 2 branches missed.">		PRISON_WARDEN.pagesStates.put(&quot;no_support&quot;,             debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L305" title="All 2 branches missed.">		PRISON_WARDEN.pagesStates.put(&quot;letter&quot;,                 debug ? READ : NOT_FOUND);</span>
+
+<span class="nc bnc" id="L307" title="All 2 branches missed.">		CAVES_EXPLORER.pagesStates.put(&quot;expedition&quot;,            debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">		CAVES_EXPLORER.pagesStates.put(&quot;gold&quot;,                  debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L309" title="All 2 branches missed.">		CAVES_EXPLORER.pagesStates.put(&quot;troll&quot;,                 debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L310" title="All 2 branches missed.">		CAVES_EXPLORER.pagesStates.put(&quot;city&quot;,                  debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L311" title="All 2 branches missed.">		CAVES_EXPLORER.pagesStates.put(&quot;alive&quot;,                 debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L312" title="All 2 branches missed.">		CAVES_EXPLORER.pagesStates.put(&quot;report&quot;,                debug ? READ : NOT_FOUND);</span>
+
+<span class="nc bnc" id="L314" title="All 2 branches missed.">		CITY_WARLOCK.pagesStates.put(&quot;old_king&quot;,                debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">		CITY_WARLOCK.pagesStates.put(&quot;resistance&quot;,              debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L316" title="All 2 branches missed.">		CITY_WARLOCK.pagesStates.put(&quot;failure&quot;,                 debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L317" title="All 2 branches missed.">		CITY_WARLOCK.pagesStates.put(&quot;more_powerful&quot;,           debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L318" title="All 2 branches missed.">		CITY_WARLOCK.pagesStates.put(&quot;new_power&quot;,               debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">		CITY_WARLOCK.pagesStates.put(&quot;seen_it&quot;,                 debug ? READ : NOT_FOUND);</span>
+
+<span class="nc bnc" id="L321" title="All 2 branches missed.">		HALLS_KING.pagesStates.put(&quot;Rejection&quot;,                 debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L322" title="All 2 branches missed.">		HALLS_KING.pagesStates.put(&quot;amulet&quot;,                    debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L323" title="All 2 branches missed.">		HALLS_KING.pagesStates.put(&quot;ritual&quot;,                    debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L324" title="All 2 branches missed.">		HALLS_KING.pagesStates.put(&quot;new_king&quot;,                  debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L325" title="All 2 branches missed.">		HALLS_KING.pagesStates.put(&quot;thing&quot;,                     debug ? READ : NOT_FOUND);</span>
+<span class="nc bnc" id="L326" title="All 2 branches missed.">		HALLS_KING.pagesStates.put(KING_ATTRITION,              debug ? NOT_FOUND : NOT_FOUND);</span>
+
+<span class="nc" id="L328">	}</span>
+	
+	private static final String DOCUMENTS = &quot;documents&quot;;
+	
+	public static void store( Bundle bundle ){
+		
+<span class="nc" id="L334">		Bundle docsBundle = new Bundle();</span>
+		
+<span class="nc bnc" id="L336" title="All 2 branches missed.">		for ( Document doc : values()){</span>
+<span class="nc" id="L337">			Bundle pagesBundle = new Bundle();</span>
+<span class="nc" id="L338">			boolean empty = true;</span>
+<span class="nc bnc" id="L339" title="All 2 branches missed.">			for (String page : doc.pageNames()){</span>
+<span class="nc bnc" id="L340" title="All 2 branches missed.">				if (doc.pagesStates.get(page) != NOT_FOUND){</span>
+<span class="nc" id="L341">					pagesBundle.put(page, doc.pagesStates.get(page));</span>
+<span class="nc" id="L342">					empty = false;</span>
+				}
+<span class="nc" id="L344">			}</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">			if (!empty){</span>
+<span class="nc" id="L346">				docsBundle.put(doc.name(), pagesBundle);</span>
+			}
+		}
+		
+<span class="nc" id="L350">		bundle.put( DOCUMENTS, docsBundle );</span>
+		
+<span class="nc" id="L352">	}</span>
+	
+	public static void restore( Bundle bundle ){
+		
+<span class="nc bnc" id="L356" title="All 2 branches missed.">		if (!bundle.contains( DOCUMENTS )){</span>
+<span class="nc" id="L357">			return;</span>
+		}
+		
+<span class="nc" id="L360">		Bundle docsBundle = bundle.getBundle( DOCUMENTS );</span>
+		
+<span class="nc bnc" id="L362" title="All 2 branches missed.">		for ( Document doc : values()){</span>
+<span class="nc bnc" id="L363" title="All 2 branches missed.">			if (docsBundle.contains(doc.name())){</span>
+<span class="nc" id="L364">				Bundle pagesBundle = docsBundle.getBundle(doc.name());</span>
+
+<span class="nc bnc" id="L366" title="All 2 branches missed.">				for (String page : doc.pageNames()) {</span>
+<span class="nc bnc" id="L367" title="All 2 branches missed.">					if (pagesBundle.contains(page)) {</span>
+<span class="nc" id="L368">						doc.pagesStates.put(page, pagesBundle.getInt(page));</span>
+					}
+<span class="nc" id="L370">				}</span>
+			}
+		}
+<span class="nc" id="L373">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TippedDart.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts</a> &gt; <span class="el_source">TippedDart.java</span></div><h1>TippedDart.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.PinCushion;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfRegrowth;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Crossbow;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Blindweed;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Earthroot;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Fadeleaf;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Icecap;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Mageroyal;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Rotberry;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Sorrowmoss;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Starflower;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Stormvine;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Sungrass;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Swiftthistle;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+
+<span class="nc" id="L58">public abstract class TippedDart extends Dart {</span>
+	
+	{
+<span class="nc" id="L61">		tier = 2;</span>
+
+<span class="nc" id="L63">		baseUses = 1f;</span>
+<span class="nc" id="L64">	}</span>
+	
+	private static final String AC_CLEAN = &quot;CLEAN&quot;;
+	
+	@Override
+	public ArrayList&lt;String&gt; actions(Hero hero) {
+<span class="nc" id="L70">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc" id="L71">		actions.remove( AC_TIP );</span>
+<span class="nc" id="L72">		actions.add( AC_CLEAN );</span>
+<span class="nc" id="L73">		return actions;</span>
+	}
+	
+	@Override
+	public void execute(final Hero hero, String action) {
+<span class="nc" id="L78">		super.execute(hero, action);</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if (action.equals( AC_CLEAN )){</span>
+
+			String[] options;
+<span class="nc bnc" id="L82" title="All 2 branches missed.">			if (quantity() &gt; 1){</span>
+<span class="nc" id="L83">				options = new String[]{</span>
+<span class="nc" id="L84">					Messages.get(this, &quot;clean_all&quot;),</span>
+<span class="nc" id="L85">					Messages.get(this, &quot;clean_one&quot;),</span>
+<span class="nc" id="L86">					Messages.get(this, &quot;cancel&quot;)</span>
+				};
+			} else {
+<span class="nc" id="L89">				options = new String[]{</span>
+<span class="nc" id="L90">					Messages.get(this, &quot;clean_one&quot;),</span>
+<span class="nc" id="L91">					Messages.get(this, &quot;cancel&quot;)</span>
+				};
+			}
+			
+<span class="nc" id="L95">			GameScene.show(new WndOptions(new ItemSprite(this),</span>
+<span class="nc" id="L96">					Messages.titleCase(name()),</span>
+<span class="nc" id="L97">					Messages.get(this, &quot;clean_desc&quot;),</span>
+<span class="nc" id="L98">					options){</span>
+				@Override
+				protected void onSelect(int index) {
+<span class="nc bnc" id="L101" title="All 2 branches missed.">					if (index == 0){</span>
+<span class="nc" id="L102">						detachAll(hero.belongings.backpack);</span>
+<span class="nc" id="L103">						new Dart().quantity(quantity).collect();</span>
+						
+<span class="nc" id="L105">						hero.spend( 1f );</span>
+<span class="nc" id="L106">						hero.busy();</span>
+<span class="nc" id="L107">						hero.sprite.operate(hero.pos);</span>
+<span class="nc bnc" id="L108" title="All 4 branches missed.">					} else if (index == 1 &amp;&amp; quantity() &gt; 1){</span>
+<span class="nc" id="L109">						detach(hero.belongings.backpack);</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">						if (!new Dart().collect()) Dungeon.level.drop(new Dart(), hero.pos).sprite.drop();</span>
+
+						//reset durability if there are darts left in the stack
+<span class="nc" id="L113">						durability = MAX_DURABILITY;</span>
+						
+<span class="nc" id="L115">						hero.spend( 1f );</span>
+<span class="nc" id="L116">						hero.busy();</span>
+<span class="nc" id="L117">						hero.sprite.operate(hero.pos);</span>
+					}
+<span class="nc" id="L119">				}</span>
+			});
+			
+		}
+<span class="nc" id="L123">	}</span>
+	
+	//exact same damage as regular darts, despite being higher tier.
+
+	@Override
+	protected void rangedHit(Char enemy, int cell) {
+<span class="nc" id="L129">		targetPos = cell;</span>
+<span class="nc" id="L130">		super.rangedHit( enemy, cell);</span>
+		
+		//need to spawn a dart
+<span class="nc bnc" id="L133" title="All 4 branches missed.">		if (durability &lt;= 0 &amp;&amp; !spawnedForEffect){</span>
+			//attempt to stick the dart to the enemy, just drop it if we can't.
+<span class="nc" id="L135">			Dart d = new Dart();</span>
+<span class="nc" id="L136">			Catalog.countUse(getClass());</span>
+<span class="nc bnc" id="L137" title="All 8 branches missed.">			if (sticky &amp;&amp; enemy != null &amp;&amp; enemy.isAlive() &amp;&amp; enemy.alignment != Char.Alignment.ALLY){</span>
+<span class="nc" id="L138">				PinCushion p = Buff.affect(enemy, PinCushion.class);</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">				if (p.target == enemy){</span>
+<span class="nc" id="L140">					p.stick(d);</span>
+<span class="nc" id="L141">					return;</span>
+				}
+			}
+<span class="nc" id="L144">			Dungeon.level.drop( d, enemy.pos ).sprite.drop();</span>
+		}
+<span class="nc" id="L146">	}</span>
+
+	//the number of regular darts lost due to merge being called
+<span class="nc" id="L149">	public static int lostDarts = 0;</span>
+
+	@Override
+	public Item merge(Item other) {
+<span class="nc" id="L153">		int total = quantity() + other.quantity();</span>
+<span class="nc" id="L154">		super.merge(other);</span>
+<span class="nc" id="L155">		int extra = total - quantity();</span>
+
+		//need to spawn waste tipped darts as regular darts
+<span class="nc bnc" id="L158" title="All 2 branches missed.">		if (extra &gt; 0){</span>
+<span class="nc" id="L159">			lostDarts += extra;</span>
+		}
+<span class="nc" id="L161">		return this;</span>
+	}
+
+<span class="nc" id="L164">	private static int targetPos = -1;</span>
+
+	@Override
+	public float durabilityPerUse() {
+<span class="nc" id="L168">		float use = super.durabilityPerUse(false);</span>
+
+<span class="nc bnc" id="L170" title="All 2 branches missed.">		if (Dungeon.hero != null) {</span>
+<span class="nc" id="L171">			use /= (1 + Dungeon.hero.pointsInTalent(Talent.DURABLE_TIPS));</span>
+
+			//checks both destination and source position
+<span class="nc" id="L174">			float lotusPreserve = 0f;</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">			if (targetPos != -1) {</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">				for (Char ch : Actor.chars()) {</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">					if (ch instanceof WandOfRegrowth.Lotus) {</span>
+<span class="nc" id="L178">						WandOfRegrowth.Lotus l = (WandOfRegrowth.Lotus) ch;</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">						if (l.inRange(targetPos)) {</span>
+<span class="nc" id="L180">							lotusPreserve = Math.max(lotusPreserve, l.seedPreservation());</span>
+						}
+					}
+<span class="nc" id="L183">				}</span>
+<span class="nc" id="L184">				targetPos = -1;</span>
+			}
+<span class="nc bnc" id="L186" title="All 2 branches missed.">			int p = curUser == null ? Dungeon.hero.pos : curUser.pos;</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">			for (Char ch : Actor.chars()) {</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">				if (ch instanceof WandOfRegrowth.Lotus) {</span>
+<span class="nc" id="L189">					WandOfRegrowth.Lotus l = (WandOfRegrowth.Lotus) ch;</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">					if (l.inRange(p)) {</span>
+<span class="nc" id="L191">						lotusPreserve = Math.max(lotusPreserve, l.seedPreservation());</span>
+					}
+				}
+<span class="nc" id="L194">			}</span>
+<span class="nc" id="L195">			use *= (1f - lotusPreserve);</span>
+		}
+
+<span class="nc" id="L198">		float usages = Math.round(MAX_DURABILITY/use);</span>
+
+		//grants 3+lvl extra uses with charged shot
+<span class="nc bnc" id="L201" title="All 6 branches missed.">		if (bow != null &amp;&amp; Dungeon.hero != null &amp;&amp; Dungeon.hero.buff(Crossbow.ChargedShot.class) != null){</span>
+<span class="nc" id="L202">			usages += 3 + bow.buffedLvl();</span>
+		}
+
+		//at 100 uses, items just last forever.
+<span class="nc bnc" id="L206" title="All 2 branches missed.">		if (usages &gt;= 100f) return 0;</span>
+
+		//add a tiny amount to account for rounding error for calculations like 1/3
+<span class="nc" id="L209">		return (MAX_DURABILITY/usages) + 0.001f;</span>
+	}
+	
+	@Override
+	public int value() {
+		//value of regular dart plus half of the seed
+<span class="nc" id="L215">		return 8 * quantity;</span>
+	}
+	
+<span class="nc" id="L218">	public static final LinkedHashMap&lt;Class&lt;?extends Plant.Seed&gt;, Class&lt;?extends TippedDart&gt;&gt; types = new LinkedHashMap&lt;&gt;();</span>
+	static {
+<span class="nc" id="L220">		types.put(Rotberry.Seed.class,      RotDart.class);</span>
+<span class="nc" id="L221">		types.put(Sungrass.Seed.class,      HealingDart.class);</span>
+<span class="nc" id="L222">		types.put(Fadeleaf.Seed.class,      DisplacingDart.class);</span>
+<span class="nc" id="L223">		types.put(Icecap.Seed.class,        ChillingDart.class);</span>
+<span class="nc" id="L224">		types.put(Firebloom.Seed.class,     IncendiaryDart.class);</span>
+<span class="nc" id="L225">		types.put(Sorrowmoss.Seed.class,    PoisonDart.class);</span>
+<span class="nc" id="L226">		types.put(Swiftthistle.Seed.class,  AdrenalineDart.class);</span>
+<span class="nc" id="L227">		types.put(Blindweed.Seed.class,     BlindingDart.class);</span>
+<span class="nc" id="L228">		types.put(Stormvine.Seed.class,     ShockingDart.class);</span>
+<span class="nc" id="L229">		types.put(Earthroot.Seed.class,     ParalyticDart.class);</span>
+<span class="nc" id="L230">		types.put(Mageroyal.Seed.class,     CleansingDart.class);</span>
+<span class="nc" id="L231">		types.put(Starflower.Seed.class,    HolyDart.class);</span>
+<span class="nc" id="L232">	}</span>
+	
+	public static TippedDart getTipped( Plant.Seed s, int quantity ){
+<span class="nc" id="L235">		return (TippedDart) Reflection.newInstance(types.get(s.getClass())).quantity(quantity);</span>
+	}
+	
+	public static TippedDart randomTipped( int quantity ){
+		Plant.Seed s;
+		do{
+<span class="nc" id="L241">			s = (Plant.Seed) Generator.randomUsingDefaults(Generator.Category.SEED);</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">		} while (!types.containsKey(s.getClass()));</span>
+		
+<span class="nc" id="L244">		return getTipped(s, quantity );</span>
+		
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

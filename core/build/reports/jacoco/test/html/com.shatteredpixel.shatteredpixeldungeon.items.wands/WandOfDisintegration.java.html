@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WandOfDisintegration.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.wands</a> &gt; <span class="el_source">WandOfDisintegration.java</span></div><h1>WandOfDisintegration.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.wands;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Web;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Beam;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.PurpleParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.watabou.utils.Callback;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L44">public class WandOfDisintegration extends DamageWand {</span>
+
+	{
+<span class="nc" id="L47">		image = ItemSpriteSheet.WAND_DISINTEGRATION;</span>
+
+<span class="nc" id="L49">		collisionProperties = Ballistica.WONT_STOP;</span>
+<span class="nc" id="L50">	}</span>
+
+
+	public int min(int lvl){
+<span class="nc" id="L54">		return 2+lvl;</span>
+	}
+
+	public int max(int lvl){
+<span class="nc" id="L58">		return 8+4*lvl;</span>
+	}
+	
+	@Override
+	public int targetingPos(Hero user, int dst) {
+<span class="nc bnc" id="L63" title="All 4 branches missed.">		if (!cursed || !cursedKnown) {</span>
+<span class="nc" id="L64">			return dst;</span>
+		} else {
+<span class="nc" id="L66">			return super.targetingPos(user, dst);</span>
+		}
+	}
+
+	@Override
+	public void onZap(Ballistica beam) {
+		
+<span class="nc" id="L73">		boolean terrainAffected = false;</span>
+		
+<span class="nc" id="L75">		int level = buffedLvl();</span>
+		
+<span class="nc" id="L77">		int maxDistance = Math.min(distance(), beam.dist);</span>
+		
+<span class="nc" id="L79">		ArrayList&lt;Char&gt; chars = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L81">		Blob web = Dungeon.level.blobs.get(Web.class);</span>
+
+<span class="nc" id="L83">		int terrainPassed = 2, terrainBonus = 0;</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		for (int c : beam.subPath(1, maxDistance)) {</span>
+			
+			Char ch;
+<span class="nc bnc" id="L87" title="All 2 branches missed.">			if ((ch = Actor.findChar( c )) != null) {</span>
+
+				//we don't want to count passed terrain after the last enemy hit. That would be a lot of bonus levels.
+				//terrainPassed starts at 2, equivalent of rounding up when /3 for integer arithmetic.
+<span class="nc" id="L91">				terrainBonus += terrainPassed/3;</span>
+<span class="nc" id="L92">				terrainPassed = terrainPassed%3;</span>
+
+<span class="nc bnc" id="L94" title="All 8 branches missed.">				if (ch instanceof Mob &amp;&amp; ((Mob) ch).state == ((Mob) ch).PASSIVE</span>
+						&amp;&amp; !(Dungeon.level.mapped[c] || Dungeon.level.visited[c])){
+					//avoid harming undiscovered passive chars
+				} else {
+<span class="nc" id="L98">					chars.add(ch);</span>
+				}
+			}
+
+<span class="nc bnc" id="L102" title="All 2 branches missed.">			if (Dungeon.level.solid[c]) {</span>
+<span class="nc" id="L103">				terrainPassed++;</span>
+			}
+
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			if (Dungeon.level.flamable[c]) {</span>
+
+<span class="nc" id="L108">				Dungeon.level.destroy( c );</span>
+<span class="nc" id="L109">				GameScene.updateMap( c );</span>
+<span class="nc" id="L110">				terrainAffected = true;</span>
+				
+			}
+			
+<span class="nc" id="L114">			CellEmitter.center( c ).burst( PurpleParticle.BURST, Random.IntRange( 1, 2 ) );</span>
+<span class="nc" id="L115">		}</span>
+		
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		if (terrainAffected) {</span>
+<span class="nc" id="L118">			Dungeon.observe();</span>
+		}
+		
+<span class="nc" id="L121">		int lvl = level + (chars.size()-1) + terrainBonus;</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">		for (Char ch : chars) {</span>
+<span class="nc" id="L123">			wandProc(ch, chargesPerCast());</span>
+<span class="nc" id="L124">			ch.damage( damageRoll(lvl), this );</span>
+<span class="nc" id="L125">			ch.sprite.centerEmitter().burst( PurpleParticle.BURST, Random.IntRange( 1, 2 ) );</span>
+<span class="nc" id="L126">			ch.sprite.flash();</span>
+<span class="nc" id="L127">		}</span>
+<span class="nc" id="L128">	}</span>
+
+	@Override
+	public void onHit(MagesStaff staff, Char attacker, Char defender, int damage) {
+		//no direct effect, see magesStaff.reachfactor
+<span class="nc" id="L133">	}</span>
+
+	private int distance() {
+<span class="nc" id="L136">		return buffedLvl()*2 + 6;</span>
+	}
+
+	@Override
+	public String upgradeStat2(int level) {
+<span class="nc" id="L141">		return Integer.toString(6 + level*2);</span>
+	}
+
+	@Override
+	public void fx(Ballistica beam, Callback callback) {
+		
+<span class="nc" id="L147">		int cell = beam.path.get(Math.min(beam.dist, distance()));</span>
+<span class="nc" id="L148">		curUser.sprite.parent.add(new Beam.DeathRay(curUser.sprite.center(), DungeonTilemap.raisedTileCenterToWorld( cell )));</span>
+<span class="nc" id="L149">		callback.call();</span>
+<span class="nc" id="L150">	}</span>
+
+	@Override
+	public void staffFx(MagesStaff.StaffParticle particle) {
+<span class="nc" id="L154">		particle.color(0x220022);</span>
+<span class="nc" id="L155">		particle.am = 0.6f;</span>
+<span class="nc" id="L156">		particle.setLifespan(1f);</span>
+<span class="nc" id="L157">		particle.acc.set(10, -10);</span>
+<span class="nc" id="L158">		particle.setSize( 0.5f, 3f);</span>
+<span class="nc" id="L159">		particle.shuffleXY(1f);</span>
+<span class="nc" id="L160">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

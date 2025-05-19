@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NewsScene.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.scenes</a> &gt; <span class="el_source">NewsScene.java</span></div><h1>NewsScene.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.scenes;
+
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.services.news.News;
+import com.shatteredpixel.shatteredpixeldungeon.services.news.NewsArticle;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Archs;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ExitButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.windows.IconTitle;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndTitledMessage;
+import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.NinePatch;
+import com.watabou.noosa.ui.Component;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L49">public class NewsScene extends PixelScene {</span>
+
+<span class="nc" id="L51">	boolean displayingNoArticles = false;</span>
+
+	private static final int BTN_HEIGHT = 22;
+	private static final int BTN_WIDTH = 100;
+
+	@Override
+	public void create() {
+<span class="nc" id="L58">		super.create();</span>
+
+<span class="nc" id="L60">		uiCamera.visible = false;</span>
+
+<span class="nc" id="L62">		int w = Camera.main.width;</span>
+<span class="nc" id="L63">		int h = Camera.main.height;</span>
+
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		int fullWidth = PixelScene.landscape() ? 202 : 100;</span>
+<span class="nc" id="L66">		int left = (w - fullWidth)/2;</span>
+
+<span class="nc" id="L68">		Archs archs = new Archs();</span>
+<span class="nc" id="L69">		archs.setSize(w, h);</span>
+<span class="nc" id="L70">		add(archs);</span>
+
+<span class="nc" id="L72">		ExitButton btnExit = new ExitButton();</span>
+<span class="nc" id="L73">		btnExit.setPos(w - btnExit.width(), 0);</span>
+<span class="nc" id="L74">		add(btnExit);</span>
+
+<span class="nc" id="L76">		IconTitle title = new IconTitle( Icons.NEWS.get(), Messages.get(this, &quot;title&quot;));</span>
+<span class="nc" id="L77">		title.setSize(200, 0);</span>
+<span class="nc" id="L78">		title.setPos(</span>
+<span class="nc" id="L79">				(w - title.reqWidth()) / 2f,</span>
+<span class="nc" id="L80">				(20 - title.height()) / 2f</span>
+		);
+<span class="nc" id="L82">		align(title);</span>
+<span class="nc" id="L83">		add(title);</span>
+
+<span class="nc" id="L85">		float top = 18;</span>
+
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		displayingNoArticles = !News.articlesAvailable();</span>
+<span class="nc bnc" id="L88" title="All 4 branches missed.">		if (displayingNoArticles || Messages.lang() != Languages.ENGLISH) {</span>
+
+<span class="nc" id="L90">			Component newsInfo = new NewsInfo();</span>
+<span class="nc" id="L91">			newsInfo.setRect(left, 20, fullWidth, 0);</span>
+<span class="nc" id="L92">			add(newsInfo);</span>
+
+<span class="nc" id="L94">			top = newsInfo.bottom();</span>
+
+		}
+
+<span class="nc bnc" id="L98" title="All 2 branches missed.">		if (!displayingNoArticles) {</span>
+<span class="nc" id="L99">			ArrayList&lt;NewsArticle&gt; articles = News.articles();</span>
+
+<span class="nc" id="L101">			float articleSpace = h - top - 2;</span>
+<span class="nc" id="L102">			int rows = articles.size();</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			if (PixelScene.landscape()){</span>
+<span class="nc" id="L104">				rows /= 2;</span>
+			}
+<span class="nc" id="L106">			rows++;</span>
+
+<span class="nc bnc" id="L108" title="All 2 branches missed.">			while ((articleSpace) / (BTN_HEIGHT+0.5f) &lt; rows) {</span>
+<span class="nc" id="L109">				articles.remove(articles.size() - 1);</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">				if (PixelScene.landscape()) {</span>
+<span class="nc" id="L111">					articles.remove(articles.size() - 1);</span>
+				}
+<span class="nc" id="L113">				rows--;</span>
+			}
+
+<span class="nc" id="L116">			float gap = ((articleSpace) - (BTN_HEIGHT * rows)) / (float)rows;</span>
+
+<span class="nc" id="L118">			boolean rightCol = false;</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">			for (NewsArticle article : articles) {</span>
+<span class="nc" id="L120">				StyledButton b = new ArticleButton(article);</span>
+<span class="nc" id="L121">				b.multiline = true;</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">				if (!rightCol) {</span>
+<span class="nc" id="L123">					top += gap;</span>
+<span class="nc" id="L124">					b.setRect( left, top, BTN_WIDTH, BTN_HEIGHT);</span>
+				} else {
+<span class="nc" id="L126">					b.setRect( left + fullWidth - BTN_WIDTH, top, BTN_WIDTH, BTN_HEIGHT);</span>
+				}
+<span class="nc" id="L128">				align(b);</span>
+<span class="nc" id="L129">				add(b);</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">				if (!PixelScene.landscape()) {</span>
+<span class="nc" id="L131">					top += BTN_HEIGHT;</span>
+				} else {
+<span class="nc bnc" id="L133" title="All 2 branches missed.">					if (rightCol){</span>
+<span class="nc" id="L134">						top += BTN_HEIGHT;</span>
+					}
+<span class="nc bnc" id="L136" title="All 2 branches missed.">					rightCol = !rightCol;</span>
+				}
+<span class="nc" id="L138">			}</span>
+<span class="nc" id="L139">			top += gap;</span>
+<span class="nc" id="L140">		} else {</span>
+<span class="nc" id="L141">			top += 20;</span>
+		}
+
+<span class="nc" id="L144">		StyledButton btnSite = new StyledButton(Chrome.Type.GREY_BUTTON_TR, Messages.get(this, &quot;read_more&quot;)){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L147">				super.onClick();</span>
+<span class="nc" id="L148">				ShatteredPixelDungeon.platform.openURI(&quot;https://ShatteredPixel.com&quot;);</span>
+<span class="nc" id="L149">			}</span>
+		};
+<span class="nc" id="L151">		btnSite.icon(Icons.get(Icons.NEWS));</span>
+<span class="nc" id="L152">		btnSite.textColor(Window.TITLE_COLOR);</span>
+<span class="nc" id="L153">		btnSite.setRect(left, top, fullWidth, BTN_HEIGHT);</span>
+<span class="nc" id="L154">		add(btnSite);</span>
+
+<span class="nc" id="L156">	}</span>
+
+	@Override
+	protected void onBackPressed() {
+<span class="nc" id="L160">		ShatteredPixelDungeon.switchNoFade( TitleScene.class );</span>
+<span class="nc" id="L161">	}</span>
+
+	@Override
+	public void update() {
+<span class="nc bnc" id="L165" title="All 4 branches missed.">		if (displayingNoArticles &amp;&amp; News.articlesAvailable()){</span>
+<span class="nc" id="L166">			ShatteredPixelDungeon.seamlessResetScene();</span>
+		}
+<span class="nc" id="L168">		super.update();</span>
+<span class="nc" id="L169">	}</span>
+
+	private static class NewsInfo extends Component {
+
+		NinePatch bg;
+		RenderedTextBlock text;
+		RedButton button;
+
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L179">			bg = Chrome.get(Chrome.Type.GREY_BUTTON_TR);</span>
+<span class="nc" id="L180">			add(bg);</span>
+			
+<span class="nc" id="L182">			String message = &quot;&quot;;</span>
+
+<span class="nc bnc" id="L184" title="All 2 branches missed.">			if (Messages.lang() != Languages.ENGLISH){</span>
+<span class="nc" id="L185">				message += Messages.get(this, &quot;english_warn&quot;);</span>
+			}
+			
+<span class="nc bnc" id="L188" title="All 2 branches missed.">			if (!News.articlesAvailable()){</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">				if (SPDSettings.news()) {</span>
+<span class="nc bnc" id="L190" title="All 4 branches missed.">					if (SPDSettings.WiFi() &amp;&amp; !Game.platform.connectedToUnmeteredNetwork()) {</span>
+<span class="nc" id="L191">						message += &quot;\n\n&quot; + Messages.get(this, &quot;metered_network&quot;);</span>
+
+<span class="nc" id="L193">						button = new RedButton(Messages.get(this, &quot;enable_data&quot;)) {</span>
+							@Override
+							protected void onClick() {
+<span class="nc" id="L196">								super.onClick();</span>
+<span class="nc" id="L197">								SPDSettings.WiFi(false);</span>
+<span class="nc" id="L198">								News.checkForNews();</span>
+<span class="nc" id="L199">								ShatteredPixelDungeon.seamlessResetScene();</span>
+<span class="nc" id="L200">							}</span>
+						};
+<span class="nc" id="L202">						add(button);</span>
+					} else {
+<span class="nc" id="L204">						message += &quot;\n\n&quot; + Messages.get(this, &quot;no_internet&quot;);</span>
+					}
+				} else {
+<span class="nc" id="L207">					message += &quot;\n\n&quot; + Messages.get(this, &quot;news_disabled&quot;);</span>
+
+<span class="nc" id="L209">					button = new RedButton(Messages.get(this, &quot;enable_news&quot;)) {</span>
+						@Override
+						protected void onClick() {
+<span class="nc" id="L212">							super.onClick();</span>
+<span class="nc" id="L213">							SPDSettings.news(true);</span>
+<span class="nc" id="L214">							News.checkForNews();</span>
+<span class="nc" id="L215">							ShatteredPixelDungeon.seamlessResetScene();</span>
+<span class="nc" id="L216">						}</span>
+					};
+<span class="nc" id="L218">					add(button);</span>
+				}
+			}
+
+<span class="nc bnc" id="L222" title="All 2 branches missed.">			if (message.startsWith(&quot;\n\n&quot;)) message = message.replaceFirst(&quot;\n\n&quot;, &quot;&quot;);</span>
+			
+<span class="nc" id="L224">			text = PixelScene.renderTextBlock(message, 6);</span>
+<span class="nc" id="L225">			text.hardlight(CharSprite.WARNING);</span>
+<span class="nc" id="L226">			add(text);</span>
+<span class="nc" id="L227">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L231">			bg.x = x;</span>
+<span class="nc" id="L232">			bg.y = y;</span>
+
+<span class="nc" id="L234">			text.maxWidth((int)width - bg.marginHor());</span>
+<span class="nc" id="L235">			text.setPos(x + bg.marginLeft(), y + bg.marginTop()+1);</span>
+
+<span class="nc" id="L237">			height = (text.bottom()) - y;</span>
+
+<span class="nc bnc" id="L239" title="All 2 branches missed.">			if (button != null){</span>
+<span class="nc" id="L240">				height += 4;</span>
+<span class="nc" id="L241">				button.multiline = true;</span>
+<span class="nc" id="L242">				button.setSize(width - bg.marginHor(), 16);</span>
+<span class="nc" id="L243">				button.setSize(width - bg.marginHor(), Math.max(button.reqHeight(), 16));</span>
+<span class="nc" id="L244">				button.setPos(x + (width - button.width())/2, y + height);</span>
+<span class="nc" id="L245">				height = button.bottom() - y;</span>
+			}
+
+<span class="nc" id="L248">			height += bg.marginBottom() + 1;</span>
+
+<span class="nc" id="L250">			bg.size(width, height);</span>
+
+<span class="nc" id="L252">		}</span>
+	}
+
+	private static class ArticleButton extends StyledButton {
+
+		NewsArticle article;
+
+		BitmapText date;
+
+		public ArticleButton(NewsArticle article) {
+<span class="nc" id="L262">			super(Chrome.Type.GREY_BUTTON_TR, article.title, 6);</span>
+<span class="nc" id="L263">			this.article = article;</span>
+
+<span class="nc" id="L265">			icon(News.parseArticleIcon(article));</span>
+<span class="nc" id="L266">			long lastRead = SPDSettings.newsLastRead();</span>
+<span class="nc bnc" id="L267" title="All 4 branches missed.">			if (lastRead &gt; 0 &amp;&amp; article.date.getTime() &gt; lastRead) {</span>
+<span class="nc" id="L268">				textColor(Window.SHPX_COLOR);</span>
+			}
+
+<span class="nc" id="L271">			date = new BitmapText( News.parseArticleDate(article), pixelFont);</span>
+<span class="nc" id="L272">			date.scale.set(PixelScene.align(0.5f));</span>
+<span class="nc" id="L273">			date.hardlight( 0x888888 );</span>
+<span class="nc" id="L274">			date.measure();</span>
+<span class="nc" id="L275">			add(date);</span>
+<span class="nc" id="L276">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L280">			super.layout();</span>
+
+<span class="nc" id="L282">			icon.x = x + bg.marginLeft() + (16-icon.width())/2f;</span>
+<span class="nc" id="L283">			PixelScene.align(icon);</span>
+<span class="nc" id="L284">			text.setPos(x + bg.marginLeft() + 18, text.top());</span>
+
+<span class="nc bnc" id="L286" title="All 2 branches missed.">			if (date != null) {</span>
+<span class="nc" id="L287">				date.x = x + width - bg.marginRight() - date.width() + 1;</span>
+<span class="nc" id="L288">				date.y = y + height - bg.marginBottom() - date.height() + 2.5f;</span>
+<span class="nc" id="L289">				align(date);</span>
+			}
+<span class="nc" id="L291">		}</span>
+
+		@Override
+		protected void onClick() {
+<span class="nc" id="L295">			super.onClick();</span>
+<span class="nc" id="L296">			textColor(Window.WHITE);</span>
+<span class="nc bnc" id="L297" title="All 2 branches missed.">			if (article.date.getTime() &gt; SPDSettings.newsLastRead()){</span>
+<span class="nc" id="L298">				SPDSettings.newsLastRead(article.date.getTime());</span>
+			}
+<span class="nc" id="L300">			ShatteredPixelDungeon.scene().addToFront(new WndArticle(article));</span>
+<span class="nc" id="L301">		}</span>
+	}
+
+	private static class WndArticle extends WndTitledMessage {
+
+		public WndArticle(NewsArticle article ) {
+<span class="nc" id="L307">			super(News.parseArticleIcon(article), article.title, article.summary);</span>
+
+<span class="nc" id="L309">			RedButton link = new RedButton(Messages.get(NewsScene.class, &quot;read_more&quot;)){</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L312">					super.onClick();</span>
+<span class="nc" id="L313">					ShatteredPixelDungeon.platform.openURI(article.URL);</span>
+<span class="nc" id="L314">				}</span>
+			};
+<span class="nc" id="L316">			link.setRect(0, height + 2, width, BTN_HEIGHT);</span>
+<span class="nc" id="L317">			add(link);</span>
+<span class="nc" id="L318">			resize(width, (int) link.bottom());</span>
+<span class="nc" id="L319">		}</span>
+
+
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

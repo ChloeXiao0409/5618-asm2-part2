@@ -1,0 +1,541 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Trinity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric</a> &gt; <span class="el_source">Trinity.java</span></div><h1>Trinity.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.BodyForm;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.ClericSpell;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.MindForm;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.SpiritForm;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Enchanting;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.ChaliceOfBlood;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.EtherealChains;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.TalismanOfForesight;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.TimekeepersHourglass;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.UnstableSpellbook;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfFireblast;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfRegrowth;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortsword;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ItemButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndTitledMessage;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundlable;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L78">public class Trinity extends ArmorAbility {</span>
+
+	{
+<span class="nc" id="L81">		baseChargeUse = 25;</span>
+	}
+
+<span class="nc" id="L84">	private Bundlable bodyForm = null;</span>
+<span class="nc" id="L85">	private Bundlable mindForm = null;</span>
+<span class="nc" id="L86">	private Bundlable spiritForm = null;</span>
+
+	@Override
+	protected void activate(ClassArmor armor, Hero hero, Integer target) {
+
+<span class="nc bnc" id="L91" title="All 6 branches missed.">		if (bodyForm == null &amp;&amp; mindForm == null &amp;&amp; spiritForm == null){</span>
+<span class="nc" id="L92">			GLog.w(Messages.get(this, &quot;no_imbue&quot;));</span>
+		} else {
+<span class="nc" id="L94">			GameScene.show(new WndUseTrinity(armor));</span>
+		}
+
+<span class="nc" id="L97">	}</span>
+
+	@Override
+	public int targetedPos(Char user, int dst) {
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (mindForm != null){</span>
+<span class="nc" id="L102">			return ((Item)mindForm).targetingPos((Hero)user, dst);</span>
+		}
+<span class="nc" id="L104">		return super.targetedPos(user, dst);</span>
+	}
+
+	public class WndUseTrinity extends WndTitledMessage {
+
+<span class="nc" id="L109">		public WndUseTrinity(ClassArmor armor) {</span>
+<span class="nc" id="L110">			super(new HeroIcon(Trinity.this),</span>
+<span class="nc" id="L111">					Messages.titleCase(Trinity.this.name()),</span>
+<span class="nc" id="L112">					Messages.get(WndUseTrinity.class, &quot;text&quot;));</span>
+
+<span class="nc" id="L114">			int top = height;</span>
+
+<span class="nc bnc" id="L116" title="All 2 branches missed.">			if (bodyForm != null){</span>
+<span class="nc" id="L117">				RedButton btnBody = null;</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">				if (bodyForm instanceof Weapon.Enchantment){</span>
+
+<span class="nc" id="L120">					btnBody = new RedButton(Messages.get(WndUseTrinity.class, &quot;body&quot;,</span>
+<span class="nc" id="L121">							Messages.titleCase(((Weapon.Enchantment)bodyForm).name()))</span>
+<span class="nc" id="L122">							+ &quot; &quot; + trinityItemUseText(bodyForm.getClass()), 6){</span>
+						@Override
+						protected void onClick() {
+<span class="nc bnc" id="L125" title="All 2 branches missed.">							if (Dungeon.hero.belongings.weapon() != null &amp;&amp;</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">									((Weapon)Dungeon.hero.belongings.weapon()).enchantment != null &amp;&amp;</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">									((Weapon)Dungeon.hero.belongings.weapon()).enchantment.getClass().equals(bodyForm.getClass())){</span>
+<span class="nc" id="L128">								GLog.w(Messages.get(Trinity.class, &quot;no_duplicate&quot;));</span>
+<span class="nc" id="L129">								hide();</span>
+							} else {
+<span class="nc" id="L131">								Buff.prolong(Dungeon.hero, BodyForm.BodyFormBuff.class, BodyForm.duration()).setEffect(bodyForm);</span>
+<span class="nc" id="L132">								Sample.INSTANCE.play(Assets.Sounds.TELEPORT);</span>
+<span class="nc" id="L133">								Weapon w = new WornShortsword();</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">								if (Dungeon.hero.belongings.weapon() != null) {</span>
+<span class="nc" id="L135">									w.image = Dungeon.hero.belongings.weapon().image;</span>
+								}
+<span class="nc" id="L137">								w.enchant((Weapon.Enchantment) bodyForm);</span>
+<span class="nc" id="L138">								Enchanting.show(Dungeon.hero, w);</span>
+<span class="nc" id="L139">								Dungeon.hero.sprite.operate(Dungeon.hero.pos);</span>
+<span class="nc" id="L140">								Dungeon.hero.spendAndNext(1f);</span>
+<span class="nc" id="L141">								armor.charge -= trinityChargeUsePerEffect(bodyForm.getClass());</span>
+<span class="nc" id="L142">								armor.updateQuickslot();</span>
+<span class="nc" id="L143">								Invisibility.dispel();</span>
+<span class="nc" id="L144">								hide();</span>
+							}
+<span class="nc" id="L146">						}</span>
+					};
+<span class="nc bnc" id="L148" title="All 2 branches missed.">					if (Dungeon.hero.belongings.weapon() != null) {</span>
+<span class="nc" id="L149">						btnBody.icon(new ItemSprite(Dungeon.hero.belongings.weapon().image, ((Weapon.Enchantment) bodyForm).glowing()));</span>
+					} else {
+<span class="nc" id="L151">						btnBody.icon(new ItemSprite(ItemSpriteSheet.WORN_SHORTSWORD, ((Weapon.Enchantment) bodyForm).glowing()));</span>
+					}
+<span class="nc bnc" id="L153" title="All 2 branches missed.">				} else if (bodyForm instanceof Armor.Glyph){</span>
+<span class="nc" id="L154">					btnBody = new RedButton(Messages.get(WndUseTrinity.class, &quot;body&quot;,</span>
+<span class="nc" id="L155">							Messages.titleCase(((Armor.Glyph)bodyForm).name()))</span>
+<span class="nc" id="L156">							+ &quot; &quot; + trinityItemUseText(bodyForm.getClass()), 6){</span>
+						@Override
+						protected void onClick() {
+<span class="nc bnc" id="L159" title="All 2 branches missed.">							if (Dungeon.hero.belongings.armor() != null &amp;&amp;</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">									Dungeon.hero.belongings.armor().glyph != null &amp;&amp;</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">									(Dungeon.hero.belongings.armor()).glyph.getClass().equals(bodyForm.getClass())){</span>
+<span class="nc" id="L162">								GLog.w(Messages.get(Trinity.class, &quot;no_duplicate&quot;));</span>
+<span class="nc" id="L163">								hide();</span>
+							} else {
+<span class="nc" id="L165">								Buff.prolong(Dungeon.hero, BodyForm.BodyFormBuff.class, BodyForm.duration()).setEffect(bodyForm);</span>
+<span class="nc" id="L166">								Sample.INSTANCE.play(Assets.Sounds.TELEPORT);</span>
+<span class="nc" id="L167">								Armor a = new ClothArmor();</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">								if (Dungeon.hero.belongings.armor() != null) {</span>
+<span class="nc" id="L169">									a.image = Dungeon.hero.belongings.armor().image;</span>
+								}
+<span class="nc" id="L171">								a.inscribe((Armor.Glyph) bodyForm);</span>
+<span class="nc" id="L172">								Enchanting.show(Dungeon.hero, a);</span>
+<span class="nc" id="L173">								Dungeon.hero.sprite.operate(Dungeon.hero.pos);</span>
+<span class="nc" id="L174">								Dungeon.hero.spendAndNext(1f);</span>
+<span class="nc" id="L175">								armor.charge -= trinityChargeUsePerEffect(bodyForm.getClass());</span>
+<span class="nc" id="L176">								armor.updateQuickslot();</span>
+<span class="nc" id="L177">								Invisibility.dispel();</span>
+<span class="nc" id="L178">								hide();</span>
+							}
+<span class="nc" id="L180">						}</span>
+					};
+<span class="nc bnc" id="L182" title="All 2 branches missed.">					if (Dungeon.hero.belongings.armor() != null) {</span>
+<span class="nc" id="L183">						btnBody.icon(new ItemSprite(Dungeon.hero.belongings.armor().image, ((Armor.Glyph) bodyForm).glowing()));</span>
+					} else {
+<span class="nc" id="L185">						btnBody.icon(new ItemSprite(ItemSpriteSheet.ARMOR_CLOTH, ((Armor.Glyph) bodyForm).glowing()));</span>
+					}
+				}
+<span class="nc" id="L188">				btnBody.multiline = true;</span>
+<span class="nc" id="L189">				btnBody.setSize(width, 100); //for text layout</span>
+<span class="nc" id="L190">				btnBody.setRect(0, top + 2, width, btnBody.reqHeight());</span>
+<span class="nc" id="L191">				add(btnBody);</span>
+<span class="nc" id="L192">				top = (int)btnBody.bottom();</span>
+
+<span class="nc bnc" id="L194" title="All 4 branches missed.">				btnBody.enable(Dungeon.hero.buff(MagicImmune.class) == null &amp;&amp; armor.charge &gt;= trinityChargeUsePerEffect(bodyForm.getClass()));</span>
+			}
+
+<span class="nc bnc" id="L197" title="All 2 branches missed.">			if (mindForm != null){</span>
+<span class="nc" id="L198">				RedButton btnMind = new RedButton(Messages.get(WndUseTrinity.class, &quot;mind&quot;,</span>
+<span class="nc" id="L199">						Messages.titleCase(((Item)mindForm).name()))</span>
+<span class="nc" id="L200">						+ &quot; &quot; + trinityItemUseText(mindForm.getClass()), 6){</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L203">						hide();</span>
+<span class="nc" id="L204">						MindForm.targetSelector mindEffect = new MindForm.targetSelector();</span>
+<span class="nc" id="L205">						mindEffect.setEffect(mindForm);</span>
+<span class="nc" id="L206">						GameScene.selectCell(mindEffect);</span>
+<span class="nc" id="L207">						Sample.INSTANCE.play(Assets.Sounds.TELEPORT);</span>
+<span class="nc" id="L208">						Enchanting.show(Dungeon.hero, (Item)mindForm);</span>
+<span class="nc" id="L209">						Dungeon.hero.sprite.operate(Dungeon.hero.pos);</span>
+
+<span class="nc bnc" id="L211" title="All 4 branches missed.">						if (((Item) mindForm).usesTargeting &amp;&amp; Dungeon.quickslot.contains(armor)){</span>
+<span class="nc" id="L212">							QuickSlotButton.useTargeting(Dungeon.quickslot.getSlot(armor));</span>
+						}
+<span class="nc" id="L214">					}</span>
+				};
+<span class="nc" id="L216">				btnMind.icon(new ItemSprite((Item)mindForm));</span>
+<span class="nc" id="L217">				btnMind.multiline = true;</span>
+<span class="nc" id="L218">				btnMind.setSize(width, 100); //for text layout</span>
+<span class="nc" id="L219">				btnMind.setRect(0, top + 2, width, btnMind.reqHeight());</span>
+<span class="nc" id="L220">				add(btnMind);</span>
+<span class="nc" id="L221">				top = (int)btnMind.bottom();</span>
+
+<span class="nc bnc" id="L223" title="All 2 branches missed.">				btnMind.enable(armor.charge &gt;= trinityChargeUsePerEffect(mindForm.getClass()));</span>
+<span class="nc bnc" id="L224" title="All 4 branches missed.">				if (mindForm instanceof Wand &amp;&amp; Dungeon.hero.buff(MagicImmune.class) != null){</span>
+<span class="nc" id="L225">					btnMind.enable(false);</span>
+				}
+			}
+
+<span class="nc bnc" id="L229" title="All 2 branches missed.">			if (spiritForm != null){</span>
+<span class="nc" id="L230">				RedButton btnSpirit = new RedButton(Messages.get(WndUseTrinity.class, &quot;spirit&quot;,</span>
+<span class="nc" id="L231">						Messages.titleCase(((Item)spiritForm).name()))</span>
+<span class="nc" id="L232">						+ &quot; &quot; + trinityItemUseText(spiritForm.getClass()), 6){</span>
+					@Override
+					protected void onClick() {
+<span class="nc bnc" id="L235" title="All 4 branches missed.">						if ((Dungeon.hero.belongings.ring() != null &amp;&amp; Dungeon.hero.belongings.ring().getClass().equals(spiritForm.getClass()))</span>
+<span class="nc bnc" id="L236" title="All 4 branches missed.">								|| (Dungeon.hero.belongings.misc() != null &amp;&amp; Dungeon.hero.belongings.misc().getClass().equals(spiritForm.getClass()))</span>
+<span class="nc bnc" id="L237" title="All 4 branches missed.">								|| (Dungeon.hero.belongings.artifact() != null &amp;&amp; Dungeon.hero.belongings.artifact().getClass().equals(spiritForm.getClass()))){</span>
+<span class="nc" id="L238">							GLog.w(Messages.get(Trinity.class, &quot;no_duplicate&quot;));</span>
+<span class="nc" id="L239">							hide();</span>
+<span class="nc" id="L240">							return;</span>
+						}
+<span class="nc" id="L242">						Invisibility.dispel();</span>
+						//Rings and the Chalice specifically get their passive effects for 20 turns
+<span class="nc bnc" id="L244" title="All 4 branches missed.">						if (spiritForm instanceof Ring || spiritForm instanceof ChaliceOfBlood) {</span>
+<span class="nc" id="L245">							Buff.prolong(Dungeon.hero, SpiritForm.SpiritFormBuff.class, SpiritForm.SpiritFormBuff.DURATION).setEffect(spiritForm);</span>
+<span class="nc" id="L246">							Dungeon.hero.spendAndNext(1f);</span>
+						} else {
+<span class="nc" id="L248">							SpiritForm.applyActiveArtifactEffect(armor, (Artifact) spiritForm);</span>
+							//turn spending is handled within the application of the artifact effect
+						}
+<span class="nc" id="L251">						Sample.INSTANCE.play(Assets.Sounds.TELEPORT);</span>
+<span class="nc" id="L252">						Enchanting.show(Dungeon.hero, (Item) spiritForm);</span>
+<span class="nc" id="L253">						Dungeon.hero.sprite.operate(Dungeon.hero.pos);</span>
+<span class="nc" id="L254">						armor.charge -= trinityChargeUsePerEffect(spiritForm.getClass());</span>
+<span class="nc" id="L255">						armor.updateQuickslot();</span>
+<span class="nc" id="L256">						hide();</span>
+<span class="nc" id="L257">					}</span>
+				};
+<span class="nc bnc" id="L259" title="All 2 branches missed.">				if (spiritForm instanceof Artifact){</span>
+<span class="nc" id="L260">					((Artifact) spiritForm).resetForTrinity(SpiritForm.artifactLevel());</span>
+				}
+
+<span class="nc" id="L263">				btnSpirit.icon(new ItemSprite((Item)spiritForm));</span>
+<span class="nc" id="L264">				btnSpirit.multiline = true;</span>
+<span class="nc" id="L265">				btnSpirit.setSize(width, 100); //for text layout</span>
+<span class="nc" id="L266">				btnSpirit.setRect(0, top + 2, width, btnSpirit.reqHeight());</span>
+<span class="nc" id="L267">				add(btnSpirit);</span>
+<span class="nc" id="L268">				top = (int)btnSpirit.bottom();</span>
+
+<span class="nc bnc" id="L270" title="All 4 branches missed.">				btnSpirit.enable(Dungeon.hero.buff(MagicImmune.class) == null &amp;&amp; armor.charge &gt;= trinityChargeUsePerEffect(spiritForm.getClass()));</span>
+			}
+
+<span class="nc" id="L273">			resize(width, top);</span>
+
+<span class="nc" id="L275">		}</span>
+
+	}
+
+	private static final String BODY = &quot;body_form&quot;;
+	private static final String MIND = &quot;mind_form&quot;;
+	private static final String SPIRIT = &quot;spirit_form&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L285">		super.storeInBundle(bundle);</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">		if (bodyForm != null)   bundle.put(BODY, bodyForm);</span>
+<span class="nc bnc" id="L287" title="All 2 branches missed.">		if (mindForm != null)   bundle.put(MIND, mindForm);</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">		if (spiritForm != null) bundle.put(SPIRIT, spiritForm);</span>
+<span class="nc" id="L289">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L293">		super.restoreFromBundle(bundle);</span>
+<span class="nc bnc" id="L294" title="All 2 branches missed.">		if (bundle.contains(BODY))  bodyForm = bundle.get(BODY);</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">		if (bundle.contains(MIND))  mindForm = bundle.get(MIND);</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">		if (bundle.contains(SPIRIT))spiritForm = bundle.get(SPIRIT);</span>
+<span class="nc" id="L297">	}</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L301">		return HeroIcon.TRINITY;</span>
+	}
+
+	@Override
+	public Talent[] talents() {
+<span class="nc" id="L306">		return new Talent[]{Talent.BODY_FORM, Talent.MIND_FORM, Talent.SPIRIT_FORM, Talent.HEROIC_ENERGY};</span>
+	}
+
+	public static class WndItemtypeSelect extends WndTitledMessage {
+
+		//probably want a callback here?
+		public WndItemtypeSelect(HolyTome tome, ClericSpell spell) {
+<span class="nc" id="L313">			super(new HeroIcon(spell), Messages.titleCase(spell.name()), Messages.get(WndItemtypeSelect.class, &quot;text&quot;));</span>
+
+			//start by filtering and sorting
+<span class="nc" id="L316">			ArrayList&lt;Class&lt;?&gt;&gt; discoveredClasses = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L317" title="All 2 branches missed.">			if (spell == BodyForm.INSTANCE) {</span>
+<span class="nc bnc" id="L318" title="All 2 branches missed.">				for (Class&lt;?&gt; cls : Catalog.ENCHANTMENTS.items()) {</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">					if (Statistics.itemTypesDiscovered.contains(cls)) {</span>
+<span class="nc" id="L320">						discoveredClasses.add(cls);</span>
+					}
+<span class="nc" id="L322">				}</span>
+<span class="nc bnc" id="L323" title="All 2 branches missed.">				for (Class&lt;?&gt; cls : Catalog.GLYPHS.items()) {</span>
+<span class="nc bnc" id="L324" title="All 2 branches missed.">					if (Statistics.itemTypesDiscovered.contains(cls)) {</span>
+<span class="nc" id="L325">						discoveredClasses.add(cls);</span>
+					}
+<span class="nc" id="L327">				}</span>
+<span class="nc bnc" id="L328" title="All 2 branches missed.">			} else if (spell == MindForm.INSTANCE){</span>
+<span class="nc bnc" id="L329" title="All 2 branches missed.">				for (Class&lt;?&gt; cls : Catalog.WANDS.items()) {</span>
+<span class="nc bnc" id="L330" title="All 2 branches missed.">					if (Statistics.itemTypesDiscovered.contains(cls)) {</span>
+<span class="nc" id="L331">						discoveredClasses.add(cls);</span>
+					}
+<span class="nc" id="L333">				}</span>
+<span class="nc bnc" id="L334" title="All 2 branches missed.">				for (Class&lt;?&gt; cls : Catalog.THROWN_WEAPONS.items()) {</span>
+<span class="nc bnc" id="L335" title="All 2 branches missed.">					if (Statistics.itemTypesDiscovered.contains(cls)) {</span>
+<span class="nc" id="L336">						discoveredClasses.add(cls);</span>
+					}
+<span class="nc" id="L338">				}</span>
+<span class="nc bnc" id="L339" title="All 2 branches missed.">				for (Class&lt;?&gt; cls : Catalog.TIPPED_DARTS.items()) {</span>
+<span class="nc bnc" id="L340" title="All 2 branches missed.">					if (Statistics.itemTypesDiscovered.contains(cls)) {</span>
+<span class="nc" id="L341">						discoveredClasses.add(cls);</span>
+					}
+<span class="nc" id="L343">				}</span>
+<span class="nc bnc" id="L344" title="All 2 branches missed.">			} else if (spell == SpiritForm.INSTANCE){</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">				for (Class&lt;?&gt; cls : Catalog.RINGS.items()) {</span>
+<span class="nc bnc" id="L346" title="All 2 branches missed.">					if (Statistics.itemTypesDiscovered.contains(cls)) {</span>
+<span class="nc" id="L347">						discoveredClasses.add(cls);</span>
+					}
+<span class="nc" id="L349">				}</span>
+<span class="nc bnc" id="L350" title="All 2 branches missed.">				for (Class&lt;?&gt; cls : Catalog.ARTIFACTS.items()) {</span>
+<span class="nc bnc" id="L351" title="All 2 branches missed.">					if (Statistics.itemTypesDiscovered.contains(cls)) {</span>
+<span class="nc" id="L352">						discoveredClasses.add(cls);</span>
+					}
+					//no tome specifically
+<span class="nc" id="L355">					discoveredClasses.remove(HolyTome.class);</span>
+<span class="nc" id="L356">				}</span>
+			}
+
+<span class="nc" id="L359">			ArrayList&lt;Item&gt; options = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L360" title="All 2 branches missed.">			for (Class&lt;?&gt; cls : discoveredClasses){</span>
+<span class="nc bnc" id="L361" title="All 2 branches missed.">				if (Weapon.Enchantment.class.isAssignableFrom(cls)){</span>
+<span class="nc" id="L362">					MeleeWeapon w = new WornShortsword();</span>
+<span class="nc bnc" id="L363" title="All 2 branches missed.">					if (Dungeon.hero.belongings.weapon() != null){</span>
+<span class="nc" id="L364">						w.image = Dungeon.hero.belongings.weapon().image;</span>
+					}
+<span class="nc" id="L366">					w.enchant((Weapon.Enchantment) Reflection.newInstance(cls));</span>
+<span class="nc" id="L367">					options.add(w);</span>
+<span class="nc bnc" id="L368" title="All 2 branches missed.">				} else if (Armor.Glyph.class.isAssignableFrom(cls)) {</span>
+<span class="nc" id="L369">					Armor a = new ClothArmor();</span>
+<span class="nc bnc" id="L370" title="All 2 branches missed.">					if (Dungeon.hero.belongings.armor() != null){</span>
+<span class="nc" id="L371">						a.image = Dungeon.hero.belongings.armor().image;</span>
+					}
+<span class="nc" id="L373">					a.inscribe((Armor.Glyph) Reflection.newInstance(cls));</span>
+<span class="nc" id="L374">					options.add(a);</span>
+<span class="nc" id="L375">				} else {</span>
+<span class="nc" id="L376">					options.add((Item) Reflection.newInstance(cls));</span>
+				}
+<span class="nc" id="L378">			}</span>
+
+<span class="nc" id="L380">			int top = height + 2;</span>
+<span class="nc" id="L381">			int left = 0;</span>
+
+<span class="nc bnc" id="L383" title="All 2 branches missed.">			for (Item item : options){</span>
+<span class="nc" id="L384">				ItemButton btn = new ItemButton(){</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L387">						GameScene.show(new WndItemConfirm(WndItemtypeSelect.this, item, tome, spell));</span>
+<span class="nc" id="L388">					}</span>
+				};
+<span class="nc" id="L390">				btn.item(item);</span>
+<span class="nc" id="L391">				btn.slot().textVisible(false);</span>
+<span class="nc" id="L392">				btn.setRect(left, top, 19, 19);</span>
+<span class="nc" id="L393">				add(btn);</span>
+
+<span class="nc" id="L395">				left += 20;</span>
+<span class="nc bnc" id="L396" title="All 2 branches missed.">				if (left &gt;= width - 19){</span>
+<span class="nc" id="L397">					top += 20;</span>
+<span class="nc" id="L398">					left = 0;</span>
+				}
+<span class="nc" id="L400">			}</span>
+
+<span class="nc bnc" id="L402" title="All 2 branches missed.">			if (left &gt; 0){</span>
+<span class="nc" id="L403">				top += 20;</span>
+<span class="nc" id="L404">				left = 0;</span>
+			}
+
+<span class="nc" id="L407">			resize(width, top);</span>
+
+<span class="nc" id="L409">		}</span>
+
+	}
+
+	public static class WndItemConfirm extends WndTitledMessage {
+
+		public WndItemConfirm(Window parentWnd, Item item, HolyTome tome, ClericSpell spell){
+<span class="nc" id="L416">			super(new ItemSprite(item),  Messages.titleCase(getName(item)), getText(item));</span>
+
+			String text;
+<span class="nc bnc" id="L419" title="All 2 branches missed.">			if (spell == BodyForm.INSTANCE){</span>
+<span class="nc" id="L420">				text = Messages.get(this, &quot;body&quot;);</span>
+<span class="nc bnc" id="L421" title="All 2 branches missed.">			} else if (spell == MindForm.INSTANCE){</span>
+<span class="nc" id="L422">				text = Messages.get(this, &quot;mind&quot;);</span>
+			} else {
+<span class="nc" id="L424">				text = Messages.get(this, &quot;spirit&quot;);</span>
+			}
+
+<span class="nc" id="L427">			RedButton btnConfirm = new RedButton(text){</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L430">					parentWnd.hide();</span>
+<span class="nc" id="L431">					WndItemConfirm.this.hide();</span>
+
+<span class="nc bnc" id="L433" title="All 2 branches missed.">					if (item instanceof MeleeWeapon) {</span>
+<span class="nc" id="L434">						((Trinity)Dungeon.hero.armorAbility).bodyForm = ((MeleeWeapon) item).enchantment;</span>
+<span class="nc bnc" id="L435" title="All 2 branches missed.">					} else if (item instanceof Armor) {</span>
+<span class="nc" id="L436">						((Trinity)Dungeon.hero.armorAbility).bodyForm = ((Armor) item).glyph;</span>
+<span class="nc bnc" id="L437" title="All 4 branches missed.">					} else if (item instanceof Wand || item instanceof MissileWeapon){</span>
+<span class="nc" id="L438">						((Trinity)Dungeon.hero.armorAbility).mindForm = item;</span>
+					} else {
+<span class="nc" id="L440">						((Trinity)Dungeon.hero.armorAbility).spiritForm = item;</span>
+					}
+<span class="nc" id="L442">					spell.onSpellCast(tome, Dungeon.hero);</span>
+
+<span class="nc" id="L444">					Dungeon.hero.sprite.operate(Dungeon.hero.pos);</span>
+<span class="nc" id="L445">					Enchanting.show(Dungeon.hero, item);</span>
+<span class="nc" id="L446">					Sample.INSTANCE.play(Assets.Sounds.TELEPORT);</span>
+<span class="nc" id="L447">				}</span>
+			};
+<span class="nc" id="L449">			btnConfirm.setRect(0, height+2, width, 16);</span>
+<span class="nc" id="L450">			add(btnConfirm);</span>
+
+<span class="nc" id="L452">			resize(width, (int)btnConfirm.bottom());</span>
+
+<span class="nc" id="L454">		}</span>
+
+		private static String getName(Item item){
+<span class="nc bnc" id="L457" title="All 2 branches missed.">			if (item instanceof MeleeWeapon){</span>
+<span class="nc" id="L458">				return ((MeleeWeapon) item).enchantment.name();</span>
+<span class="nc bnc" id="L459" title="All 2 branches missed.">			} else if (item instanceof Armor){</span>
+<span class="nc" id="L460">				return (((Armor) item).glyph.name());</span>
+			}
+<span class="nc" id="L462">			return item.name();</span>
+		}
+
+		private static String getText(Item item){
+<span class="nc bnc" id="L466" title="All 2 branches missed.">			if (item instanceof MeleeWeapon){</span>
+<span class="nc" id="L467">				return ((MeleeWeapon) item).enchantment.desc() + &quot;\n\n&quot; + trinityItemUseText(((MeleeWeapon) item).enchantment.getClass());</span>
+<span class="nc bnc" id="L468" title="All 2 branches missed.">			} else if (item instanceof Armor){</span>
+<span class="nc" id="L469">				return ((Armor) item).glyph.desc() + &quot;\n\n&quot; + trinityItemUseText(((Armor) item).glyph.getClass());</span>
+			} else {
+<span class="nc" id="L471">				return item.desc() + &quot;\n\n&quot; + trinityItemUseText(item.getClass());</span>
+			}
+		}
+
+	}
+
+	public static String trinityItemUseText(Class&lt;?&gt; cls ){
+<span class="nc" id="L478">		float chargeUse = trinityChargeUsePerEffect(cls);</span>
+<span class="nc bnc" id="L479" title="All 4 branches missed.">		if (Weapon.Enchantment.class.isAssignableFrom(cls) || Armor.Glyph.class.isAssignableFrom(cls)) {</span>
+<span class="nc bnc" id="L480" title="All 2 branches missed.">			for (Class ench : Weapon.Enchantment.rare) {</span>
+<span class="nc bnc" id="L481" title="All 2 branches missed.">				if (ench.equals(cls)) {</span>
+<span class="nc" id="L482">					return Messages.get(Trinity.class, &quot;rare_ench_glyph_use&quot;, BodyForm.duration(), Messages.decimalFormat(&quot;#.##&quot;, chargeUse));</span>
+				}
+			}
+<span class="nc bnc" id="L485" title="All 2 branches missed.">			for (Class glyph : Armor.Glyph.rare){</span>
+<span class="nc bnc" id="L486" title="All 2 branches missed.">				if (glyph.equals(cls)){</span>
+<span class="nc" id="L487">					return Messages.get(Trinity.class, &quot;rare_ench_glyph_use&quot;, BodyForm.duration(), Messages.decimalFormat(&quot;#.##&quot;, chargeUse));</span>
+				}
+			}
+<span class="nc" id="L490">			return Messages.get(Trinity.class, &quot;ench_glyph_use&quot;, BodyForm.duration(), Messages.decimalFormat(&quot;#.##&quot;, chargeUse));</span>
+		}
+<span class="nc bnc" id="L492" title="All 2 branches missed.">		if (MissileWeapon.class.isAssignableFrom(cls)){</span>
+<span class="nc" id="L493">			return Messages.get(Trinity.class, &quot;thrown_use&quot;, MindForm.itemLevel(), Messages.decimalFormat(&quot;#.##&quot;, chargeUse));</span>
+		}
+<span class="nc bnc" id="L495" title="All 2 branches missed.">		if (Wand.class.isAssignableFrom(cls)){</span>
+<span class="nc bnc" id="L496" title="All 4 branches missed.">			if (cls.equals(WandOfFireblast.class) || cls.equals(WandOfRegrowth.class)){</span>
+<span class="nc" id="L497">				return Messages.get(Trinity.class, &quot;wand_multi_use&quot;, MindForm.itemLevel(), Messages.decimalFormat(&quot;#.##&quot;, chargeUse));</span>
+			}
+<span class="nc" id="L499">			return Messages.get(Trinity.class, &quot;wand_use&quot;, MindForm.itemLevel(), Messages.decimalFormat(&quot;#.##&quot;, chargeUse));</span>
+		}
+<span class="nc bnc" id="L501" title="All 2 branches missed.">		if (Ring.class.isAssignableFrom(cls)){</span>
+<span class="nc" id="L502">			return Messages.get(Trinity.class, &quot;ring_use&quot;, SpiritForm.ringLevel(), Messages.decimalFormat(&quot;#.##&quot;, chargeUse));</span>
+		}
+<span class="nc bnc" id="L504" title="All 2 branches missed.">		if (Artifact.class.isAssignableFrom(cls)){</span>
+<span class="nc" id="L505">			return Messages.get(Trinity.class, cls.getSimpleName() + &quot;_use&quot;, SpiritForm.artifactLevel(), Messages.decimalFormat(&quot;#.##&quot;, chargeUse));</span>
+		}
+<span class="nc" id="L507">		return &quot;error!&quot;;</span>
+
+	}
+
+	public static float trinityChargeUsePerEffect(Class&lt;?&gt; cls){
+<span class="nc" id="L512">		float chargeUse = Dungeon.hero.armorAbility.chargeUse(Dungeon.hero);</span>
+<span class="nc bnc" id="L513" title="All 4 branches missed.">		if (Weapon.Enchantment.class.isAssignableFrom(cls) || Armor.Glyph.class.isAssignableFrom(cls)) {</span>
+<span class="nc bnc" id="L514" title="All 2 branches missed.">			for (Class ench : Weapon.Enchantment.rare) {</span>
+<span class="nc bnc" id="L515" title="All 2 branches missed.">				if (ench.equals(cls)) {</span>
+<span class="nc" id="L516">					return 2*chargeUse; //50 charge</span>
+				}
+			}
+<span class="nc bnc" id="L519" title="All 2 branches missed.">			for (Class glyph : Armor.Glyph.rare){</span>
+<span class="nc bnc" id="L520" title="All 2 branches missed.">				if (glyph.equals(cls)){</span>
+<span class="nc" id="L521">					return 2*chargeUse; //50 charge</span>
+				}
+			}
+		}
+<span class="nc bnc" id="L525" title="All 4 branches missed.">		if (cls.equals(WandOfFireblast.class) || cls.equals(WandOfRegrowth.class)){</span>
+<span class="nc" id="L526">			return 2*chargeUse;</span>
+		}
+<span class="nc bnc" id="L528" title="All 2 branches missed.">		if (Artifact.class.isAssignableFrom(cls)){</span>
+<span class="nc bnc" id="L529" title="All 4 branches missed.">			if (cls.equals(DriedRose.class) || cls.equals(UnstableSpellbook.class)){</span>
+<span class="nc" id="L530">				return 2*chargeUse; //50 charge</span>
+			}
+<span class="nc bnc" id="L532" title="All 6 branches missed.">			if (cls.equals(EtherealChains.class) || cls.equals(TalismanOfForesight.class) || cls.equals(TimekeepersHourglass.class)){</span>
+<span class="nc" id="L533">				return 1.4f*chargeUse; //35 charge</span>
+			}
+		}
+		//all other effects are standard charge use, 25 at base
+<span class="nc" id="L537">		return chargeUse;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

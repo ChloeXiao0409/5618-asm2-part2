@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HighGrass.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.features</a> &gt; <span class="el_source">HighGrass.java</span></div><h1>HighGrass.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.features;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Blacksmith;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.LeafParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Dewdrop;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Camouflage;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.SandalsOfNature;
+import com.shatteredpixel.shatteredpixeldungeon.items.food.Berry;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.PetrifiedSeed;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.MiningLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L47">public class HighGrass {</span>
+	
+	//prevents items dropped from grass, from trampling that same grass.
+	//yes this is a bit ugly, oh well.
+<span class="nc" id="L51">	private static boolean freezeTrample = false;</span>
+
+	public static void trample( Level level, int pos ) {
+		
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		if (freezeTrample) return;</span>
+		
+<span class="nc" id="L57">		Char ch = Actor.findChar(pos);</span>
+		
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		if (level.map[pos] == Terrain.FURROWED_GRASS){</span>
+<span class="nc bnc" id="L60" title="All 4 branches missed.">			if (ch instanceof Hero &amp;&amp; ((Hero) ch).heroClass == HeroClass.HUNTRESS){</span>
+				//Do nothing
+<span class="nc" id="L62">				freezeTrample = true;</span>
+			} else {
+<span class="nc" id="L64">				Level.set(pos, Terrain.GRASS);</span>
+			}
+			
+		} else {
+<span class="nc bnc" id="L68" title="All 4 branches missed.">			if (ch instanceof Hero &amp;&amp; ((Hero) ch).heroClass == HeroClass.HUNTRESS){</span>
+<span class="nc" id="L69">				Level.set(pos, Terrain.FURROWED_GRASS);</span>
+<span class="nc" id="L70">				freezeTrample = true;</span>
+			} else {
+<span class="nc" id="L72">				Level.set(pos, Terrain.GRASS);</span>
+			}
+			
+<span class="nc" id="L75">			int naturalismLevel = 0;</span>
+			
+<span class="nc bnc" id="L77" title="All 2 branches missed.">			if (ch != null) {</span>
+<span class="nc" id="L78">				SandalsOfNature.Naturalism naturalism = ch.buff( SandalsOfNature.Naturalism.class );</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">				if (naturalism != null) {</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">					if (!naturalism.isCursed()) {</span>
+<span class="nc" id="L81">						naturalismLevel = naturalism.itemLevel() + 1;</span>
+<span class="nc" id="L82">						naturalism.charge();</span>
+					} else {
+<span class="nc" id="L84">						naturalismLevel = -1;</span>
+					}
+				}
+
+				//berries try to drop on floors 2/3/4/6/7/8, to a max of 4/6
+<span class="nc bnc" id="L89" title="All 4 branches missed.">				if (ch instanceof Hero &amp;&amp; ((Hero) ch).hasTalent(Talent.NATURES_BOUNTY)){</span>
+<span class="nc" id="L90">					int berriesAvailable = 2 + 2*((Hero) ch).pointsInTalent(Talent.NATURES_BOUNTY);</span>
+
+<span class="nc" id="L92">					Talent.NatureBerriesDropped dropped = Buff.affect(ch, Talent.NatureBerriesDropped.class);</span>
+<span class="nc" id="L93">					berriesAvailable -= dropped.count();</span>
+
+<span class="nc bnc" id="L95" title="All 2 branches missed.">					if (berriesAvailable &gt; 0) {</span>
+<span class="nc" id="L96">						int targetFloor = 2 + 2 * ((Hero) ch).pointsInTalent(Talent.NATURES_BOUNTY);</span>
+<span class="nc" id="L97">						targetFloor -= berriesAvailable;</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">						targetFloor += (targetFloor &gt;= 5) ? 3 : 2;</span>
+
+						//If we're behind: 1/10, if we're on page: 1/30, if we're ahead: 1/90
+<span class="nc" id="L101">						boolean droppingBerry = false;</span>
+<span class="nc bnc" id="L102" title="All 4 branches missed.">						if (Dungeon.depth &gt; targetFloor) droppingBerry = Random.Int(10) == 0;</span>
+<span class="nc bnc" id="L103" title="All 4 branches missed.">						else if (Dungeon.depth == targetFloor) droppingBerry = Random.Int(30) == 0;</span>
+<span class="nc bnc" id="L104" title="All 4 branches missed.">						else if (Dungeon.depth &lt; targetFloor) droppingBerry = Random.Int(90) == 0;</span>
+
+<span class="nc bnc" id="L106" title="All 2 branches missed.">						if (droppingBerry) {</span>
+<span class="nc" id="L107">							dropped.countUp(1);</span>
+<span class="nc" id="L108">							level.drop(new Berry(), pos).sprite.drop();</span>
+						}
+					}
+
+				}
+			}
+
+			//grass gives 1/3 the normal amount of loot in fungi level
+<span class="nc bnc" id="L116" title="All 2 branches missed.">			if (Dungeon.level instanceof MiningLevel</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">					&amp;&amp; Blacksmith.Quest.Type() == Blacksmith.Quest.FUNGI</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">					&amp;&amp; Random.Int(3) != 0){</span>
+<span class="nc" id="L119">				naturalismLevel = -1;</span>
+			}
+			
+<span class="nc bnc" id="L122" title="All 2 branches missed.">			if (naturalismLevel &gt;= 0) {</span>
+				// Seed, scales from 1/25 to 1/9
+<span class="nc" id="L124">				float lootChance = 1/(25f - naturalismLevel*4f);</span>
+
+				// absolute max drop rate is ~1/6.5 with footwear of nature, ~1/18 without
+<span class="nc" id="L127">				lootChance *= PetrifiedSeed.grassLootMultiplier();</span>
+
+<span class="nc bnc" id="L129" title="All 2 branches missed.">				if (Random.Float() &lt; lootChance) {</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">					if (Random.Float() &lt; PetrifiedSeed.stoneInsteadOfSeedChance()) {</span>
+<span class="nc" id="L131">						level.drop(Generator.randomUsingDefaults(Generator.Category.STONE), pos).sprite.drop();</span>
+					} else {
+<span class="nc" id="L133">						level.drop(Generator.random(Generator.Category.SEED), pos).sprite.drop();</span>
+					}
+				}
+				
+				// Dew, scales from 1/6 to 1/4
+<span class="nc" id="L138">				lootChance = 1/(6f -naturalismLevel/2f);</span>
+
+				//grassy levels spawn half as much dew
+<span class="nc bnc" id="L141" title="All 4 branches missed.">				if (Dungeon.level != null &amp;&amp; Dungeon.level.feeling == Level.Feeling.GRASS){</span>
+<span class="nc" id="L142">					lootChance /= 2;</span>
+				}
+
+<span class="nc bnc" id="L145" title="All 2 branches missed.">				if (Random.Float() &lt; lootChance) {</span>
+<span class="nc" id="L146">					level.drop(new Dewdrop(), pos).sprite.drop();</span>
+				}
+			}
+
+<span class="nc bnc" id="L150" title="All 2 branches missed.">			if (ch != null) {</span>
+<span class="nc" id="L151">				Camouflage.activate(ch, ch.glyphLevel(Camouflage.class));</span>
+			}
+			
+		}
+		
+<span class="nc" id="L156">		freezeTrample = false;</span>
+		
+<span class="nc bnc" id="L158" title="All 2 branches missed.">		if (ShatteredPixelDungeon.scene() instanceof GameScene) {</span>
+<span class="nc" id="L159">			GameScene.updateMap(pos);</span>
+			
+<span class="nc" id="L161">			CellEmitter.get(pos).burst(LeafParticle.LEVEL_SPECIFIC, 4);</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">			if (Dungeon.level.heroFOV[pos]) Dungeon.observe();</span>
+		}
+<span class="nc" id="L164">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

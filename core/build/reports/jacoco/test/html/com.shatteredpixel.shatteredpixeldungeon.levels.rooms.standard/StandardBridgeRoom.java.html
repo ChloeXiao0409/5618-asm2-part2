@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StandardBridgeRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard</a> &gt; <span class="el_source">StandardBridgeRoom.java</span></div><h1>StandardBridgeRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard;
+
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+import com.watabou.utils.Rect;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+
+<span class="nc" id="L36">public abstract class StandardBridgeRoom extends StandardRoom {</span>
+
+	@Override
+	public int minWidth() {
+<span class="nc" id="L40">		return Math.max(5, super.minWidth());</span>
+	}
+
+	@Override
+	public int minHeight() {
+<span class="nc" id="L45">		return Math.max(5, super.minHeight());</span>
+	}
+
+	@Override
+	public boolean canMerge(Level l, Room other, Point p, int mergeTerrain) {
+<span class="nc" id="L50">		int cell = l.pointToCell(pointInside(p, 1));</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">		return l.map[cell] != spaceTile();</span>
+	}
+
+	@Override
+	public boolean canPlaceItem(Point p, Level l) {
+<span class="nc bnc" id="L56" title="All 6 branches missed.">		return super.canPlaceItem(p, l) &amp;&amp; (spaceRect == null || !spaceRect.inside(p));</span>
+	}
+
+	@Override
+	public boolean canPlaceCharacter(Point p, Level l) {
+<span class="nc bnc" id="L61" title="All 6 branches missed.">		return super.canPlaceItem(p, l) &amp;&amp; (spaceRect == null || !spaceRect.inside(p));</span>
+	}
+
+	//keep these so that subclasses can use them in their methods
+	protected Rect spaceRect;
+	protected Rect bridgeRect;
+
+	@Override
+	public void paint(Level level) {
+<span class="nc" id="L70">		Painter.fill( level, this, Terrain.WALL );</span>
+<span class="nc" id="L71">		Painter.fill( level, this, 1 , Terrain.EMPTY );</span>
+
+		//prefer to place the bridge space to segment the most doors, or the most space in the room
+<span class="nc" id="L74">		int doorsXY = 0;</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">		for (Door door : connected.values()) {</span>
+<span class="nc" id="L76">			door.set( Door.Type.REGULAR );</span>
+<span class="nc bnc" id="L77" title="All 4 branches missed.">			if (door.x == left || door.x == right){</span>
+<span class="nc" id="L78">				doorsXY++;</span>
+			} else {
+<span class="nc" id="L80">				doorsXY--;</span>
+			}
+<span class="nc" id="L82">		}</span>
+<span class="nc" id="L83">		doorsXY += (width() - height())/2;</span>
+
+<span class="nc bnc" id="L85" title="All 6 branches missed.">		if (doorsXY &gt; 0 || (doorsXY == 0 &amp;&amp; Random.Int(2) == 0)){</span>
+
+<span class="nc" id="L87">			ArrayList&lt;Point&gt; spacePoints = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">			for (Door door : connected.values()) {</span>
+<span class="nc bnc" id="L89" title="All 4 branches missed.">				if (door.y == top || door.y == bottom){</span>
+<span class="nc" id="L90">					spacePoints.add(door);</span>
+				}
+<span class="nc" id="L92">			}</span>
+
+			//add fake doors for very left/right
+<span class="nc" id="L95">			spacePoints.add(new Point(left+1, 0));</span>
+<span class="nc" id="L96">			spacePoints.add(new Point(right-1, 0));</span>
+
+<span class="nc" id="L98">			Collections.sort(spacePoints, new Comparator&lt;Point&gt;() {</span>
+				@Override
+				public int compare(Point d1, Point d2) {
+<span class="nc" id="L101">					return d1.x - d2.x;</span>
+				}
+			});
+
+<span class="nc" id="L105">			int spaceStart = -1;</span>
+<span class="nc" id="L106">			int spaceEnd = -1;</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">			for (int i = 0; i &lt; spacePoints.size()-1; i++){</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">				if (spaceEnd - spaceStart &lt; spacePoints.get(i+1).x - spacePoints.get(i).x){</span>
+<span class="nc" id="L109">					spaceStart = spacePoints.get(i).x;</span>
+<span class="nc" id="L110">					spaceEnd = spacePoints.get(i+1).x;</span>
+				}
+			}
+
+<span class="nc bnc" id="L114" title="All 2 branches missed.">			while (spaceEnd - spaceStart &gt; maxBridgeWidth(width())+1){</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">				if (Random.Int(2) == 0){</span>
+<span class="nc" id="L116">					spaceStart++;</span>
+				} else {
+<span class="nc" id="L118">					spaceEnd--;</span>
+				}
+			}
+
+<span class="nc" id="L122">			spaceRect = new Rect(spaceStart+1, top+1, spaceEnd, bottom);</span>
+
+<span class="nc" id="L124">			int bridgeY = Random.NormalIntRange(spaceRect.top+1, spaceRect.bottom-2);</span>
+<span class="nc" id="L125">			bridgeRect = new Rect(spaceRect.left, bridgeY, spaceRect.right, bridgeY+1);</span>
+
+<span class="nc" id="L127">		} else {</span>
+
+<span class="nc" id="L129">			ArrayList&lt;Point&gt; spacePoints = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">			for (Door door : connected.values()) {</span>
+<span class="nc bnc" id="L131" title="All 4 branches missed.">				if (door.x == left || door.x == right){</span>
+<span class="nc" id="L132">					spacePoints.add(door);</span>
+				}
+<span class="nc" id="L134">			}</span>
+
+			//add fake doors for very top/bottom
+<span class="nc" id="L137">			spacePoints.add(new Point(0, top+1));</span>
+<span class="nc" id="L138">			spacePoints.add(new Point(0, bottom-1));</span>
+
+<span class="nc" id="L140">			Collections.sort(spacePoints, new Comparator&lt;Point&gt;() {</span>
+				@Override
+				public int compare(Point d1, Point d2) {
+<span class="nc" id="L143">					return d1.y - d2.y;</span>
+				}
+			});
+
+<span class="nc" id="L147">			int spaceStart = -1;</span>
+<span class="nc" id="L148">			int spaceEnd = -1;</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">			for (int i = 0; i &lt; spacePoints.size()-1; i++){</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">				if (spaceEnd - spaceStart &lt; spacePoints.get(i+1).y - spacePoints.get(i).y){</span>
+<span class="nc" id="L151">					spaceStart = spacePoints.get(i).y;</span>
+<span class="nc" id="L152">					spaceEnd = spacePoints.get(i+1).y;</span>
+				}
+			}
+
+<span class="nc bnc" id="L156" title="All 2 branches missed.">			while (spaceEnd - spaceStart &gt; maxBridgeWidth(height())+1){</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">				if (Random.Int(2) == 0){</span>
+<span class="nc" id="L158">					spaceStart++;</span>
+				} else {
+<span class="nc" id="L160">					spaceEnd--;</span>
+				}
+			}
+
+<span class="nc" id="L164">			spaceRect = new Rect(left+1, spaceStart+1, right, spaceEnd);</span>
+
+<span class="nc" id="L166">			int bridgeX = Random.NormalIntRange(spaceRect.left+1, spaceRect.right-2);</span>
+<span class="nc" id="L167">			bridgeRect = new Rect(bridgeX, spaceRect.top, bridgeX+1, spaceRect.bottom);</span>
+
+		}
+
+<span class="nc" id="L171">		Painter.fill(level, spaceRect, spaceTile());</span>
+<span class="nc" id="L172">		Painter.fill(level, bridgeRect, Terrain.EMPTY_SP);</span>
+
+<span class="nc" id="L174">	}</span>
+
+	protected abstract int maxBridgeWidth( int roomDimension );
+
+	protected abstract int spaceTile();
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

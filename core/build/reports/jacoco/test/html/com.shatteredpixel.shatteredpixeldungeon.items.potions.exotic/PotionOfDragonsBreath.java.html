@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PotionOfDragonsBreath.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic</a> &gt; <span class="el_source">PotionOfDragonsBreath.java</span></div><h1>PotionOfDragonsBreath.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Fire;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Cripple;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.ConeAOE;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Callback;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L55">public class PotionOfDragonsBreath extends ExoticPotion {</span>
+	
+	{
+<span class="nc" id="L58">		icon = ItemSpriteSheet.Icons.POTION_DRGBREATH;</span>
+	}
+
+<span class="nc" id="L61">	protected static boolean identifiedByUse = false;</span>
+
+	@Override
+	//need to override drink so that time isn't spent right away
+	protected void drink(final Hero hero) {
+
+<span class="nc bnc" id="L67" title="All 2 branches missed.">		if (!isKnown()) {</span>
+<span class="nc" id="L68">			identify();</span>
+<span class="nc" id="L69">			curItem = detach( hero.belongings.backpack );</span>
+<span class="nc" id="L70">			identifiedByUse = true;</span>
+		} else {
+<span class="nc" id="L72">			identifiedByUse = false;</span>
+		}
+
+<span class="nc" id="L75">		GameScene.selectCell(targeter);</span>
+<span class="nc" id="L76">	}</span>
+	
+<span class="nc" id="L78">	private CellSelector.Listener targeter = new CellSelector.Listener() {</span>
+
+<span class="nc" id="L80">		private boolean showingWindow = false;</span>
+<span class="nc" id="L81">		private boolean potionAlreadyUsed = false;</span>
+
+		@Override
+		public void onSelect(final Integer cell) {
+
+<span class="nc bnc" id="L86" title="All 2 branches missed.">			if (showingWindow){</span>
+<span class="nc" id="L87">				return;</span>
+			}
+<span class="nc bnc" id="L89" title="All 2 branches missed.">			if (potionAlreadyUsed){</span>
+<span class="nc" id="L90">				potionAlreadyUsed = false;</span>
+<span class="nc" id="L91">				return;</span>
+			}
+
+<span class="nc bnc" id="L94" title="All 4 branches missed.">			if (cell == null &amp;&amp; identifiedByUse){</span>
+<span class="nc" id="L95">				showingWindow = true;</span>
+<span class="nc" id="L96">				ShatteredPixelDungeon.runOnRenderThread(new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L99">						GameScene.show( new WndOptions(new ItemSprite(PotionOfDragonsBreath.this),</span>
+<span class="nc" id="L100">								Messages.titleCase(name()),</span>
+<span class="nc" id="L101">								Messages.get(ExoticPotion.class, &quot;warning&quot;),</span>
+<span class="nc" id="L102">								Messages.get(ExoticPotion.class, &quot;yes&quot;),</span>
+<span class="nc" id="L103">								Messages.get(ExoticPotion.class, &quot;no&quot;) ) {</span>
+							@Override
+							protected void onSelect( int index ) {
+<span class="nc" id="L106">								showingWindow = false;</span>
+<span class="nc bnc" id="L107" title="All 3 branches missed.">								switch (index) {</span>
+									case 0:
+<span class="nc" id="L109">										curUser.spendAndNext(1f);</span>
+<span class="nc" id="L110">										identifiedByUse = false;</span>
+<span class="nc" id="L111">										break;</span>
+									case 1:
+<span class="nc" id="L113">										GameScene.selectCell( targeter );</span>
+										break;
+								}
+<span class="nc" id="L116">							}</span>
+<span class="nc" id="L117">							public void onBackPressed() {}</span>
+						} );
+<span class="nc" id="L119">					}</span>
+				});
+<span class="nc bnc" id="L121" title="All 2 branches missed.">			} else if (cell != null) {</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">				if (!identifiedByUse) {</span>
+<span class="nc" id="L123">					curItem.detach(curUser.belongings.backpack);</span>
+				}
+<span class="nc" id="L125">				potionAlreadyUsed = true;</span>
+<span class="nc" id="L126">				identifiedByUse = false;</span>
+<span class="nc" id="L127">				curUser.busy();</span>
+<span class="nc" id="L128">				Sample.INSTANCE.play( Assets.Sounds.DRINK );</span>
+<span class="nc" id="L129">				curUser.sprite.operate(curUser.pos, new Callback() {</span>
+					@Override
+					public void call() {
+
+<span class="nc" id="L133">						curUser.sprite.idle();</span>
+<span class="nc" id="L134">						curUser.sprite.zap(cell);</span>
+<span class="nc" id="L135">						Sample.INSTANCE.play( Assets.Sounds.BURNING );</span>
+
+<span class="nc" id="L137">						final Ballistica bolt = new Ballistica(curUser.pos, cell, Ballistica.WONT_STOP);</span>
+
+<span class="nc" id="L139">						int maxDist = 6;</span>
+<span class="nc" id="L140">						int dist = Math.min(bolt.dist, maxDist);</span>
+
+<span class="nc" id="L142">						final ConeAOE cone = new ConeAOE(bolt, 6, 60, Ballistica.STOP_SOLID | Ballistica.STOP_TARGET | Ballistica.IGNORE_SOFT_SOLID);</span>
+
+						//cast to cells at the tip, rather than all cells, better performance.
+<span class="nc bnc" id="L145" title="All 2 branches missed.">						for (Ballistica ray : cone.outerRays){</span>
+<span class="nc" id="L146">							((MagicMissile)curUser.sprite.parent.recycle( MagicMissile.class )).reset(</span>
+									MagicMissile.FIRE_CONE,
+<span class="nc" id="L148">									curUser.sprite,</span>
+<span class="nc" id="L149">									ray.path.get(ray.dist),</span>
+									null
+							);
+<span class="nc" id="L152">						}</span>
+						
+<span class="nc" id="L154">						MagicMissile.boltFromChar(curUser.sprite.parent,</span>
+								MagicMissile.FIRE_CONE,
+<span class="nc" id="L156">								curUser.sprite,</span>
+<span class="nc" id="L157">								bolt.path.get(dist / 2),</span>
+<span class="nc" id="L158">								new Callback() {</span>
+									@Override
+									public void call() {
+<span class="nc" id="L161">										ArrayList&lt;Integer&gt; adjacentCells = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">										for (int cell : cone.cells){</span>
+											//ignore caster cell
+<span class="nc bnc" id="L164" title="All 2 branches missed.">											if (cell == bolt.sourcePos){</span>
+<span class="nc" id="L165">												continue;</span>
+											}
+
+											//knock doors open
+<span class="nc bnc" id="L169" title="All 2 branches missed.">											if (Dungeon.level.map[cell] == Terrain.DOOR){</span>
+<span class="nc" id="L170">												Level.set(cell, Terrain.OPEN_DOOR);</span>
+<span class="nc" id="L171">												GameScene.updateMap(cell);</span>
+											}
+
+											//only ignite cells directly near caster if they are flammable
+<span class="nc bnc" id="L175" title="All 4 branches missed.">											if (Dungeon.level.adjacent(bolt.sourcePos, cell) &amp;&amp; !Dungeon.level.flamable[cell]){</span>
+<span class="nc" id="L176">												adjacentCells.add(cell);</span>
+											} else {
+<span class="nc" id="L178">												GameScene.add( Blob.seed( cell, 5, Fire.class ) );</span>
+											}
+											
+<span class="nc" id="L181">											Char ch = Actor.findChar( cell );</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">											if (ch != null) {</span>
+												
+<span class="nc" id="L184">												Buff.affect( ch, Burning.class ).reignite( ch );</span>
+<span class="nc" id="L185">												Buff.affect(ch, Cripple.class, 5f);</span>
+											}
+<span class="nc" id="L187">										}</span>
+
+										//ignite cells that share a side with an adjacent cell, are flammable, and are further from the source pos
+										//This prevents short-range casts not igniting barricades or bookshelves
+<span class="nc bnc" id="L191" title="All 2 branches missed.">										for (int cell : adjacentCells){</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">											for (int i : PathFinder.NEIGHBOURS4){</span>
+<span class="nc bnc" id="L193" title="All 4 branches missed.">												if (Dungeon.level.trueDistance(cell+i, bolt.sourcePos) &gt; Dungeon.level.trueDistance(cell, bolt.sourcePos)</span>
+														&amp;&amp; Dungeon.level.flamable[cell+i]
+<span class="nc bnc" id="L195" title="All 2 branches missed.">														&amp;&amp; Fire.volumeAt(cell+i, Fire.class) == 0){</span>
+<span class="nc" id="L196">													GameScene.add( Blob.seed( cell+i, 5, Fire.class ) );</span>
+												}
+											}
+<span class="nc" id="L199">										}</span>
+
+<span class="nc" id="L201">										curUser.spendAndNext(1f);</span>
+
+<span class="nc bnc" id="L203" title="All 2 branches missed.">										if (!anonymous) {</span>
+<span class="nc" id="L204">											Catalog.countUse(PotionOfDragonsBreath.class);</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">											if (Random.Float() &lt; talentChance) {</span>
+<span class="nc" id="L206">												Talent.onPotionUsed(curUser, curUser.pos, talentFactor);</span>
+											}
+										}
+<span class="nc" id="L209">									}</span>
+								});
+						
+<span class="nc" id="L212">					}</span>
+				});
+			}
+<span class="nc" id="L215">		}</span>
+		
+		@Override
+		public String prompt() {
+<span class="nc" id="L219">			return Messages.get(PotionOfDragonsBreath.class, &quot;prompt&quot;);</span>
+		}
+	};
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DeathMark.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.rogue</a> &gt; <span class="el_source">DeathMark.java</span></div><h1>DeathMark.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.rogue;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Cripple;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Terror;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.watabou.utils.BArray;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+
+<span class="nc" id="L49">public class DeathMark extends ArmorAbility {</span>
+
+	{
+<span class="nc" id="L52">		baseChargeUse = 25f;</span>
+<span class="nc" id="L53">	}</span>
+
+	@Override
+	public String targetingPrompt() {
+<span class="nc" id="L57">		return Messages.get(this, &quot;prompt&quot;);</span>
+	}
+
+	@Override
+	public int targetedPos(Char user, int dst) {
+<span class="nc" id="L62">		return dst;</span>
+	}
+
+	@Override
+	public float chargeUse( Hero hero ) {
+<span class="nc" id="L67">		float chargeUse = super.chargeUse(hero);</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		if (hero.buff(DoubleMarkTracker.class) != null){</span>
+			//reduced charge use by 30%/50%/65%/75%
+<span class="nc" id="L70">			chargeUse *= Math.pow(0.707, hero.pointsInTalent(Talent.DOUBLE_MARK));</span>
+		}
+<span class="nc" id="L72">		return chargeUse;</span>
+	}
+
+	@Override
+	protected void activate(ClassArmor armor, Hero hero, Integer target) {
+<span class="nc bnc" id="L77" title="All 2 branches missed.">		if (target == null){</span>
+<span class="nc" id="L78">			return;</span>
+		}
+
+<span class="nc" id="L81">		Char ch = Actor.findChar(target);</span>
+
+<span class="nc bnc" id="L83" title="All 4 branches missed.">		if (ch == null || !Dungeon.level.heroFOV[target]){</span>
+<span class="nc" id="L84">			GLog.w(Messages.get(this, &quot;no_target&quot;));</span>
+<span class="nc" id="L85">			return;</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		} else if (ch.alignment != Char.Alignment.ENEMY){</span>
+<span class="nc" id="L87">			GLog.w(Messages.get(this, &quot;ally_target&quot;));</span>
+<span class="nc" id="L88">			return;</span>
+		}
+
+<span class="nc bnc" id="L91" title="All 2 branches missed.">		if (ch != null){</span>
+<span class="nc" id="L92">			Buff.affect(ch, DeathMarkTracker.class, DeathMarkTracker.DURATION).setInitialHP(ch.HP);</span>
+		}
+
+<span class="nc" id="L95">		armor.charge -= chargeUse( hero );</span>
+<span class="nc" id="L96">		armor.updateQuickslot();</span>
+<span class="nc" id="L97">		hero.sprite.zap(target);</span>
+
+<span class="nc" id="L99">		hero.next();</span>
+
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (hero.buff(DoubleMarkTracker.class) != null){</span>
+<span class="nc" id="L102">			hero.buff(DoubleMarkTracker.class).detach();</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		} else if (hero.hasTalent(Talent.DOUBLE_MARK)) {</span>
+<span class="nc" id="L104">			Buff.affect(hero, DoubleMarkTracker.class, 0.01f);</span>
+		}
+
+<span class="nc" id="L107">	}</span>
+
+	public static void processFearTheReaper( Char ch ){
+<span class="nc bnc" id="L110" title="All 4 branches missed.">		if (ch.HP &gt; 0 || ch.buff(DeathMarkTracker.class) == null){</span>
+<span class="nc" id="L111">			return;</span>
+		}
+
+<span class="nc bnc" id="L114" title="All 2 branches missed.">		if (Dungeon.hero.hasTalent(Talent.FEAR_THE_REAPER)) {</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">			if (Dungeon.hero.pointsInTalent(Talent.FEAR_THE_REAPER) &gt;= 2) {</span>
+<span class="nc" id="L116">				Buff.prolong(ch, Terror.class, 5f).object = Dungeon.hero.id();</span>
+			}
+<span class="nc" id="L118">			Buff.prolong(ch, Cripple.class, 5f);</span>
+
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			if (Dungeon.hero.pointsInTalent(Talent.FEAR_THE_REAPER) &gt;= 3) {</span>
+<span class="nc" id="L121">				boolean[] passable = BArray.not(Dungeon.level.solid, null);</span>
+<span class="nc" id="L122">				PathFinder.buildDistanceMap(ch.pos, passable, 3);</span>
+
+<span class="nc bnc" id="L124" title="All 2 branches missed.">				for (Char near : Actor.chars()) {</span>
+<span class="nc bnc" id="L125" title="All 6 branches missed.">					if (near != ch &amp;&amp; near.alignment == Char.Alignment.ENEMY</span>
+							&amp;&amp; PathFinder.distance[near.pos] != Integer.MAX_VALUE) {
+<span class="nc bnc" id="L127" title="All 2 branches missed.">						if (Dungeon.hero.pointsInTalent(Talent.FEAR_THE_REAPER) == 4) {</span>
+<span class="nc" id="L128">							Buff.prolong(near, Terror.class, 5f).object = Dungeon.hero.id();</span>
+						}
+<span class="nc" id="L130">						Buff.prolong(near, Cripple.class, 5f);</span>
+					}
+<span class="nc" id="L132">				}</span>
+			}
+		}
+<span class="nc" id="L135">	}</span>
+
+<span class="nc" id="L137">	public static class DoubleMarkTracker extends FlavourBuff{};</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L141">		return HeroIcon.DEATH_MARK;</span>
+	}
+
+	@Override
+	public Talent[] talents() {
+<span class="nc" id="L146">		return new Talent[]{Talent.FEAR_THE_REAPER, Talent.DEATHLY_DURABILITY, Talent.DOUBLE_MARK, Talent.HEROIC_ENERGY};</span>
+	}
+
+<span class="nc" id="L149">	public static class DeathMarkTracker extends FlavourBuff {</span>
+
+<span class="nc" id="L151">		public static float DURATION = 5f;</span>
+
+<span class="nc" id="L153">		int initialHP = 0;</span>
+
+		{
+<span class="nc" id="L156">			type = buffType.NEGATIVE;</span>
+<span class="nc" id="L157">			announced = true;</span>
+<span class="nc" id="L158">		}</span>
+
+		@Override
+		public int icon() {
+<span class="nc" id="L162">			return BuffIndicator.INVERT_MARK;</span>
+		}
+
+		@Override
+		public void tintIcon(Image icon) {
+<span class="nc" id="L167">			icon.hardlight(1f, 0.2f, 0.2f);</span>
+<span class="nc" id="L168">		}</span>
+
+		@Override
+		public float iconFadePercent() {
+<span class="nc" id="L172">			return Math.max(0, (DURATION - visualcooldown()) / DURATION);</span>
+		}
+
+		private void setInitialHP( int hp ){
+<span class="nc bnc" id="L176" title="All 2 branches missed.">			if (initialHP &lt; hp){</span>
+<span class="nc" id="L177">				initialHP = hp;</span>
+			}
+<span class="nc" id="L179">		}</span>
+
+		@Override
+		public boolean attachTo(Char target) {
+<span class="nc bnc" id="L183" title="All 2 branches missed.">			if (super.attachTo(target)){</span>
+<span class="nc" id="L184">				target.deathMarked = true;</span>
+<span class="nc" id="L185">				return true;</span>
+			} else {
+<span class="nc" id="L187">				return false;</span>
+			}
+		}
+
+		@Override
+		public void detach() {
+<span class="nc" id="L193">			super.detach();</span>
+<span class="nc" id="L194">			target.deathMarked = false;</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">			if (!target.isAlive()){</span>
+<span class="nc" id="L196">				target.sprite.flash();</span>
+<span class="nc" id="L197">				target.sprite.bloodBurstA(target.sprite.center(), target.HT*2);</span>
+<span class="nc" id="L198">				Sample.INSTANCE.play(Assets.Sounds.HIT_STAB);</span>
+<span class="nc" id="L199">				Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);</span>
+<span class="nc" id="L200">				target.die(this);</span>
+<span class="nc" id="L201">				int shld = Math.round(initialHP * (0.125f*Dungeon.hero.pointsInTalent(Talent.DEATHLY_DURABILITY)));</span>
+<span class="nc bnc" id="L202" title="All 4 branches missed.">				if (shld &gt; 0 &amp;&amp; target.alignment != Char.Alignment.ALLY){</span>
+<span class="nc" id="L203">					Dungeon.hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shld), FloatingText.SHIELDING);</span>
+<span class="nc" id="L204">					Buff.affect(Dungeon.hero, Barrier.class).setShield(shld);</span>
+				}
+			}
+<span class="nc" id="L207">		}</span>
+
+<span class="nc" id="L209">		private static String INITIAL_HP = &quot;initial_hp&quot;;</span>
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L213">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L214">			bundle.put(INITIAL_HP, initialHP);</span>
+<span class="nc" id="L215">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L219">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L220">			initialHP = bundle.getInt(INITIAL_HP);</span>
+<span class="nc" id="L221">		}</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

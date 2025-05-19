@@ -1,0 +1,497 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RegularPainter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.painters</a> &gt; <span class="el_source">RegularPainter.java</span></div><h1>RegularPainter.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.painters;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.TrapMechanism;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Document;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Patch;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.connection.ConnectionRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.SpecialRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.StandardRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
+import com.watabou.noosa.Game;
+import com.watabou.utils.Graph;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+import com.watabou.utils.Rect;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+<span class="nc" id="L48">public abstract class RegularPainter extends Painter {</span>
+	
+<span class="nc" id="L50">	private float waterFill = 0f;</span>
+	private int waterSmoothness;
+	
+	public RegularPainter setWater(float fill, int smoothness){
+<span class="nc" id="L54">		waterFill = fill;</span>
+<span class="nc" id="L55">		waterSmoothness = smoothness;</span>
+<span class="nc" id="L56">		return this;</span>
+	}
+	
+<span class="nc" id="L59">	private float grassFill = 0f;</span>
+	private int grassSmoothness;
+	
+	public RegularPainter setGrass(float fill, int smoothness){
+<span class="nc" id="L63">		grassFill = fill;</span>
+<span class="nc" id="L64">		grassSmoothness = smoothness;</span>
+<span class="nc" id="L65">		return this;</span>
+	}
+	
+<span class="nc" id="L68">	private int nTraps = 0;</span>
+	private Class&lt;? extends Trap&gt;[] trapClasses;
+	private float[] trapChances;
+	
+	public RegularPainter setTraps(int num, Class&lt;?&gt;[] classes, float[] chances){
+<span class="nc" id="L73">		nTraps = num;</span>
+<span class="nc" id="L74">		trapClasses = (Class&lt;? extends Trap&gt;[]) classes;</span>
+<span class="nc" id="L75">		trapChances = chances;</span>
+<span class="nc" id="L76">		return this;</span>
+	}
+
+	protected int padding(Level level){
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		return level.feeling == Level.Feeling.CHASM ? 2 : 1;</span>
+	}
+	
+	@Override
+	public boolean paint(Level level, ArrayList&lt;Room&gt; rooms) {
+		
+		//painter can be used without rooms
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		if (rooms != null) {</span>
+			
+<span class="nc" id="L89">			int padding = padding(level);</span>
+			
+<span class="nc" id="L91">			int leftMost = Integer.MAX_VALUE, topMost = Integer.MAX_VALUE;</span>
+			
+<span class="nc bnc" id="L93" title="All 2 branches missed.">			for (Room r : rooms) {</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">				if (r.left &lt; leftMost) leftMost = r.left;</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">				if (r.top &lt; topMost) topMost = r.top;</span>
+<span class="nc" id="L96">			}</span>
+			
+<span class="nc" id="L98">			leftMost -= padding;</span>
+<span class="nc" id="L99">			topMost -= padding;</span>
+			
+<span class="nc" id="L101">			int rightMost = 0, bottomMost = 0;</span>
+			
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			for (Room r : rooms) {</span>
+<span class="nc" id="L104">				r.shift(-leftMost, -topMost);</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">				if (r.right &gt; rightMost) rightMost = r.right;</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">				if (r.bottom &gt; bottomMost) bottomMost = r.bottom;</span>
+<span class="nc" id="L107">			}</span>
+			
+<span class="nc" id="L109">			rightMost += padding;</span>
+<span class="nc" id="L110">			bottomMost += padding;</span>
+			
+			//add 1 to account for 0 values
+<span class="nc" id="L113">			level.setSize(rightMost + 1, bottomMost + 1);</span>
+<span class="nc" id="L114">		} else {</span>
+			//check if the level's size was already initialized by something else
+<span class="nc bnc" id="L116" title="All 2 branches missed.">			if (level.length() == 0) return false;</span>
+			
+			//easier than checking for null everywhere
+<span class="nc" id="L119">			rooms = new ArrayList&lt;&gt;();</span>
+		}
+		
+<span class="nc" id="L122">		Random.shuffle(rooms);</span>
+		
+<span class="nc bnc" id="L124" title="All 2 branches missed.">		for (Room r : rooms.toArray(new Room[0])) {</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">			if (r.connected.isEmpty()){</span>
+<span class="nc" id="L126">				Game.reportException( new RuntimeException(&quot;Painting a room with no connections! Room:&quot; + r.getClass().getSimpleName() + &quot; Seed:&quot; + Dungeon.seed + &quot; Depth:&quot; + Dungeon.depth));</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">				if (r instanceof SpecialRoom) return false;</span>
+			}
+<span class="nc" id="L129">			placeDoors( r );</span>
+<span class="nc" id="L130">			r.paint( level );</span>
+		}
+		
+<span class="nc" id="L133">		paintDoors( level, rooms );</span>
+
+		//use a separate RNG here so that extra painting variance doesn't affect the rest of levelgen
+		//e.g. this minimizes mossy clump's effect on levelgen
+<span class="nc" id="L137">		Random.pushGenerator(Random.Long());</span>
+
+<span class="nc bnc" id="L139" title="All 2 branches missed.">			if (waterFill &gt; 0f) {</span>
+<span class="nc" id="L140">				paintWater( level, rooms );</span>
+			}
+
+<span class="nc bnc" id="L143" title="All 2 branches missed.">			if (grassFill &gt; 0f){</span>
+<span class="nc" id="L144">				paintGrass( level, rooms );</span>
+			}
+
+<span class="nc bnc" id="L147" title="All 2 branches missed.">			if (nTraps &gt; 0){</span>
+<span class="nc" id="L148">				paintTraps( level, rooms );</span>
+			}
+		
+<span class="nc" id="L151">			decorate( level, rooms );</span>
+
+<span class="nc" id="L153">		Random.popGenerator();</span>
+		
+<span class="nc" id="L155">		return true;</span>
+	}
+	
+	protected abstract void decorate(Level level, ArrayList&lt;Room&gt; rooms);
+	
+	private void placeDoors( Room r ) {
+<span class="nc bnc" id="L161" title="All 2 branches missed.">		for (Room n : r.connected.keySet()) {</span>
+<span class="nc" id="L162">			Room.Door door = r.connected.get( n );</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">			if (door == null) {</span>
+				
+<span class="nc" id="L165">				Rect i = r.intersect( n );</span>
+<span class="nc" id="L166">				ArrayList&lt;Point&gt; doorSpots = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">				for (Point p : i.getPoints()){</span>
+<span class="nc bnc" id="L168" title="All 4 branches missed.">					if (r.canConnect(p) &amp;&amp; n.canConnect(p))</span>
+<span class="nc" id="L169">						doorSpots.add(p);</span>
+<span class="nc" id="L170">				}</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">				if (doorSpots.isEmpty()){</span>
+<span class="nc" id="L172">					ShatteredPixelDungeon.reportException(</span>
+							new RuntimeException(&quot;Could not place a door! &quot; +
+<span class="nc" id="L174">									&quot;r=&quot; + r.getClass().getSimpleName() +</span>
+<span class="nc" id="L175">									&quot; n=&quot; + n.getClass().getSimpleName()));</span>
+<span class="nc" id="L176">					continue;</span>
+				}
+<span class="nc" id="L178">				door = new Room.Door(Random.element(doorSpots));</span>
+				
+<span class="nc" id="L180">				r.connected.put( n, door );</span>
+<span class="nc" id="L181">				n.connected.put( r, door );</span>
+			}
+<span class="nc" id="L183">		}</span>
+<span class="nc" id="L184">	}</span>
+	
+	protected void paintDoors( Level l, ArrayList&lt;Room&gt; rooms ) {
+
+<span class="nc" id="L188">		float hiddenDoorChance = 0;</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">		if (Dungeon.depth &gt; 1){</span>
+			//chance for a hidden door scales from 2/20 on floor 2 to 20/20 on floor 20
+<span class="nc" id="L191">			hiddenDoorChance = Math.min(1f, Dungeon.depth / 20f);</span>
+		}
+<span class="nc bnc" id="L193" title="All 2 branches missed.">		if (l.feeling == Level.Feeling.SECRETS){</span>
+			//pull the value of extra secret doors toward 50% on secrets level feel
+<span class="nc" id="L195">			hiddenDoorChance = (0.5f + hiddenDoorChance)/2f;</span>
+		}
+
+<span class="nc" id="L198">		HashMap&lt;Room, Room&gt; roomMerges = new HashMap&lt;&gt;();</span>
+
+<span class="nc bnc" id="L200" title="All 2 branches missed.">		for (Room r : rooms) {</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">			for (Room n : r.connected.keySet()) {</span>
+
+				//normal sized rooms can be merged at most once. Large and Giant rooms can be merged many times
+<span class="nc bnc" id="L204" title="All 4 branches missed.">				if (roomMerges.get(r) == n || roomMerges.get(n) == r){</span>
+<span class="nc" id="L205">					continue;</span>
+<span class="nc bnc" id="L206" title="All 4 branches missed.">				} else if (!roomMerges.containsKey(r) &amp;&amp; !roomMerges.containsKey(n) &amp;&amp;</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">						mergeRooms(l, r, n, r.connected.get(n), Terrain.EMPTY)) {</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">					if (((StandardRoom) r).sizeCat == StandardRoom.SizeCategory.NORMAL) roomMerges.put(r, n);</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">					if (((StandardRoom) n).sizeCat == StandardRoom.SizeCategory.NORMAL) roomMerges.put(n, r);</span>
+					continue;
+				}
+				
+<span class="nc" id="L213">				Room.Door d = r.connected.get(n);</span>
+<span class="nc" id="L214">				int door = d.x + d.y * l.width();</span>
+				
+<span class="nc bnc" id="L216" title="All 2 branches missed.">				if (d.type == Room.Door.Type.REGULAR){</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">					if (Random.Float() &lt; hiddenDoorChance) {</span>
+<span class="nc" id="L218">						d.type = Room.Door.Type.HIDDEN;</span>
+						//all standard rooms must have an unbroken path to all other standard rooms
+<span class="nc bnc" id="L220" title="All 2 branches missed.">						if (l.feeling != Level.Feeling.SECRETS){</span>
+<span class="nc" id="L221">							Graph.buildDistanceMap(rooms, r);</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">							if (n.distance == Integer.MAX_VALUE){</span>
+<span class="nc" id="L223">								d.type = Room.Door.Type.UNLOCKED;</span>
+							}
+						//on a secrets level, rooms just have to not be totally isolated
+						} else {
+<span class="nc" id="L227">							int roomsInGraph = 0;</span>
+<span class="nc" id="L228">							Graph.buildDistanceMap(rooms, r);</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">							for (Room rDest : rooms){</span>
+<span class="nc bnc" id="L230" title="All 4 branches missed.">								if (rDest.distance != Integer.MAX_VALUE</span>
+										&amp;&amp; !(rDest instanceof ConnectionRoom)){
+<span class="nc" id="L232">									roomsInGraph++;</span>
+								}
+<span class="nc" id="L234">							}</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">							if (roomsInGraph &lt; 2){</span>
+<span class="nc" id="L236">								d.type = Room.Door.Type.UNLOCKED;</span>
+							} else {
+<span class="nc" id="L238">								roomsInGraph = 0;</span>
+<span class="nc" id="L239">								Graph.buildDistanceMap(rooms, n);</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">								for (Room nDest : rooms){</span>
+<span class="nc bnc" id="L241" title="All 4 branches missed.">									if (nDest.distance != Integer.MAX_VALUE</span>
+											&amp;&amp; !(nDest instanceof ConnectionRoom)){
+<span class="nc" id="L243">										roomsInGraph++;</span>
+									}
+<span class="nc" id="L245">								}</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">								if (roomsInGraph &lt; 2){</span>
+<span class="nc" id="L247">									d.type = Room.Door.Type.UNLOCKED;</span>
+								}
+							}
+						}
+<span class="nc" id="L251">						Graph.buildDistanceMap(rooms, r);</span>
+						//don't hide if it would make this room only accessible by hidden doors
+						//unless we're on a secrets depth
+<span class="nc bnc" id="L254" title="All 4 branches missed.">						if (l.feeling != Level.Feeling.SECRETS &amp;&amp; n.distance == Integer.MAX_VALUE){</span>
+<span class="nc" id="L255">							d.type = Room.Door.Type.UNLOCKED;</span>
+						}
+					} else {
+<span class="nc" id="L258">						d.type = Room.Door.Type.UNLOCKED;</span>
+					}
+
+					//entrance doors on floor 1 are hidden during tutorial
+					//entrance doors on floor 2 are hidden if the player hasn't picked up 2nd guidebook page
+<span class="nc bnc" id="L263" title="All 4 branches missed.">					if (r.isEntrance() || n.isEntrance()){</span>
+<span class="nc bnc" id="L264" title="All 6 branches missed.">						if ((Dungeon.depth == 1 &amp;&amp; SPDSettings.intro())</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">							|| (Dungeon.depth == 2 &amp;&amp; !Document.ADVENTURERS_GUIDE.isPageFound(Document.GUIDE_SEARCHING))) {</span>
+<span class="nc" id="L266">							d.type = Room.Door.Type.HIDDEN;</span>
+						}
+					}
+				}
+				
+<span class="nc bnc" id="L271" title="All 10 branches missed.">				switch (d.type) {</span>
+					case EMPTY:
+<span class="nc" id="L273">						l.map[door] = Terrain.EMPTY;</span>
+<span class="nc" id="L274">						break;</span>
+					case TUNNEL:
+<span class="nc" id="L276">						l.map[door] = l.tunnelTile();</span>
+<span class="nc" id="L277">						break;</span>
+					case WATER:
+<span class="nc" id="L279">						l.map[door] = Terrain.WATER;</span>
+<span class="nc" id="L280">						break;</span>
+					case UNLOCKED:
+<span class="nc" id="L282">						l.map[door] = Terrain.DOOR;</span>
+<span class="nc" id="L283">						break;</span>
+					case HIDDEN:
+<span class="nc" id="L285">						l.map[door] = Terrain.SECRET_DOOR;</span>
+<span class="nc" id="L286">						break;</span>
+					case BARRICADE:
+<span class="nc" id="L288">						l.map[door] = Terrain.BARRICADE;</span>
+<span class="nc" id="L289">						break;</span>
+					case LOCKED:
+<span class="nc" id="L291">						l.map[door] = Terrain.LOCKED_DOOR;</span>
+<span class="nc" id="L292">						break;</span>
+					case CRYSTAL:
+<span class="nc" id="L294">						l.map[door] = Terrain.CRYSTAL_DOOR;</span>
+<span class="nc" id="L295">						break;</span>
+					case WALL:
+<span class="nc" id="L297">						l.map[door] = Terrain.WALL;</span>
+						break;
+				}
+<span class="nc" id="L300">			}</span>
+<span class="nc" id="L301">		}</span>
+<span class="nc" id="L302">	}</span>
+
+	protected boolean mergeRooms( Level l, Room r, Room n, Point start, int mergeTerrain){
+
+<span class="nc" id="L306">		Rect intersect = r.intersect( n );</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">		if (intersect.left == intersect.right) {</span>
+
+<span class="nc" id="L309">			Rect merge = new Rect();</span>
+<span class="nc" id="L310">			merge.left = merge.right = intersect.left;</span>
+<span class="nc bnc" id="L311" title="All 2 branches missed.">			merge.top = merge.bottom = start != null ? start.y : intersect.center().y;</span>
+
+<span class="nc" id="L313">			Point p = new Point(merge.left, merge.top);</span>
+<span class="nc bnc" id="L314" title="All 6 branches missed.">			while(merge.top &gt; intersect.top &amp;&amp; n.canMerge(l, r, p, mergeTerrain) &amp;&amp; r.canMerge(l, n, p, mergeTerrain)) {</span>
+<span class="nc" id="L315">				merge.top--;</span>
+<span class="nc" id="L316">				p.y--;</span>
+			}
+<span class="nc" id="L318">			p.y = merge.bottom;</span>
+<span class="nc bnc" id="L319" title="All 6 branches missed.">			while(merge.bottom &lt; intersect.bottom &amp;&amp; n.canMerge(l, r, p, mergeTerrain) &amp;&amp; r.canMerge(l, n, p, mergeTerrain)) {</span>
+<span class="nc" id="L320">				merge.bottom++;</span>
+<span class="nc" id="L321">				p.y++;</span>
+			}
+
+<span class="nc bnc" id="L324" title="All 2 branches missed.">			if (merge.height() &gt;= 3) {</span>
+<span class="nc" id="L325">				r.merge(l, n, new Rect(merge.left, merge.top + 1, merge.left+1, merge.bottom), mergeTerrain);</span>
+<span class="nc" id="L326">				return true;</span>
+			} else {
+<span class="nc" id="L328">				return false;</span>
+			}
+
+<span class="nc bnc" id="L331" title="All 2 branches missed.">		} else if (intersect.top == intersect.bottom) {</span>
+
+<span class="nc" id="L333">			Rect merge = new Rect();</span>
+<span class="nc bnc" id="L334" title="All 2 branches missed.">			merge.left = merge.right = start != null ? start.x : intersect.center().x;</span>
+<span class="nc" id="L335">			merge.top = merge.bottom = intersect.top;</span>
+
+<span class="nc" id="L337">			Point p = new Point(merge.left, merge.top);</span>
+<span class="nc bnc" id="L338" title="All 6 branches missed.">			while(merge.left &gt; intersect.left &amp;&amp; n.canMerge(l, r, p, mergeTerrain) &amp;&amp; r.canMerge(l, n, p, mergeTerrain)) {</span>
+<span class="nc" id="L339">				merge.left--;</span>
+<span class="nc" id="L340">				p.x--;</span>
+			}
+<span class="nc" id="L342">			p.x = merge.right;</span>
+<span class="nc bnc" id="L343" title="All 6 branches missed.">			while(merge.right &lt; intersect.right &amp;&amp; n.canMerge(l, r, p, mergeTerrain) &amp;&amp; r.canMerge(l, n, p, mergeTerrain)) {</span>
+<span class="nc" id="L344">				merge.right++;</span>
+<span class="nc" id="L345">				p.x++;</span>
+			}
+
+<span class="nc bnc" id="L348" title="All 2 branches missed.">			if (merge.width() &gt;= 3) {</span>
+<span class="nc" id="L349">				r.merge(l, n, new Rect(merge.left + 1, merge.top, merge.right, merge.top+1), mergeTerrain);</span>
+<span class="nc" id="L350">				return true;</span>
+			} else {
+<span class="nc" id="L352">				return false;</span>
+			}
+		} else {
+<span class="nc" id="L355">			return false;</span>
+		}
+
+	}
+	
+	protected void paintWater( Level l, ArrayList&lt;Room&gt; rooms ){
+<span class="nc" id="L361">		boolean[] lake = Patch.generate( l.width(), l.height(), waterFill, waterSmoothness, true );</span>
+		
+<span class="nc bnc" id="L363" title="All 2 branches missed.">		if (!rooms.isEmpty()){</span>
+<span class="nc bnc" id="L364" title="All 2 branches missed.">			for (Room r : rooms){</span>
+<span class="nc bnc" id="L365" title="All 2 branches missed.">				for (Point p : r.waterPlaceablePoints()){</span>
+<span class="nc" id="L366">					int i = l.pointToCell(p);</span>
+<span class="nc bnc" id="L367" title="All 4 branches missed.">					if (lake[i] &amp;&amp; l.map[i] == Terrain.EMPTY){</span>
+<span class="nc" id="L368">						l.map[i] = Terrain.WATER;</span>
+					}
+<span class="nc" id="L370">				}</span>
+<span class="nc" id="L371">			}</span>
+		} else {
+<span class="nc bnc" id="L373" title="All 2 branches missed.">			for (int i = 0; i &lt; l.length(); i ++) {</span>
+<span class="nc bnc" id="L374" title="All 4 branches missed.">				if (lake[i] &amp;&amp; l.map[i] == Terrain.EMPTY){</span>
+<span class="nc" id="L375">					l.map[i] = Terrain.WATER;</span>
+				}
+			}
+		}
+		
+<span class="nc" id="L380">	}</span>
+	
+	protected void paintGrass( Level l, ArrayList&lt;Room&gt; rooms ) {
+<span class="nc" id="L383">		boolean[] grass = Patch.generate( l.width(), l.height(), grassFill, grassSmoothness, true );</span>
+		
+<span class="nc" id="L385">		ArrayList&lt;Integer&gt; grassCells = new ArrayList&lt;&gt;();</span>
+		
+<span class="nc bnc" id="L387" title="All 2 branches missed.">		if (!rooms.isEmpty()){</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">			for (Room r : rooms){</span>
+<span class="nc bnc" id="L389" title="All 2 branches missed.">				for (Point p : r.grassPlaceablePoints()){</span>
+<span class="nc" id="L390">					int i = l.pointToCell(p);</span>
+<span class="nc bnc" id="L391" title="All 4 branches missed.">					if (grass[i] &amp;&amp; l.map[i] == Terrain.EMPTY){</span>
+<span class="nc" id="L392">						grassCells.add(i);</span>
+					}
+<span class="nc" id="L394">				}</span>
+<span class="nc" id="L395">			}</span>
+		} else {
+<span class="nc bnc" id="L397" title="All 2 branches missed.">			for (int i = 0; i &lt; l.length(); i ++) {</span>
+<span class="nc bnc" id="L398" title="All 4 branches missed.">				if (grass[i] &amp;&amp; l.map[i] == Terrain.EMPTY){</span>
+<span class="nc" id="L399">					grassCells.add(i);</span>
+				}
+			}
+		}
+		
+		//Adds chaos to grass height distribution. Ratio of high grass depends on fill and smoothing
+		//Full range is 8.3% to 75%, but most commonly (20% fill with 3 smoothing) is around 60%
+		//low smoothing, or very low fill, will begin to push the ratio down, normally to 50-30%
+<span class="nc bnc" id="L407" title="All 2 branches missed.">		for (int i : grassCells) {</span>
+<span class="nc bnc" id="L408" title="All 4 branches missed.">			if (l.heaps.get(i) != null || l.findMob(i) != null) {</span>
+<span class="nc" id="L409">				l.map[i] = Terrain.GRASS;</span>
+<span class="nc" id="L410">				continue;</span>
+			}
+			
+<span class="nc" id="L413">			int count = 1;</span>
+<span class="nc bnc" id="L414" title="All 2 branches missed.">			for (int n : PathFinder.NEIGHBOURS8) {</span>
+<span class="nc bnc" id="L415" title="All 2 branches missed.">				if (grass[i + n]) {</span>
+<span class="nc" id="L416">					count++;</span>
+				}
+			}
+<span class="nc bnc" id="L419" title="All 2 branches missed.">			l.map[i] = (Random.Float() &lt; count / 12f) ? Terrain.HIGH_GRASS : Terrain.GRASS;</span>
+<span class="nc" id="L420">		}</span>
+<span class="nc" id="L421">	}</span>
+	
+	protected void paintTraps( Level l, ArrayList&lt;Room&gt; rooms ) {
+<span class="nc" id="L424">		ArrayList&lt;Integer&gt; validCells = new ArrayList&lt;&gt;();</span>
+		
+<span class="nc bnc" id="L426" title="All 2 branches missed.">		if (!rooms.isEmpty()){</span>
+<span class="nc bnc" id="L427" title="All 2 branches missed.">			for (Room r : rooms){</span>
+<span class="nc bnc" id="L428" title="All 2 branches missed.">				for (Point p : r.trapPlaceablePoints()){</span>
+<span class="nc" id="L429">					int i = l.pointToCell(p);</span>
+<span class="nc bnc" id="L430" title="All 2 branches missed.">					if (l.map[i] == Terrain.EMPTY){</span>
+<span class="nc" id="L431">						validCells.add(i);</span>
+					}
+<span class="nc" id="L433">				}</span>
+<span class="nc" id="L434">			}</span>
+		} else {
+<span class="nc bnc" id="L436" title="All 2 branches missed.">			for (int i = 0; i &lt; l.length(); i ++) {</span>
+<span class="nc bnc" id="L437" title="All 2 branches missed.">				if (l.map[i] == Terrain.EMPTY){</span>
+<span class="nc" id="L438">					validCells.add(i);</span>
+				}
+			}
+		}
+		
+		//no more than one trap every 5 valid tiles.
+<span class="nc" id="L444">		nTraps = Math.min(nTraps, validCells.size()/5);</span>
+
+		//for traps that want to avoid being in hallways
+<span class="nc" id="L447">		ArrayList&lt;Integer&gt; validNonHallways = new ArrayList&lt;&gt;();</span>
+
+		//temporarily use the passable array for the next step
+<span class="nc bnc" id="L450" title="All 2 branches missed.">		for (int i = 0; i &lt; l.length(); i++){</span>
+<span class="nc bnc" id="L451" title="All 2 branches missed.">			l.passable[i] = (Terrain.flags[l.map[i]] &amp; Terrain.PASSABLE) != 0;</span>
+		}
+
+<span class="nc bnc" id="L454" title="All 2 branches missed.">		for (int i : validCells){</span>
+<span class="nc bnc" id="L455" title="All 8 branches missed.">			if ((l.passable[i+PathFinder.CIRCLE4[0]] || l.passable[i+PathFinder.CIRCLE4[2]])</span>
+					&amp;&amp; (l.passable[i+PathFinder.CIRCLE4[1]] || l.passable[i+PathFinder.CIRCLE4[3]])){
+<span class="nc" id="L457">				validNonHallways.add(i);</span>
+			}
+<span class="nc" id="L459">		}</span>
+
+		//no more than one trap every 5 valid tiles.
+<span class="nc" id="L462">		nTraps = Math.min(nTraps, validCells.size()/5);</span>
+
+<span class="nc" id="L464">		float revealedChance = TrapMechanism.revealHiddenTrapChance();</span>
+<span class="nc" id="L465">		float revealInc = 0;</span>
+
+		//5x traps on traps level feeling, but the extra traps are all visible
+<span class="nc bnc" id="L468" title="All 4 branches missed.">		for (int i = 0; i &lt; (l.feeling == Level.Feeling.TRAPS ? 5*nTraps : nTraps); i++) {</span>
+
+<span class="nc" id="L470">			Trap trap = Reflection.newInstance(trapClasses[Random.chances( trapChances )]);</span>
+
+			Integer trapPos;
+<span class="nc bnc" id="L473" title="All 4 branches missed.">			if (trap.avoidsHallways &amp;&amp; !validNonHallways.isEmpty()){</span>
+<span class="nc" id="L474">				trapPos = Random.element(validNonHallways);</span>
+			} else {
+<span class="nc" id="L476">				trapPos = Random.element(validCells);</span>
+			}
+			//removes the integer object, not at the index
+<span class="nc" id="L479">			validCells.remove(trapPos);</span>
+<span class="nc" id="L480">			validNonHallways.remove(trapPos);</span>
+
+<span class="nc" id="L482">			revealInc += revealedChance;</span>
+<span class="nc bnc" id="L483" title="All 4 branches missed.">			if (i &gt;= nTraps || revealInc &gt;= 1) {</span>
+<span class="nc" id="L484">				trap.reveal();</span>
+<span class="nc" id="L485">				revealInc--;</span>
+			} else {
+<span class="nc" id="L487">				trap.hide();</span>
+			}
+
+<span class="nc" id="L490">			l.setTrap( trap, trapPos );</span>
+			//some traps will not be hidden
+<span class="nc bnc" id="L492" title="All 2 branches missed.">			l.map[trapPos] = trap.visible ? Terrain.TRAP : Terrain.SECRET_TRAP;</span>
+		}
+<span class="nc" id="L494">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

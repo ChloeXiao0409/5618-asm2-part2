@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WndWandmaker.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.windows</a> &gt; <span class="el_source">WndWandmaker.java</span></div><h1>WndWandmaker.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.windows;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Wandmaker;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.CorpseDust;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.Embers;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Rotberry;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ItemButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+
+public class WndWandmaker extends Window {
+
+	private static final int WIDTH		= 120;
+	private static final int BTN_SIZE	= 32;
+	private static final int BTN_GAP	= 5;
+	private static final int GAP		= 2;
+
+	Wandmaker wandmaker;
+	Item questItem;
+
+	public WndWandmaker( final Wandmaker wandmaker, final Item item ) {
+		
+<span class="nc" id="L52">		super();</span>
+
+<span class="nc" id="L54">		this.wandmaker = wandmaker;</span>
+<span class="nc" id="L55">		this.questItem = item;</span>
+		
+<span class="nc" id="L57">		IconTitle titlebar = new IconTitle();</span>
+<span class="nc" id="L58">		titlebar.icon(new ItemSprite(item.image(), null));</span>
+<span class="nc" id="L59">		titlebar.label(Messages.titleCase(item.name()));</span>
+<span class="nc" id="L60">		titlebar.setRect(0, 0, WIDTH, 0);</span>
+<span class="nc" id="L61">		add( titlebar );</span>
+
+<span class="nc" id="L63">		String msg = &quot;&quot;;</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">		if (item instanceof CorpseDust){</span>
+<span class="nc" id="L65">			msg = Messages.get(this, &quot;dust&quot;);</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		} else if (item instanceof Embers){</span>
+<span class="nc" id="L67">			msg = Messages.get(this, &quot;ember&quot;);</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		} else if (item instanceof Rotberry.Seed){</span>
+<span class="nc" id="L69">			msg = Messages.get(this, &quot;berry&quot;);</span>
+		}
+
+<span class="nc" id="L72">		RenderedTextBlock message = PixelScene.renderTextBlock( msg, 6 );</span>
+<span class="nc" id="L73">		message.maxWidth(WIDTH);</span>
+<span class="nc" id="L74">		message.setPos(0, titlebar.bottom() + GAP);</span>
+<span class="nc" id="L75">		add( message );</span>
+
+<span class="nc" id="L77">		ItemButton btnWand1 = new ItemButton(){</span>
+			@Override
+			protected void onClick() {
+<span class="nc bnc" id="L80" title="All 4 branches missed.">				if (Dungeon.hero.belongings.contains(questItem) &amp;&amp; item() != null) {</span>
+<span class="nc" id="L81">					GameScene.show(new RewardWindow(item()));</span>
+				} else {
+<span class="nc" id="L83">					hide();</span>
+				}
+<span class="nc" id="L85">			}</span>
+		};
+<span class="nc" id="L87">		btnWand1.item(Wandmaker.Quest.wand1);</span>
+<span class="nc" id="L88">		btnWand1.setRect( (WIDTH - BTN_GAP) / 2 - BTN_SIZE, message.top() + message.height() + BTN_GAP, BTN_SIZE, BTN_SIZE );</span>
+<span class="nc" id="L89">		add( btnWand1 );</span>
+		
+<span class="nc" id="L91">		ItemButton btnWand2 = new ItemButton(){</span>
+			@Override
+			protected void onClick() {
+<span class="nc bnc" id="L94" title="All 4 branches missed.">				if (Dungeon.hero.belongings.contains(questItem) &amp;&amp; item() != null) {</span>
+<span class="nc" id="L95">					GameScene.show(new RewardWindow(item()));</span>
+				} else {
+<span class="nc" id="L97">					hide();</span>
+				}
+<span class="nc" id="L99">			}</span>
+		};
+<span class="nc" id="L101">		btnWand2.item(Wandmaker.Quest.wand2);</span>
+<span class="nc" id="L102">		btnWand2.setRect( btnWand1.right() + BTN_GAP, btnWand1.top(), BTN_SIZE, BTN_SIZE );</span>
+<span class="nc" id="L103">		add(btnWand2);</span>
+		
+<span class="nc" id="L105">		resize(WIDTH, (int) btnWand2.bottom());</span>
+<span class="nc" id="L106">	}</span>
+	
+	private void selectReward( Item reward ) {
+
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		if (reward == null){</span>
+<span class="nc" id="L111">			return;</span>
+		}
+
+<span class="nc" id="L114">		hide();</span>
+
+<span class="nc" id="L116">		questItem.detach( Dungeon.hero.belongings.backpack );</span>
+
+<span class="nc" id="L118">		reward.identify(false);</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">		if (reward.doPickUp( Dungeon.hero )) {</span>
+<span class="nc" id="L120">			GLog.i( Messages.capitalize(Messages.get(Dungeon.hero, &quot;you_now_have&quot;, reward.name())) );</span>
+		} else {
+<span class="nc" id="L122">			Dungeon.level.drop( reward, wandmaker.pos ).sprite.drop();</span>
+		}
+		
+<span class="nc" id="L125">		wandmaker.yell( Messages.get(this, &quot;farewell&quot;, Messages.titleCase(Dungeon.hero.name())) );</span>
+<span class="nc" id="L126">		wandmaker.destroy();</span>
+		
+<span class="nc" id="L128">		wandmaker.sprite.die();</span>
+		
+<span class="nc" id="L130">		Wandmaker.Quest.complete();</span>
+<span class="nc" id="L131">	}</span>
+
+	private class RewardWindow extends WndInfoItem {
+
+<span class="nc" id="L135">		public RewardWindow( Item item ) {</span>
+<span class="nc" id="L136">			super(item);</span>
+
+<span class="nc" id="L138">			RedButton btnConfirm = new RedButton(Messages.get(WndSadGhost.class, &quot;confirm&quot;)){</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L141">					RewardWindow.this.hide();</span>
+
+<span class="nc" id="L143">					selectReward( item );</span>
+<span class="nc" id="L144">				}</span>
+			};
+<span class="nc" id="L146">			btnConfirm.setRect(0, height+2, width/2-1, 16);</span>
+<span class="nc" id="L147">			add(btnConfirm);</span>
+
+<span class="nc" id="L149">			RedButton btnCancel = new RedButton(Messages.get(WndSadGhost.class, &quot;cancel&quot;)){</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L152">					hide();</span>
+<span class="nc" id="L153">				}</span>
+			};
+<span class="nc" id="L155">			btnCancel.setRect(btnConfirm.right()+2, height+2, btnConfirm.width(), 16);</span>
+<span class="nc" id="L156">			add(btnCancel);</span>
+
+<span class="nc" id="L158">			resize(width, (int)btnCancel.bottom());</span>
+<span class="nc" id="L159">		}</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

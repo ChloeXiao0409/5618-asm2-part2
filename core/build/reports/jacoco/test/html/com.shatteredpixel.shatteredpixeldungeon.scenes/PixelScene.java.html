@@ -1,0 +1,480 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PixelScene.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.scenes</a> &gt; <span class="el_source">PixelScene.java</span></div><h1>PixelScene.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.scenes;
+
+import com.badlogic.gdx.Input;
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.effects.BadgeBanner;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Tooltip;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.utils.Holiday;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndJournal;
+import com.watabou.gltextures.TextureCache;
+import com.watabou.glwrap.Blending;
+import com.watabou.input.ControllerHandler;
+import com.watabou.input.KeyEvent;
+import com.watabou.input.PointerEvent;
+import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.BitmapText.Font;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.ColorBlock;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Gizmo;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.Scene;
+import com.watabou.noosa.Visual;
+import com.watabou.noosa.ui.Component;
+import com.watabou.noosa.ui.Cursor;
+import com.watabou.utils.Callback;
+import com.watabou.utils.DeviceCompat;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Reflection;
+import com.watabou.utils.Signal;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L61">public class PixelScene extends Scene {</span>
+
+	// Minimum virtual display size for mobile portrait orientation
+	public static final float MIN_WIDTH_P = 135;
+	public static final float MIN_HEIGHT_P = 225;
+
+	// Minimum virtual display size for mobile landscape orientation
+	public static final float MIN_WIDTH_L = 240;
+	public static final float MIN_HEIGHT_L = 160;
+
+	// Minimum virtual display size for full desktop UI (landscape only)
+	//TODO maybe include another scale for mixed UI? might make it more accessible to mobile devices
+	// mixed UI has similar requirements to mobile landscape tbh... Maybe just merge them?
+	// mixed UI can possible be used on mobile portrait for tablets though.. Does that happen often?
+	public static final float MIN_WIDTH_FULL = 360;
+	public static final float MIN_HEIGHT_FULL = 200;
+
+<span class="nc" id="L78">	public static int defaultZoom = 0;</span>
+<span class="nc" id="L79">	public static int maxDefaultZoom = 0;</span>
+<span class="nc" id="L80">	public static int maxScreenZoom = 0;</span>
+	public static float minZoom;
+	public static float maxZoom;
+
+	public static Camera uiCamera;
+
+	//stylized 3x5 bitmapped pixel font. Only latin characters supported.
+	public static BitmapText.Font pixelFont;
+
+<span class="nc" id="L89">	protected boolean inGameScene = false;</span>
+
+	private Signal.Listener&lt;KeyEvent&gt; fullscreenListener;
+
+	@Override
+	public void create() {
+
+<span class="nc" id="L96">		super.create();</span>
+
+<span class="nc" id="L98">		GameScene.scene = null;</span>
+
+		//flush the texture cache whenever moving from ingame to menu, helps reduce memory load
+<span class="nc bnc" id="L101" title="All 4 branches missed.">		if (!inGameScene &amp;&amp; InterlevelScene.lastRegion != -1){</span>
+<span class="nc" id="L102">			InterlevelScene.lastRegion = -1;</span>
+<span class="nc" id="L103">			TextureCache.clear();</span>
+			//good time to clear holiday cache as well
+<span class="nc" id="L105">			Holiday.clearCachedHoliday();</span>
+		}
+
+		float minWidth, minHeight, scaleFactor;
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		if (SPDSettings.interfaceSize() &gt; 0){</span>
+<span class="nc" id="L110">			minWidth = MIN_WIDTH_FULL;</span>
+<span class="nc" id="L111">			minHeight = MIN_HEIGHT_FULL;</span>
+<span class="nc" id="L112">			scaleFactor = 3.75f;</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		} else if (landscape()) {</span>
+<span class="nc" id="L114">			minWidth = MIN_WIDTH_L;</span>
+<span class="nc" id="L115">			minHeight = MIN_HEIGHT_L;</span>
+<span class="nc" id="L116">			scaleFactor = 2.5f;</span>
+		} else {
+<span class="nc" id="L118">			minWidth = MIN_WIDTH_P;</span>
+<span class="nc" id="L119">			minHeight = MIN_HEIGHT_P;</span>
+<span class="nc" id="L120">			scaleFactor = 2.5f;</span>
+		}
+
+<span class="nc" id="L123">		maxDefaultZoom = (int)Math.min(Game.width/minWidth, Game.height/minHeight);</span>
+<span class="nc" id="L124">		maxScreenZoom = (int)Math.min(Game.dispWidth/minWidth, Game.dispHeight/minHeight);</span>
+<span class="nc" id="L125">		defaultZoom = SPDSettings.scale();</span>
+
+<span class="nc bnc" id="L127" title="All 4 branches missed.">		if (defaultZoom &lt; Math.ceil( Game.density * 2 ) || defaultZoom &gt; maxDefaultZoom){</span>
+<span class="nc" id="L128">			defaultZoom = (int)GameMath.gate(2, (int)Math.ceil( Game.density * scaleFactor ), maxDefaultZoom);</span>
+
+<span class="nc bnc" id="L130" title="All 4 branches missed.">			if (SPDSettings.interfaceSize() &gt; 0 &amp;&amp; defaultZoom &lt; (maxDefaultZoom+1)/2){</span>
+<span class="nc" id="L131">				defaultZoom = (maxDefaultZoom+1)/2;</span>
+			}
+		}
+
+<span class="nc" id="L135">		minZoom = 1;</span>
+<span class="nc" id="L136">		maxZoom = defaultZoom * 2;</span>
+
+<span class="nc" id="L138">		Camera.reset( new PixelCamera( defaultZoom ) );</span>
+
+<span class="nc" id="L140">		float uiZoom = defaultZoom;</span>
+<span class="nc" id="L141">		uiCamera = Camera.createFullscreen( uiZoom );</span>
+<span class="nc" id="L142">		Camera.add( uiCamera );</span>
+
+		// 3x5 (6)
+<span class="nc" id="L145">		pixelFont = Font.colorMarked(</span>
+<span class="nc" id="L146">			TextureCache.get( Assets.Fonts.PIXELFONT), 0x00000000, BitmapText.Font.LATIN_FULL );</span>
+<span class="nc" id="L147">		pixelFont.baseLine = 6;</span>
+<span class="nc" id="L148">		pixelFont.tracking = -1;</span>
+		
+		//set up the texture size which rendered text will use for any new glyphs.
+		int renderedTextPageSize;
+<span class="nc bnc" id="L152" title="All 2 branches missed.">		if (defaultZoom &lt;= 3){</span>
+<span class="nc" id="L153">			renderedTextPageSize = 256;</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		} else if (defaultZoom &lt;= 8){</span>
+<span class="nc" id="L155">			renderedTextPageSize = 512;</span>
+		} else {
+<span class="nc" id="L157">			renderedTextPageSize = 1024;</span>
+		}
+		//asian languages have many more unique characters, so increase texture size to anticipate that
+<span class="nc bnc" id="L160" title="All 2 branches missed.">		if (Messages.lang() == Languages.KOREAN ||</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">				Messages.lang() == Languages.CHINESE ||</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">				Messages.lang() == Languages.JAPANESE){</span>
+<span class="nc" id="L163">			renderedTextPageSize *= 2;</span>
+		}
+<span class="nc" id="L165">		Game.platform.setupFontGenerators(renderedTextPageSize, SPDSettings.systemFont());</span>
+
+<span class="nc" id="L167">		Tooltip.resetLastUsedTime();</span>
+
+<span class="nc" id="L169">		Cursor.setCustomCursor(Cursor.Type.DEFAULT, defaultZoom);</span>
+
+<span class="nc" id="L171">	}</span>
+
+	@Override
+	public void update() {
+		//we create this here so that it is last in the scene
+<span class="nc bnc" id="L176" title="All 4 branches missed.">		if (DeviceCompat.isDesktop() &amp;&amp; fullscreenListener == null){</span>
+<span class="nc" id="L177">			KeyEvent.addKeyListener(fullscreenListener = new Signal.Listener&lt;KeyEvent&gt;() {</span>
+
+				private boolean alt;
+				private boolean enter;
+
+				@Override
+				public boolean onSignal(KeyEvent keyEvent) {
+
+					//we don't use keybindings for these as we want the user to be able to
+					// bind these keys to other actions when pressed individually
+<span class="nc bnc" id="L187" title="All 2 branches missed.">					if (keyEvent.code == Input.Keys.ALT_RIGHT){</span>
+<span class="nc" id="L188">						alt = keyEvent.pressed;</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">					} else if (keyEvent.code == Input.Keys.ENTER){</span>
+<span class="nc" id="L190">						enter = keyEvent.pressed;</span>
+					}
+
+<span class="nc bnc" id="L193" title="All 4 branches missed.">					if (alt &amp;&amp; enter){</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">						SPDSettings.fullscreen(!SPDSettings.fullscreen());</span>
+<span class="nc" id="L195">						return true;</span>
+					}
+
+<span class="nc" id="L198">					return false;</span>
+				}
+			});
+		}
+
+<span class="nc" id="L203">		super.update();</span>
+		//20% deadzone
+<span class="nc bnc" id="L205" title="All 2 branches missed.">		if (!Cursor.isCursorCaptured()) {</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">			if (Math.abs(ControllerHandler.rightStickPosition.x) &gt;= 0.2f</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">					|| Math.abs(ControllerHandler.rightStickPosition.y) &gt;= 0.2f) {</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">				if (!ControllerHandler.controllerPointerActive()) {</span>
+<span class="nc" id="L209">					ControllerHandler.setControllerPointer(true);</span>
+				}
+
+<span class="nc" id="L212">				int sensitivity = SPDSettings.controllerPointerSensitivity() * 100;</span>
+
+				//cursor moves 100xsens scaled pixels per second at full speed
+				//35x at 50% movement, ~9x at 20% deadzone threshold
+<span class="nc" id="L216">				float xMove = (float) Math.pow(Math.abs(ControllerHandler.rightStickPosition.x), 1.5);</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">				if (ControllerHandler.rightStickPosition.x &lt; 0) xMove = -xMove;</span>
+
+<span class="nc" id="L219">				float yMove = (float) Math.pow(Math.abs(ControllerHandler.rightStickPosition.y), 1.5);</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">				if (ControllerHandler.rightStickPosition.y &lt; 0) yMove = -yMove;</span>
+
+<span class="nc" id="L222">				PointF virtualCursorPos = ControllerHandler.getControllerPointerPos();</span>
+<span class="nc" id="L223">				virtualCursorPos.x += defaultZoom * sensitivity * Game.elapsed * xMove;</span>
+<span class="nc" id="L224">				virtualCursorPos.y += defaultZoom * sensitivity * Game.elapsed * yMove;</span>
+
+<span class="nc" id="L226">				PointF cameraShift = new PointF();</span>
+
+<span class="nc bnc" id="L228" title="All 2 branches missed.">				if (virtualCursorPos.x &lt; 0){</span>
+<span class="nc" id="L229">					cameraShift.x = virtualCursorPos.x;</span>
+<span class="nc" id="L230">					virtualCursorPos.x = 0;</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">				} else if (virtualCursorPos.x &gt; Camera.main.screenWidth()){</span>
+<span class="nc" id="L232">					cameraShift.x = (virtualCursorPos.x - Camera.main.screenWidth());</span>
+<span class="nc" id="L233">					virtualCursorPos.x = Camera.main.screenWidth();</span>
+				}
+
+<span class="nc bnc" id="L236" title="All 2 branches missed.">				if (virtualCursorPos.y &lt; 0){</span>
+<span class="nc" id="L237">					cameraShift.y = virtualCursorPos.y;</span>
+<span class="nc" id="L238">					virtualCursorPos.y = 0;</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">				} else if (virtualCursorPos.y &gt; Camera.main.screenHeight()){</span>
+<span class="nc" id="L240">					cameraShift.y = (virtualCursorPos.y - Camera.main.screenHeight());</span>
+<span class="nc" id="L241">					virtualCursorPos.y = Camera.main.screenHeight();</span>
+				}
+
+<span class="nc" id="L244">				cameraShift.invScale(Camera.main.zoom);</span>
+<span class="nc" id="L245">				cameraShift.x *= Camera.main.edgeScroll.x;</span>
+<span class="nc" id="L246">				cameraShift.y *= Camera.main.edgeScroll.y;</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">				if (cameraShift.length() &gt; 0){</span>
+<span class="nc" id="L248">					Camera.main.shift(cameraShift);</span>
+				}
+<span class="nc" id="L250">				ControllerHandler.updateControllerPointer(virtualCursorPos, true);</span>
+			}
+		}
+<span class="nc" id="L253">	}</span>
+
+<span class="nc" id="L255">	private Image cursor = null;</span>
+
+	@Override
+	public synchronized void draw() {
+<span class="nc" id="L259">		super.draw();</span>
+
+		//cursor is separate from the rest of the scene, always appears above
+<span class="nc bnc" id="L262" title="All 2 branches missed.">		if (ControllerHandler.controllerPointerActive()){</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">			if (cursor == null){</span>
+<span class="nc" id="L264">				cursor = new Image(Cursor.Type.CONTROLLER.file);</span>
+			}
+
+<span class="nc" id="L267">			PointF virtualCursorPos = ControllerHandler.getControllerPointerPos();</span>
+<span class="nc" id="L268">			cursor.x = (virtualCursorPos.x / defaultZoom) - cursor.width()/2f;</span>
+<span class="nc" id="L269">			cursor.y = (virtualCursorPos.y / defaultZoom) - cursor.height()/2f;</span>
+<span class="nc" id="L270">			cursor.camera = uiCamera;</span>
+<span class="nc" id="L271">			align(cursor);</span>
+<span class="nc" id="L272">			cursor.draw();</span>
+		}
+<span class="nc" id="L274">	}</span>
+
+	//this system only preserves windows with a public zero-arg constructor
+<span class="nc" id="L277">	private static ArrayList&lt;Class&lt;?extends Window&gt;&gt; savedWindows = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L278">	private static Class&lt;?extends PixelScene&gt; savedClass = null;</span>
+	
+	public synchronized void saveWindows(){
+<span class="nc bnc" id="L281" title="All 2 branches missed.">		if (members == null) return;</span>
+
+<span class="nc" id="L283">		savedWindows.clear();</span>
+<span class="nc" id="L284">		savedClass = getClass();</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">		for (Gizmo g : members.toArray(new Gizmo[0])){</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">			if (g instanceof Window){</span>
+<span class="nc" id="L287">				savedWindows.add((Class&lt;? extends Window&gt;) g.getClass());</span>
+			}
+		}
+<span class="nc" id="L290">	}</span>
+	
+	public synchronized void restoreWindows(){
+<span class="nc bnc" id="L293" title="All 2 branches missed.">		if (getClass().equals(savedClass)){</span>
+<span class="nc bnc" id="L294" title="All 2 branches missed.">			for (Class&lt;?extends Window&gt; w : savedWindows){</span>
+				try{
+<span class="nc" id="L296">					add(Reflection.newInstanceUnhandled(w));</span>
+<span class="nc" id="L297">				} catch (Exception e){</span>
+					//just eat the exception
+<span class="nc" id="L299">				}</span>
+<span class="nc" id="L300">			}</span>
+		}
+<span class="nc" id="L302">		savedWindows.clear();</span>
+<span class="nc" id="L303">	}</span>
+
+	@Override
+	public void destroy() {
+<span class="nc" id="L307">		super.destroy();</span>
+<span class="nc" id="L308">		PointerEvent.clearListeners();</span>
+<span class="nc bnc" id="L309" title="All 2 branches missed.">		if (fullscreenListener != null){</span>
+<span class="nc" id="L310">			KeyEvent.removeKeyListener(fullscreenListener);</span>
+		}
+<span class="nc bnc" id="L312" title="All 2 branches missed.">		if (cursor != null){</span>
+<span class="nc" id="L313">			cursor.destroy();</span>
+		}
+<span class="nc" id="L315">	}</span>
+
+	public static boolean landscape(){
+<span class="nc bnc" id="L318" title="All 4 branches missed.">		return SPDSettings.interfaceSize() &gt; 0 || Game.width &gt; Game.height;</span>
+	}
+
+
+	public static RenderedTextBlock renderTextBlock(int size ){
+<span class="nc" id="L323">		return renderTextBlock(&quot;&quot;, size);</span>
+	}
+
+	public static RenderedTextBlock renderTextBlock(String text, int size ){
+<span class="nc" id="L327">		RenderedTextBlock result = new RenderedTextBlock( text, size*defaultZoom);</span>
+<span class="nc" id="L328">		result.zoom(1/(float)defaultZoom);</span>
+<span class="nc" id="L329">		return result;</span>
+	}
+
+	/**
+	 * These methods align UI elements to device pixels.
+	 * e.g. if we have a scale of 3x then valid positions are #.0, #.33, #.67
+	 */
+
+	public static float align( float pos ) {
+<span class="nc" id="L338">		return Math.round(pos * defaultZoom) / (float)defaultZoom;</span>
+	}
+
+	public static float align( Camera camera, float pos ) {
+<span class="nc" id="L342">		return Math.round(pos * camera.zoom) / camera.zoom;</span>
+	}
+
+	public static void align( Visual v ) {
+<span class="nc" id="L346">		v.x = align( v.x );</span>
+<span class="nc" id="L347">		v.y = align( v.y );</span>
+<span class="nc" id="L348">	}</span>
+
+	public static void align( Component c ){
+<span class="nc" id="L351">		c.setPos(align(c.left()), align(c.top()));</span>
+<span class="nc" id="L352">	}</span>
+
+<span class="nc" id="L354">	public static boolean noFade = false;</span>
+	protected void fadeIn() {
+<span class="nc bnc" id="L356" title="All 2 branches missed.">		if (noFade) {</span>
+<span class="nc" id="L357">			noFade = false;</span>
+		} else {
+<span class="nc" id="L359">			fadeIn( 0xFF000000, false );</span>
+		}
+<span class="nc" id="L361">	}</span>
+	
+	protected void fadeIn( int color, boolean light ) {
+<span class="nc" id="L364">		add( new Fader( color, light ) );</span>
+<span class="nc" id="L365">	}</span>
+	
+	public static void showBadge( Badges.Badge badge ) {
+<span class="nc" id="L368">		Game.runOnRenderThread(new Callback() {</span>
+			@Override
+			public void call() {
+<span class="nc" id="L371">				Scene s = Game.scene();</span>
+<span class="nc bnc" id="L372" title="All 2 branches missed.">				if (s != null) {</span>
+<span class="nc" id="L373">					BadgeBanner banner = BadgeBanner.show(badge.image);</span>
+<span class="nc" id="L374">					s.add(banner);</span>
+<span class="nc" id="L375">					float offset = Camera.main.centerOffset.y;</span>
+
+<span class="nc" id="L377">					int left = uiCamera.width/2 - BadgeBanner.SIZE/2;</span>
+<span class="nc" id="L378">					left -= (BadgeBanner.SIZE * BadgeBanner.DEFAULT_SCALE * (BadgeBanner.showing.size()-1))/2;</span>
+<span class="nc bnc" id="L379" title="All 2 branches missed.">					for (int i = 0; i &lt; BadgeBanner.showing.size(); i++){</span>
+<span class="nc" id="L380">						banner = BadgeBanner.showing.get(i);</span>
+<span class="nc" id="L381">						banner.camera = uiCamera;</span>
+<span class="nc" id="L382">						banner.x = align(banner.camera, left);</span>
+<span class="nc" id="L383">						banner.y = align(uiCamera, (uiCamera.height - banner.height) / 2 - banner.height / 2 - 16 - offset);</span>
+<span class="nc" id="L384">						left += BadgeBanner.SIZE * BadgeBanner.DEFAULT_SCALE;</span>
+					}
+
+<span class="nc" id="L387">					WndJournal.last_index = 4;</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">					WndJournal.BadgesTab.global = badge.type != Badges.BadgeType.LOCAL;</span>
+
+				}
+<span class="nc" id="L391">			}</span>
+		});
+<span class="nc" id="L393">	}</span>
+	
+	public static void shake( float magnitude, float duration){
+<span class="nc" id="L396">		magnitude *= SPDSettings.screenShake();</span>
+<span class="nc" id="L397">		Camera.main.shake(magnitude, duration);</span>
+<span class="nc" id="L398">	}</span>
+	
+	protected static class Fader extends ColorBlock {
+		
+<span class="nc" id="L402">		private static float FADE_TIME = 1f;</span>
+		
+		private boolean light;
+		
+		private float time;
+
+		private static Fader INSTANCE;
+		
+		public Fader( int color, boolean light ) {
+<span class="nc" id="L411">			super( uiCamera.width, uiCamera.height, color );</span>
+			
+<span class="nc" id="L413">			this.light = light;</span>
+			
+<span class="nc" id="L415">			camera = uiCamera;</span>
+			
+<span class="nc" id="L417">			alpha( 1f );</span>
+<span class="nc" id="L418">			time = FADE_TIME;</span>
+
+<span class="nc bnc" id="L420" title="All 2 branches missed.">			if (INSTANCE != null){</span>
+<span class="nc" id="L421">				INSTANCE.killAndErase();</span>
+			}
+<span class="nc" id="L423">			INSTANCE = this;</span>
+<span class="nc" id="L424">		}</span>
+		
+		@Override
+		public void update() {
+			
+<span class="nc" id="L429">			super.update();</span>
+			
+<span class="nc bnc" id="L431" title="All 2 branches missed.">			if ((time -= Game.elapsed) &lt;= 0) {</span>
+<span class="nc" id="L432">				alpha( 0f );</span>
+<span class="nc" id="L433">				parent.remove( this );</span>
+<span class="nc" id="L434">				destroy();</span>
+<span class="nc bnc" id="L435" title="All 2 branches missed.">				if (INSTANCE == this) {</span>
+<span class="nc" id="L436">					INSTANCE = null;</span>
+				}
+			} else {
+<span class="nc" id="L439">				alpha( time / FADE_TIME );</span>
+			}
+<span class="nc" id="L441">		}</span>
+		
+		@Override
+		public void draw() {
+<span class="nc bnc" id="L445" title="All 2 branches missed.">			if (light) {</span>
+<span class="nc" id="L446">				Blending.setLightMode();</span>
+<span class="nc" id="L447">				super.draw();</span>
+<span class="nc" id="L448">				Blending.setNormalMode();</span>
+			} else {
+<span class="nc" id="L450">				super.draw();</span>
+			}
+<span class="nc" id="L452">		}</span>
+	}
+	
+	private static class PixelCamera extends Camera {
+		
+		public PixelCamera( float zoom ) {
+<span class="nc" id="L458">			super(</span>
+<span class="nc" id="L459">				(int)(Game.width - Math.ceil( Game.width / zoom ) * zoom) / 2,</span>
+<span class="nc" id="L460">				(int)(Game.height - Math.ceil( Game.height / zoom ) * zoom) / 2,</span>
+<span class="nc" id="L461">				(int)Math.ceil( Game.width / zoom ),</span>
+<span class="nc" id="L462">				(int)Math.ceil( Game.height / zoom ), zoom );</span>
+<span class="nc" id="L463">			fullScreen = true;</span>
+<span class="nc" id="L464">		}</span>
+		
+		@Override
+		protected void updateMatrix() {
+<span class="nc" id="L468">			float sx = align( this, scroll.x + shakeX );</span>
+<span class="nc" id="L469">			float sy = align( this, scroll.y + shakeY );</span>
+			
+<span class="nc" id="L471">			matrix[0] = +zoom * invW2;</span>
+<span class="nc" id="L472">			matrix[5] = -zoom * invH2;</span>
+			
+<span class="nc" id="L474">			matrix[12] = -1 + x * invW2 - sx * matrix[0];</span>
+<span class="nc" id="L475">			matrix[13] = +1 - y * invH2 - sy * matrix[5];</span>
+			
+<span class="nc" id="L477">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

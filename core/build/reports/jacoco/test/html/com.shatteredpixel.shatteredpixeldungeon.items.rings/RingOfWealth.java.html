@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RingOfWealth.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.rings</a> &gt; <span class="el_source">RingOfWealth.java</span></div><h1>RingOfWealth.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.rings;
+
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.CounterBuff;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Gold;
+import com.shatteredpixel.shatteredpixeldungeon.items.Honeypot;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfExperience;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.brews.UnstableBrew;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.ExoticPotion;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfDivineInspiration;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTransmutation;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ExoticScroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfMetamorphosis;
+import com.shatteredpixel.shatteredpixeldungeon.items.spells.UnstableSpell;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfEnchantment;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.ExoticCrystals;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.watabou.noosa.Visual;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L56">public class RingOfWealth extends Ring {</span>
+
+	{
+<span class="nc" id="L59">		icon = ItemSpriteSheet.Icons.RING_WEALTH;</span>
+<span class="nc" id="L60">		buffClass = Wealth.class;</span>
+	}
+
+<span class="nc" id="L63">	private float triesToDrop = Float.MIN_VALUE;</span>
+<span class="nc" id="L64">	private int dropsToRare = Integer.MIN_VALUE;</span>
+	
+	public String statsInfo() {
+<span class="nc bnc" id="L67" title="All 2 branches missed.">		if (isIdentified()){</span>
+<span class="nc" id="L68">			String info = Messages.get(this, &quot;stats&quot;,</span>
+<span class="nc" id="L69">					Messages.decimalFormat(&quot;#.##&quot;, 100f * (Math.pow(1.20f, soloBuffedBonus()) - 1f)));</span>
+<span class="nc bnc" id="L70" title="All 4 branches missed.">			if (isEquipped(Dungeon.hero) &amp;&amp; soloBuffedBonus() != combinedBuffedBonus(Dungeon.hero)){</span>
+<span class="nc" id="L71">				info += &quot;\n\n&quot; + Messages.get(this, &quot;combined_stats&quot;,</span>
+<span class="nc" id="L72">						Messages.decimalFormat(&quot;#.##&quot;, 100f * (Math.pow(1.20f, combinedBuffedBonus(Dungeon.hero)) - 1f)));</span>
+			}
+<span class="nc" id="L74">			return info;</span>
+		} else {
+<span class="nc" id="L76">			return Messages.get(this, &quot;typical_stats&quot;, Messages.decimalFormat(&quot;#.##&quot;, 20f));</span>
+		}
+	}
+
+	public String upgradeStat1(int level){
+<span class="nc bnc" id="L81" title="All 4 branches missed.">		if (cursed &amp;&amp; cursedKnown) level = Math.min(-1, level-3);</span>
+<span class="nc" id="L82">		return Messages.decimalFormat(&quot;#.##&quot;, 100f * (Math.pow(1.2f, level+1)-1f)) + &quot;%&quot;;</span>
+	}
+
+	private static final String TRIES_TO_DROP = &quot;tries_to_drop&quot;;
+	private static final String DROPS_TO_RARE = &quot;drops_to_rare&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L90">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L91">		bundle.put(TRIES_TO_DROP, triesToDrop);</span>
+<span class="nc" id="L92">		bundle.put(DROPS_TO_RARE, dropsToRare);</span>
+<span class="nc" id="L93">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L97">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L98">		triesToDrop = bundle.getFloat(TRIES_TO_DROP);</span>
+<span class="nc" id="L99">		dropsToRare = bundle.getInt(DROPS_TO_RARE);</span>
+<span class="nc" id="L100">	}</span>
+
+	@Override
+	protected RingBuff buff( ) {
+<span class="nc" id="L104">		return new Wealth();</span>
+	}
+	
+	public static float dropChanceMultiplier( Char target ){
+<span class="nc" id="L108">		return (float)Math.pow(1.20, getBuffedBonus(target, Wealth.class));</span>
+	}
+	
+	public static ArrayList&lt;Item&gt; tryForBonusDrop(Char target, int tries ){
+<span class="nc" id="L112">		int bonus = getBuffedBonus(target, Wealth.class);</span>
+
+<span class="nc bnc" id="L114" title="All 2 branches missed.">		if (bonus &lt;= 0) return null;</span>
+
+<span class="nc" id="L116">		CounterBuff triesToDrop = target.buff(TriesToDropTracker.class);</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		if (triesToDrop == null){</span>
+<span class="nc" id="L118">			triesToDrop = Buff.affect(target, TriesToDropTracker.class);</span>
+<span class="nc" id="L119">			triesToDrop.countUp( Random.NormalIntRange(0, 20) );</span>
+		}
+
+<span class="nc" id="L122">		CounterBuff dropsToEquip = target.buff(DropsToEquipTracker.class);</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		if (dropsToEquip == null){</span>
+<span class="nc" id="L124">			dropsToEquip = Buff.affect(target, DropsToEquipTracker.class);</span>
+<span class="nc" id="L125">			dropsToEquip.countUp( Random.NormalIntRange(5, 10) );</span>
+		}
+
+		//now handle reward logic
+<span class="nc" id="L129">		ArrayList&lt;Item&gt; drops = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L131">		triesToDrop.countDown(tries);</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">		while ( triesToDrop.count() &lt;= 0 ){</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">			if (dropsToEquip.count() &lt;= 0){</span>
+<span class="nc" id="L134">				int equipBonus = 0;</span>
+
+				//A second ring of wealth can be at most +1 when calculating wealth bonus for equips
+				//This is to prevent using an upgraded wealth to farm another upgraded wealth and
+				//using the two to get substantially more upgrade value than intended
+<span class="nc bnc" id="L139" title="All 2 branches missed.">				for (Wealth w : target.buffs(Wealth.class)){</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">					if (w.buffedLvl() &gt; equipBonus){</span>
+<span class="nc" id="L141">						equipBonus = w.buffedLvl() + Math.min(equipBonus, 2);</span>
+					} else {
+<span class="nc" id="L143">						equipBonus += Math.min(w.buffedLvl(), 2);</span>
+					}
+<span class="nc" id="L145">				}</span>
+
+				Item i;
+				do {
+<span class="nc" id="L149">					i = genEquipmentDrop(equipBonus - 1);</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">				} while (Challenges.isItemBlocked(i));</span>
+<span class="nc" id="L151">				drops.add(i);</span>
+<span class="nc" id="L152">				dropsToEquip.countUp(Random.NormalIntRange(5, 10));</span>
+<span class="nc" id="L153">			} else {</span>
+				Item i;
+				do {
+<span class="nc" id="L156">					i = genConsumableDrop(bonus - 1);</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">				} while (Challenges.isItemBlocked(i));</span>
+<span class="nc" id="L158">				drops.add(i);</span>
+<span class="nc" id="L159">				dropsToEquip.countDown(1);</span>
+			}
+<span class="nc" id="L161">			triesToDrop.countUp( Random.NormalIntRange(0, 20) );</span>
+		}
+		
+<span class="nc" id="L164">		return drops;</span>
+	}
+
+	//used for visuals
+	// 1/2/3 used for low/mid/high tier consumables
+	// 3 used for +0-1 equips, 4 used for +2 or higher equips
+<span class="nc" id="L170">	private static int latestDropTier = 0;</span>
+
+	public static void showFlareForBonusDrop( Visual vis ){
+<span class="nc bnc" id="L173" title="All 4 branches missed.">		if (vis == null || vis.parent == null) return;</span>
+<span class="nc bnc" id="L174" title="All 5 branches missed.">		switch (latestDropTier){</span>
+			default:
+<span class="nc" id="L176">				break; //do nothing</span>
+			case 1:
+<span class="nc" id="L178">				new Flare(6, 20).color(0x00FF00, true).show(vis, 3f);</span>
+<span class="nc" id="L179">				break;</span>
+			case 2:
+<span class="nc" id="L181">				new Flare(6, 24).color(0x00AAFF, true).show(vis, 3.33f);</span>
+<span class="nc" id="L182">				break;</span>
+			case 3:
+<span class="nc" id="L184">				new Flare(6, 28).color(0xAA00FF, true).show(vis, 3.67f);</span>
+<span class="nc" id="L185">				break;</span>
+			case 4:
+<span class="nc" id="L187">				new Flare(6, 32).color(0xFFAA00, true).show(vis, 4f);</span>
+				break;
+		}
+<span class="nc" id="L190">		latestDropTier = 0;</span>
+<span class="nc" id="L191">	}</span>
+	
+	public static Item genConsumableDrop(int level) {
+<span class="nc" id="L194">		float roll = Random.Float();</span>
+		//60% chance - 4% per level. Starting from +15: 0%
+<span class="nc bnc" id="L196" title="All 2 branches missed.">		if (roll &lt; (0.6f - 0.04f * level)) {</span>
+<span class="nc" id="L197">			latestDropTier = 1;</span>
+<span class="nc" id="L198">			return genLowValueConsumable();</span>
+		//30% chance + 2% per level. Starting from +15: 60%-2%*(lvl-15)
+<span class="nc bnc" id="L200" title="All 2 branches missed.">		} else if (roll &lt; (0.9f - 0.02f * level)) {</span>
+<span class="nc" id="L201">			latestDropTier = 2;</span>
+<span class="nc" id="L202">			return genMidValueConsumable();</span>
+		//10% chance + 2% per level. Starting from +15: 40%+2%*(lvl-15)
+		} else {
+<span class="nc" id="L205">			latestDropTier = 3;</span>
+<span class="nc" id="L206">			return genHighValueConsumable();</span>
+		}
+	}
+
+	private static Item genLowValueConsumable(){
+<span class="nc bnc" id="L211" title="All 4 branches missed.">		switch (Random.Int(4)){</span>
+			case 0: default:
+<span class="nc" id="L213">				Item i = new Gold().random();</span>
+<span class="nc" id="L214">				return i.quantity(i.quantity()/2);</span>
+			case 1:
+<span class="nc" id="L216">				return Generator.randomUsingDefaults(Generator.Category.STONE);</span>
+			case 2:
+<span class="nc" id="L218">				return Generator.randomUsingDefaults(Generator.Category.POTION);</span>
+			case 3:
+<span class="nc" id="L220">				return Generator.randomUsingDefaults(Generator.Category.SCROLL);</span>
+		}
+	}
+
+	private static Item genMidValueConsumable(){
+<span class="nc bnc" id="L225" title="All 6 branches missed.">		switch (Random.Int(6)){</span>
+			case 0: default:
+<span class="nc" id="L227">				Item i = genLowValueConsumable();</span>
+<span class="nc" id="L228">				return i.quantity(i.quantity()*2);</span>
+			case 1:
+<span class="nc" id="L230">				i = Generator.randomUsingDefaults(Generator.Category.POTION);</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">				if (!(i instanceof ExoticPotion)) {</span>
+<span class="nc" id="L232">					return Reflection.newInstance(ExoticPotion.regToExo.get(i.getClass()));</span>
+				} else {
+<span class="nc" id="L234">					return Reflection.newInstance(i.getClass());</span>
+				}
+			case 2:
+<span class="nc" id="L237">				i = Generator.randomUsingDefaults(Generator.Category.SCROLL);</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">				if (!(i instanceof ExoticScroll)){</span>
+<span class="nc" id="L239">					return Reflection.newInstance(ExoticScroll.regToExo.get(i.getClass()));</span>
+				} else {
+<span class="nc" id="L241">					return Reflection.newInstance(i.getClass());</span>
+				}
+			case 3:
+<span class="nc bnc" id="L244" title="All 2 branches missed.">				return Random.Int(2) == 0 ? new UnstableBrew() : new UnstableSpell();</span>
+			case 4:
+<span class="nc" id="L246">				return new Bomb();</span>
+			case 5:
+<span class="nc" id="L248">				return new Honeypot();</span>
+		}
+	}
+
+	private static Item genHighValueConsumable(){
+<span class="nc bnc" id="L253" title="All 4 branches missed.">		switch (Random.Int(4)){</span>
+			case 0: default:
+<span class="nc" id="L255">				Item i = genMidValueConsumable();</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">				if (i instanceof Bomb){</span>
+<span class="nc" id="L257">					return new Bomb.DoubleBomb();</span>
+				} else {
+<span class="nc" id="L259">					return i.quantity(i.quantity()*2);</span>
+				}
+			case 1:
+<span class="nc" id="L262">				return new StoneOfEnchantment();</span>
+			case 2:
+<span class="nc bnc" id="L264" title="All 2 branches missed.">				return Random.Float() &lt; ExoticCrystals.consumableExoticChance() ? new PotionOfDivineInspiration() : new PotionOfExperience();</span>
+			case 3:
+<span class="nc bnc" id="L266" title="All 2 branches missed.">				return Random.Float() &lt; ExoticCrystals.consumableExoticChance() ? new ScrollOfMetamorphosis() : new ScrollOfTransmutation();</span>
+		}
+	}
+
+	private static Item genEquipmentDrop( int level ){
+		Item result;
+		//each upgrade increases depth used for calculating drops by 1
+<span class="nc" id="L273">		int floorset = (Dungeon.depth + level)/5;</span>
+<span class="nc bnc" id="L274" title="All 4 branches missed.">		switch (Random.Int(5)){</span>
+			default: case 0: case 1:
+<span class="nc" id="L276">				Weapon w = Generator.randomWeapon(floorset, true);</span>
+<span class="nc bnc" id="L277" title="All 4 branches missed.">				if (!w.hasGoodEnchant() &amp;&amp; Random.Int(10) &lt; level)      w.enchant();</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">				else if (w.hasCurseEnchant())                           w.enchant(null);</span>
+<span class="nc" id="L279">				result = w;</span>
+<span class="nc" id="L280">				break;</span>
+			case 2:
+<span class="nc" id="L282">				Armor a = Generator.randomArmor(floorset);</span>
+<span class="nc bnc" id="L283" title="All 4 branches missed.">				if (!a.hasGoodGlyph() &amp;&amp; Random.Int(10) &lt; level)        a.inscribe();</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">				else if (a.hasCurseGlyph())                             a.inscribe(null);</span>
+<span class="nc" id="L285">				result = a;</span>
+<span class="nc" id="L286">				break;</span>
+			case 3:
+<span class="nc" id="L288">				result = Generator.randomUsingDefaults(Generator.Category.RING);</span>
+<span class="nc" id="L289">				break;</span>
+			case 4:
+<span class="nc" id="L291">				result = Generator.random(Generator.Category.ARTIFACT);</span>
+				break;
+		}
+		//minimum level is 1/2/3/4/5/6 when ring level is 1/3/5/7/9/11
+<span class="nc bnc" id="L295" title="All 2 branches missed.">		if (result.isUpgradable()){</span>
+<span class="nc" id="L296">			int minLevel = (level+1)/2;</span>
+<span class="nc bnc" id="L297" title="All 2 branches missed.">			if (result.level() &lt; minLevel){</span>
+<span class="nc" id="L298">				result.level(minLevel);</span>
+			}
+		}
+<span class="nc" id="L301">		result.cursed = false;</span>
+<span class="nc" id="L302">		result.cursedKnown = true;</span>
+<span class="nc bnc" id="L303" title="All 2 branches missed.">		if (result.level() &gt;= 2) {</span>
+<span class="nc" id="L304">			latestDropTier = 4;</span>
+		} else {
+<span class="nc" id="L306">			latestDropTier = 3;</span>
+		}
+<span class="nc" id="L308">		return result;</span>
+	}
+
+<span class="nc" id="L311">	public class Wealth extends RingBuff {</span>
+	}
+
+<span class="nc" id="L314">	public static class TriesToDropTracker extends CounterBuff {</span>
+		{
+<span class="nc" id="L316">			revivePersists = true;</span>
+<span class="nc" id="L317">		}</span>
+	}
+
+<span class="nc" id="L320">	public static class DropsToEquipTracker extends CounterBuff {</span>
+		{
+<span class="nc" id="L322">			revivePersists = true;</span>
+<span class="nc" id="L323">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

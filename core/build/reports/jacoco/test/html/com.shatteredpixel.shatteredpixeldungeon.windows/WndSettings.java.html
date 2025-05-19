@@ -1,0 +1,1312 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WndSettings.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.windows</a> &gt; <span class="el_source">WndSettings.java</span></div><h1>WndSettings.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.windows;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.services.news.News;
+import com.shatteredpixel.shatteredpixeldungeon.services.updates.Updates;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.CheckBox;
+import com.shatteredpixel.shatteredpixeldungeon.ui.GameLog;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.OptionSlider;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Toolbar;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.watabou.input.ControllerHandler;
+import com.watabou.noosa.ColorBlock;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.ui.Component;
+import com.watabou.utils.DeviceCompat;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Locale;
+
+public class WndSettings extends WndTabbed {
+
+	private static final int WIDTH_P	    = 122;
+	private static final int WIDTH_L	    = 223;
+
+	private static final int SLIDER_HEIGHT	= 21;
+	private static final int BTN_HEIGHT	    = 16;
+	private static final float GAP          = 1;
+
+	private DisplayTab  display;
+	private UITab       ui;
+	private InputTab    input;
+	private DataTab     data;
+	private AudioTab    audio;
+	private LangsTab    langs;
+
+<span class="nc" id="L72">	public static int last_index = 0;</span>
+
+	public WndSettings() {
+<span class="nc" id="L75">		super();</span>
+
+		float height;
+
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		int width = PixelScene.landscape() ? WIDTH_L : WIDTH_P;</span>
+
+<span class="nc" id="L81">		display = new DisplayTab();</span>
+<span class="nc" id="L82">		display.setSize(width, 0);</span>
+<span class="nc" id="L83">		height = display.height();</span>
+<span class="nc" id="L84">		add( display );</span>
+
+<span class="nc" id="L86">		add( new IconTab(Icons.get(Icons.DISPLAY)){</span>
+			@Override
+			protected void select(boolean value) {
+<span class="nc" id="L89">				super.select(value);</span>
+<span class="nc" id="L90">				display.visible = display.active = value;</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">				if (value) last_index = 0;</span>
+<span class="nc" id="L92">			}</span>
+		});
+
+<span class="nc" id="L95">		ui = new UITab();</span>
+<span class="nc" id="L96">		ui.setSize(width, 0);</span>
+<span class="nc" id="L97">		height = Math.max(height, ui.height());</span>
+<span class="nc" id="L98">		add( ui );</span>
+
+<span class="nc" id="L100">		add( new IconTab(Icons.get(Icons.PREFS)){</span>
+			@Override
+			protected void select(boolean value) {
+<span class="nc" id="L103">				super.select(value);</span>
+<span class="nc" id="L104">				ui.visible = ui.active = value;</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">				if (value) last_index = 1;</span>
+<span class="nc" id="L106">			}</span>
+		});
+
+<span class="nc" id="L109">		input = new InputTab();</span>
+<span class="nc" id="L110">		input.setSize(width, 0);</span>
+<span class="nc" id="L111">		height = Math.max(height, input.height());</span>
+
+<span class="nc bnc" id="L113" title="All 4 branches missed.">		if (DeviceCompat.hasHardKeyboard() || ControllerHandler.isControllerConnected()) {</span>
+<span class="nc" id="L114">			add( input );</span>
+			Image icon;
+<span class="nc bnc" id="L116" title="All 4 branches missed.">			if (ControllerHandler.controllerActive || !DeviceCompat.hasHardKeyboard()){</span>
+<span class="nc" id="L117">				icon = Icons.get(Icons.CONTROLLER);</span>
+			} else {
+<span class="nc" id="L119">				icon = Icons.get(Icons.KEYBOARD);</span>
+			}
+<span class="nc" id="L121">			add(new IconTab(icon) {</span>
+				@Override
+				protected void select(boolean value) {
+<span class="nc" id="L124">					super.select(value);</span>
+<span class="nc" id="L125">					input.visible = input.active = value;</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">					if (value) last_index = 2;</span>
+<span class="nc" id="L127">				}</span>
+			});
+		}
+
+<span class="nc" id="L131">		data = new DataTab();</span>
+<span class="nc" id="L132">		data.setSize(width, 0);</span>
+<span class="nc" id="L133">		height = Math.max(height, data.height());</span>
+<span class="nc" id="L134">		add( data );</span>
+
+<span class="nc" id="L136">		add( new IconTab(Icons.get(Icons.DATA)){</span>
+			@Override
+			protected void select(boolean value) {
+<span class="nc" id="L139">				super.select(value);</span>
+<span class="nc" id="L140">				data.visible = data.active = value;</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">				if (value) last_index = 3;</span>
+<span class="nc" id="L142">			}</span>
+		});
+
+<span class="nc" id="L145">		audio = new AudioTab();</span>
+<span class="nc" id="L146">		audio.setSize(width, 0);</span>
+<span class="nc" id="L147">		height = Math.max(height, audio.height());</span>
+<span class="nc" id="L148">		add( audio );</span>
+
+<span class="nc" id="L150">		add( new IconTab(Icons.get(Icons.AUDIO)){</span>
+			@Override
+			protected void select(boolean value) {
+<span class="nc" id="L153">				super.select(value);</span>
+<span class="nc" id="L154">				audio.visible = audio.active = value;</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">				if (value) last_index = 4;</span>
+<span class="nc" id="L156">			}</span>
+		});
+
+<span class="nc" id="L159">		langs = new LangsTab();</span>
+<span class="nc" id="L160">		langs.setSize(width, 0);</span>
+<span class="nc" id="L161">		height = Math.max(height, langs.height());</span>
+<span class="nc" id="L162">		add( langs );</span>
+
+
+<span class="nc" id="L165">		IconTab langsTab = new IconTab(Icons.get(Icons.LANGS)){</span>
+			@Override
+			protected void select(boolean value) {
+<span class="nc" id="L168">				super.select(value);</span>
+<span class="nc" id="L169">				langs.visible = langs.active = value;</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">				if (value) last_index = 5;</span>
+<span class="nc" id="L171">			}</span>
+
+			@Override
+			protected void createChildren() {
+<span class="nc" id="L175">				super.createChildren();</span>
+<span class="nc bnc" id="L176" title="All 3 branches missed.">				switch(Messages.lang().status()){</span>
+					case X_UNFINISH:
+<span class="nc" id="L178">						icon.hardlight(1.5f, 0, 0);</span>
+<span class="nc" id="L179">						break;</span>
+					case __UNREVIEW:
+<span class="nc" id="L181">						icon.hardlight(1.5f, 0.75f, 0f);</span>
+						break;
+				}
+<span class="nc" id="L184">			}</span>
+
+		};
+<span class="nc" id="L187">		add( langsTab );</span>
+
+<span class="nc" id="L189">		resize(width, (int)Math.ceil(height));</span>
+
+<span class="nc" id="L191">		layoutTabs();</span>
+
+<span class="nc bnc" id="L193" title="All 4 branches missed.">		if (tabs.size() == 5 &amp;&amp; last_index &gt;= 3){</span>
+			//input tab isn't visible
+<span class="nc" id="L195">			select(last_index-1);</span>
+		} else {
+<span class="nc" id="L197">			select(last_index);</span>
+		}
+
+<span class="nc" id="L200">	}</span>
+
+	@Override
+	public void hide() {
+<span class="nc" id="L204">		super.hide();</span>
+		//resets generators because there's no need to retain chars for languages not selected
+<span class="nc" id="L206">		ShatteredPixelDungeon.seamlessResetScene(new Game.SceneChangeCallback() {</span>
+			@Override
+			public void beforeCreate() {
+<span class="nc" id="L209">				Game.platform.resetGenerators();</span>
+<span class="nc" id="L210">			}</span>
+			@Override
+			public void afterCreate() {
+				//do nothing
+<span class="nc" id="L214">			}</span>
+		});
+<span class="nc" id="L216">	}</span>
+
+	private static class DisplayTab extends Component {
+
+		RenderedTextBlock title;
+		ColorBlock sep1;
+		CheckBox chkFullscreen;
+		OptionSlider optScale;
+		CheckBox chkSaver;
+		RedButton btnOrientation;
+		ColorBlock sep2;
+		OptionSlider optBrightness;
+		OptionSlider optVisGrid;
+		OptionSlider optFollowIntensity;
+		OptionSlider optScreenShake;
+
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L234">			title = PixelScene.renderTextBlock(Messages.get(this, &quot;title&quot;), 9);</span>
+<span class="nc" id="L235">			title.hardlight(TITLE_COLOR);</span>
+<span class="nc" id="L236">			add(title);</span>
+
+<span class="nc" id="L238">			sep1 = new ColorBlock(1, 1, 0xFF000000);</span>
+<span class="nc" id="L239">			add(sep1);</span>
+
+<span class="nc" id="L241">			chkFullscreen = new CheckBox( Messages.get(this, &quot;fullscreen&quot;) ) {</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L244">					super.onClick();</span>
+<span class="nc" id="L245">					SPDSettings.fullscreen(checked());</span>
+<span class="nc" id="L246">				}</span>
+			};
+<span class="nc bnc" id="L248" title="All 2 branches missed.">			if (DeviceCompat.supportsFullScreen()){</span>
+<span class="nc" id="L249">				chkFullscreen.checked(SPDSettings.fullscreen());</span>
+			} else {
+<span class="nc" id="L251">				chkFullscreen.checked(true);</span>
+<span class="nc" id="L252">				chkFullscreen.enable(false);</span>
+			}
+<span class="nc" id="L254">			add(chkFullscreen);</span>
+
+			//power saver is being slowly phased out, only show it on old (4.3-) android devices
+			// this is being phased out as the setting is useless on all but very old devices anyway
+			// and support is going to be dropped for 4.3- in the forseeable future
+<span class="nc bnc" id="L259" title="All 4 branches missed.">			if (DeviceCompat.isAndroid() &amp;&amp; PixelScene.maxScreenZoom &gt;= 2</span>
+<span class="nc bnc" id="L260" title="All 4 branches missed.">				&amp;&amp; (SPDSettings.powerSaver() || !DeviceCompat.supportsFullScreen())) {</span>
+<span class="nc" id="L261">				chkSaver = new CheckBox(Messages.get(this, &quot;saver&quot;)) {</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L264">						super.onClick();</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">						if (checked()) {</span>
+<span class="nc bnc" id="L266" title="All 2 branches missed.">							checked(!checked());</span>
+<span class="nc" id="L267">							ShatteredPixelDungeon.scene().add(new WndOptions(Icons.get(Icons.DISPLAY),</span>
+<span class="nc" id="L268">									Messages.get(DisplayTab.class, &quot;saver&quot;),</span>
+<span class="nc" id="L269">									Messages.get(DisplayTab.class, &quot;saver_desc&quot;),</span>
+<span class="nc" id="L270">									Messages.get(DisplayTab.class, &quot;okay&quot;),</span>
+<span class="nc" id="L271">									Messages.get(DisplayTab.class, &quot;cancel&quot;)) {</span>
+								@Override
+								protected void onSelect(int index) {
+<span class="nc bnc" id="L274" title="All 2 branches missed.">									if (index == 0) {</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">										checked(!checked());</span>
+<span class="nc" id="L276">										SPDSettings.powerSaver(checked());</span>
+									}
+<span class="nc" id="L278">								}</span>
+							});
+						} else {
+<span class="nc" id="L281">							SPDSettings.powerSaver(checked());</span>
+						}
+<span class="nc" id="L283">					}</span>
+				};
+<span class="nc" id="L285">				chkSaver.checked( SPDSettings.powerSaver() );</span>
+<span class="nc" id="L286">				add( chkSaver );</span>
+			}
+
+<span class="nc bnc" id="L289" title="All 2 branches missed.">			if (DeviceCompat.isAndroid()) {</span>
+<span class="nc" id="L290">				Boolean landscape = SPDSettings.landscape();</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">				if (landscape == null){</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">					landscape = Game.width &gt; Game.height;</span>
+				}
+<span class="nc" id="L294">				Boolean finalLandscape = landscape;</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">				btnOrientation = new RedButton(finalLandscape ?</span>
+<span class="nc" id="L296">						Messages.get(this, &quot;portrait&quot;)</span>
+<span class="nc" id="L297">						: Messages.get(this, &quot;landscape&quot;)) {</span>
+					@Override
+					protected void onClick() {
+<span class="nc bnc" id="L300" title="All 2 branches missed.">						SPDSettings.landscape(!finalLandscape);</span>
+<span class="nc" id="L301">					}</span>
+				};
+<span class="nc" id="L303">				add(btnOrientation);</span>
+			}
+
+<span class="nc" id="L306">			sep2 = new ColorBlock(1, 1, 0xFF000000);</span>
+<span class="nc" id="L307">			add(sep2);</span>
+
+<span class="nc" id="L309">			optBrightness = new OptionSlider(Messages.get(this, &quot;brightness&quot;),</span>
+<span class="nc" id="L310">					Messages.get(this, &quot;dark&quot;), Messages.get(this, &quot;bright&quot;), -1, 1) {</span>
+				@Override
+				protected void onChange() {
+<span class="nc" id="L313">					SPDSettings.brightness(getSelectedValue());</span>
+<span class="nc" id="L314">				}</span>
+			};
+<span class="nc" id="L316">			optBrightness.setSelectedValue(SPDSettings.brightness());</span>
+<span class="nc" id="L317">			add(optBrightness);</span>
+
+<span class="nc" id="L319">			optVisGrid = new OptionSlider(Messages.get(this, &quot;visual_grid&quot;),</span>
+<span class="nc" id="L320">					Messages.get(this, &quot;off&quot;), Messages.get(this, &quot;high&quot;), -1, 2) {</span>
+				@Override
+				protected void onChange() {
+<span class="nc" id="L323">					SPDSettings.visualGrid(getSelectedValue());</span>
+<span class="nc" id="L324">				}</span>
+			};
+<span class="nc" id="L326">			optVisGrid.setSelectedValue(SPDSettings.visualGrid());</span>
+<span class="nc" id="L327">			add(optVisGrid);</span>
+
+<span class="nc" id="L329">			optFollowIntensity = new OptionSlider(Messages.get(this, &quot;camera_follow&quot;),</span>
+<span class="nc" id="L330">					Messages.get(this, &quot;low&quot;), Messages.get(this, &quot;high&quot;), 1, 4) {</span>
+				@Override
+				protected void onChange() {
+<span class="nc" id="L333">					SPDSettings.cameraFollow(getSelectedValue());</span>
+<span class="nc" id="L334">				}</span>
+			};
+<span class="nc" id="L336">			optFollowIntensity.setSelectedValue(SPDSettings.cameraFollow());</span>
+<span class="nc" id="L337">			add(optFollowIntensity);</span>
+
+<span class="nc" id="L339">			optScreenShake = new OptionSlider(Messages.get(this, &quot;screenshake&quot;),</span>
+<span class="nc" id="L340">					Messages.get(this, &quot;off&quot;), Messages.get(this, &quot;high&quot;), 0, 4) {</span>
+				@Override
+				protected void onChange() {
+<span class="nc" id="L343">					SPDSettings.screenShake(getSelectedValue());</span>
+<span class="nc" id="L344">				}</span>
+			};
+<span class="nc" id="L346">			optScreenShake.setSelectedValue(SPDSettings.screenShake());</span>
+<span class="nc" id="L347">			add(optScreenShake);</span>
+
+<span class="nc" id="L349">		}</span>
+
+		@Override
+		protected void layout() {
+
+<span class="nc" id="L354">			float bottom = y;</span>
+
+<span class="nc" id="L356">			title.setPos((width - title.width())/2, bottom + GAP);</span>
+<span class="nc" id="L357">			sep1.size(width, 1);</span>
+<span class="nc" id="L358">			sep1.y = title.bottom() + 3*GAP;</span>
+
+<span class="nc" id="L360">			bottom = sep1.y + 1;</span>
+
+<span class="nc bnc" id="L362" title="All 4 branches missed.">			if (width &gt; 200 &amp;&amp; chkSaver != null) {</span>
+<span class="nc" id="L363">				chkFullscreen.setRect(0, bottom + GAP, width/2-1, BTN_HEIGHT);</span>
+<span class="nc" id="L364">				chkSaver.setRect(chkFullscreen.right()+ GAP, bottom + GAP, width/2-1, BTN_HEIGHT);</span>
+<span class="nc" id="L365">				bottom = chkFullscreen.bottom();</span>
+			} else {
+<span class="nc" id="L367">				chkFullscreen.setRect(0, bottom + GAP, width, BTN_HEIGHT);</span>
+<span class="nc" id="L368">				bottom = chkFullscreen.bottom();</span>
+
+<span class="nc bnc" id="L370" title="All 2 branches missed.">				if (chkSaver != null) {</span>
+<span class="nc" id="L371">					chkSaver.setRect(0, bottom + GAP, width, BTN_HEIGHT);</span>
+<span class="nc" id="L372">					bottom = chkSaver.bottom();</span>
+				}
+			}
+
+<span class="nc bnc" id="L376" title="All 2 branches missed.">			if (btnOrientation != null) {</span>
+<span class="nc" id="L377">				btnOrientation.setRect(0, bottom + GAP, width, BTN_HEIGHT);</span>
+<span class="nc" id="L378">				bottom = btnOrientation.bottom();</span>
+			}
+
+<span class="nc bnc" id="L381" title="All 2 branches missed.">			if (optScale != null){</span>
+<span class="nc" id="L382">				optScale.setRect(0, bottom + GAP, width, SLIDER_HEIGHT);</span>
+<span class="nc" id="L383">				bottom = optScale.bottom();</span>
+			}
+
+<span class="nc" id="L386">			sep2.size(width, 1);</span>
+<span class="nc" id="L387">			sep2.y = bottom + GAP;</span>
+<span class="nc" id="L388">			bottom = sep2.y + 1;</span>
+
+<span class="nc bnc" id="L390" title="All 2 branches missed.">			if (width &gt; 200){</span>
+<span class="nc" id="L391">				optBrightness.setRect(0, bottom + GAP, width/2-GAP/2, SLIDER_HEIGHT);</span>
+<span class="nc" id="L392">				optVisGrid.setRect(optBrightness.right() + GAP, optBrightness.top(), width/2-GAP/2, SLIDER_HEIGHT);</span>
+
+<span class="nc" id="L394">				optFollowIntensity.setRect(0, optVisGrid.bottom() + GAP, width/2-GAP/2, SLIDER_HEIGHT);</span>
+<span class="nc" id="L395">				optScreenShake.setRect(optFollowIntensity.right() + GAP, optFollowIntensity.top(), width/2-GAP/2, SLIDER_HEIGHT);</span>
+			} else {
+<span class="nc" id="L397">				optBrightness.setRect(0, bottom + GAP, width, SLIDER_HEIGHT);</span>
+<span class="nc" id="L398">				optVisGrid.setRect(0, optBrightness.bottom() + GAP, width, SLIDER_HEIGHT);</span>
+
+<span class="nc" id="L400">				optFollowIntensity.setRect(0, optVisGrid.bottom() + GAP, width, SLIDER_HEIGHT);</span>
+<span class="nc" id="L401">				optScreenShake.setRect(0, optFollowIntensity.bottom() + GAP, width, SLIDER_HEIGHT);</span>
+			}
+
+<span class="nc" id="L404">			height = optScreenShake.bottom();</span>
+<span class="nc" id="L405">		}</span>
+
+	}
+
+	private static class UITab extends Component {
+
+		RenderedTextBlock title;
+
+		ColorBlock sep1;
+		OptionSlider optUIMode;
+		OptionSlider optUIScale;
+		RedButton btnToolbarSettings;
+		CheckBox chkFlipTags;
+		ColorBlock sep2;
+		CheckBox chkFont;
+		CheckBox chkVibrate;
+
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L424">			title = PixelScene.renderTextBlock(Messages.get(this, &quot;title&quot;), 9);</span>
+<span class="nc" id="L425">			title.hardlight(TITLE_COLOR);</span>
+<span class="nc" id="L426">			add(title);</span>
+
+<span class="nc" id="L428">			sep1 = new ColorBlock(1, 1, 0xFF000000);</span>
+<span class="nc" id="L429">			add(sep1);</span>
+
+			//add slider for UI size only if device has enough space to support it
+<span class="nc" id="L432">			float wMin = Game.width / PixelScene.MIN_WIDTH_FULL;</span>
+<span class="nc" id="L433">			float hMin = Game.height / PixelScene.MIN_HEIGHT_FULL;</span>
+<span class="nc bnc" id="L434" title="All 2 branches missed.">			if (Math.min(wMin, hMin) &gt;= 2*Game.density){</span>
+<span class="nc" id="L435">				optUIMode = new OptionSlider(</span>
+<span class="nc" id="L436">						Messages.get(this, &quot;ui_mode&quot;),</span>
+<span class="nc" id="L437">						Messages.get(this, &quot;mobile&quot;),</span>
+<span class="nc" id="L438">						Messages.get(this, &quot;full&quot;),</span>
+						0,
+						2
+<span class="nc" id="L441">				) {</span>
+					@Override
+					protected void onChange() {
+<span class="nc" id="L444">						SPDSettings.interfaceSize(getSelectedValue());</span>
+<span class="nc" id="L445">						ShatteredPixelDungeon.seamlessResetScene();</span>
+<span class="nc" id="L446">					}</span>
+				};
+<span class="nc" id="L448">				optUIMode.setSelectedValue(SPDSettings.interfaceSize());</span>
+<span class="nc" id="L449">				add(optUIMode);</span>
+			}
+
+<span class="nc bnc" id="L452" title="All 2 branches missed.">			if ((int)Math.ceil(2* Game.density) &lt; PixelScene.maxDefaultZoom) {</span>
+<span class="nc" id="L453">				optUIScale = new OptionSlider(Messages.get(this, &quot;scale&quot;),</span>
+<span class="nc" id="L454">						(int)Math.ceil(2* Game.density)+ &quot;X&quot;,</span>
+						PixelScene.maxDefaultZoom + &quot;X&quot;,
+<span class="nc" id="L456">						(int)Math.ceil(2* Game.density),</span>
+<span class="nc" id="L457">						PixelScene.maxDefaultZoom ) {</span>
+					@Override
+					protected void onChange() {
+<span class="nc bnc" id="L460" title="All 2 branches missed.">						if (getSelectedValue() != SPDSettings.scale()) {</span>
+<span class="nc" id="L461">							SPDSettings.scale(getSelectedValue());</span>
+<span class="nc" id="L462">							ShatteredPixelDungeon.seamlessResetScene();</span>
+						}
+<span class="nc" id="L464">					}</span>
+				};
+<span class="nc" id="L466">				optUIScale.setSelectedValue(PixelScene.defaultZoom);</span>
+<span class="nc" id="L467">				add(optUIScale);</span>
+			}
+
+<span class="nc bnc" id="L470" title="All 2 branches missed.">			if (SPDSettings.interfaceSize() == 0) {</span>
+<span class="nc" id="L471">				btnToolbarSettings = new RedButton(Messages.get(this, &quot;toolbar_settings&quot;), 9){</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L474">						ShatteredPixelDungeon.scene().addToFront(new Window(){</span>
+
+							RenderedTextBlock barDesc;
+							RedButton btnSplit; RedButton btnGrouped; RedButton btnCentered;
+							CheckBox chkQuickSwapper;
+							RenderedTextBlock swapperDesc;
+							CheckBox chkFlipToolbar;
+							CheckBox chkFlipTags;
+
+							{
+<span class="nc" id="L484">								barDesc = PixelScene.renderTextBlock(Messages.get(WndSettings.UITab.this, &quot;mode&quot;), 9);</span>
+<span class="nc" id="L485">								add(barDesc);</span>
+
+<span class="nc" id="L487">								btnSplit = new RedButton(Messages.get(WndSettings.UITab.this, &quot;split&quot;)) {</span>
+									@Override
+									protected void onClick() {
+<span class="nc" id="L490">										textColor(TITLE_COLOR);</span>
+<span class="nc" id="L491">										btnGrouped.textColor(WHITE);</span>
+<span class="nc" id="L492">										btnCentered.textColor(WHITE);</span>
+<span class="nc" id="L493">										SPDSettings.toolbarMode(Toolbar.Mode.SPLIT.name());</span>
+<span class="nc" id="L494">										Toolbar.updateLayout();</span>
+<span class="nc" id="L495">									}</span>
+								};
+<span class="nc bnc" id="L497" title="All 2 branches missed.">								if (SPDSettings.toolbarMode().equals(Toolbar.Mode.SPLIT.name())) {</span>
+<span class="nc" id="L498">									btnSplit.textColor(TITLE_COLOR);</span>
+								}
+<span class="nc" id="L500">								add(btnSplit);</span>
+
+<span class="nc" id="L502">								btnGrouped = new RedButton(Messages.get(WndSettings.UITab.this, &quot;group&quot;)) {</span>
+									@Override
+									protected void onClick() {
+<span class="nc" id="L505">										btnSplit.textColor(WHITE);</span>
+<span class="nc" id="L506">										textColor(TITLE_COLOR);</span>
+<span class="nc" id="L507">										btnCentered.textColor(WHITE);</span>
+<span class="nc" id="L508">										SPDSettings.toolbarMode(Toolbar.Mode.GROUP.name());</span>
+<span class="nc" id="L509">										Toolbar.updateLayout();</span>
+<span class="nc" id="L510">									}</span>
+								};
+<span class="nc bnc" id="L512" title="All 2 branches missed.">								if (SPDSettings.toolbarMode().equals(Toolbar.Mode.GROUP.name())) {</span>
+<span class="nc" id="L513">									btnGrouped.textColor(TITLE_COLOR);</span>
+								}
+<span class="nc" id="L515">								add(btnGrouped);</span>
+
+<span class="nc" id="L517">								btnCentered = new RedButton(Messages.get(WndSettings.UITab.this, &quot;center&quot;)) {</span>
+									@Override
+									protected void onClick() {
+<span class="nc" id="L520">										btnSplit.textColor(WHITE);</span>
+<span class="nc" id="L521">										btnGrouped.textColor(WHITE);</span>
+<span class="nc" id="L522">										textColor(TITLE_COLOR);</span>
+<span class="nc" id="L523">										SPDSettings.toolbarMode(Toolbar.Mode.CENTER.name());</span>
+<span class="nc" id="L524">										Toolbar.updateLayout();</span>
+<span class="nc" id="L525">									}</span>
+								};
+<span class="nc bnc" id="L527" title="All 2 branches missed.">								if (SPDSettings.toolbarMode().equals(Toolbar.Mode.CENTER.name())) {</span>
+<span class="nc" id="L528">									btnCentered.textColor(TITLE_COLOR);</span>
+								}
+<span class="nc" id="L530">								add(btnCentered);</span>
+
+<span class="nc" id="L532">								chkQuickSwapper = new CheckBox(Messages.get(WndSettings.UITab.this, &quot;quickslot_swapper&quot;)) {</span>
+									@Override
+									protected void onClick() {
+<span class="nc" id="L535">										super.onClick();</span>
+<span class="nc" id="L536">										SPDSettings.quickSwapper(checked());</span>
+<span class="nc" id="L537">										Toolbar.updateLayout();</span>
+<span class="nc" id="L538">									}</span>
+								};
+<span class="nc" id="L540">								chkQuickSwapper.checked(SPDSettings.quickSwapper());</span>
+<span class="nc" id="L541">								add(chkQuickSwapper);</span>
+
+<span class="nc" id="L543">								swapperDesc = PixelScene.renderTextBlock(Messages.get(WndSettings.UITab.this, &quot;swapper_desc&quot;), 5);</span>
+<span class="nc" id="L544">								swapperDesc.hardlight(0x888888);</span>
+<span class="nc" id="L545">								add(swapperDesc);</span>
+
+<span class="nc" id="L547">								chkFlipToolbar = new CheckBox(Messages.get(WndSettings.UITab.this, &quot;flip_toolbar&quot;)) {</span>
+									@Override
+									protected void onClick() {
+<span class="nc" id="L550">										super.onClick();</span>
+<span class="nc" id="L551">										SPDSettings.flipToolbar(checked());</span>
+<span class="nc" id="L552">										Toolbar.updateLayout();</span>
+<span class="nc" id="L553">									}</span>
+								};
+<span class="nc" id="L555">								chkFlipToolbar.checked(SPDSettings.flipToolbar());</span>
+<span class="nc" id="L556">								add(chkFlipToolbar);</span>
+
+<span class="nc" id="L558">								chkFlipTags = new CheckBox(Messages.get(WndSettings.UITab.this, &quot;flip_indicators&quot;)){</span>
+									@Override
+									protected void onClick() {
+<span class="nc" id="L561">										super.onClick();</span>
+<span class="nc" id="L562">										SPDSettings.flipTags(checked());</span>
+<span class="nc" id="L563">										GameScene.layoutTags();</span>
+<span class="nc" id="L564">									}</span>
+								};
+<span class="nc" id="L566">								chkFlipTags.checked(SPDSettings.flipTags());</span>
+<span class="nc" id="L567">								add(chkFlipTags);</span>
+
+								//layout
+<span class="nc" id="L570">								resize(WIDTH_P, 0);</span>
+
+<span class="nc" id="L572">								barDesc.setPos((width - barDesc.width()) / 2f, GAP);</span>
+<span class="nc" id="L573">								PixelScene.align(barDesc);</span>
+
+<span class="nc" id="L575">								int btnWidth = (int) (width - 2 * GAP) / 3;</span>
+<span class="nc" id="L576">								btnSplit.setRect(0, barDesc.bottom() + GAP, btnWidth, BTN_HEIGHT-2);</span>
+<span class="nc" id="L577">								btnGrouped.setRect(btnSplit.right() + GAP, btnSplit.top(), btnWidth, BTN_HEIGHT-2);</span>
+<span class="nc" id="L578">								btnCentered.setRect(btnGrouped.right() + GAP, btnSplit.top(), btnWidth, BTN_HEIGHT-2);</span>
+
+<span class="nc" id="L580">								chkQuickSwapper.setRect(0, btnGrouped.bottom() + GAP, width, BTN_HEIGHT);</span>
+
+<span class="nc" id="L582">								swapperDesc.maxWidth(width);</span>
+<span class="nc" id="L583">								swapperDesc.setPos(0, chkQuickSwapper.bottom()+1);</span>
+
+<span class="nc bnc" id="L585" title="All 2 branches missed.">								if (width &gt; 200) {</span>
+<span class="nc" id="L586">									chkFlipToolbar.setRect(0, swapperDesc.bottom() + GAP, width / 2 - 1, BTN_HEIGHT);</span>
+<span class="nc" id="L587">									chkFlipTags.setRect(chkFlipToolbar.right() + GAP, chkFlipToolbar.top(), width / 2 - 1, BTN_HEIGHT);</span>
+								} else {
+<span class="nc" id="L589">									chkFlipToolbar.setRect(0, swapperDesc.bottom() + GAP, width, BTN_HEIGHT);</span>
+<span class="nc" id="L590">									chkFlipTags.setRect(0, chkFlipToolbar.bottom() + GAP, width, BTN_HEIGHT);</span>
+								}
+
+<span class="nc" id="L593">								resize(WIDTH_P, (int)chkFlipTags.bottom());</span>
+
+<span class="nc" id="L595">							}</span>
+						});
+<span class="nc" id="L597">					}</span>
+				};
+<span class="nc" id="L599">				add(btnToolbarSettings);</span>
+
+			} else {
+
+<span class="nc" id="L603">				chkFlipTags = new CheckBox(Messages.get(this, &quot;flip_indicators&quot;)) {</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L606">						super.onClick();</span>
+<span class="nc" id="L607">						SPDSettings.flipTags(checked());</span>
+<span class="nc" id="L608">						GameScene.layoutTags();</span>
+<span class="nc" id="L609">					}</span>
+				};
+<span class="nc" id="L611">				chkFlipTags.checked(SPDSettings.flipTags());</span>
+<span class="nc" id="L612">				add(chkFlipTags);</span>
+
+			}
+
+<span class="nc" id="L616">			sep2 = new ColorBlock(1, 1, 0xFF000000);</span>
+<span class="nc" id="L617">			add(sep2);</span>
+
+<span class="nc" id="L619">			chkFont = new CheckBox(Messages.get(this, &quot;system_font&quot;)){</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L622">					super.onClick();</span>
+<span class="nc" id="L623">					ShatteredPixelDungeon.seamlessResetScene(new Game.SceneChangeCallback() {</span>
+						@Override
+						public void beforeCreate() {
+<span class="nc" id="L626">							SPDSettings.systemFont(checked());</span>
+<span class="nc" id="L627">						}</span>
+
+						@Override
+						public void afterCreate() {
+							//do nothing
+<span class="nc" id="L632">						}</span>
+					});
+<span class="nc" id="L634">				}</span>
+			};
+<span class="nc" id="L636">			chkFont.checked(SPDSettings.systemFont());</span>
+<span class="nc" id="L637">			add(chkFont);</span>
+
+<span class="nc" id="L639">			chkVibrate = new CheckBox(Messages.get(this, &quot;vibration&quot;)){</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L642">					super.onClick();</span>
+<span class="nc" id="L643">					SPDSettings.vibration(checked());</span>
+<span class="nc bnc" id="L644" title="All 2 branches missed.">					if (checked()){</span>
+<span class="nc" id="L645">						Game.vibrate(250);</span>
+					}
+<span class="nc" id="L647">				}</span>
+			};
+<span class="nc" id="L649">			chkVibrate.enable(Game.platform.supportsVibration());</span>
+<span class="nc bnc" id="L650" title="All 2 branches missed.">			if (chkVibrate.active) {</span>
+<span class="nc" id="L651">				chkVibrate.checked(SPDSettings.vibration());</span>
+			}
+<span class="nc" id="L653">			add(chkVibrate);</span>
+<span class="nc" id="L654">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L658">			title.setPos((width - title.width())/2, y + GAP);</span>
+<span class="nc" id="L659">			sep1.size(width, 1);</span>
+<span class="nc" id="L660">			sep1.y = title.bottom() + 3*GAP;</span>
+
+<span class="nc" id="L662">			height = sep1.y + 1;</span>
+
+<span class="nc bnc" id="L664" title="All 6 branches missed.">			if (optUIMode != null &amp;&amp; optUIScale != null &amp;&amp; width &gt; 200){</span>
+<span class="nc" id="L665">				optUIMode.setRect(0, height + GAP, width/2-1, SLIDER_HEIGHT);</span>
+<span class="nc" id="L666">				optUIScale.setRect(width/2+1, height + GAP, width/2-1, SLIDER_HEIGHT);</span>
+<span class="nc" id="L667">				height = optUIScale.bottom();</span>
+			} else {
+<span class="nc bnc" id="L669" title="All 2 branches missed.">				if (optUIMode != null) {</span>
+<span class="nc" id="L670">					optUIMode.setRect(0, height + GAP, width, SLIDER_HEIGHT);</span>
+<span class="nc" id="L671">					height = optUIMode.bottom();</span>
+				}
+
+<span class="nc bnc" id="L674" title="All 2 branches missed.">				if (optUIScale != null) {</span>
+<span class="nc" id="L675">					optUIScale.setRect(0, height + GAP, width, SLIDER_HEIGHT);</span>
+<span class="nc" id="L676">					height = optUIScale.bottom();</span>
+				}
+			}
+
+<span class="nc bnc" id="L680" title="All 2 branches missed.">			if (btnToolbarSettings != null) {</span>
+<span class="nc" id="L681">				btnToolbarSettings.setRect(0, height + GAP, width, BTN_HEIGHT);</span>
+<span class="nc" id="L682">				height = btnToolbarSettings.bottom();</span>
+			} else {
+<span class="nc" id="L684">				chkFlipTags.setRect(0, height + GAP, width, BTN_HEIGHT);</span>
+<span class="nc" id="L685">				height = chkFlipTags.bottom();</span>
+			}
+
+<span class="nc" id="L688">			sep2.size(width, 1);</span>
+<span class="nc" id="L689">			sep2.y = height + GAP;</span>
+
+<span class="nc bnc" id="L691" title="All 2 branches missed.">			if (width &gt; 200) {</span>
+<span class="nc" id="L692">				chkFont.setRect(0, sep2.y + 1 + GAP, width/2-1, BTN_HEIGHT);</span>
+<span class="nc" id="L693">				chkVibrate.setRect(chkFont.right()+2, chkFont.top(), width/2-1, BTN_HEIGHT);</span>
+<span class="nc" id="L694">				height = chkVibrate.bottom();</span>
+
+			} else {
+<span class="nc" id="L697">				chkFont.setRect(0, sep2.y + 1 + GAP, width, BTN_HEIGHT);</span>
+<span class="nc" id="L698">				chkVibrate.setRect(0, chkFont.bottom() + GAP, width, BTN_HEIGHT);</span>
+<span class="nc" id="L699">				height = chkVibrate.bottom();</span>
+			}
+<span class="nc" id="L701">		}</span>
+
+	}
+
+	private static class InputTab extends Component{
+
+		RenderedTextBlock title;
+		ColorBlock sep1;
+
+		RedButton btnKeyBindings;
+		RedButton btnControllerBindings;
+
+		ColorBlock sep2;
+
+		OptionSlider optControlSens;
+		OptionSlider optHoldMoveSens;
+
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L720">			title = PixelScene.renderTextBlock(Messages.get(this, &quot;title&quot;), 9);</span>
+<span class="nc" id="L721">			title.hardlight(TITLE_COLOR);</span>
+<span class="nc" id="L722">			add(title);</span>
+
+<span class="nc" id="L724">			sep1 = new ColorBlock(1, 1, 0xFF000000);</span>
+<span class="nc" id="L725">			add(sep1);</span>
+
+<span class="nc bnc" id="L727" title="All 2 branches missed.">			if (DeviceCompat.hasHardKeyboard()){</span>
+
+<span class="nc" id="L729">				btnKeyBindings = new RedButton(Messages.get(this, &quot;key_bindings&quot;)){</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L732">						super.onClick();</span>
+<span class="nc" id="L733">						ShatteredPixelDungeon.scene().addToFront(new WndKeyBindings(false));</span>
+<span class="nc" id="L734">					}</span>
+				};
+
+<span class="nc" id="L737">				add(btnKeyBindings);</span>
+			}
+
+<span class="nc bnc" id="L740" title="All 2 branches missed.">			if (ControllerHandler.isControllerConnected()){</span>
+<span class="nc" id="L741">				btnControllerBindings = new RedButton(Messages.get(this, &quot;controller_bindings&quot;)){</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L744">						super.onClick();</span>
+<span class="nc" id="L745">						ShatteredPixelDungeon.scene().addToFront(new WndKeyBindings(true));</span>
+<span class="nc" id="L746">					}</span>
+				};
+
+<span class="nc" id="L749">				add(btnControllerBindings);</span>
+			}
+
+<span class="nc" id="L752">			sep2 = new ColorBlock(1, 1, 0xFF000000);</span>
+<span class="nc" id="L753">			add(sep2);</span>
+
+
+<span class="nc" id="L756">			optControlSens = new OptionSlider(</span>
+<span class="nc" id="L757">					Messages.get(this, &quot;controller_sensitivity&quot;),</span>
+					&quot;1&quot;,
+					&quot;10&quot;,
+					1,
+					10
+<span class="nc" id="L762">			) {</span>
+				@Override
+				protected void onChange() {
+<span class="nc" id="L765">					SPDSettings.controllerPointerSensitivity(getSelectedValue());</span>
+<span class="nc" id="L766">				}</span>
+			};
+<span class="nc" id="L768">			optControlSens.setSelectedValue(SPDSettings.controllerPointerSensitivity());</span>
+<span class="nc" id="L769">			add(optControlSens);</span>
+
+<span class="nc" id="L771">			optHoldMoveSens = new OptionSlider(</span>
+<span class="nc" id="L772">					Messages.get(this, &quot;movement_sensitivity&quot;),</span>
+<span class="nc" id="L773">					Messages.get(this, &quot;off&quot;),</span>
+<span class="nc" id="L774">					Messages.get(this, &quot;high&quot;),</span>
+					0,
+					4
+<span class="nc" id="L777">			) {</span>
+				@Override
+				protected void onChange() {
+<span class="nc" id="L780">					SPDSettings.movementHoldSensitivity(getSelectedValue());</span>
+<span class="nc" id="L781">				}</span>
+			};
+<span class="nc" id="L783">			optHoldMoveSens.setSelectedValue(SPDSettings.movementHoldSensitivity());</span>
+<span class="nc" id="L784">			add(optHoldMoveSens);</span>
+<span class="nc" id="L785">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L789">			title.setPos((width - title.width())/2, y + GAP);</span>
+<span class="nc" id="L790">			sep1.size(width, 1);</span>
+<span class="nc" id="L791">			sep1.y = title.bottom() + 3*GAP;</span>
+
+<span class="nc" id="L793">			height = sep1.y+1;</span>
+
+<span class="nc bnc" id="L795" title="All 6 branches missed.">			if (width &gt; 200 &amp;&amp; btnKeyBindings != null &amp;&amp; btnControllerBindings != null){</span>
+<span class="nc" id="L796">				btnKeyBindings.setRect(0, height + GAP, width/2-1, BTN_HEIGHT);</span>
+<span class="nc" id="L797">				btnControllerBindings.setRect(width/2+1, height + GAP, width/2-1, BTN_HEIGHT);</span>
+<span class="nc" id="L798">				height = btnControllerBindings.bottom();</span>
+			} else {
+<span class="nc bnc" id="L800" title="All 2 branches missed.">				if (btnKeyBindings != null) {</span>
+<span class="nc" id="L801">					btnKeyBindings.setRect(0, height + GAP, width, BTN_HEIGHT);</span>
+<span class="nc" id="L802">					height = btnKeyBindings.bottom();</span>
+				}
+
+<span class="nc bnc" id="L805" title="All 2 branches missed.">				if (btnControllerBindings != null) {</span>
+<span class="nc" id="L806">					btnControllerBindings.setRect(0, height + GAP, width, BTN_HEIGHT);</span>
+<span class="nc" id="L807">					height = btnControllerBindings.bottom();</span>
+				}
+			}
+
+<span class="nc" id="L811">			sep2.size(width, 1);</span>
+<span class="nc" id="L812">			sep2.y = height+ GAP;</span>
+
+<span class="nc bnc" id="L814" title="All 2 branches missed.">			if (width &gt; 200){</span>
+<span class="nc" id="L815">				optControlSens.setRect(0, sep2.y + 1 + GAP, width/2-1, SLIDER_HEIGHT);</span>
+<span class="nc" id="L816">				optHoldMoveSens.setRect(width/2 + 1, optControlSens.top(), width/2 -1, SLIDER_HEIGHT);</span>
+			} else {
+<span class="nc" id="L818">				optControlSens.setRect(0, sep2.y + 1 + GAP, width, SLIDER_HEIGHT);</span>
+<span class="nc" id="L819">				optHoldMoveSens.setRect(0, optControlSens.bottom() + GAP, width, SLIDER_HEIGHT);</span>
+			}
+
+<span class="nc" id="L822">			height = optHoldMoveSens.bottom();</span>
+
+<span class="nc" id="L824">		}</span>
+	}
+
+	private static class DataTab extends Component{
+
+		RenderedTextBlock title;
+		ColorBlock sep1;
+		CheckBox chkNews;
+		CheckBox chkUpdates;
+		CheckBox chkBetas;
+		CheckBox chkWifi;
+
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L838">			title = PixelScene.renderTextBlock(Messages.get(this, &quot;title&quot;), 9);</span>
+<span class="nc" id="L839">			title.hardlight(TITLE_COLOR);</span>
+<span class="nc" id="L840">			add(title);</span>
+
+<span class="nc" id="L842">			sep1 = new ColorBlock(1, 1, 0xFF000000);</span>
+<span class="nc" id="L843">			add(sep1);</span>
+
+<span class="nc" id="L845">			chkNews = new CheckBox(Messages.get(this, &quot;news&quot;)){</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L848">					super.onClick();</span>
+<span class="nc" id="L849">					SPDSettings.news(checked());</span>
+<span class="nc" id="L850">					News.clearArticles();</span>
+<span class="nc" id="L851">				}</span>
+			};
+<span class="nc" id="L853">			chkNews.checked(SPDSettings.news());</span>
+<span class="nc" id="L854">			add(chkNews);</span>
+
+<span class="nc bnc" id="L856" title="All 4 branches missed.">			if (Updates.supportsUpdates() &amp;&amp; Updates.supportsUpdatePrompts()) {</span>
+<span class="nc" id="L857">				chkUpdates = new CheckBox(Messages.get(this, &quot;updates&quot;)) {</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L860">						super.onClick();</span>
+<span class="nc" id="L861">						SPDSettings.updates(checked());</span>
+<span class="nc" id="L862">						Updates.clearUpdate();</span>
+<span class="nc" id="L863">					}</span>
+				};
+<span class="nc" id="L865">				chkUpdates.checked(SPDSettings.updates());</span>
+<span class="nc" id="L866">				add(chkUpdates);</span>
+
+<span class="nc bnc" id="L868" title="All 2 branches missed.">				if (Updates.supportsBetaChannel()){</span>
+<span class="nc" id="L869">					chkBetas = new CheckBox(Messages.get(this, &quot;betas&quot;)) {</span>
+						@Override
+						protected void onClick() {
+<span class="nc" id="L872">							super.onClick();</span>
+<span class="nc" id="L873">							SPDSettings.betas(checked());</span>
+<span class="nc" id="L874">							Updates.clearUpdate();</span>
+<span class="nc" id="L875">						}</span>
+					};
+<span class="nc" id="L877">					chkBetas.checked(SPDSettings.betas());</span>
+<span class="nc" id="L878">					add(chkBetas);</span>
+				}
+			}
+
+<span class="nc bnc" id="L882" title="All 2 branches missed.">			if (!DeviceCompat.isDesktop()){</span>
+<span class="nc" id="L883">				chkWifi = new CheckBox(Messages.get(this, &quot;wifi&quot;)){</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L886">						super.onClick();</span>
+<span class="nc" id="L887">						SPDSettings.WiFi(checked());</span>
+<span class="nc" id="L888">					}</span>
+				};
+<span class="nc" id="L890">				chkWifi.checked(SPDSettings.WiFi());</span>
+<span class="nc" id="L891">				add(chkWifi);</span>
+			}
+<span class="nc" id="L893">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L897">			title.setPos((width - title.width())/2, y + GAP);</span>
+<span class="nc" id="L898">			sep1.size(width, 1);</span>
+<span class="nc" id="L899">			sep1.y = title.bottom() + 3*GAP;</span>
+
+			float pos;
+<span class="nc bnc" id="L902" title="All 4 branches missed.">			if (width &gt; 200 &amp;&amp; chkUpdates != null){</span>
+<span class="nc" id="L903">				chkNews.setRect(0, sep1.y + 1 + GAP, width/2-1, BTN_HEIGHT);</span>
+<span class="nc" id="L904">				chkUpdates.setRect(chkNews.right() + GAP, chkNews.top(), width/2-1, BTN_HEIGHT);</span>
+<span class="nc" id="L905">				pos = chkUpdates.bottom();</span>
+			} else {
+<span class="nc" id="L907">				chkNews.setRect(0, sep1.y + 1 + GAP, width, BTN_HEIGHT);</span>
+<span class="nc" id="L908">				pos = chkNews.bottom();</span>
+<span class="nc bnc" id="L909" title="All 2 branches missed.">				if (chkUpdates != null) {</span>
+<span class="nc" id="L910">					chkUpdates.setRect(0, chkNews.bottom() + GAP, width, BTN_HEIGHT);</span>
+<span class="nc" id="L911">					pos = chkUpdates.bottom();</span>
+				}
+			}
+
+<span class="nc bnc" id="L915" title="All 2 branches missed.">			if (chkBetas != null){</span>
+<span class="nc" id="L916">				chkBetas.setRect(0, pos + GAP, width, BTN_HEIGHT);</span>
+<span class="nc" id="L917">				pos = chkBetas.bottom();</span>
+			}
+
+<span class="nc bnc" id="L920" title="All 2 branches missed.">			if (chkWifi != null){</span>
+<span class="nc" id="L921">				chkWifi.setRect(0, pos + GAP, width, BTN_HEIGHT);</span>
+<span class="nc" id="L922">				pos = chkWifi.bottom();</span>
+			}
+
+<span class="nc" id="L925">			height = pos;</span>
+
+<span class="nc" id="L927">		}</span>
+	}
+
+	private static class AudioTab extends Component {
+
+		RenderedTextBlock title;
+		ColorBlock sep1;
+		OptionSlider optMusic;
+		CheckBox chkMusicMute;
+		ColorBlock sep2;
+		OptionSlider optSFX;
+		CheckBox chkMuteSFX;
+		ColorBlock sep3;
+		CheckBox chkIgnoreSilent;
+		CheckBox chkMusicBG;
+
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L945">			title = PixelScene.renderTextBlock(Messages.get(this, &quot;title&quot;), 9);</span>
+<span class="nc" id="L946">			title.hardlight(TITLE_COLOR);</span>
+<span class="nc" id="L947">			add(title);</span>
+
+<span class="nc" id="L949">			sep1 = new ColorBlock(1, 1, 0xFF000000);</span>
+<span class="nc" id="L950">			add(sep1);</span>
+
+<span class="nc" id="L952">			optMusic = new OptionSlider(Messages.get(this, &quot;music_vol&quot;), &quot;0&quot;, &quot;10&quot;, 0, 10) {</span>
+				@Override
+				protected void onChange() {
+<span class="nc" id="L955">					SPDSettings.musicVol(getSelectedValue());</span>
+<span class="nc" id="L956">				}</span>
+			};
+<span class="nc" id="L958">			optMusic.setSelectedValue(SPDSettings.musicVol());</span>
+<span class="nc" id="L959">			add(optMusic);</span>
+
+<span class="nc" id="L961">			chkMusicMute = new CheckBox(Messages.get(this, &quot;music_mute&quot;)){</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L964">					super.onClick();</span>
+<span class="nc bnc" id="L965" title="All 2 branches missed.">					SPDSettings.music(!checked());</span>
+<span class="nc" id="L966">				}</span>
+			};
+<span class="nc bnc" id="L968" title="All 2 branches missed.">			chkMusicMute.checked(!SPDSettings.music());</span>
+<span class="nc" id="L969">			add(chkMusicMute);</span>
+
+<span class="nc" id="L971">			sep2 = new ColorBlock(1, 1, 0xFF000000);</span>
+<span class="nc" id="L972">			add(sep2);</span>
+
+<span class="nc" id="L974">			optSFX = new OptionSlider(Messages.get(this, &quot;sfx_vol&quot;), &quot;0&quot;, &quot;10&quot;, 0, 10) {</span>
+				@Override
+				protected void onChange() {
+<span class="nc" id="L977">					SPDSettings.SFXVol(getSelectedValue());</span>
+<span class="nc bnc" id="L978" title="All 2 branches missed.">					if (Random.Int(100) == 0){</span>
+<span class="nc" id="L979">						Sample.INSTANCE.play(Assets.Sounds.MIMIC);</span>
+					} else {
+<span class="nc" id="L981">						Sample.INSTANCE.play(Random.oneOf(Assets.Sounds.GOLD,</span>
+								Assets.Sounds.HIT,
+								Assets.Sounds.ITEM,
+								Assets.Sounds.SHATTER,
+								Assets.Sounds.EVOKE,
+								Assets.Sounds.SECRET));
+					}
+<span class="nc" id="L988">				}</span>
+			};
+<span class="nc" id="L990">			optSFX.setSelectedValue(SPDSettings.SFXVol());</span>
+<span class="nc" id="L991">			add(optSFX);</span>
+
+<span class="nc" id="L993">			chkMuteSFX = new CheckBox( Messages.get(this, &quot;sfx_mute&quot;) ) {</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L996">					super.onClick();</span>
+<span class="nc bnc" id="L997" title="All 2 branches missed.">					SPDSettings.soundFx(!checked());</span>
+<span class="nc" id="L998">					Sample.INSTANCE.play( Assets.Sounds.CLICK );</span>
+<span class="nc" id="L999">				}</span>
+			};
+<span class="nc bnc" id="L1001" title="All 2 branches missed.">			chkMuteSFX.checked(!SPDSettings.soundFx());</span>
+<span class="nc" id="L1002">			add( chkMuteSFX );</span>
+
+<span class="nc bnc" id="L1004" title="All 2 branches missed.">			if (DeviceCompat.isiOS()){</span>
+
+<span class="nc" id="L1006">				sep3 = new ColorBlock(1, 1, 0xFF000000);</span>
+<span class="nc" id="L1007">				add(sep3);</span>
+
+<span class="nc" id="L1009">				chkIgnoreSilent = new CheckBox( Messages.get(this, &quot;ignore_silent&quot;) ){</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L1012">						super.onClick();</span>
+<span class="nc" id="L1013">						SPDSettings.ignoreSilentMode(checked());</span>
+<span class="nc" id="L1014">					}</span>
+				};
+<span class="nc" id="L1016">				chkIgnoreSilent.checked(SPDSettings.ignoreSilentMode());</span>
+<span class="nc" id="L1017">				add(chkIgnoreSilent);</span>
+
+<span class="nc bnc" id="L1019" title="All 2 branches missed.">			} else if (DeviceCompat.isDesktop()){</span>
+
+<span class="nc" id="L1021">				sep3 = new ColorBlock(1, 1, 0xFF000000);</span>
+<span class="nc" id="L1022">				add(sep3);</span>
+
+<span class="nc" id="L1024">				chkMusicBG = new CheckBox( Messages.get(this, &quot;music_bg&quot;) ){</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L1027">						super.onClick();</span>
+<span class="nc" id="L1028">						SPDSettings.playMusicInBackground(checked());</span>
+<span class="nc" id="L1029">					}</span>
+				};
+<span class="nc" id="L1031">				chkMusicBG.checked(SPDSettings.playMusicInBackground());</span>
+<span class="nc" id="L1032">				add(chkMusicBG);</span>
+			}
+<span class="nc" id="L1034">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L1038">			title.setPos((width - title.width())/2, y + GAP);</span>
+<span class="nc" id="L1039">			sep1.size(width, 1);</span>
+<span class="nc" id="L1040">			sep1.y = title.bottom() + 3*GAP;</span>
+
+<span class="nc bnc" id="L1042" title="All 2 branches missed.">			if (width &gt; 200) {</span>
+<span class="nc" id="L1043">				optMusic.setRect(0, sep1.y + 1 + GAP, width/2-1, SLIDER_HEIGHT);</span>
+<span class="nc" id="L1044">				chkMusicMute.setRect(0, optMusic.bottom() + GAP, width/2-1, BTN_HEIGHT);</span>
+
+<span class="nc" id="L1046">				sep2.size(width, 1);</span>
+<span class="nc" id="L1047">				sep2.y = sep1.y; //just have them overlap</span>
+
+<span class="nc" id="L1049">				optSFX.setRect(optMusic.right()+2, sep2.y + 1 + GAP, width/2-1, SLIDER_HEIGHT);</span>
+<span class="nc" id="L1050">				chkMuteSFX.setRect(chkMusicMute.right()+2, optSFX.bottom() + GAP, width/2-1, BTN_HEIGHT);</span>
+
+			} else {
+<span class="nc" id="L1053">				optMusic.setRect(0, sep1.y + 1 + GAP, width, SLIDER_HEIGHT);</span>
+<span class="nc" id="L1054">				chkMusicMute.setRect(0, optMusic.bottom() + GAP, width, BTN_HEIGHT);</span>
+
+<span class="nc" id="L1056">				sep2.size(width, 1);</span>
+<span class="nc" id="L1057">				sep2.y = chkMusicMute.bottom() + GAP;</span>
+
+<span class="nc" id="L1059">				optSFX.setRect(0, sep2.y + 1 + GAP, width, SLIDER_HEIGHT);</span>
+<span class="nc" id="L1060">				chkMuteSFX.setRect(0, optSFX.bottom() + GAP, width, BTN_HEIGHT);</span>
+			}
+
+<span class="nc" id="L1063">			height = chkMuteSFX.bottom();</span>
+
+<span class="nc bnc" id="L1065" title="All 2 branches missed.">			if (chkIgnoreSilent != null){</span>
+<span class="nc" id="L1066">				sep3.size(width, 1);</span>
+<span class="nc" id="L1067">				sep3.y = chkMuteSFX.bottom() + GAP;</span>
+
+<span class="nc" id="L1069">				chkIgnoreSilent.setRect(0, sep3.y + 1 + GAP, width, BTN_HEIGHT);</span>
+<span class="nc" id="L1070">				height = chkIgnoreSilent.bottom();</span>
+<span class="nc bnc" id="L1071" title="All 2 branches missed.">			} else if (chkMusicBG != null){</span>
+<span class="nc" id="L1072">				sep3.size(width, 1);</span>
+<span class="nc" id="L1073">				sep3.y = chkMuteSFX.bottom() + GAP;</span>
+
+<span class="nc" id="L1075">				chkMusicBG.setRect(0, sep3.y + 1 + GAP, width, BTN_HEIGHT);</span>
+<span class="nc" id="L1076">				height = chkMusicBG.bottom();</span>
+			}
+<span class="nc" id="L1078">		}</span>
+
+	}
+
+	private static class LangsTab extends Component{
+
+		final static int COLS_P = 3;
+		final static int COLS_L = 6;
+
+		final static int BTN_HEIGHT = 11;
+
+		RenderedTextBlock title;
+		ColorBlock sep1;
+		RenderedTextBlock txtLangInfo;
+		ColorBlock sep2;
+		RedButton[] lanBtns;
+		ColorBlock sep3;
+		RenderedTextBlock txtTranifex;
+		RedButton btnCredits;
+
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L1100">			title = PixelScene.renderTextBlock(Messages.get(this, &quot;title&quot;), 9);</span>
+<span class="nc" id="L1101">			title.hardlight(TITLE_COLOR);</span>
+<span class="nc" id="L1102">			add(title);</span>
+
+<span class="nc" id="L1104">			sep1 = new ColorBlock(1, 1, 0xFF000000);</span>
+<span class="nc" id="L1105">			add(sep1);</span>
+
+<span class="nc" id="L1107">			final ArrayList&lt;Languages&gt; langs = new ArrayList&lt;&gt;(Arrays.asList(Languages.values()));</span>
+
+<span class="nc" id="L1109">			Languages nativeLang = Languages.matchLocale(Locale.getDefault());</span>
+<span class="nc" id="L1110">			langs.remove(nativeLang);</span>
+			//move the native language to the top.
+<span class="nc" id="L1112">			langs.add(0, nativeLang);</span>
+
+<span class="nc" id="L1114">			final Languages currLang = Messages.lang();</span>
+
+<span class="nc" id="L1116">			txtLangInfo = PixelScene.renderTextBlock(6);</span>
+<span class="nc" id="L1117">			String info = &quot;_&quot; + Messages.titleCase(currLang.nativeName()) + &quot;_ - &quot;;</span>
+<span class="nc bnc" id="L1118" title="All 2 branches missed.">			if (currLang == Languages.ENGLISH) info += &quot;This is the source language, written by the developer.&quot;;</span>
+<span class="nc bnc" id="L1119" title="All 2 branches missed.">			else if (currLang.status() == Languages.Status.O_COMPLETE) info += Messages.get(this, &quot;completed&quot;);</span>
+<span class="nc bnc" id="L1120" title="All 2 branches missed.">			else if (currLang.status() == Languages.Status.__UNREVIEW) info += Messages.get(this, &quot;unreviewed&quot;);</span>
+<span class="nc bnc" id="L1121" title="All 2 branches missed.">			else if (currLang.status() == Languages.Status.X_UNFINISH) info += Messages.get(this, &quot;unfinished&quot;);</span>
+<span class="nc" id="L1122">			txtLangInfo.text(info);</span>
+
+<span class="nc bnc" id="L1124" title="All 2 branches missed.">			if (currLang.status() == Languages.Status.__UNREVIEW) txtLangInfo.setHightlighting(true, CharSprite.WARNING);</span>
+<span class="nc bnc" id="L1125" title="All 2 branches missed.">			else if (currLang.status() == Languages.Status.X_UNFINISH) txtLangInfo.setHightlighting(true, CharSprite.NEGATIVE);</span>
+<span class="nc" id="L1126">			add(txtLangInfo);</span>
+
+<span class="nc" id="L1128">			sep2 = new ColorBlock(1, 1, 0xFF000000);</span>
+<span class="nc" id="L1129">			add(sep2);</span>
+
+<span class="nc" id="L1131">			lanBtns = new RedButton[langs.size()];</span>
+<span class="nc bnc" id="L1132" title="All 2 branches missed.">			for (int i = 0; i &lt; langs.size(); i++){</span>
+<span class="nc" id="L1133">				final int langIndex = i;</span>
+<span class="nc" id="L1134">				RedButton btn = new RedButton(Messages.titleCase(langs.get(i).nativeName()), 6){</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L1137">						super.onClick();</span>
+<span class="nc" id="L1138">						Messages.setup(langs.get(langIndex));</span>
+<span class="nc" id="L1139">						ShatteredPixelDungeon.seamlessResetScene(new Game.SceneChangeCallback() {</span>
+							@Override
+							public void beforeCreate() {
+<span class="nc" id="L1142">								SPDSettings.language(langs.get(langIndex));</span>
+<span class="nc" id="L1143">								GameLog.wipe();</span>
+<span class="nc" id="L1144">								Game.platform.resetGenerators();</span>
+<span class="nc" id="L1145">							}</span>
+							@Override
+							public void afterCreate() {
+								//do nothing
+<span class="nc" id="L1149">							}</span>
+						});
+<span class="nc" id="L1151">					}</span>
+				};
+<span class="nc bnc" id="L1153" title="All 2 branches missed.">				if (currLang == langs.get(i)){</span>
+<span class="nc" id="L1154">					btn.textColor(TITLE_COLOR);</span>
+				} else {
+<span class="nc bnc" id="L1156" title="All 3 branches missed.">					switch (langs.get(i).status()) {</span>
+						case X_UNFINISH:
+<span class="nc" id="L1158">							btn.textColor(0x888888);</span>
+<span class="nc" id="L1159">							break;</span>
+						case __UNREVIEW:
+<span class="nc" id="L1161">							btn.textColor(0xBBBBBB);</span>
+							break;
+					}
+				}
+<span class="nc" id="L1165">				lanBtns[i] = btn;</span>
+<span class="nc" id="L1166">				add(btn);</span>
+			}
+
+<span class="nc" id="L1169">			sep3 = new ColorBlock(1, 1, 0xFF000000);</span>
+<span class="nc" id="L1170">			add(sep3);</span>
+
+<span class="nc" id="L1172">			txtTranifex = PixelScene.renderTextBlock(5);</span>
+<span class="nc" id="L1173">			txtTranifex.text(Messages.get(this, &quot;transifex&quot;));</span>
+<span class="nc" id="L1174">			add(txtTranifex);</span>
+
+<span class="nc bnc" id="L1176" title="All 2 branches missed.">			if (currLang != Languages.ENGLISH) {</span>
+<span class="nc" id="L1177">				String credText = Messages.titleCase(Messages.get(this, &quot;credits&quot;));</span>
+<span class="nc bnc" id="L1178" title="All 2 branches missed.">				btnCredits = new RedButton(credText, credText.length() &gt; 9 ? 6 : 9) {</span>
+					@Override
+					protected void onClick() {
+<span class="nc" id="L1181">						super.onClick();</span>
+<span class="nc" id="L1182">						String[] reviewers = currLang.reviewers();</span>
+<span class="nc" id="L1183">						String[] translators = currLang.translators();</span>
+
+<span class="nc" id="L1185">						int totalCredits = 2*reviewers.length + translators.length;</span>
+<span class="nc" id="L1186">						int totalTokens = 2*totalCredits; //for spaces</span>
+
+						//additional space for titles, and newline chars
+<span class="nc bnc" id="L1189" title="All 2 branches missed.">						if (reviewers.length &gt; 0) totalTokens+=6;</span>
+<span class="nc" id="L1190">						totalTokens +=4;</span>
+
+<span class="nc" id="L1192">						String[] entries = new String[totalTokens];</span>
+<span class="nc" id="L1193">						int index = 0;</span>
+<span class="nc bnc" id="L1194" title="All 2 branches missed.">						if (reviewers.length &gt; 0){</span>
+<span class="nc" id="L1195">							entries[0] = &quot;_&quot;;</span>
+<span class="nc" id="L1196">							entries[1] = Messages.titleCase(Messages.get(LangsTab.this, &quot;reviewers&quot;));</span>
+<span class="nc" id="L1197">							entries[2] = &quot;_&quot;;</span>
+<span class="nc" id="L1198">							entries[3] = &quot;\n&quot;;</span>
+<span class="nc" id="L1199">							index = 4;</span>
+<span class="nc bnc" id="L1200" title="All 2 branches missed.">							for (int i = 0; i &lt; reviewers.length; i++){</span>
+<span class="nc" id="L1201">								entries[index] = reviewers[i];</span>
+<span class="nc bnc" id="L1202" title="All 2 branches missed.">								if (i &lt; reviewers.length-1) entries[index] += &quot;, &quot;;</span>
+<span class="nc" id="L1203">								entries[index+1] = &quot; &quot;;</span>
+<span class="nc" id="L1204">								index += 2;</span>
+							}
+<span class="nc" id="L1206">							entries[index] = &quot;\n&quot;;</span>
+<span class="nc" id="L1207">							entries[index+1] = &quot;\n&quot;;</span>
+<span class="nc" id="L1208">							index += 2;</span>
+						}
+
+<span class="nc" id="L1211">						entries[index] = &quot;_&quot;;</span>
+<span class="nc" id="L1212">						entries[index+1] = Messages.titleCase(Messages.get(LangsTab.this, &quot;translators&quot;));</span>
+<span class="nc" id="L1213">						entries[index+2] = &quot;_&quot;;</span>
+<span class="nc" id="L1214">						entries[index+3] = &quot;\n&quot;;</span>
+<span class="nc" id="L1215">						index += 4;</span>
+
+						//reviewers are also shown as translators
+<span class="nc bnc" id="L1218" title="All 2 branches missed.">						for (int i = 0; i &lt; reviewers.length; i++){</span>
+<span class="nc" id="L1219">							entries[index] = reviewers[i];</span>
+<span class="nc bnc" id="L1220" title="All 4 branches missed.">							if (i &lt; reviewers.length-1 || translators.length &gt; 0) entries[index] += &quot;, &quot;;</span>
+<span class="nc" id="L1221">							entries[index+1] = &quot; &quot;;</span>
+<span class="nc" id="L1222">							index += 2;</span>
+						}
+
+<span class="nc bnc" id="L1225" title="All 2 branches missed.">						for (int i = 0; i &lt; translators.length; i++){</span>
+<span class="nc" id="L1226">							entries[index] = translators[i];</span>
+<span class="nc bnc" id="L1227" title="All 2 branches missed.">							if (i &lt; translators.length-1) entries[index] += &quot;, &quot;;</span>
+<span class="nc" id="L1228">							entries[index+1] = &quot; &quot;;</span>
+<span class="nc" id="L1229">							index += 2;</span>
+						}
+
+<span class="nc" id="L1232">						Window credits = new Window(0, 0, Chrome.get(Chrome.Type.TOAST));</span>
+
+<span class="nc bnc" id="L1234" title="All 2 branches missed.">						int w = PixelScene.landscape() ? 120 : 80;</span>
+<span class="nc bnc" id="L1235" title="All 2 branches missed.">						if (totalCredits &gt;= 25) w *= 1.5f;</span>
+
+<span class="nc" id="L1237">						RenderedTextBlock title = PixelScene.renderTextBlock(9);</span>
+<span class="nc" id="L1238">						title.text(Messages.titleCase(Messages.get(LangsTab.this, &quot;credits&quot;)), w);</span>
+<span class="nc" id="L1239">						title.hardlight(TITLE_COLOR);</span>
+<span class="nc" id="L1240">						title.setPos((w - title.width()) / 2, 0);</span>
+<span class="nc" id="L1241">						credits.add(title);</span>
+
+<span class="nc" id="L1243">						RenderedTextBlock text = PixelScene.renderTextBlock(7);</span>
+<span class="nc" id="L1244">						text.maxWidth(w);</span>
+<span class="nc" id="L1245">						text.tokens(entries);</span>
+
+<span class="nc" id="L1247">						text.setPos(0, title.bottom() + 4);</span>
+<span class="nc" id="L1248">						credits.add(text);</span>
+
+<span class="nc" id="L1250">						credits.resize(w, (int) text.bottom() + 2);</span>
+<span class="nc" id="L1251">						ShatteredPixelDungeon.scene().addToFront(credits);</span>
+<span class="nc" id="L1252">					}</span>
+				};
+<span class="nc" id="L1254">				add(btnCredits);</span>
+			}
+
+<span class="nc" id="L1257">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L1261">			title.setPos((width - title.width())/2, y + GAP);</span>
+<span class="nc" id="L1262">			sep1.size(width, 1);</span>
+<span class="nc" id="L1263">			sep1.y = title.bottom() + 3*GAP;</span>
+
+<span class="nc" id="L1265">			txtLangInfo.setPos(0, sep1.y + 1 + GAP);</span>
+<span class="nc" id="L1266">			txtLangInfo.maxWidth((int)width);</span>
+
+<span class="nc" id="L1268">			y = txtLangInfo.bottom() + 2*GAP;</span>
+<span class="nc" id="L1269">			int x = 0;</span>
+
+<span class="nc" id="L1271">			sep2.size(width, 1);</span>
+<span class="nc" id="L1272">			sep2.y = y;</span>
+<span class="nc" id="L1273">			y += 2;</span>
+
+<span class="nc bnc" id="L1275" title="All 2 branches missed.">			int cols = PixelScene.landscape() ? COLS_L : COLS_P;</span>
+<span class="nc" id="L1276">			int btnWidth = (int)Math.floor((width - (cols-1)) / cols);</span>
+<span class="nc bnc" id="L1277" title="All 2 branches missed.">			for (RedButton btn : lanBtns){</span>
+<span class="nc" id="L1278">				btn.setRect(x, y, btnWidth, BTN_HEIGHT);</span>
+<span class="nc" id="L1279">				btn.setPos(x, y);</span>
+<span class="nc" id="L1280">				x += btnWidth+1;</span>
+<span class="nc bnc" id="L1281" title="All 2 branches missed.">				if (x + btnWidth &gt; width){</span>
+<span class="nc" id="L1282">					x = 0;</span>
+<span class="nc" id="L1283">					y += BTN_HEIGHT+1;</span>
+				}
+			}
+<span class="nc bnc" id="L1286" title="All 2 branches missed.">			if (x &gt; 0){</span>
+<span class="nc" id="L1287">				y += BTN_HEIGHT+1;</span>
+			}
+
+<span class="nc" id="L1290">			sep3.size(width, 1);</span>
+<span class="nc" id="L1291">			sep3.y = y;</span>
+<span class="nc" id="L1292">			y += 2;</span>
+
+<span class="nc bnc" id="L1294" title="All 2 branches missed.">			if (btnCredits != null){</span>
+<span class="nc" id="L1295">				btnCredits.setSize(btnCredits.reqWidth() + 2, 16);</span>
+<span class="nc" id="L1296">				btnCredits.setPos(width - btnCredits.width(), y);</span>
+
+<span class="nc" id="L1298">				txtTranifex.setPos(0, y);</span>
+<span class="nc" id="L1299">				txtTranifex.maxWidth((int)btnCredits.left());</span>
+
+<span class="nc" id="L1301">				height = Math.max(btnCredits.bottom(), txtTranifex.bottom());</span>
+			} else {
+<span class="nc" id="L1303">				txtTranifex.setPos(0, y);</span>
+<span class="nc" id="L1304">				txtTranifex.maxWidth((int)width);</span>
+
+<span class="nc" id="L1306">				height = txtTranifex.bottom();</span>
+			}
+
+<span class="nc" id="L1309">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

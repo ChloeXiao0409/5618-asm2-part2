@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Berserk.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.buffs</a> &gt; <span class="el_source">Berserk.java</span></div><h1>Berserk.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.buffs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
+import com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal.WarriorShield;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ActionIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.Visual;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.GameMath;
+
+<span class="nc" id="L46">public class Berserk extends Buff implements ActionIndicator.Action {</span>
+
+	{
+<span class="nc" id="L49">		type = buffType.POSITIVE;</span>
+	}
+
+<span class="nc" id="L52">	private enum State{</span>
+<span class="nc" id="L53">		NORMAL, BERSERK, RECOVERING</span>
+	}
+<span class="nc" id="L55">	private State state = State.NORMAL;</span>
+
+	private static final float LEVEL_RECOVER_START = 4f;
+	private float levelRecovery;
+
+	private static final int TURN_RECOVERY_START = 100;
+	private int turnRecovery;
+
+<span class="nc" id="L63">	public int powerLossBuffer = 0;</span>
+<span class="nc" id="L64">	private float power = 0;</span>
+
+	private static final String STATE = &quot;state&quot;;
+	private static final String LEVEL_RECOVERY = &quot;levelrecovery&quot;;
+	private static final String TURN_RECOVERY = &quot;turn_recovery&quot;;
+	private static final String POWER = &quot;power&quot;;
+	private static final String POWER_BUFFER = &quot;power_buffer&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L74">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L75">		bundle.put(STATE, state);</span>
+<span class="nc" id="L76">		bundle.put(POWER, power);</span>
+<span class="nc" id="L77">		bundle.put(POWER_BUFFER, powerLossBuffer);</span>
+<span class="nc" id="L78">		bundle.put(LEVEL_RECOVERY, levelRecovery);</span>
+<span class="nc" id="L79">		bundle.put(TURN_RECOVERY, turnRecovery);</span>
+<span class="nc" id="L80">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L84">		super.restoreFromBundle(bundle);</span>
+
+<span class="nc" id="L86">		state = bundle.getEnum(STATE, State.class);</span>
+<span class="nc" id="L87">		power = bundle.getFloat(POWER);</span>
+<span class="nc" id="L88">		powerLossBuffer = bundle.getInt(POWER_BUFFER);</span>
+<span class="nc" id="L89">		levelRecovery = bundle.getFloat(LEVEL_RECOVERY);</span>
+<span class="nc" id="L90">		turnRecovery = bundle.getInt(TURN_RECOVERY);</span>
+
+<span class="nc bnc" id="L92" title="All 4 branches missed.">		if (power &gt;= 1f &amp;&amp; state == State.NORMAL){</span>
+<span class="nc" id="L93">			ActionIndicator.setAction(this);</span>
+		}
+<span class="nc" id="L95">	}</span>
+
+	@Override
+	public boolean act() {
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		if (state == State.BERSERK){</span>
+<span class="nc" id="L100">			ShieldBuff buff = target.buff(WarriorShield.class);</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">			if (target.shielding() &gt; 0) {</span>
+				//lose 2.5% of shielding per turn, but no less than 1
+<span class="nc" id="L103">				int dmg = (int)Math.ceil(target.shielding() * 0.025f);</span>
+<span class="nc bnc" id="L104" title="All 4 branches missed.">				if (buff != null &amp;&amp; buff.shielding() &gt; 0) {</span>
+<span class="nc" id="L105">					dmg = buff.absorbDamage(dmg);</span>
+				}
+
+<span class="nc bnc" id="L108" title="All 2 branches missed.">				if (dmg &gt; 0){</span>
+					//if there is leftover damage, then try to remove from other shielding buffs
+<span class="nc bnc" id="L110" title="All 2 branches missed.">					for (ShieldBuff s : target.buffs(ShieldBuff.class)){</span>
+<span class="nc" id="L111">						dmg = s.absorbDamage(dmg);</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">						if (dmg == 0) break;</span>
+<span class="nc" id="L113">					}</span>
+				}
+
+<span class="nc bnc" id="L116" title="All 2 branches missed.">				if (target.shielding() &lt;= 0){</span>
+<span class="nc" id="L117">					state = State.RECOVERING;</span>
+<span class="nc" id="L118">					power = 0f;</span>
+<span class="nc" id="L119">					BuffIndicator.refreshHero();</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">					if (!target.isAlive()){</span>
+<span class="nc" id="L121">						target.die(this);</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">						if (!target.isAlive()) Dungeon.fail(this);</span>
+					}
+				}
+
+<span class="nc" id="L126">			} else {</span>
+<span class="nc" id="L127">				state = State.RECOVERING;</span>
+<span class="nc" id="L128">				power = 0f;</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">				if (!target.isAlive()){</span>
+<span class="nc" id="L130">					target.die(this);</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">					if (!target.isAlive()) Dungeon.fail(this);</span>
+				}
+
+			}
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		} else if (state == State.NORMAL) {</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">			if (powerLossBuffer &gt; 0){</span>
+<span class="nc" id="L137">				powerLossBuffer--;</span>
+			} else {
+<span class="nc" id="L139">				power -= GameMath.gate(0.1f, power, 1f) * 0.067f * Math.pow((target.HP / (float) target.HT), 2);</span>
+
+<span class="nc bnc" id="L141" title="All 2 branches missed.">				if (power &lt; 1f){</span>
+<span class="nc" id="L142">					ActionIndicator.clearAction(this);</span>
+				} else {
+<span class="nc" id="L144">					ActionIndicator.refresh();</span>
+				}
+
+<span class="nc bnc" id="L147" title="All 2 branches missed.">				if (power &lt;= 0) {</span>
+<span class="nc" id="L148">					detach();</span>
+				}
+			}
+<span class="nc bnc" id="L151" title="All 6 branches missed.">		} else if (state == State.RECOVERING &amp;&amp; levelRecovery == 0 &amp;&amp; Regeneration.regenOn()){</span>
+<span class="nc" id="L152">			turnRecovery--;</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">			if (turnRecovery &lt;= 0){</span>
+<span class="nc" id="L154">				turnRecovery = 0;</span>
+<span class="nc" id="L155">				state = State.NORMAL;</span>
+			}
+		}
+<span class="nc" id="L158">		spend(TICK);</span>
+<span class="nc" id="L159">		return true;</span>
+	}
+
+	@Override
+	public void detach() {
+<span class="nc" id="L164">		super.detach();</span>
+<span class="nc" id="L165">		ActionIndicator.clearAction(this);</span>
+<span class="nc" id="L166">	}</span>
+
+	public float enchantFactor(float chance){
+<span class="nc" id="L169">		return chance + ((Math.min(1f, power) * 0.15f) * ((Hero) target).pointsInTalent(Talent.ENRAGED_CATALYST));</span>
+	}
+
+	public float damageFactor(float dmg){
+<span class="nc" id="L173">		return dmg * Math.min(1.5f, 1f + (power / 2f));</span>
+	}
+
+	public boolean berserking(){
+<span class="nc bnc" id="L177" title="All 6 branches missed.">		if (target.HP == 0</span>
+				&amp;&amp; state == State.NORMAL
+				&amp;&amp; power &gt;= 1f
+<span class="nc bnc" id="L180" title="All 2 branches missed.">				&amp;&amp; target.buff(WarriorShield.class) != null</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">				&amp;&amp; ((Hero)target).hasTalent(Talent.DEATHLESS_FURY)){</span>
+<span class="nc" id="L182">			startBerserking();</span>
+<span class="nc" id="L183">			ActionIndicator.clearAction(this);</span>
+		}
+
+<span class="nc bnc" id="L186" title="All 4 branches missed.">		return state == State.BERSERK &amp;&amp; target.shielding() &gt; 0;</span>
+	}
+
+	private void startBerserking(){
+<span class="nc" id="L190">		state = State.BERSERK;</span>
+<span class="nc" id="L191">		SpellSprite.show(target, SpellSprite.BERSERK);</span>
+<span class="nc" id="L192">		Sample.INSTANCE.play( Assets.Sounds.CHALLENGE );</span>
+<span class="nc" id="L193">		GameScene.flash(0xFF0000);</span>
+
+<span class="nc bnc" id="L195" title="All 2 branches missed.">		if (target.HP &gt; 0) {</span>
+<span class="nc" id="L196">			turnRecovery = TURN_RECOVERY_START;</span>
+<span class="nc" id="L197">			levelRecovery = 0;</span>
+		} else {
+<span class="nc" id="L199">			levelRecovery = LEVEL_RECOVER_START - ((Hero)target).pointsInTalent(Talent.DEATHLESS_FURY);</span>
+<span class="nc" id="L200">			turnRecovery = 0;</span>
+		}
+
+		//base multiplier scales at 2/3/4/5/6x at 100/37/20/9/0% HP
+<span class="nc" id="L204">		float shieldMultiplier = 2f + 4*(float)Math.pow((1f-(target.HP/(float)target.HT)), 3);</span>
+
+		//Endless rage effect on shield and cooldown
+<span class="nc bnc" id="L207" title="All 2 branches missed.">		if (power &gt; 1f){</span>
+<span class="nc" id="L208">			shieldMultiplier *= power;</span>
+<span class="nc" id="L209">			levelRecovery *= 2f - power;</span>
+<span class="nc" id="L210">			turnRecovery *= 2f - power;</span>
+		}
+
+<span class="nc" id="L213">		WarriorShield shield = target.buff(WarriorShield.class);</span>
+<span class="nc" id="L214">		int shieldAmount = Math.round(shield.maxShield() * shieldMultiplier);</span>
+<span class="nc" id="L215">		shield.supercharge(shieldAmount);</span>
+<span class="nc" id="L216">		target.sprite.showStatusWithIcon( CharSprite.POSITIVE, Integer.toString(shieldAmount), FloatingText.SHIELDING );</span>
+
+<span class="nc" id="L218">		BuffIndicator.refreshHero();</span>
+<span class="nc" id="L219">	}</span>
+	
+	public void damage(int damage){
+<span class="nc bnc" id="L222" title="All 2 branches missed.">		if (state != State.NORMAL) return;</span>
+<span class="nc" id="L223">		float maxPower = 1f + 0.1667f*((Hero)target).pointsInTalent(Talent.ENDLESS_RAGE);</span>
+<span class="nc" id="L224">		power = Math.min(maxPower, power + (damage/(float)target.HT)/3f );</span>
+<span class="nc" id="L225">		BuffIndicator.refreshHero(); //show new power immediately</span>
+<span class="nc" id="L226">		powerLossBuffer = 3; //2 turns until rage starts dropping</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">		if (power &gt;= 1f){</span>
+<span class="nc" id="L228">			ActionIndicator.setAction(this);</span>
+		}
+<span class="nc" id="L230">	}</span>
+
+	public void recover(float percent){
+<span class="nc bnc" id="L233" title="All 4 branches missed.">		if (state == State.RECOVERING &amp;&amp; levelRecovery &gt; 0){</span>
+<span class="nc" id="L234">			levelRecovery -= percent;</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">			if (levelRecovery &lt;= 0) {</span>
+<span class="nc" id="L236">				levelRecovery = 0;</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">				if (turnRecovery == 0){</span>
+<span class="nc" id="L238">					state = State.NORMAL;</span>
+				}
+			}
+		}
+<span class="nc" id="L242">	}</span>
+
+	@Override
+	public String actionName() {
+<span class="nc" id="L246">		return Messages.get(this, &quot;action_name&quot;);</span>
+	}
+
+	@Override
+	public int actionIcon() {
+<span class="nc" id="L251">		return HeroIcon.BERSERK;</span>
+	}
+
+	@Override
+	public Visual secondaryVisual() {
+<span class="nc" id="L256">		BitmapText txt = new BitmapText(PixelScene.pixelFont);</span>
+<span class="nc" id="L257">		txt.text((int) (power * 100) + &quot;%&quot;);</span>
+<span class="nc" id="L258">		txt.hardlight(CharSprite.POSITIVE);</span>
+<span class="nc" id="L259">		txt.measure();</span>
+<span class="nc" id="L260">		return txt;</span>
+	}
+
+	@Override
+	public int indicatorColor() {
+<span class="nc" id="L265">		return 0x660000;</span>
+	}
+
+	@Override
+	public void doAction() {
+<span class="nc" id="L270">		WarriorShield shield = target.buff(WarriorShield.class);</span>
+<span class="nc bnc" id="L271" title="All 4 branches missed.">		if (shield != null &amp;&amp; shield.maxShield() &gt; 0) {</span>
+<span class="nc" id="L272">			startBerserking();</span>
+<span class="nc" id="L273">			ActionIndicator.clearAction(this);</span>
+		} else {
+<span class="nc" id="L275">			GLog.w(Messages.get(this, &quot;no_seal&quot;));</span>
+		}
+<span class="nc" id="L277">	}</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L281">		return BuffIndicator.BERSERK;</span>
+	}
+	
+	@Override
+	public void tintIcon(Image icon) {
+<span class="nc bnc" id="L286" title="All 3 branches missed.">		switch (state){</span>
+			case NORMAL: default:
+<span class="nc bnc" id="L288" title="All 2 branches missed.">				if (power &lt; 1f) icon.hardlight(1f, 0.5f, 0f);</span>
+<span class="nc" id="L289">				else            icon.hardlight(1f, 0f, 0f);</span>
+<span class="nc" id="L290">				break;</span>
+			case BERSERK:
+<span class="nc" id="L292">				icon.hardlight(1f, 0f, 0f);</span>
+<span class="nc" id="L293">				break;</span>
+			case RECOVERING:
+<span class="nc" id="L295">				icon.hardlight(0, 0, 1f);</span>
+				break;
+		}
+<span class="nc" id="L298">	}</span>
+	
+	@Override
+	public float iconFadePercent() {
+<span class="nc bnc" id="L302" title="All 3 branches missed.">		switch (state){</span>
+			case NORMAL: default:
+<span class="nc" id="L304">				float maxPower = 1f + 0.1667f*((Hero)target).pointsInTalent(Talent.ENDLESS_RAGE);</span>
+<span class="nc" id="L305">				return (maxPower - power)/maxPower;</span>
+			case BERSERK:
+<span class="nc" id="L307">				return 0f;</span>
+			case RECOVERING:
+<span class="nc bnc" id="L309" title="All 2 branches missed.">				if (levelRecovery &gt; 0) {</span>
+<span class="nc" id="L310">					return 1f - levelRecovery/(LEVEL_RECOVER_START-Dungeon.hero.pointsInTalent(Talent.DEATHLESS_FURY));</span>
+				} else {
+<span class="nc" id="L312">					return 1f - turnRecovery/(float)TURN_RECOVERY_START;</span>
+				}
+		}
+	}
+
+	public String iconTextDisplay(){
+<span class="nc bnc" id="L318" title="All 2 branches missed.">		switch (state){</span>
+			case NORMAL: case BERSERK: default:
+<span class="nc" id="L320">				return (int)(power*100) + &quot;%&quot;;</span>
+			case RECOVERING:
+<span class="nc bnc" id="L322" title="All 2 branches missed.">				if (levelRecovery &gt; 0) {</span>
+<span class="nc" id="L323">					return Messages.decimalFormat(&quot;#.##&quot;, levelRecovery);</span>
+				} else {
+<span class="nc" id="L325">					return Integer.toString(turnRecovery);</span>
+				}
+		}
+	}
+
+	@Override
+	public String name() {
+<span class="nc bnc" id="L332" title="All 3 branches missed.">		switch (state){</span>
+			case NORMAL: default:
+<span class="nc" id="L334">				return Messages.get(this, &quot;angered&quot;);</span>
+			case BERSERK:
+<span class="nc" id="L336">				return Messages.get(this, &quot;berserk&quot;);</span>
+			case RECOVERING:
+<span class="nc" id="L338">				return Messages.get(this, &quot;recovering&quot;);</span>
+		}
+	}
+
+	@Override
+	public String desc() {
+<span class="nc" id="L344">		float dispDamage = ((int)damageFactor(10000) / 100f) - 100f;</span>
+<span class="nc bnc" id="L345" title="All 3 branches missed.">		switch (state){</span>
+			case NORMAL: default:
+<span class="nc" id="L347">				return Messages.get(this, &quot;angered_desc&quot;, Math.floor(power * 100f), dispDamage);</span>
+			case BERSERK:
+<span class="nc" id="L349">				return Messages.get(this, &quot;berserk_desc&quot;);</span>
+			case RECOVERING:
+<span class="nc bnc" id="L351" title="All 2 branches missed.">				if (levelRecovery &gt; 0){</span>
+<span class="nc" id="L352">					return Messages.get(this, &quot;recovering_desc&quot;) + &quot;\n\n&quot; + Messages.get(this, &quot;recovering_desc_levels&quot;, levelRecovery);</span>
+				} else {
+<span class="nc" id="L354">					return Messages.get(this, &quot;recovering_desc&quot;) + &quot;\n\n&quot; + Messages.get(this, &quot;recovering_desc_turns&quot;, turnRecovery);</span>
+				}
+		}
+		
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

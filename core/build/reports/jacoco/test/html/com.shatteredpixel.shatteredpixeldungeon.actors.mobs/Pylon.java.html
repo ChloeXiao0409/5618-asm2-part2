@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Pylon.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">Pylon.java</span></div><h1>Pylon.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Electricity;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.LockedFloor;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Lightning;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SparkParticle;
+import com.shatteredpixel.shatteredpixeldungeon.levels.CavesBossLevel;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.PylonSprite;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L49">public class Pylon extends Mob {</span>
+
+	{
+<span class="nc" id="L52">		spriteClass = PylonSprite.class;</span>
+
+<span class="nc bnc" id="L54" title="All 2 branches missed.">		HP = HT = Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? 80 : 50;</span>
+
+<span class="nc" id="L56">		maxLvl = -2;</span>
+
+<span class="nc" id="L58">		properties.add(Property.MINIBOSS);</span>
+<span class="nc" id="L59">		properties.add(Property.BOSS_MINION);</span>
+<span class="nc" id="L60">		properties.add(Property.INORGANIC);</span>
+<span class="nc" id="L61">		properties.add(Property.ELECTRIC);</span>
+<span class="nc" id="L62">		properties.add(Property.IMMOVABLE);</span>
+<span class="nc" id="L63">		properties.add(Property.STATIC);</span>
+
+<span class="nc" id="L65">		state = PASSIVE;</span>
+<span class="nc" id="L66">		alignment = Alignment.NEUTRAL;</span>
+	}
+
+<span class="nc" id="L69">	private int targetNeighbor = Random.Int(8);</span>
+
+	@Override
+	protected boolean act() {
+		//char logic
+<span class="nc bnc" id="L74" title="All 4 branches missed.">		if (fieldOfView == null || fieldOfView.length != Dungeon.level.length()){</span>
+<span class="nc" id="L75">			fieldOfView = new boolean[Dungeon.level.length()];</span>
+		}
+<span class="nc" id="L77">		Dungeon.level.updateFieldOfView( this, fieldOfView );</span>
+
+<span class="nc" id="L79">		throwItems();</span>
+
+<span class="nc" id="L81">		sprite.hideAlert();</span>
+<span class="nc" id="L82">		sprite.hideLost();</span>
+
+		//mob logic
+<span class="nc" id="L85">		enemy = chooseEnemy();</span>
+
+<span class="nc bnc" id="L87" title="All 8 branches missed.">		enemySeen = enemy != null &amp;&amp; enemy.isAlive() &amp;&amp; fieldOfView[enemy.pos] &amp;&amp; enemy.invisible &lt;= 0;</span>
+		//end of char/mob logic
+
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		if (alignment == Alignment.NEUTRAL){</span>
+<span class="nc" id="L91">			spend(TICK);</span>
+<span class="nc" id="L92">			return true;</span>
+		}
+
+<span class="nc" id="L95">		ArrayList&lt;Integer&gt; shockCells = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L97">		shockCells.add(pos + PathFinder.CIRCLE8[targetNeighbor]);</span>
+
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		if (Dungeon.isChallenged(Challenges.STRONGER_BOSSES)){</span>
+<span class="nc" id="L100">			shockCells.add(pos + PathFinder.CIRCLE8[(targetNeighbor+3)%8]);</span>
+<span class="nc" id="L101">			shockCells.add(pos + PathFinder.CIRCLE8[(targetNeighbor+5)%8]);</span>
+		} else {
+<span class="nc" id="L103">			shockCells.add(pos + PathFinder.CIRCLE8[(targetNeighbor+4)%8]);</span>
+		}
+
+<span class="nc" id="L106">		sprite.flash();</span>
+
+<span class="nc" id="L108">		boolean visible = Dungeon.level.heroFOV[pos];</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		for (int cell : shockCells){</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">			if (Dungeon.level.heroFOV[cell]){</span>
+<span class="nc" id="L111">				visible = true;</span>
+			}
+<span class="nc" id="L113">		}</span>
+
+<span class="nc bnc" id="L115" title="All 2 branches missed.">		if (visible) {</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">			for (int cell : shockCells){</span>
+<span class="nc" id="L117">				sprite.parent.add(new Lightning(sprite.center(),</span>
+<span class="nc" id="L118">						DungeonTilemap.raisedTileCenterToWorld(cell), null));</span>
+<span class="nc" id="L119">				CellEmitter.get(cell).burst(SparkParticle.FACTORY, 3);</span>
+<span class="nc" id="L120">			}</span>
+<span class="nc" id="L121">			Sample.INSTANCE.play( Assets.Sounds.LIGHTNING );</span>
+		}
+
+<span class="nc bnc" id="L124" title="All 2 branches missed.">		for (int cell : shockCells) {</span>
+<span class="nc" id="L125">			shockChar(Actor.findChar(cell));</span>
+<span class="nc" id="L126">		}</span>
+
+<span class="nc" id="L128">		targetNeighbor = (targetNeighbor+1)%8;</span>
+
+<span class="nc" id="L130">		spend(TICK);</span>
+
+<span class="nc" id="L132">		return true;</span>
+	}
+
+	private void shockChar( Char ch ){
+<span class="nc bnc" id="L136" title="All 4 branches missed.">		if (ch != null &amp;&amp; !(ch instanceof DM300)){</span>
+<span class="nc" id="L137">			ch.sprite.flash();</span>
+<span class="nc" id="L138">			ch.damage(Random.NormalIntRange(10, 20), new Electricity());</span>
+
+<span class="nc bnc" id="L140" title="All 2 branches missed.">			if (ch == Dungeon.hero) {</span>
+<span class="nc" id="L141">				Statistics.qualifiedForBossChallengeBadge = false;</span>
+<span class="nc" id="L142">				Statistics.bossScores[2] -= 100;</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">				if (!ch.isAlive()) {</span>
+<span class="nc" id="L144">					Dungeon.fail(DM300.class);</span>
+<span class="nc" id="L145">					GLog.n(Messages.get(Electricity.class, &quot;ondeath&quot;));</span>
+				}
+			}
+		}
+<span class="nc" id="L149">	}</span>
+
+	public void activate(){
+<span class="nc" id="L152">		alignment = Alignment.ENEMY;</span>
+<span class="nc" id="L153">		state = HUNTING; //so allies know to attack it</span>
+<span class="nc" id="L154">		((PylonSprite) sprite).activate();</span>
+<span class="nc" id="L155">	}</span>
+
+	@Override
+	public CharSprite sprite() {
+<span class="nc" id="L159">		PylonSprite p = (PylonSprite) super.sprite();</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">		if (alignment != Alignment.NEUTRAL) p.activate();</span>
+<span class="nc" id="L161">		return p;</span>
+	}
+
+	@Override
+	public void beckon(int cell) {
+		//do nothing
+<span class="nc" id="L167">	}</span>
+
+	@Override
+	public String description() {
+<span class="nc bnc" id="L171" title="All 2 branches missed.">		if (alignment == Alignment.NEUTRAL){</span>
+<span class="nc" id="L172">			return Messages.get(this, &quot;desc_inactive&quot;);</span>
+		} else {
+<span class="nc" id="L174">			return Messages.get(this, &quot;desc_active&quot;);</span>
+		}
+	}
+
+	@Override
+	public boolean interact(Char c) {
+<span class="nc" id="L180">		return true;</span>
+	}
+
+	@Override
+	public boolean add(Buff buff) {
+		//immune to all buffs/debuffs when inactive
+<span class="nc bnc" id="L186" title="All 2 branches missed.">		if (alignment != Alignment.NEUTRAL) {</span>
+<span class="nc" id="L187">			return super.add(buff);</span>
+		}
+<span class="nc" id="L189">		return false;</span>
+	}
+
+	@Override
+	public boolean isInvulnerable(Class effect) {
+		//immune to damage when inactive
+<span class="nc bnc" id="L195" title="All 4 branches missed.">		return alignment == Alignment.NEUTRAL || super.isInvulnerable(effect);</span>
+	}
+
+	@Override
+	public void damage(int dmg, Object src) {
+<span class="nc bnc" id="L200" title="All 2 branches missed.">		if (dmg &gt;= 15){</span>
+			//takes 15/16/17/18/19/20 dmg at 15/17/20/24/29/36 incoming dmg
+<span class="nc" id="L202">			dmg = 14 + (int)(Math.sqrt(8*(dmg - 14) + 1) - 1)/2;</span>
+		}
+
+<span class="nc" id="L205">		LockedFloor lock = Dungeon.hero.buff(LockedFloor.class);</span>
+<span class="nc bnc" id="L206" title="All 6 branches missed.">		if (lock != null &amp;&amp; !isImmune(src.getClass()) &amp;&amp; !isInvulnerable(src.getClass())){</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">			if (Dungeon.isChallenged(Challenges.STRONGER_BOSSES))   lock.addTime(dmg/2f);</span>
+<span class="nc" id="L208">			else                                                    lock.addTime(dmg);</span>
+		}
+<span class="nc" id="L210">		super.damage(dmg, src);</span>
+<span class="nc" id="L211">	}</span>
+
+	@Override
+	public void die(Object cause) {
+<span class="nc" id="L215">		super.die(cause);</span>
+<span class="nc" id="L216">		((CavesBossLevel)Dungeon.level).eliminatePylon();</span>
+<span class="nc" id="L217">	}</span>
+
+	private static final String ALIGNMENT = &quot;alignment&quot;;
+	private static final String TARGET_NEIGHBOUR = &quot;target_neighbour&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L224">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L225">		bundle.put(ALIGNMENT, alignment);</span>
+<span class="nc" id="L226">		bundle.put(TARGET_NEIGHBOUR, targetNeighbor);</span>
+<span class="nc" id="L227">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L231">		alignment = bundle.getEnum(ALIGNMENT, Alignment.class);</span>
+<span class="nc" id="L232">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L233">		targetNeighbor = bundle.getInt(TARGET_NEIGHBOUR);</span>
+<span class="nc" id="L234">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

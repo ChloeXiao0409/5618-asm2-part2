@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RadialMenu.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">RadialMenu.java</span></div><h1>RadialMenu.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CircleArc;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.watabou.input.ControllerHandler;
+import com.watabou.noosa.ColorBlock;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.ui.Cursor;
+import com.watabou.utils.PointF;
+
+public class RadialMenu extends Window {
+
+	int slots;
+	float targetAngle;
+	PointF center;
+
+	CircleArc selectionArc;
+	RenderedTextBlock titleTxt;
+	RenderedTextBlock descTxt;
+
+	String[] texts;
+	Image[] icons;
+<span class="nc" id="L48">	int selectedIdx = -1;</span>
+
+	public RadialMenu(String title, String desc, String[] optionTexts, Image[] optionIcons){
+<span class="nc" id="L51">		super(0, 0, Chrome.get(Chrome.Type.BLANK));</span>
+<span class="nc" id="L52">		remove(shadow);</span>
+
+<span class="nc bnc" id="L54" title="All 2 branches missed.">		int size = SPDSettings.interfaceSize() == 0 ? 140 : 200;</span>
+<span class="nc" id="L55">		resize(Game.width, Game.height);</span>
+
+<span class="nc" id="L57">		slots = optionTexts.length;</span>
+<span class="nc" id="L58">		center = new PointF(width/2, height/2);</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		int length = SPDSettings.interfaceSize() == 0 ? 57 : 80;</span>
+
+<span class="nc" id="L61">		selectionArc = new CircleArc(120/slots, size/2 - 1);</span>
+<span class="nc" id="L62">		selectionArc.color(0xFFFFFF, false);</span>
+<span class="nc" id="L63">		selectionArc.alpha(0.6f);</span>
+<span class="nc" id="L64">		selectionArc.setSweep(1f/slots);</span>
+<span class="nc" id="L65">		selectionArc.point(center);</span>
+<span class="nc" id="L66">		selectionArc.visible = false;</span>
+<span class="nc" id="L67">		add(selectionArc);</span>
+
+<span class="nc" id="L69">		Image outerBG = getBGTexture(size, false);</span>
+<span class="nc" id="L70">		outerBG.x = (width - outerBG.width) / 2;</span>
+<span class="nc" id="L71">		outerBG.y = (height - outerBG.height) / 2;</span>
+<span class="nc" id="L72">		PixelScene.align(outerBG);</span>
+<span class="nc" id="L73">		add(outerBG);</span>
+
+<span class="nc" id="L75">		texts = optionTexts;</span>
+<span class="nc" id="L76">		icons = optionIcons;</span>
+
+<span class="nc bnc" id="L78" title="All 2 branches missed.">		for (int i = 0; i &lt; slots; i++){</span>
+
+<span class="nc" id="L80">			PointF iconCenter = new PointF().polar((PointF.PI2/slots * i)-PointF.PI/2, length);</span>
+<span class="nc" id="L81">			iconCenter.offset(center);</span>
+<span class="nc" id="L82">			optionIcons[i].x = iconCenter.x - optionIcons[i].width()/2f;</span>
+<span class="nc" id="L83">			optionIcons[i].y = iconCenter.y - optionIcons[i].height()/2f;</span>
+<span class="nc" id="L84">			PixelScene.align(optionIcons[i]);</span>
+<span class="nc" id="L85">			optionIcons[i].alpha(0.4f);</span>
+<span class="nc" id="L86">			add(optionIcons[i]);</span>
+
+<span class="nc" id="L88">			ColorBlock sep = new ColorBlock(size/2 - 2, 1, 0xFF000000);</span>
+<span class="nc" id="L89">			sep.x = center.x;</span>
+<span class="nc" id="L90">			sep.y = center.y;</span>
+<span class="nc" id="L91">			sep.angle = (360f/slots * i) + selectionArc.getSweep()*180 - 90;</span>
+<span class="nc" id="L92">			addToFront(sep);</span>
+
+		}
+
+<span class="nc" id="L96">		Image innerBG = getBGTexture(size, true);</span>
+<span class="nc" id="L97">		innerBG.x = (width - innerBG.width) / 2;</span>
+<span class="nc" id="L98">		innerBG.y = (height - innerBG.height) / 2;</span>
+<span class="nc" id="L99">		PixelScene.align(innerBG);</span>
+<span class="nc" id="L100">		add(innerBG);</span>
+
+<span class="nc" id="L102">		descTxt = PixelScene.renderTextBlock(desc, 6);</span>
+<span class="nc" id="L103">		descTxt.align(RenderedTextBlock.CENTER_ALIGN);</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">		descTxt.maxWidth(SPDSettings.interfaceSize() == 0 ? 80 : 100);</span>
+<span class="nc" id="L105">		descTxt.setPos(center.x - descTxt.width()/2, center.y - descTxt.height()/4);</span>
+<span class="nc" id="L106">		add(descTxt);</span>
+
+<span class="nc" id="L108">		titleTxt = PixelScene.renderTextBlock(title, 9);</span>
+<span class="nc" id="L109">		titleTxt.setPos(center.x - titleTxt.width()/2f, descTxt.top() - titleTxt.height() - 6);</span>
+<span class="nc" id="L110">		PixelScene.align(titleTxt);</span>
+<span class="nc" id="L111">		titleTxt.hardlight(TITLE_COLOR);</span>
+<span class="nc" id="L112">		add(titleTxt);</span>
+
+<span class="nc" id="L114">		Cursor.captureCursor(true);</span>
+
+<span class="nc" id="L116">		Button selector = new Button(){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L119">				super.onClick();</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">				if (selectedIdx != -1){</span>
+<span class="nc" id="L121">					hide();</span>
+<span class="nc" id="L122">					onSelect(selectedIdx, false);</span>
+				}
+<span class="nc" id="L124">			}</span>
+
+			@Override
+			protected boolean onLongClick() {
+<span class="nc bnc" id="L128" title="All 2 branches missed.">				if (selectedIdx != -1){</span>
+<span class="nc" id="L129">					hide();</span>
+<span class="nc" id="L130">					onSelect(selectedIdx, true);</span>
+				}
+<span class="nc" id="L132">				return true;</span>
+			}
+
+			@Override
+			protected void onRightClick() {
+<span class="nc" id="L137">				super.onRightClick();</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">				if (selectedIdx != -1){</span>
+<span class="nc" id="L139">					hide();</span>
+<span class="nc" id="L140">					onSelect(selectedIdx, true);</span>
+				}
+<span class="nc" id="L142">			}</span>
+		};
+<span class="nc" id="L144">		selector.setRect(0, 0, width, height);</span>
+<span class="nc" id="L145">		add(selector);</span>
+
+<span class="nc" id="L147">	}</span>
+
+<span class="nc" id="L149">	public void onSelect(int idx, boolean alt){}</span>
+
+	@Override
+	public void destroy() {
+<span class="nc" id="L153">		super.destroy();</span>
+<span class="nc" id="L154">		Cursor.captureCursor(false);</span>
+<span class="nc" id="L155">	}</span>
+
+	//the mouse has a hidden position in a 20-pixel radius circle, helps make selection feel more natural
+<span class="nc" id="L158">	private PointF mousePos = new PointF();</span>
+<span class="nc" id="L159">	private boolean first = true; //ignore the first mouse input as it's caused by hiding mouse</span>
+
+	@Override
+	public synchronized void update() {
+<span class="nc" id="L163">		super.update();</span>
+
+<span class="nc" id="L165">		PointF movement = Cursor.getCursorDelta();</span>
+		//40% deadzone for controller input here
+<span class="nc bnc" id="L167" title="All 2 branches missed.">		if (Math.abs(ControllerHandler.rightStickPosition.x) &gt;= 0.4f</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">				|| Math.abs(ControllerHandler.rightStickPosition.y) &gt;= 0.4f){</span>
+<span class="nc" id="L169">			movement.x = ControllerHandler.rightStickPosition.x;</span>
+<span class="nc" id="L170">			movement.y = ControllerHandler.rightStickPosition.y;</span>
+<span class="nc" id="L171">			first = false;</span>
+<span class="nc bnc" id="L172" title="All 4 branches missed.">		} else if (movement.length() != 0 &amp;&amp; !first) {</span>
+<span class="nc" id="L173">			mousePos.offset(movement);</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">			if (mousePos.length() &gt; PixelScene.defaultZoom*20) {</span>
+<span class="nc" id="L175">				mousePos.invScale(mousePos.length() / (PixelScene.defaultZoom*20));</span>
+			}
+<span class="nc" id="L177">			movement = mousePos;</span>
+		}
+
+<span class="nc bnc" id="L180" title="All 2 branches missed.">		if (movement.length() != 0) {</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">			if (first){</span>
+<span class="nc" id="L182">				first = false;</span>
+<span class="nc" id="L183">				return;</span>
+			}
+
+<span class="nc" id="L186">			targetAngle = PointF.angle(movement.x, movement.y) / PointF.G2R + 90;</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">			if (targetAngle &lt; 0) targetAngle += 360f;</span>
+
+<span class="nc" id="L189">			selectionArc.visible = true;</span>
+<span class="nc" id="L190">			selectionArc.angle = targetAngle + selectionArc.getSweep()*180;</span>
+
+<span class="nc" id="L192">			int newSelect = (int) Math.round((targetAngle) / (360f/slots));</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">			if (newSelect &gt;= slots) newSelect = 0;</span>
+
+<span class="nc bnc" id="L195" title="All 2 branches missed.">			if (newSelect != selectedIdx) {</span>
+<span class="nc" id="L196">				selectedIdx = newSelect;</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">				for (int i = 0; i &lt; slots; i++) {</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">					if (i == selectedIdx) {</span>
+<span class="nc" id="L199">						icons[i].alpha(1f);</span>
+<span class="nc" id="L200">						titleTxt.text(texts[i]);</span>
+<span class="nc" id="L201">						titleTxt.setPos(center.x - titleTxt.width()/2f, descTxt.top() - titleTxt.height() - 6);</span>
+<span class="nc" id="L202">						PixelScene.align(titleTxt);</span>
+					} else {
+<span class="nc" id="L204">						icons[i].alpha(0.4f);</span>
+					}
+				}
+			}
+		}
+
+<span class="nc" id="L210">	}</span>
+
+	private static Image getBGTexture(int size, boolean inner){
+<span class="nc bnc" id="L213" title="All 2 branches missed.">		if (size &gt;= 200){</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">			if (!inner)  return new Image(Assets.Interfaces.RADIAL_MENU, 0, 0, 200, 200);</span>
+<span class="nc" id="L215">			else        return new Image(Assets.Interfaces.RADIAL_MENU, 340, 0, 120, 120);</span>
+		} else {
+<span class="nc bnc" id="L217" title="All 2 branches missed.">			if (!inner)  return new Image(Assets.Interfaces.RADIAL_MENU, 200, 0, 140, 140);</span>
+<span class="nc" id="L218">			else        return new Image(Assets.Interfaces.RADIAL_MENU, 340, 120, 90, 90);</span>
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

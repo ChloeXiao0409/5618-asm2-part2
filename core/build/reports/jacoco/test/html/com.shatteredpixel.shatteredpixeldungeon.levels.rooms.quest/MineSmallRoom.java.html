@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MineSmallRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest</a> &gt; <span class="el_source">MineSmallRoom.java</span></div><h1>MineSmallRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest;
+
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Blacksmith;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret.SecretRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.CaveRoom;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L37">public class MineSmallRoom extends CaveRoom {</span>
+
+	@Override
+<span class="nc" id="L40">	public int minWidth() { return Math.max(6, super.minWidth()); }</span>
+
+	@Override
+<span class="nc" id="L43">	public int minHeight() { return Math.max(6, super.minHeight()); }</span>
+
+	@Override
+	public float[] sizeCatProbs() {
+<span class="nc" id="L47">		return new float[]{1, 0, 0};</span>
+	}
+
+	@Override
+	protected float fill() {
+<span class="nc" id="L52">		return 0.40f;</span>
+	}
+
+	@Override
+	public void paint(Level level) {
+<span class="nc" id="L57">		super.paint(level);</span>
+
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		if (Blacksmith.Quest.Type() == Blacksmith.Quest.CRYSTAL){</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">			for (int i = 0; i &lt; width()*height()/3; i ++){</span>
+<span class="nc" id="L61">				Point r = random(1);</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">				if (level.map[level.pointToCell(r)] != Terrain.WALL) {</span>
+<span class="nc" id="L63">					Painter.set(level, r, Terrain.MINE_CRYSTAL);</span>
+				}
+			}
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		} else if (Blacksmith.Quest.Type() == Blacksmith.Quest.GNOLL) {</span>
+
+			//connections to non-secret rooms have a 9/10 chance to become empty, otherwise wall
+<span class="nc bnc" id="L69" title="All 2 branches missed.">			for (Room n : connected.keySet()){</span>
+<span class="nc bnc" id="L70" title="All 4 branches missed.">				if (!(n instanceof SecretRoom) &amp;&amp; connected.get(n).type == Door.Type.REGULAR){</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">					if (Random.Int(10) == 0){</span>
+<span class="nc" id="L72">						connected.get(n).set(Door.Type.EMPTY);</span>
+					} else {
+<span class="nc" id="L74">						connected.get(n).set(Door.Type.WALL);</span>
+					}
+<span class="nc" id="L76">					connected.get(n).lockTypeChanges(true);</span>
+				}
+<span class="nc" id="L78">			}</span>
+
+<span class="nc" id="L80">			ArrayList&lt;Door&gt; doors = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">			for (Door d : connected.values()){</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">				if (d.type == Door.Type.WALL){</span>
+<span class="nc" id="L83">					doors.add(d);</span>
+				}
+<span class="nc" id="L85">			}</span>
+
+<span class="nc bnc" id="L87" title="All 2 branches missed.">			for (Point p : getPoints()){</span>
+<span class="nc" id="L88">				int cell = level.pointToCell(p);</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">				if (level.map[cell] == Terrain.EMPTY){</span>
+<span class="nc" id="L90">					float dist = 1000;</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">					for (Door d : doors){</span>
+<span class="nc" id="L92">						dist = Math.min(dist, Point.distance(p, d));</span>
+<span class="nc" id="L93">					}</span>
+<span class="nc" id="L94">					dist = GameMath.gate(1f, dist, 5f);</span>
+<span class="nc" id="L95">					float val = Random.Float((float) Math.pow(dist, 2));</span>
+<span class="nc bnc" id="L96" title="All 4 branches missed.">					if (val &lt;= 0.75f || dist &lt;= 1) {</span>
+<span class="nc" id="L97">						Painter.set(level, cell, Terrain.MINE_BOULDER);</span>
+<span class="nc bnc" id="L98" title="All 4 branches missed.">					} else if (val &lt;= 5f &amp;&amp; dist &lt;= 2){</span>
+<span class="nc" id="L99">						Painter.set(level, cell, Terrain.EMPTY_DECO);</span>
+					}
+				}
+<span class="nc" id="L102">			}</span>
+
+		}
+
+<span class="nc" id="L106">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

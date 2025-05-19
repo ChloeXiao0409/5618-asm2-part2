@@ -1,0 +1,545 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MissileWeapon.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles</a> &gt; <span class="el_source">MissileWeapon.java</span></div><h1>MissileWeapon.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Momentum;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.PinCushion;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.RevealedArea;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.MagicalHolster;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfSharpshooting;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Projecting;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.Dart;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L51">abstract public class MissileWeapon extends Weapon {</span>
+
+	{
+<span class="nc" id="L54">		stackable = true;</span>
+<span class="nc" id="L55">		levelKnown = true;</span>
+		
+<span class="nc" id="L57">		bones = true;</span>
+
+<span class="nc" id="L59">		defaultAction = AC_THROW;</span>
+<span class="nc" id="L60">		usesTargeting = true;</span>
+	}
+
+	//whether or not this instance of the item exists purely to trigger its effect. i.e. no dropping
+<span class="nc" id="L64">	public boolean spawnedForEffect = false;</span>
+	
+<span class="nc" id="L66">	protected boolean sticky = true;</span>
+	
+	public static final float MAX_DURABILITY = 100;
+<span class="nc" id="L69">	protected float durability = MAX_DURABILITY;</span>
+<span class="nc" id="L70">	protected float baseUses = 10;</span>
+	
+	public boolean holster;
+	
+	//used to reduce durability from the source weapon stack, rather than the one being thrown.
+	protected MissileWeapon parent;
+	
+	public int tier;
+	
+	@Override
+	public int min() {
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		if (Dungeon.hero != null){</span>
+<span class="nc" id="L82">			return Math.max(0, min(buffedLvl() + RingOfSharpshooting.levelDamageBonus(Dungeon.hero)));</span>
+		} else {
+<span class="nc" id="L84">			return Math.max(0 , min( buffedLvl() ));</span>
+		}
+	}
+	
+	@Override
+	public int min(int lvl) {
+<span class="nc" id="L90">		return  2 * tier +                      //base</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">				(tier == 1 ? lvl : 2*lvl);      //level scaling</span>
+	}
+	
+	@Override
+	public int max() {
+<span class="nc bnc" id="L96" title="All 2 branches missed.">		if (Dungeon.hero != null){</span>
+<span class="nc" id="L97">			return Math.max(0, max( buffedLvl() + RingOfSharpshooting.levelDamageBonus(Dungeon.hero) ));</span>
+		} else {
+<span class="nc" id="L99">			return Math.max(0 , max( buffedLvl() ));</span>
+		}
+	}
+	
+	@Override
+	public int max(int lvl) {
+<span class="nc" id="L105">		return  5 * tier +                      //base</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">				(tier == 1 ? 2*lvl : tier*lvl); //level scaling</span>
+	}
+	
+	public int STRReq(int lvl){
+<span class="nc" id="L110">		return STRReq(tier, lvl) - 1; //1 less str than normal for their tier</span>
+	}
+
+	//use the parent item if this has been thrown from a parent
+	public int buffedLvl(){
+<span class="nc bnc" id="L115" title="All 2 branches missed.">		if (parent != null) {</span>
+<span class="nc" id="L116">			return parent.buffedLvl();</span>
+		} else {
+<span class="nc" id="L118">			return super.buffedLvl();</span>
+		}
+	}
+	
+	@Override
+	//FIXME some logic here assumes the items are in the player's inventory. Might need to adjust
+	public Item upgrade() {
+<span class="nc bnc" id="L125" title="All 2 branches missed.">		if (!bundleRestoring) {</span>
+<span class="nc" id="L126">			durability = MAX_DURABILITY;</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">			if (quantity &gt; 1) {</span>
+<span class="nc" id="L128">				MissileWeapon upgraded = (MissileWeapon) split(1);</span>
+<span class="nc" id="L129">				upgraded.parent = null;</span>
+				
+<span class="nc" id="L131">				upgraded = (MissileWeapon) upgraded.upgrade();</span>
+				
+				//try to put the upgraded into inventory, if it didn't already merge
+<span class="nc bnc" id="L134" title="All 4 branches missed.">				if (upgraded.quantity() == 1 &amp;&amp; !upgraded.collect()) {</span>
+<span class="nc" id="L135">					Dungeon.level.drop(upgraded, Dungeon.hero.pos);</span>
+				}
+<span class="nc" id="L137">				updateQuickslot();</span>
+<span class="nc" id="L138">				return upgraded;</span>
+			} else {
+<span class="nc" id="L140">				super.upgrade();</span>
+				
+<span class="nc" id="L142">				Item similar = Dungeon.hero.belongings.getSimilar(this);</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">				if (similar != null){</span>
+<span class="nc" id="L144">					detach(Dungeon.hero.belongings.backpack);</span>
+<span class="nc" id="L145">					Item result = similar.merge(this);</span>
+<span class="nc" id="L146">					updateQuickslot();</span>
+<span class="nc" id="L147">					return result;</span>
+				}
+<span class="nc" id="L149">				updateQuickslot();</span>
+<span class="nc" id="L150">				return this;</span>
+			}
+			
+		} else {
+<span class="nc" id="L154">			return super.upgrade();</span>
+		}
+	}
+
+	@Override
+	public ArrayList&lt;String&gt; actions( Hero hero ) {
+<span class="nc" id="L160">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc" id="L161">		actions.remove( AC_EQUIP );</span>
+<span class="nc" id="L162">		return actions;</span>
+	}
+	
+	@Override
+	public boolean collect(Bag container) {
+<span class="nc bnc" id="L167" title="All 2 branches missed.">		if (container instanceof MagicalHolster) holster = true;</span>
+<span class="nc" id="L168">		return super.collect(container);</span>
+	}
+
+	public boolean isSimilar( Item item ) {
+<span class="nc bnc" id="L172" title="All 4 branches missed.">		return level() == item.level() &amp;&amp; getClass() == item.getClass();</span>
+	}
+	
+	@Override
+	public int throwPos(Hero user, int dst) {
+
+<span class="nc" id="L178">		boolean projecting = hasEnchant(Projecting.class, user);</span>
+<span class="nc bnc" id="L179" title="All 4 branches missed.">		if (!projecting &amp;&amp; Random.Int(3) &lt; user.pointsInTalent(Talent.SHARED_ENCHANTMENT)){</span>
+<span class="nc bnc" id="L180" title="All 4 branches missed.">			if (this instanceof Dart &amp;&amp; ((Dart) this).crossbowHasEnchant(Dungeon.hero)){</span>
+				//do nothing
+			} else {
+<span class="nc" id="L183">				SpiritBow bow = Dungeon.hero.belongings.getItem(SpiritBow.class);</span>
+<span class="nc bnc" id="L184" title="All 4 branches missed.">				if (bow != null &amp;&amp; bow.hasEnchant(Projecting.class, user)) {</span>
+<span class="nc" id="L185">					projecting = true;</span>
+				}
+			}
+		}
+
+<span class="nc bnc" id="L190" title="All 6 branches missed.">		if (projecting</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">				&amp;&amp; (Dungeon.level.passable[dst] || Dungeon.level.avoid[dst] || Actor.findChar(dst) != null)</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">				&amp;&amp; Dungeon.level.distance(user.pos, dst) &lt;= Math.round(4 * Enchantment.genericProcChanceMultiplier(user))){</span>
+<span class="nc" id="L193">			return dst;</span>
+		} else {
+<span class="nc" id="L195">			return super.throwPos(user, dst);</span>
+		}
+	}
+
+	@Override
+	public float accuracyFactor(Char owner, Char target) {
+<span class="nc" id="L201">		float accFactor = super.accuracyFactor(owner, target);</span>
+<span class="nc bnc" id="L202" title="All 6 branches missed.">		if (owner instanceof Hero &amp;&amp; owner.buff(Momentum.class) != null &amp;&amp; owner.buff(Momentum.class).freerunning()){</span>
+<span class="nc" id="L203">			accFactor *= 1f + 0.2f*((Hero) owner).pointsInTalent(Talent.PROJECTILE_MOMENTUM);</span>
+		}
+
+<span class="nc" id="L206">		accFactor *= adjacentAccFactor(owner, target);</span>
+
+<span class="nc" id="L208">		return accFactor;</span>
+	}
+
+	protected float adjacentAccFactor(Char owner, Char target){
+<span class="nc bnc" id="L212" title="All 2 branches missed.">		if (Dungeon.level.adjacent( owner.pos, target.pos )) {</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">			if (owner instanceof Hero){</span>
+<span class="nc" id="L214">				return (0.5f + 0.2f*((Hero) owner).pointsInTalent(Talent.POINT_BLANK));</span>
+			} else {
+<span class="nc" id="L216">				return 0.5f;</span>
+			}
+		} else {
+<span class="nc" id="L219">			return 1.5f;</span>
+		}
+	}
+
+	@Override
+	public void doThrow(Hero hero) {
+<span class="nc" id="L225">		parent = null; //reset parent before throwing, just incase</span>
+<span class="nc" id="L226">		super.doThrow(hero);</span>
+<span class="nc" id="L227">	}</span>
+
+	@Override
+	protected void onThrow( int cell ) {
+<span class="nc" id="L231">		Char enemy = Actor.findChar( cell );</span>
+<span class="nc bnc" id="L232" title="All 4 branches missed.">		if (enemy == null || enemy == curUser) {</span>
+<span class="nc" id="L233">			parent = null;</span>
+
+			//metamorphed seer shot logic
+<span class="nc bnc" id="L236" title="All 4 branches missed.">			if (curUser.hasTalent(Talent.SEER_SHOT)</span>
+					&amp;&amp; curUser.heroClass != HeroClass.HUNTRESS
+<span class="nc bnc" id="L238" title="All 2 branches missed.">					&amp;&amp; curUser.buff(Talent.SeerShotCooldown.class) == null){</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">				if (Actor.findChar(cell) == null) {</span>
+<span class="nc" id="L240">					RevealedArea a = Buff.affect(curUser, RevealedArea.class, 5 * curUser.pointsInTalent(Talent.SEER_SHOT));</span>
+<span class="nc" id="L241">					a.depth = Dungeon.depth;</span>
+<span class="nc" id="L242">					a.pos = cell;</span>
+<span class="nc" id="L243">					Buff.affect(curUser, Talent.SeerShotCooldown.class, 20f);</span>
+				}
+			}
+
+<span class="nc bnc" id="L247" title="All 2 branches missed.">			if (!spawnedForEffect) super.onThrow( cell );</span>
+		} else {
+<span class="nc bnc" id="L249" title="All 2 branches missed.">			if (!curUser.shoot( enemy, this )) {</span>
+<span class="nc" id="L250">				rangedMiss( cell );</span>
+			} else {
+				
+<span class="nc" id="L253">				rangedHit( enemy, cell );</span>
+
+			}
+		}
+<span class="nc" id="L257">	}</span>
+
+	@Override
+	public int proc(Char attacker, Char defender, int damage) {
+<span class="nc bnc" id="L261" title="All 4 branches missed.">		if (attacker == Dungeon.hero &amp;&amp; Random.Int(3) &lt; Dungeon.hero.pointsInTalent(Talent.SHARED_ENCHANTMENT)){</span>
+<span class="nc bnc" id="L262" title="All 4 branches missed.">			if (this instanceof Dart &amp;&amp; ((Dart) this).crossbowHasEnchant(Dungeon.hero)){</span>
+				//do nothing
+			} else {
+<span class="nc" id="L265">				SpiritBow bow = Dungeon.hero.belongings.getItem(SpiritBow.class);</span>
+<span class="nc bnc" id="L266" title="All 6 branches missed.">				if (bow != null &amp;&amp; bow.enchantment != null &amp;&amp; Dungeon.hero.buff(MagicImmune.class) == null) {</span>
+<span class="nc" id="L267">					damage = bow.enchantment.proc(this, attacker, defender, damage);</span>
+				}
+			}
+		}
+
+<span class="nc" id="L272">		return super.proc(attacker, defender, damage);</span>
+	}
+
+	@Override
+	public Item random() {
+<span class="nc bnc" id="L277" title="All 2 branches missed.">		if (!stackable) return this;</span>
+		
+		//2: 66.67% (2/3)
+		//3: 26.67% (4/15)
+		//4: 6.67%  (1/15)
+<span class="nc" id="L282">		quantity = 2;</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">		if (Random.Int(3) == 0) {</span>
+<span class="nc" id="L284">			quantity++;</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">			if (Random.Int(5) == 0) {</span>
+<span class="nc" id="L286">				quantity++;</span>
+			}
+		}
+<span class="nc" id="L289">		return this;</span>
+	}
+
+	public String status() {
+		//show quantity even when it is 1
+<span class="nc" id="L294">		return Integer.toString( quantity );</span>
+	}
+	
+	@Override
+	public float castDelay(Char user, int dst) {
+<span class="nc" id="L299">		return delayFactor( user );</span>
+	}
+	
+	protected void rangedHit( Char enemy, int cell ){
+<span class="nc" id="L303">		decrementDurability();</span>
+<span class="nc bnc" id="L304" title="All 4 branches missed.">		if (durability &gt; 0 &amp;&amp; !spawnedForEffect){</span>
+			//attempt to stick the missile weapon to the enemy, just drop it if we can't.
+<span class="nc bnc" id="L306" title="All 8 branches missed.">			if (sticky &amp;&amp; enemy != null &amp;&amp; enemy.isActive() &amp;&amp; enemy.alignment != Char.Alignment.ALLY){</span>
+<span class="nc" id="L307">				PinCushion p = Buff.affect(enemy, PinCushion.class);</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">				if (p.target == enemy){</span>
+<span class="nc" id="L309">					p.stick(this);</span>
+<span class="nc" id="L310">					return;</span>
+				}
+			}
+<span class="nc" id="L313">			Dungeon.level.drop( this, cell ).sprite.drop();</span>
+		}
+<span class="nc" id="L315">	}</span>
+	
+	protected void rangedMiss( int cell ) {
+<span class="nc" id="L318">		parent = null;</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">		if (!spawnedForEffect) super.onThrow(cell);</span>
+<span class="nc" id="L320">	}</span>
+
+	public float durabilityLeft(){
+<span class="nc" id="L323">		return durability;</span>
+	}
+
+	public void repair( float amount ){
+<span class="nc" id="L327">		durability += amount;</span>
+<span class="nc" id="L328">		durability = Math.min(durability, MAX_DURABILITY);</span>
+<span class="nc" id="L329">	}</span>
+	
+	public float durabilityPerUse(){
+		//classes that override durabilityPerUse can turn rounding off, to do their own rounding after more logic
+<span class="nc" id="L333">		return durabilityPerUse(true);</span>
+	}
+
+	protected final float durabilityPerUse( boolean rounded){
+<span class="nc" id="L337">		float usages = baseUses * (float)(Math.pow(3, level()));</span>
+
+		//+50%/75% durability
+<span class="nc bnc" id="L340" title="All 4 branches missed.">		if (Dungeon.hero != null &amp;&amp; Dungeon.hero.hasTalent(Talent.DURABLE_PROJECTILES)){</span>
+<span class="nc" id="L341">			usages *= 1.25f + (0.25f*Dungeon.hero.pointsInTalent(Talent.DURABLE_PROJECTILES));</span>
+		}
+<span class="nc bnc" id="L343" title="All 2 branches missed.">		if (holster) {</span>
+<span class="nc" id="L344">			usages *= MagicalHolster.HOLSTER_DURABILITY_FACTOR;</span>
+		}
+
+<span class="nc bnc" id="L347" title="All 2 branches missed.">		if (Dungeon.hero != null) usages *= RingOfSharpshooting.durabilityMultiplier( Dungeon.hero );</span>
+
+		//at 100 uses, items just last forever.
+<span class="nc bnc" id="L350" title="All 2 branches missed.">		if (usages &gt;= 100f) return 0;</span>
+
+<span class="nc bnc" id="L352" title="All 2 branches missed.">		if (rounded){</span>
+<span class="nc" id="L353">			usages = Math.round(usages);</span>
+			//add a tiny amount to account for rounding error for calculations like 1/3
+<span class="nc" id="L355">			return (MAX_DURABILITY/usages) + 0.001f;</span>
+		} else {
+			//rounding can be disabled for classes that override durability per use
+<span class="nc" id="L358">			return MAX_DURABILITY/usages;</span>
+		}
+	}
+	
+	protected void decrementDurability(){
+		//if this weapon was thrown from a source stack, degrade that stack.
+		//unless a weapon is about to break, then break the one being thrown
+<span class="nc bnc" id="L365" title="All 2 branches missed.">		if (parent != null){</span>
+<span class="nc bnc" id="L366" title="All 2 branches missed.">			if (parent.durability &lt;= parent.durabilityPerUse()){</span>
+<span class="nc" id="L367">				durability = 0;</span>
+<span class="nc" id="L368">				parent.durability = MAX_DURABILITY;</span>
+<span class="nc bnc" id="L369" title="All 2 branches missed.">				if (parent.durabilityPerUse() &lt; 100f) {</span>
+<span class="nc" id="L370">					GLog.n(Messages.get(this, &quot;has_broken&quot;));</span>
+				}
+			} else {
+<span class="nc" id="L373">				parent.durability -= parent.durabilityPerUse();</span>
+<span class="nc bnc" id="L374" title="All 4 branches missed.">				if (parent.durability &gt; 0 &amp;&amp; parent.durability &lt;= parent.durabilityPerUse()){</span>
+<span class="nc" id="L375">					GLog.w(Messages.get(this, &quot;about_to_break&quot;));</span>
+				}
+			}
+<span class="nc" id="L378">			parent = null;</span>
+		} else {
+<span class="nc" id="L380">			durability -= durabilityPerUse();</span>
+<span class="nc bnc" id="L381" title="All 4 branches missed.">			if (durability &gt; 0 &amp;&amp; durability &lt;= durabilityPerUse()){</span>
+<span class="nc" id="L382">				GLog.w(Messages.get(this, &quot;about_to_break&quot;));</span>
+<span class="nc bnc" id="L383" title="All 4 branches missed.">			} else if (durabilityPerUse() &lt; 100f &amp;&amp; durability &lt;= 0){</span>
+<span class="nc" id="L384">				GLog.n(Messages.get(this, &quot;has_broken&quot;));</span>
+			}
+		}
+<span class="nc" id="L387">	}</span>
+	
+	@Override
+	public int damageRoll(Char owner) {
+<span class="nc" id="L391">		int damage = augment.damageFactor(super.damageRoll( owner ));</span>
+		
+<span class="nc bnc" id="L393" title="All 2 branches missed.">		if (owner instanceof Hero) {</span>
+<span class="nc" id="L394">			int exStr = ((Hero)owner).STR() - STRReq();</span>
+<span class="nc bnc" id="L395" title="All 2 branches missed.">			if (exStr &gt; 0) {</span>
+<span class="nc" id="L396">				damage += Hero.heroDamageIntRange( 0, exStr );</span>
+			}
+<span class="nc bnc" id="L398" title="All 4 branches missed.">			if (owner.buff(Momentum.class) != null &amp;&amp; owner.buff(Momentum.class).freerunning()) {</span>
+<span class="nc" id="L399">				damage = Math.round(damage * (1f + 0.15f * ((Hero) owner).pointsInTalent(Talent.PROJECTILE_MOMENTUM)));</span>
+			}
+		}
+		
+<span class="nc" id="L403">		return damage;</span>
+	}
+	
+	@Override
+	public void reset() {
+<span class="nc" id="L408">		super.reset();</span>
+<span class="nc" id="L409">		durability = MAX_DURABILITY;</span>
+<span class="nc" id="L410">	}</span>
+	
+	@Override
+	public Item merge(Item other) {
+<span class="nc" id="L414">		super.merge(other);</span>
+<span class="nc bnc" id="L415" title="All 2 branches missed.">		if (isSimilar(other)) {</span>
+<span class="nc" id="L416">			durability += ((MissileWeapon)other).durability;</span>
+<span class="nc" id="L417">			durability -= MAX_DURABILITY;</span>
+<span class="nc bnc" id="L418" title="All 2 branches missed.">			while (durability &lt;= 0){</span>
+<span class="nc" id="L419">				quantity -= 1;</span>
+<span class="nc" id="L420">				durability += MAX_DURABILITY;</span>
+			}
+		}
+<span class="nc" id="L423">		return this;</span>
+	}
+	
+	@Override
+	public Item split(int amount) {
+<span class="nc" id="L428">		bundleRestoring = true;</span>
+<span class="nc" id="L429">		Item split = super.split(amount);</span>
+<span class="nc" id="L430">		bundleRestoring = false;</span>
+		
+		//unless the thrown weapon will break, split off a max durability item and
+		//have it reduce the durability of the main stack. Cleaner to the player this way
+<span class="nc bnc" id="L434" title="All 2 branches missed.">		if (split != null){</span>
+<span class="nc" id="L435">			MissileWeapon m = (MissileWeapon)split;</span>
+<span class="nc" id="L436">			m.durability = MAX_DURABILITY;</span>
+<span class="nc" id="L437">			m.parent = this;</span>
+		}
+		
+<span class="nc" id="L440">		return split;</span>
+	}
+	
+	@Override
+	public boolean doPickUp(Hero hero, int pos) {
+<span class="nc" id="L445">		parent = null;</span>
+<span class="nc" id="L446">		return super.doPickUp(hero, pos);</span>
+	}
+	
+	@Override
+	public boolean isIdentified() {
+<span class="nc" id="L451">		return true;</span>
+	}
+	
+	@Override
+	public String info() {
+
+<span class="nc" id="L457">		String info = super.info();</span>
+		
+<span class="nc" id="L459">		info += &quot;\n\n&quot; + Messages.get( MissileWeapon.class, &quot;stats&quot;,</span>
+<span class="nc" id="L460">				tier,</span>
+<span class="nc" id="L461">				Math.round(augment.damageFactor(min())),</span>
+<span class="nc" id="L462">				Math.round(augment.damageFactor(max())),</span>
+<span class="nc" id="L463">				STRReq());</span>
+
+<span class="nc bnc" id="L465" title="All 2 branches missed.">		if (Dungeon.hero != null) {</span>
+<span class="nc bnc" id="L466" title="All 2 branches missed.">			if (STRReq() &gt; Dungeon.hero.STR()) {</span>
+<span class="nc" id="L467">				info += &quot; &quot; + Messages.get(Weapon.class, &quot;too_heavy&quot;);</span>
+<span class="nc bnc" id="L468" title="All 2 branches missed.">			} else if (Dungeon.hero.STR() &gt; STRReq()) {</span>
+<span class="nc" id="L469">				info += &quot; &quot; + Messages.get(Weapon.class, &quot;excess_str&quot;, Dungeon.hero.STR() - STRReq());</span>
+			}
+		}
+
+<span class="nc bnc" id="L473" title="All 6 branches missed.">		if (enchantment != null &amp;&amp; (cursedKnown || !enchantment.curse())){</span>
+<span class="nc" id="L474">			info += &quot;\n\n&quot; + Messages.get(Weapon.class, &quot;enchanted&quot;, enchantment.name());</span>
+<span class="nc" id="L475">			info += &quot; &quot; + Messages.get(enchantment, &quot;desc&quot;);</span>
+		}
+
+<span class="nc bnc" id="L478" title="All 4 branches missed.">		if (cursed &amp;&amp; isEquipped( Dungeon.hero )) {</span>
+<span class="nc" id="L479">			info += &quot;\n\n&quot; + Messages.get(Weapon.class, &quot;cursed_worn&quot;);</span>
+<span class="nc bnc" id="L480" title="All 4 branches missed.">		} else if (cursedKnown &amp;&amp; cursed) {</span>
+<span class="nc" id="L481">			info += &quot;\n\n&quot; + Messages.get(Weapon.class, &quot;cursed&quot;);</span>
+<span class="nc bnc" id="L482" title="All 4 branches missed.">		} else if (!isIdentified() &amp;&amp; cursedKnown){</span>
+<span class="nc" id="L483">			info += &quot;\n\n&quot; + Messages.get(Weapon.class, &quot;not_cursed&quot;);</span>
+		}
+
+<span class="nc" id="L486">		info += &quot;\n\n&quot; + Messages.get(MissileWeapon.class, &quot;distance&quot;);</span>
+		
+<span class="nc" id="L488">		info += &quot;\n\n&quot; + Messages.get(this, &quot;durability&quot;);</span>
+		
+<span class="nc bnc" id="L490" title="All 2 branches missed.">		if (durabilityPerUse() &gt; 0){</span>
+<span class="nc" id="L491">			info += &quot; &quot; + Messages.get(this, &quot;uses_left&quot;,</span>
+<span class="nc" id="L492">					(int)Math.ceil(durability/durabilityPerUse()),</span>
+<span class="nc" id="L493">					(int)Math.ceil(MAX_DURABILITY/durabilityPerUse()));</span>
+		} else {
+<span class="nc" id="L495">			info += &quot; &quot; + Messages.get(this, &quot;unlimited_uses&quot;);</span>
+		}
+		
+		
+<span class="nc" id="L499">		return info;</span>
+	}
+	
+	@Override
+	public int value() {
+<span class="nc" id="L504">		return 6 * tier * quantity * (level() + 1);</span>
+	}
+
+	private static final String SPAWNED = &quot;spawned&quot;;
+	private static final String DURABILITY = &quot;durability&quot;;
+	
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L512">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L513">		bundle.put(SPAWNED, spawnedForEffect);</span>
+<span class="nc" id="L514">		bundle.put(DURABILITY, durability);</span>
+<span class="nc" id="L515">	}</span>
+	
+<span class="nc" id="L517">	private static boolean bundleRestoring = false;</span>
+	
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L521">		bundleRestoring = true;</span>
+<span class="nc" id="L522">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L523">		bundleRestoring = false;</span>
+<span class="nc" id="L524">		spawnedForEffect = bundle.getBoolean(SPAWNED);</span>
+<span class="nc" id="L525">		durability = bundle.getFloat(DURABILITY);</span>
+<span class="nc" id="L526">	}</span>
+
+<span class="nc" id="L528">	public static class PlaceHolder extends MissileWeapon {</span>
+
+		{
+<span class="nc" id="L531">			image = ItemSpriteSheet.MISSILE_HOLDER;</span>
+<span class="nc" id="L532">		}</span>
+
+		@Override
+		public boolean isSimilar(Item item) {
+<span class="nc" id="L536">			return item instanceof MissileWeapon;</span>
+		}
+
+		@Override
+		public String info() {
+<span class="nc" id="L541">			return &quot;&quot;;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

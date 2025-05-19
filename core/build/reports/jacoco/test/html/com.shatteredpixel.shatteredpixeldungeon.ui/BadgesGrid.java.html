@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BadgesGrid.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">BadgesGrid.java</span></div><h1>BadgesGrid.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.effects.BadgeBanner;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBadge;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.ui.Component;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+public class BadgesGrid extends Component {
+
+	ArrayList&lt;BadgeButton&gt; badgeButtons;
+
+	public BadgesGrid( boolean global ){
+<span class="nc" id="L42">		super();</span>
+<span class="nc" id="L43">		badgeButtons = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L45" title="All 2 branches missed.">		for (Badges.Badge badge : Badges.filterReplacedBadges( global )) {</span>
+
+<span class="nc bnc" id="L47" title="All 2 branches missed.">			if (badge.type == Badges.BadgeType.HIDDEN) {</span>
+<span class="nc" id="L48">				continue;</span>
+			}
+
+<span class="nc" id="L51">			BadgeButton button = new BadgeButton( badge, true );</span>
+<span class="nc" id="L52">			add( button );</span>
+<span class="nc" id="L53">			badgeButtons.add(button);</span>
+<span class="nc" id="L54">		}</span>
+
+<span class="nc bnc" id="L56" title="All 2 branches missed.">		if (global) {</span>
+
+<span class="nc" id="L58">			ArrayList&lt;Badges.Badge&gt; lockedBadges = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">			for (Badges.Badge badge : Badges.Badge.values()) {</span>
+<span class="nc bnc" id="L60" title="All 4 branches missed.">				if (badge.type != Badges.BadgeType.HIDDEN &amp;&amp; !Badges.isUnlocked(badge)) {</span>
+<span class="nc" id="L61">					lockedBadges.add(badge);</span>
+				}
+			}
+<span class="nc" id="L64">			Badges.filterBadgesWithoutPrerequisites(lockedBadges);</span>
+
+<span class="nc bnc" id="L66" title="All 2 branches missed.">			for (Badges.Badge badge : lockedBadges) {</span>
+<span class="nc" id="L67">				BadgeButton button = new BadgeButton( badge, false );</span>
+<span class="nc" id="L68">				add(button);</span>
+<span class="nc" id="L69">				badgeButtons.add(button);</span>
+<span class="nc" id="L70">			}</span>
+
+		}
+
+<span class="nc" id="L74">	}</span>
+
+	@Override
+	protected void layout() {
+<span class="nc" id="L78">		super.layout();</span>
+
+		//determines roughly how much space each badge will get ideally, determines columns based on that
+<span class="nc" id="L81">		float badgeArea = (float) Math.sqrt(width * height / badgeButtons.size());</span>
+<span class="nc" id="L82">		int nCols = Math.round(width / badgeArea);</span>
+
+<span class="nc" id="L84">		int nRows = (int) Math.ceil(badgeButtons.size()/(float)nCols);</span>
+
+<span class="nc" id="L86">		float badgeWidth = width()/nCols;</span>
+<span class="nc" id="L87">		float badgeHeight = height()/nRows;</span>
+
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		for (int i = 0; i &lt; badgeButtons.size(); i++){</span>
+<span class="nc" id="L90">			int row = i / nCols;</span>
+<span class="nc" id="L91">			int col = i % nCols;</span>
+<span class="nc" id="L92">			BadgeButton button = badgeButtons.get(i);</span>
+<span class="nc" id="L93">			button.setPos(</span>
+<span class="nc" id="L94">					left() + col * badgeWidth + (badgeWidth - button.width()) / 2,</span>
+<span class="nc" id="L95">					top() + row * badgeHeight + (badgeHeight - button.height()) / 2);</span>
+<span class="nc" id="L96">			PixelScene.align(button);</span>
+		}
+<span class="nc" id="L98">	}</span>
+
+	private static class BadgeButton extends Button {
+
+		private Badges.Badge badge;
+		private boolean unlocked;
+
+		private Image icon;
+
+		public BadgeButton( Badges.Badge badge, boolean unlocked ) {
+<span class="nc" id="L108">			super();</span>
+
+<span class="nc" id="L110">			this.badge = badge;</span>
+<span class="nc" id="L111">			this.unlocked = unlocked;</span>
+
+<span class="nc" id="L113">			icon = BadgeBanner.image(badge.image);</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">			if (!unlocked) {</span>
+<span class="nc" id="L115">				icon.brightness(0.4f);</span>
+			}
+<span class="nc" id="L117">			add(icon);</span>
+
+<span class="nc" id="L119">			setSize( icon.width(), icon.height() );</span>
+<span class="nc" id="L120">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L124">			super.layout();</span>
+
+<span class="nc" id="L126">			icon.x = x + (width - icon.width()) / 2;</span>
+<span class="nc" id="L127">			icon.y = y + (height - icon.height()) / 2;</span>
+<span class="nc" id="L128">		}</span>
+
+		@Override
+		public void update() {
+<span class="nc" id="L132">			super.update();</span>
+
+<span class="nc bnc" id="L134" title="All 4 branches missed.">			if (unlocked &amp;&amp; Random.Float() &lt; Game.elapsed * 0.1) {</span>
+<span class="nc" id="L135">				BadgeBanner.highlight( icon, badge.image );</span>
+			}
+<span class="nc" id="L137">		}</span>
+
+		@Override
+		protected void onClick() {
+<span class="nc" id="L141">			Sample.INSTANCE.play( Assets.Sounds.CLICK, 0.7f, 0.7f, 1.2f );</span>
+<span class="nc" id="L142">			Game.scene().addToFront( new WndBadge( badge, unlocked ) );</span>
+<span class="nc" id="L143">		}</span>
+
+		@Override
+		protected String hoverText() {
+<span class="nc" id="L147">			return badge.title();</span>
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

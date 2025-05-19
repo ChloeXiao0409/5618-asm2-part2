@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StudyRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard</a> &gt; <span class="el_source">StudyRoom.java</span></div><h1>StudyRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard;
+
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L32">public class StudyRoom extends StandardRoom {</span>
+	
+	@Override
+	public int minWidth() {
+<span class="nc" id="L36">		return Math.max(super.minWidth(), 7);</span>
+	}
+	
+	@Override
+	public int minHeight() {
+<span class="nc" id="L41">		return Math.max(super.minHeight(), 7);</span>
+	}
+	
+	@Override
+	public float[] sizeCatProbs() {
+<span class="nc" id="L46">		return new float[]{2, 1, 0};</span>
+	}
+	
+	@Override
+	public void paint(Level level) {
+<span class="nc" id="L51">		Painter.fill( level, this, Terrain.WALL );</span>
+<span class="nc" id="L52">		Painter.fill( level, this, 1 , Terrain.BOOKSHELF );</span>
+<span class="nc" id="L53">		Painter.fill( level, this, 2 , Terrain.EMPTY_SP );</span>
+		
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		for (Door door : connected.values()) {</span>
+<span class="nc" id="L56">			Painter.drawInside(level, this, door, 2, Terrain.EMPTY_SP);</span>
+<span class="nc" id="L57">			door.set( Door.Type.REGULAR );</span>
+<span class="nc" id="L58">		}</span>
+		
+		//TODO add support for giant size as well?
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if (sizeCat == SizeCategory.LARGE){</span>
+<span class="nc" id="L62">			int pillarW = (width()-7)/2;</span>
+<span class="nc" id="L63">			int pillarH = (height()-7)/2;</span>
+			
+<span class="nc" id="L65">			Painter.fill(level, left+3, top+3, pillarW, 1, Terrain.BOOKSHELF);</span>
+<span class="nc" id="L66">			Painter.fill(level, left+3, top+3, 1, pillarH, Terrain.BOOKSHELF);</span>
+			
+<span class="nc" id="L68">			Painter.fill(level, left+3, bottom-2-1, pillarW, 1, Terrain.BOOKSHELF);</span>
+<span class="nc" id="L69">			Painter.fill(level, left+3, bottom-2-pillarH, 1, pillarH, Terrain.BOOKSHELF);</span>
+			
+<span class="nc" id="L71">			Painter.fill(level, right-2-pillarW, top+3, pillarW, 1, Terrain.BOOKSHELF);</span>
+<span class="nc" id="L72">			Painter.fill(level, right-2-1, top+3, 1, pillarH, Terrain.BOOKSHELF);</span>
+			
+<span class="nc" id="L74">			Painter.fill(level, right-2-pillarW, bottom-2-1, pillarW, 1, Terrain.BOOKSHELF);</span>
+<span class="nc" id="L75">			Painter.fill(level, right-2-1, bottom-2-pillarH, 1, pillarH, Terrain.BOOKSHELF);</span>
+		}
+		
+<span class="nc" id="L78">		Point center = center();</span>
+<span class="nc" id="L79">		Painter.set( level, center, Terrain.PEDESTAL );</span>
+		
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		Item prize = (Random.Int(2) == 0) ? level.findPrizeItem() : null;</span>
+		
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if (prize != null) {</span>
+<span class="nc" id="L84">			level.drop(prize, (center.x + center.y * level.width()));</span>
+		} else {
+<span class="nc" id="L86">			level.drop(Generator.random( Random.oneOf(</span>
+					Generator.Category.POTION,
+<span class="nc" id="L88">					Generator.Category.SCROLL)), (center.x + center.y * level.width()));</span>
+		}
+<span class="nc" id="L90">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MobSpawner.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">MobSpawner.java</span></div><h1>MobSpawner.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.RatSkull;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+
+<span class="nc" id="L32">public class MobSpawner extends Actor {</span>
+	{
+<span class="nc" id="L34">		actPriority = BUFF_PRIO; //as if it were a buff.</span>
+<span class="nc" id="L35">	}</span>
+
+	@Override
+	protected boolean act() {
+
+<span class="nc bnc" id="L40" title="All 2 branches missed.">		if (Dungeon.level.mobCount() &lt; Dungeon.level.mobLimit()) {</span>
+
+<span class="nc bnc" id="L42" title="All 2 branches missed.">			if (Dungeon.level.spawnMob(12)){</span>
+<span class="nc" id="L43">				spend(Dungeon.level.respawnCooldown());</span>
+			} else {
+				//try again in 1 turn
+<span class="nc" id="L46">				spend(TICK);</span>
+			}
+
+		} else {
+<span class="nc" id="L50">			spend(Dungeon.level.respawnCooldown());</span>
+		}
+
+<span class="nc" id="L53">		return true;</span>
+	}
+
+	public void resetCooldown(){
+<span class="nc" id="L57">		spend(-cooldown());</span>
+<span class="nc" id="L58">		spend(Dungeon.level.respawnCooldown());</span>
+<span class="nc" id="L59">	}</span>
+
+	public static ArrayList&lt;Class&lt;? extends Mob&gt;&gt; getMobRotation(int depth ){
+<span class="nc" id="L62">		ArrayList&lt;Class&lt;? extends Mob&gt;&gt; mobs = standardMobRotation( depth );</span>
+<span class="nc" id="L63">		addRareMobs(depth, mobs);</span>
+<span class="nc" id="L64">		swapMobAlts(mobs);</span>
+<span class="nc" id="L65">		Random.shuffle(mobs);</span>
+<span class="nc" id="L66">		return mobs;</span>
+	}
+
+	//returns a rotation of standard mobs, unshuffled.
+	private static ArrayList&lt;Class&lt;? extends Mob&gt;&gt; standardMobRotation( int depth ){
+<span class="nc bnc" id="L71" title="All 20 branches missed.">		switch(depth){</span>
+
+			// Sewers
+			case 1: default:
+				//3x rat, 1x snake
+<span class="nc" id="L76">				return new ArrayList&lt;&gt;(Arrays.asList(</span>
+						Rat.class, Rat.class, Rat.class,
+						Snake.class));
+			case 2:
+				//2x rat, 1x snake, 2x gnoll
+<span class="nc" id="L81">				return new ArrayList&lt;&gt;(Arrays.asList(Rat.class, Rat.class,</span>
+						Snake.class,
+						Gnoll.class, Gnoll.class));
+			case 3:
+				//1x rat, 1x snake, 3x gnoll, 1x swarm, 1x crab
+<span class="nc" id="L86">				return new ArrayList&lt;&gt;(Arrays.asList(Rat.class,</span>
+						Snake.class,
+						Gnoll.class, Gnoll.class, Gnoll.class,
+						Swarm.class,
+						Crab.class));
+			case 4: case 5:
+				//1x gnoll, 1x swarm, 2x crab, 2x slime
+<span class="nc" id="L93">				return new ArrayList&lt;&gt;(Arrays.asList(Gnoll.class,</span>
+						Swarm.class,
+						Crab.class, Crab.class,
+						Slime.class, Slime.class));
+
+			// Prison
+			case 6:
+				//3x skeleton, 1x thief, 1x swarm
+<span class="nc" id="L101">				return new ArrayList&lt;&gt;(Arrays.asList(Skeleton.class, Skeleton.class, Skeleton.class,</span>
+						Thief.class,
+						Swarm.class));
+			case 7:
+				//3x skeleton, 1x thief, 1x DM-100, 1x guard
+<span class="nc" id="L106">				return new ArrayList&lt;&gt;(Arrays.asList(Skeleton.class, Skeleton.class, Skeleton.class,</span>
+						Thief.class,
+						DM100.class,
+						Guard.class));
+			case 8:
+				//2x skeleton, 1x thief, 2x DM-100, 2x guard, 1x necromancer
+<span class="nc" id="L112">				return new ArrayList&lt;&gt;(Arrays.asList(Skeleton.class, Skeleton.class,</span>
+						Thief.class,
+						DM100.class, DM100.class,
+						Guard.class, Guard.class,
+						Necromancer.class));
+			case 9: case 10:
+				//1x skeleton, 1x thief, 2x DM-100, 2x guard, 2x necromancer
+<span class="nc" id="L119">				return new ArrayList&lt;&gt;(Arrays.asList(Skeleton.class,</span>
+						Thief.class,
+						DM100.class, DM100.class,
+						Guard.class, Guard.class,
+						Necromancer.class, Necromancer.class));
+
+			// Caves
+			case 11:
+				//3x bat, 1x brute, 1x shaman
+<span class="nc" id="L128">				return new ArrayList&lt;&gt;(Arrays.asList(</span>
+						Bat.class, Bat.class, Bat.class,
+						Brute.class,
+<span class="nc" id="L131">						Shaman.random()));</span>
+			case 12:
+				//2x bat, 2x brute, 1x shaman, 1x spinner
+<span class="nc" id="L134">				return new ArrayList&lt;&gt;(Arrays.asList(</span>
+						Bat.class, Bat.class,
+						Brute.class, Brute.class,
+<span class="nc" id="L137">						Shaman.random(),</span>
+						Spinner.class));
+			case 13:
+				//1x bat, 2x brute, 2x shaman, 2x spinner, 1x DM-200
+<span class="nc" id="L141">				return new ArrayList&lt;&gt;(Arrays.asList(</span>
+						Bat.class,
+						Brute.class, Brute.class,
+<span class="nc" id="L144">						Shaman.random(), Shaman.random(),</span>
+						Spinner.class, Spinner.class,
+						DM200.class));
+			case 14: case 15:
+				//1x bat, 1x brute, 2x shaman, 2x spinner, 2x DM-300
+<span class="nc" id="L149">				return new ArrayList&lt;&gt;(Arrays.asList(</span>
+						Bat.class,
+						Brute.class,
+<span class="nc" id="L152">						Shaman.random(), Shaman.random(),</span>
+						Spinner.class, Spinner.class,
+						DM200.class, DM200.class));
+
+			// City
+			case 16:
+				//3x ghoul, 1x elemental, 1x warlock
+<span class="nc" id="L159">				return new ArrayList&lt;&gt;(Arrays.asList(</span>
+						Ghoul.class, Ghoul.class, Ghoul.class,
+<span class="nc" id="L161">						Elemental.random(),</span>
+						Warlock.class));
+			case 17:
+				//1x ghoul, 2x elemental, 1x warlock, 1x monk
+<span class="nc" id="L165">				return new ArrayList&lt;&gt;(Arrays.asList(</span>
+						Ghoul.class,
+<span class="nc" id="L167">						Elemental.random(), Elemental.random(),</span>
+						Warlock.class,
+						Monk.class));
+			case 18:
+				//1x ghoul, 1x elemental, 2x warlock, 2x monk, 1x golem
+<span class="nc" id="L172">				return new ArrayList&lt;&gt;(Arrays.asList(</span>
+						Ghoul.class,
+<span class="nc" id="L174">						Elemental.random(),</span>
+						Warlock.class, Warlock.class,
+						Monk.class, Monk.class,
+						Golem.class));
+			case 19: case 20:
+				//1x elemental, 2x warlock, 2x monk, 3x golem
+<span class="nc" id="L180">				return new ArrayList&lt;&gt;(Arrays.asList(</span>
+<span class="nc" id="L181">						Elemental.random(),</span>
+						Warlock.class, Warlock.class,
+						Monk.class, Monk.class,
+						Golem.class, Golem.class, Golem.class));
+
+			// Halls
+			case 21:
+				//2x succubus, 1x evil eye
+<span class="nc" id="L189">				return new ArrayList&lt;&gt;(Arrays.asList(</span>
+						Succubus.class, Succubus.class,
+						Eye.class));
+			case 22:
+				//1x succubus, 1x evil eye
+<span class="nc" id="L194">				return new ArrayList&lt;&gt;(Arrays.asList(</span>
+						Succubus.class,
+						Eye.class));
+			case 23:
+				//1x succubus, 2x evil eye, 1x scorpio
+<span class="nc" id="L199">				return new ArrayList&lt;&gt;(Arrays.asList(</span>
+						Succubus.class,
+						Eye.class, Eye.class,
+						Scorpio.class));
+			case 24: case 25: case 26:
+				//1x succubus, 2x evil eye, 3x scorpio
+<span class="nc" id="L205">				return new ArrayList&lt;&gt;(Arrays.asList(</span>
+						Succubus.class,
+						Eye.class, Eye.class,
+						Scorpio.class, Scorpio.class, Scorpio.class));
+		}
+
+	}
+
+	//has a chance to add a rarely spawned mobs to the rotation
+	public static void addRareMobs( int depth, ArrayList&lt;Class&lt;?extends Mob&gt;&gt; rotation ){
+
+<span class="nc bnc" id="L216" title="All 5 branches missed.">		switch (depth){</span>
+
+			// Sewers
+			default:
+<span class="nc" id="L220">				return;</span>
+			case 4:
+<span class="nc bnc" id="L222" title="All 2 branches missed.">				if (Random.Float() &lt; 0.025f) rotation.add(Thief.class);</span>
+<span class="nc" id="L223">				return;</span>
+
+			// Prison
+			case 9:
+<span class="nc bnc" id="L227" title="All 2 branches missed.">				if (Random.Float() &lt; 0.025f) rotation.add(Bat.class);</span>
+<span class="nc" id="L228">				return;</span>
+
+			// Caves
+			case 14:
+<span class="nc bnc" id="L232" title="All 2 branches missed.">				if (Random.Float() &lt; 0.025f) rotation.add(Ghoul.class);</span>
+<span class="nc" id="L233">				return;</span>
+
+			// City
+			case 19:
+<span class="nc bnc" id="L237" title="All 2 branches missed.">				if (Random.Float() &lt; 0.025f) rotation.add(Succubus.class);</span>
+<span class="nc" id="L238">				return;</span>
+		}
+	}
+
+	//switches out regular mobs for their alt versions when appropriate
+	private static void swapMobAlts(ArrayList&lt;Class&lt;?extends Mob&gt;&gt; rotation) {
+<span class="nc" id="L244">		float altChance = 1 / 50f * RatSkull.exoticChanceMultiplier();</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">		for (int i = 0; i &lt; rotation.size(); i++) {</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">			if (Random.Float() &lt; altChance) {</span>
+<span class="nc" id="L247">				Class&lt;? extends Mob&gt; cl = rotation.get(i);</span>
+<span class="nc bnc" id="L248" title="All 2 branches missed.">				if (cl == Rat.class) {</span>
+<span class="nc" id="L249">					cl = Albino.class;</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">				} else if (cl == Slime.class) {</span>
+<span class="nc" id="L251">					cl = CausticSlime.class;</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">				} else if (cl == Thief.class) {</span>
+<span class="nc" id="L253">					cl = Bandit.class;</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">				} else if (cl == Necromancer.class) {</span>
+<span class="nc" id="L255">					cl = SpectralNecromancer.class;</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">				} else if (cl == Brute.class) {</span>
+<span class="nc" id="L257">					cl = ArmoredBrute.class;</span>
+<span class="nc bnc" id="L258" title="All 2 branches missed.">				} else if (cl == DM200.class) {</span>
+<span class="nc" id="L259">					cl = DM201.class;</span>
+<span class="nc bnc" id="L260" title="All 2 branches missed.">				} else if (cl == Monk.class) {</span>
+<span class="nc" id="L261">					cl = Senior.class;</span>
+<span class="nc bnc" id="L262" title="All 2 branches missed.">				} else if (cl == Scorpio.class) {</span>
+<span class="nc" id="L263">					cl = Acidic.class;</span>
+				}
+<span class="nc" id="L265">				rotation.set(i, cl);</span>
+			}
+		}
+<span class="nc" id="L268">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

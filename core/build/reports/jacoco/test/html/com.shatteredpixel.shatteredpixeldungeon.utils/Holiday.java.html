@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Holiday.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.utils</a> &gt; <span class="el_source">Holiday.java</span></div><h1>Holiday.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.utils;
+
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+
+<span class="nc" id="L27">public enum Holiday {</span>
+
+<span class="nc" id="L29">	NONE,</span>
+
+<span class="nc" id="L31">	LUNAR_NEW_YEAR,         //Varies, sometime in late Jan to Late Feb              (7 days)</span>
+<span class="nc" id="L32">	APRIL_FOOLS,            //April 1st, can override easter                        (1 day)</span>
+<span class="nc" id="L33">	EASTER,                 //Varies, sometime in Late Mar to Late Apr              (6-7 days)</span>
+	//Nothing in May
+<span class="nc" id="L35">	PRIDE,                  //Jun 24th to Jun 30th                                  (7 days)</span>
+	//Nothing in Jul
+<span class="nc" id="L37">	SHATTEREDPD_BIRTHDAY,   //Aug 1st to Aug 7th                                    (7 days)</span>
+	//Nothing in Sept
+<span class="nc" id="L39">	HALLOWEEN,              //Oct 24th to Oct 31st                                  (7 days)</span>
+	//Nothing in Nov
+<span class="nc" id="L41">	PD_BIRTHDAY,            //Dec 1st to Dec 7th                                    (7 days)</span>
+<span class="nc" id="L42">	WINTER_HOLIDAYS,        //Dec 15th to Dec 26th                                  (12 days)</span>
+<span class="nc" id="L43">	NEW_YEARS;              //Dec 27th to Jan 2nd                                   (7 days)</span>
+
+	//total of 61-62 festive days each year, mainly concentrated in Late Oct to Early Feb
+
+	//we cache the holiday here so that holiday logic doesn't suddenly shut off mid-game
+	//this gets cleared on game launch (of course), and whenever leaving a game scene
+	private static Holiday cached;
+	public static void clearCachedHoliday(){
+<span class="nc" id="L51">		cached = null;</span>
+<span class="nc" id="L52">	}</span>
+
+	public static Holiday getCurrentHoliday(){
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		if (cached == null){</span>
+<span class="nc" id="L56">			cached = getHolidayForDate((GregorianCalendar) GregorianCalendar.getInstance());</span>
+		}
+<span class="nc" id="L58">		return cached;</span>
+	}
+
+	//requires a gregorian calendar
+	public static Holiday getHolidayForDate(GregorianCalendar cal){
+
+		//Lunar New Year
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		if (isLunarNewYear(cal.get(Calendar.YEAR),</span>
+<span class="nc" id="L66">				cal.get(Calendar.DAY_OF_YEAR))){</span>
+<span class="nc" id="L67">			return LUNAR_NEW_YEAR;</span>
+		}
+
+		//April Fools
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		if (cal.get(Calendar.MONTH) == Calendar.APRIL</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">				&amp;&amp; cal.get(Calendar.DAY_OF_MONTH) == 1){</span>
+<span class="nc" id="L73">			return APRIL_FOOLS;</span>
+		}
+
+		//Easter
+<span class="nc bnc" id="L77" title="All 2 branches missed.">		if (isEaster(cal.get(Calendar.YEAR),</span>
+<span class="nc" id="L78">				cal.get(Calendar.DAY_OF_YEAR),</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">				cal.getActualMaximum(Calendar.DAY_OF_YEAR) == 366)){</span>
+<span class="nc" id="L80">			return EASTER;</span>
+		}
+
+		//Pride
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		if (cal.get(Calendar.MONTH) == Calendar.JUNE</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">				&amp;&amp; cal.get(Calendar.DAY_OF_MONTH) &gt;= 24){</span>
+<span class="nc" id="L86">			return PRIDE;</span>
+		}
+
+		//Shattered's Birthday
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		if (cal.get(Calendar.MONTH) == Calendar.AUGUST</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">				&amp;&amp; cal.get(Calendar.DAY_OF_MONTH) &lt;= 7){</span>
+<span class="nc" id="L92">			return SHATTEREDPD_BIRTHDAY;</span>
+		}
+
+		//Halloween
+<span class="nc bnc" id="L96" title="All 2 branches missed.">		if (cal.get(Calendar.MONTH) == Calendar.OCTOBER</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">				&amp;&amp; cal.get(Calendar.DAY_OF_MONTH) &gt;= 24){</span>
+<span class="nc" id="L98">			return HALLOWEEN;</span>
+		}
+
+		//Pixel Dungeon's Birthday
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if (cal.get(Calendar.MONTH) == Calendar.DECEMBER</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">				&amp;&amp; cal.get(Calendar.DAY_OF_MONTH) &lt;= 7){</span>
+<span class="nc" id="L104">			return PD_BIRTHDAY;</span>
+		}
+
+		//Winter Holidays
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		if (cal.get(Calendar.MONTH) == Calendar.DECEMBER</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">				&amp;&amp; cal.get(Calendar.DAY_OF_MONTH) &gt;= 15</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">				&amp;&amp; cal.get(Calendar.DAY_OF_MONTH) &lt;= 26){</span>
+<span class="nc" id="L111">			return WINTER_HOLIDAYS;</span>
+		}
+
+		//New Years
+<span class="nc bnc" id="L115" title="All 4 branches missed.">		if ((cal.get(Calendar.MONTH) == Calendar.DECEMBER &amp;&amp; cal.get(Calendar.DAY_OF_MONTH) &gt;= 27)</span>
+<span class="nc bnc" id="L116" title="All 4 branches missed.">				|| (cal.get(Calendar.MONTH) == Calendar.JANUARY &amp;&amp; cal.get(Calendar.DAY_OF_MONTH) &lt;= 2)){</span>
+<span class="nc" id="L117">			return NEW_YEARS;</span>
+		}
+
+<span class="nc" id="L120">		return NONE;</span>
+	}
+
+	//has to be hard-coded on a per-year basis =S
+	public static boolean isLunarNewYear(int year, int dayOfYear){
+		int lunarNewYearDayOfYear;
+<span class="nc bnc" id="L126" title="All 82 branches missed.">		switch (year){</span>
+			//yes, I really did hardcode this all the way from 2020 to 2100
+<span class="nc" id="L128">			default:   lunarNewYearDayOfYear = 31+5; break;     //defaults to February 5th</span>
+<span class="nc" id="L129">			case 2020: lunarNewYearDayOfYear = 25; break;       //January 25th</span>
+<span class="nc" id="L130">			case 2021: lunarNewYearDayOfYear = 31+12; break;    //February 12th</span>
+<span class="nc" id="L131">			case 2022: lunarNewYearDayOfYear = 31+1; break;     //February 1st</span>
+<span class="nc" id="L132">			case 2023: lunarNewYearDayOfYear = 22; break;       //January 22nd</span>
+<span class="nc" id="L133">			case 2024: lunarNewYearDayOfYear = 31+10; break;    //February 10th</span>
+<span class="nc" id="L134">			case 2025: lunarNewYearDayOfYear = 29; break;       //January 29th</span>
+<span class="nc" id="L135">			case 2026: lunarNewYearDayOfYear = 31+17; break;    //February 17th</span>
+<span class="nc" id="L136">			case 2027: lunarNewYearDayOfYear = 31+6; break;     //February 6th</span>
+<span class="nc" id="L137">			case 2028: lunarNewYearDayOfYear = 26; break;       //January 26th</span>
+<span class="nc" id="L138">			case 2029: lunarNewYearDayOfYear = 31+13; break;    //February 13th</span>
+<span class="nc" id="L139">			case 2030: lunarNewYearDayOfYear = 31+3; break;     //February 3rd</span>
+<span class="nc" id="L140">			case 2031: lunarNewYearDayOfYear = 23; break;       //January 23rd</span>
+<span class="nc" id="L141">			case 2032: lunarNewYearDayOfYear = 31+11; break;    //February 11th</span>
+<span class="nc" id="L142">			case 2033: lunarNewYearDayOfYear = 31; break;       //January 31st</span>
+<span class="nc" id="L143">			case 2034: lunarNewYearDayOfYear = 31+19; break;    //February 19th</span>
+<span class="nc" id="L144">			case 2035: lunarNewYearDayOfYear = 31+8; break;     //February 8th</span>
+<span class="nc" id="L145">			case 2036: lunarNewYearDayOfYear = 28; break;       //January 28th</span>
+<span class="nc" id="L146">			case 2037: lunarNewYearDayOfYear = 31+15; break;    //February 15th</span>
+<span class="nc" id="L147">			case 2038: lunarNewYearDayOfYear = 31+4; break;     //February 4th</span>
+<span class="nc" id="L148">			case 2039: lunarNewYearDayOfYear = 24; break;       //January 24th</span>
+<span class="nc" id="L149">			case 2040: lunarNewYearDayOfYear = 31+12; break;    //February 12th</span>
+<span class="nc" id="L150">			case 2041: lunarNewYearDayOfYear = 31+1; break;     //February 1st</span>
+<span class="nc" id="L151">			case 2042: lunarNewYearDayOfYear = 22; break;       //January 22nd</span>
+<span class="nc" id="L152">			case 2043: lunarNewYearDayOfYear = 31+10; break;    //February 10th</span>
+<span class="nc" id="L153">			case 2044: lunarNewYearDayOfYear = 30; break;       //January 30th</span>
+<span class="nc" id="L154">			case 2045: lunarNewYearDayOfYear = 31+17; break;    //February 17th</span>
+<span class="nc" id="L155">			case 2046: lunarNewYearDayOfYear = 31+6; break;     //February 6th</span>
+<span class="nc" id="L156">			case 2047: lunarNewYearDayOfYear = 26; break;       //January 26th</span>
+<span class="nc" id="L157">			case 2048: lunarNewYearDayOfYear = 31+14; break;    //February 14th</span>
+<span class="nc" id="L158">			case 2049: lunarNewYearDayOfYear = 31+2; break;     //February 2nd</span>
+<span class="nc" id="L159">			case 2050: lunarNewYearDayOfYear = 23; break;       //January 23rd</span>
+<span class="nc" id="L160">			case 2051: lunarNewYearDayOfYear = 31+11; break;    //February 11th</span>
+<span class="nc" id="L161">			case 2052: lunarNewYearDayOfYear = 31+1; break;     //February 1st</span>
+<span class="nc" id="L162">			case 2053: lunarNewYearDayOfYear = 31+19; break;    //February 19th</span>
+<span class="nc" id="L163">			case 2054: lunarNewYearDayOfYear = 31+8; break;     //February 8th</span>
+<span class="nc" id="L164">			case 2055: lunarNewYearDayOfYear = 28; break;       //January 28th</span>
+<span class="nc" id="L165">			case 2056: lunarNewYearDayOfYear = 31+15; break;    //February 15th</span>
+<span class="nc" id="L166">			case 2057: lunarNewYearDayOfYear = 31+4; break;     //February 4th</span>
+<span class="nc" id="L167">			case 2058: lunarNewYearDayOfYear = 24; break;       //January 24th</span>
+<span class="nc" id="L168">			case 2059: lunarNewYearDayOfYear = 31+12; break;    //February 12th</span>
+<span class="nc" id="L169">			case 2060: lunarNewYearDayOfYear = 31+2; break;     //February 2nd</span>
+<span class="nc" id="L170">			case 2061: lunarNewYearDayOfYear = 21; break;       //January 21st</span>
+<span class="nc" id="L171">			case 2062: lunarNewYearDayOfYear = 31+9; break;     //February 9th</span>
+<span class="nc" id="L172">			case 2063: lunarNewYearDayOfYear = 29; break;       //January 29th</span>
+<span class="nc" id="L173">			case 2064: lunarNewYearDayOfYear = 31+17; break;    //February 17th</span>
+<span class="nc" id="L174">			case 2065: lunarNewYearDayOfYear = 31+5; break;     //February 5th</span>
+<span class="nc" id="L175">			case 2066: lunarNewYearDayOfYear = 26; break;       //January 26th</span>
+<span class="nc" id="L176">			case 2067: lunarNewYearDayOfYear = 31+14; break;    //February 14th</span>
+<span class="nc" id="L177">			case 2068: lunarNewYearDayOfYear = 31+3; break;     //February 3rd</span>
+<span class="nc" id="L178">			case 2069: lunarNewYearDayOfYear = 23; break;       //January 23rd</span>
+<span class="nc" id="L179">			case 2070: lunarNewYearDayOfYear = 31+11; break;    //February 11th</span>
+<span class="nc" id="L180">			case 2071: lunarNewYearDayOfYear = 31; break;       //January 31st</span>
+<span class="nc" id="L181">			case 2072: lunarNewYearDayOfYear = 31+19; break;    //February 19th</span>
+<span class="nc" id="L182">			case 2073: lunarNewYearDayOfYear = 31+7; break;     //February 7th</span>
+<span class="nc" id="L183">			case 2074: lunarNewYearDayOfYear = 27; break;       //January 27th</span>
+<span class="nc" id="L184">			case 2075: lunarNewYearDayOfYear = 31+15; break;    //February 15th</span>
+<span class="nc" id="L185">			case 2076: lunarNewYearDayOfYear = 31+5; break;     //February 5th</span>
+<span class="nc" id="L186">			case 2077: lunarNewYearDayOfYear = 24; break;       //January 24th</span>
+<span class="nc" id="L187">			case 2078: lunarNewYearDayOfYear = 31+12; break;    //February 12th</span>
+<span class="nc" id="L188">			case 2079: lunarNewYearDayOfYear = 31+2; break;     //February 2nd</span>
+<span class="nc" id="L189">			case 2080: lunarNewYearDayOfYear = 22; break;       //January 22nd</span>
+<span class="nc" id="L190">			case 2081: lunarNewYearDayOfYear = 31+9; break;     //February 9th</span>
+<span class="nc" id="L191">			case 2082: lunarNewYearDayOfYear = 29; break;       //January 29th</span>
+<span class="nc" id="L192">			case 2083: lunarNewYearDayOfYear = 31+17; break;    //February 17th</span>
+<span class="nc" id="L193">			case 2084: lunarNewYearDayOfYear = 31+6; break;     //February 6th</span>
+<span class="nc" id="L194">			case 2085: lunarNewYearDayOfYear = 26; break;       //January 26th</span>
+<span class="nc" id="L195">			case 2086: lunarNewYearDayOfYear = 31+14; break;    //February 14th</span>
+<span class="nc" id="L196">			case 2087: lunarNewYearDayOfYear = 31+3; break;     //February 3rd</span>
+<span class="nc" id="L197">			case 2088: lunarNewYearDayOfYear = 24; break;       //January 24th</span>
+<span class="nc" id="L198">			case 2089: lunarNewYearDayOfYear = 31+10; break;    //February 10th</span>
+<span class="nc" id="L199">			case 2090: lunarNewYearDayOfYear = 30; break;       //January 30th</span>
+<span class="nc" id="L200">			case 2091: lunarNewYearDayOfYear = 31+18; break;    //February 18th</span>
+<span class="nc" id="L201">			case 2092: lunarNewYearDayOfYear = 31+7; break;     //February 7th</span>
+<span class="nc" id="L202">			case 2093: lunarNewYearDayOfYear = 27; break;       //January 27th</span>
+<span class="nc" id="L203">			case 2094: lunarNewYearDayOfYear = 31+15; break;    //February 15th</span>
+<span class="nc" id="L204">			case 2095: lunarNewYearDayOfYear = 31+5; break;     //February 5th</span>
+<span class="nc" id="L205">			case 2096: lunarNewYearDayOfYear = 25; break;       //January 25th</span>
+<span class="nc" id="L206">			case 2097: lunarNewYearDayOfYear = 31+12; break;    //February 12th</span>
+<span class="nc" id="L207">			case 2098: lunarNewYearDayOfYear = 31+1; break;     //February 1st</span>
+<span class="nc" id="L208">			case 2099: lunarNewYearDayOfYear = 21; break;       //January 21st</span>
+<span class="nc" id="L209">			case 2100: lunarNewYearDayOfYear = 31+9; break;     //February 9th</span>
+		}
+
+		//celebrate for 7 days total, with Lunar New Year on the 5th day
+<span class="nc bnc" id="L213" title="All 4 branches missed.">		return dayOfYear &gt;= lunarNewYearDayOfYear-4 &amp;&amp; dayOfYear &lt;= lunarNewYearDayOfYear+2;</span>
+	}
+
+	//has to be algorithmically computed =S
+	public static boolean isEaster(int year, int dayOfYear, boolean isLeapYear){
+		//if we're not in March or April, just skip out of all these calculations
+<span class="nc bnc" id="L219" title="All 4 branches missed.">		if (dayOfYear &lt; 59 || dayOfYear &gt; 121) {</span>
+<span class="nc" id="L220">			return false;</span>
+		}
+
+		//Uses the Anonymous Gregorian Algorithm
+<span class="nc" id="L224">		int a = year % 19;</span>
+<span class="nc" id="L225">		int b = year / 100;</span>
+<span class="nc" id="L226">		int c = year % 100;</span>
+<span class="nc" id="L227">		int d = b / 4;</span>
+<span class="nc" id="L228">		int e = b % 4;</span>
+<span class="nc" id="L229">		int f = (b + 8) / 25;</span>
+<span class="nc" id="L230">		int g = (b - f + 1) / 3;</span>
+<span class="nc" id="L231">		int h = (a*19 + b - d - g + 15) % 30;</span>
+<span class="nc" id="L232">		int i = c / 4;</span>
+<span class="nc" id="L233">		int k = c % 4;</span>
+<span class="nc" id="L234">		int l = (32 + 2*e + 2*i - h - k) % 7;</span>
+<span class="nc" id="L235">		int m = (a + h*11 + l*22)/451;</span>
+<span class="nc" id="L236">		int n = (h + l - m*7 + 114) / 31;</span>
+<span class="nc" id="L237">		int o = (h + l - m*7 + 114) % 31;</span>
+
+<span class="nc" id="L239">		int easterDayOfYear = 0;</span>
+
+<span class="nc bnc" id="L241" title="All 2 branches missed.">		if (n == 3){</span>
+<span class="nc" id="L242">			easterDayOfYear += 59; //march</span>
+		} else {
+<span class="nc" id="L244">			easterDayOfYear += 90; //april</span>
+		}
+
+<span class="nc bnc" id="L247" title="All 2 branches missed.">		if (isLeapYear) {</span>
+<span class="nc" id="L248">			easterDayOfYear += 1; //add an extra day to account for February 29th</span>
+		}
+
+<span class="nc" id="L251">		easterDayOfYear += (o+1); //add day of month</span>
+
+		//celebrate for 7 days total, with Easter Sunday on the 5th day
+<span class="nc bnc" id="L254" title="All 4 branches missed.">		return dayOfYear &gt;= easterDayOfYear-4 &amp;&amp; dayOfYear &lt;= easterDayOfYear+2;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,834 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HeroSelectScene.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.scenes</a> &gt; <span class="el_source">HeroSelectScene.java</span></div><h1>HeroSelectScene.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.scenes;
+
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
+import com.shatteredpixel.shatteredpixeldungeon.Rankings;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Journal;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ActionIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ExitButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.IconButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.utils.DungeonSeed;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndChallenges;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndHeroInfo;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndKeyBindings;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndMessage;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndTextInput;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndTitledMessage;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndVictoryCongrats;
+import com.watabou.gltextures.TextureCache;
+import com.watabou.input.PointerEvent;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.ColorBlock;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.NinePatch;
+import com.watabou.noosa.PointerArea;
+import com.watabou.noosa.tweeners.Tweener;
+import com.watabou.noosa.ui.Component;
+import com.watabou.utils.DeviceCompat;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.PointF;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
+
+<span class="nc" id="L70">public class HeroSelectScene extends PixelScene {</span>
+
+	private Image background;
+	private Image fadeLeft, fadeRight;
+	private IconButton btnFade; //only on landscape
+
+	//fading UI elements
+	private RenderedTextBlock title;
+<span class="nc" id="L78">	private ArrayList&lt;StyledButton&gt; heroBtns = new ArrayList&lt;&gt;();</span>
+	private RenderedTextBlock heroName; //only on landscape
+	private RenderedTextBlock heroDesc; //only on landscape
+	private StyledButton startBtn;
+	private IconButton infoButton;
+	private IconButton btnOptions;
+	private GameOptions optionsPane;
+	private IconButton btnExit;
+
+	@Override
+	public void create() {
+<span class="nc" id="L89">		super.create();</span>
+
+<span class="nc" id="L91">		Dungeon.hero = null;</span>
+
+<span class="nc" id="L93">		Badges.loadGlobal();</span>
+<span class="nc" id="L94">		Journal.loadGlobal();</span>
+
+<span class="nc" id="L96">		background = new Image(TextureCache.createSolid(0xFF2d2f31), 0, 0, 800, 450){</span>
+			@Override
+			public void update() {
+<span class="nc bnc" id="L99" title="All 2 branches missed.">				if (GamesInProgress.selectedClass != null) {</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">					if (rm &gt; 1f) {</span>
+<span class="nc" id="L101">						rm -= Game.elapsed;</span>
+<span class="nc" id="L102">						gm = bm = rm;</span>
+					} else {
+<span class="nc" id="L104">						rm = gm = bm = 1;</span>
+					}
+				}
+<span class="nc" id="L107">			}</span>
+		};
+<span class="nc" id="L109">		background.scale.set(Camera.main.height/background.height);</span>
+
+<span class="nc" id="L111">		background.x = (Camera.main.width - background.width())/2f;</span>
+<span class="nc" id="L112">		background.y = (Camera.main.height - background.height())/2f;</span>
+<span class="nc" id="L113">		PixelScene.align(background);</span>
+<span class="nc" id="L114">		add(background);</span>
+
+<span class="nc" id="L116">		fadeLeft = new Image(TextureCache.createGradient(0xFF000000, 0xFF000000, 0x00000000));</span>
+<span class="nc" id="L117">		fadeLeft.x = background.x-2;</span>
+<span class="nc" id="L118">		fadeLeft.scale.set(3, background.height());</span>
+<span class="nc" id="L119">		add(fadeLeft);</span>
+
+<span class="nc" id="L121">		fadeRight = new Image(fadeLeft);</span>
+<span class="nc" id="L122">		fadeRight.x = background.x + background.width() + 2;</span>
+<span class="nc" id="L123">		fadeRight.y = background.y + background.height();</span>
+<span class="nc" id="L124">		fadeRight.angle = 180;</span>
+<span class="nc" id="L125">		add(fadeRight);</span>
+
+<span class="nc" id="L127">		title = PixelScene.renderTextBlock(Messages.get(this, &quot;title&quot;), 12);</span>
+<span class="nc" id="L128">		title.hardlight(Window.TITLE_COLOR);</span>
+<span class="nc" id="L129">		PixelScene.align(title);</span>
+<span class="nc" id="L130">		add(title);</span>
+
+<span class="nc" id="L132">		startBtn = new StyledButton(Chrome.Type.GREY_BUTTON_TR, &quot;&quot;){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L135">				super.onClick();</span>
+
+<span class="nc bnc" id="L137" title="All 2 branches missed.">				if (GamesInProgress.selectedClass == null) return;</span>
+
+<span class="nc" id="L139">				Dungeon.hero = null;</span>
+<span class="nc" id="L140">				Dungeon.daily = Dungeon.dailyReplay = false;</span>
+<span class="nc" id="L141">				Dungeon.initSeed();</span>
+<span class="nc" id="L142">				ActionIndicator.clearAction();</span>
+<span class="nc" id="L143">				InterlevelScene.mode = InterlevelScene.Mode.DESCEND;</span>
+
+<span class="nc" id="L145">				Game.switchScene( InterlevelScene.class );</span>
+<span class="nc" id="L146">			}</span>
+		};
+<span class="nc" id="L148">		startBtn.icon(Icons.get(Icons.ENTER));</span>
+<span class="nc" id="L149">		startBtn.setSize(80, 21);</span>
+<span class="nc" id="L150">		startBtn.textColor(Window.TITLE_COLOR);</span>
+<span class="nc" id="L151">		add(startBtn);</span>
+<span class="nc" id="L152">		startBtn.visible = startBtn.active = false;</span>
+
+<span class="nc" id="L154">		infoButton = new IconButton(Icons.get(Icons.INFO)){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L157">				super.onClick();</span>
+<span class="nc" id="L158">				HeroClass cls = GamesInProgress.selectedClass;</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">				if (cls != null) {</span>
+<span class="nc" id="L160">					Window w = new WndHeroInfo(GamesInProgress.selectedClass);</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">					if (landscape()) {</span>
+<span class="nc" id="L162">						w.offset(Camera.main.width / 6, 0);</span>
+					}
+<span class="nc" id="L164">					ShatteredPixelDungeon.scene().addToFront(w);</span>
+				}
+<span class="nc" id="L166">			}</span>
+
+			@Override
+			protected String hoverText() {
+<span class="nc" id="L170">				return Messages.titleCase(Messages.get(WndKeyBindings.class, &quot;hero_info&quot;));</span>
+			}
+		};
+<span class="nc" id="L173">		infoButton.visible = infoButton.active = false;</span>
+<span class="nc" id="L174">		infoButton.setSize(20, 21);</span>
+<span class="nc" id="L175">		add(infoButton);</span>
+
+<span class="nc bnc" id="L177" title="All 2 branches missed.">		for (HeroClass cl : HeroClass.values()){</span>
+<span class="nc" id="L178">			HeroBtn button = new HeroBtn(cl);</span>
+<span class="nc" id="L179">			add(button);</span>
+<span class="nc" id="L180">			heroBtns.add(button);</span>
+		}
+
+<span class="nc" id="L183">		optionsPane = new GameOptions();</span>
+<span class="nc" id="L184">		optionsPane.visible = optionsPane.active = false;</span>
+<span class="nc" id="L185">		optionsPane.layout();</span>
+<span class="nc" id="L186">		add(optionsPane);</span>
+
+<span class="nc" id="L188">		btnOptions = new IconButton(Icons.get(Icons.PREFS)){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L191">				super.onClick();</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">				optionsPane.visible = !optionsPane.visible;</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">				optionsPane.active = !optionsPane.active;</span>
+<span class="nc" id="L194">			}</span>
+
+			@Override
+			protected void onPointerDown() {
+<span class="nc" id="L198">				super.onPointerDown();</span>
+<span class="nc" id="L199">			}</span>
+
+			@Override
+			protected void onPointerUp() {
+<span class="nc" id="L203">				updateOptionsColor();</span>
+<span class="nc" id="L204">			}</span>
+
+			@Override
+			protected String hoverText() {
+<span class="nc" id="L208">				return Messages.get(HeroSelectScene.class, &quot;options&quot;);</span>
+			}
+		};
+<span class="nc" id="L211">		updateOptionsColor();</span>
+<span class="nc" id="L212">		btnOptions.visible = false;</span>
+
+<span class="nc bnc" id="L214" title="All 2 branches missed.">		if(!SPDSettings.intro()){</span>
+<span class="nc" id="L215">			add(btnOptions);</span>
+		}
+
+<span class="nc bnc" id="L218" title="All 4 branches missed.">		if (!Badges.isUnlocked(Badges.Badge.VICTORY) &amp;&amp; !DeviceCompat.isDebug()){</span>
+<span class="nc" id="L219">			Dungeon.challenges = 0;</span>
+<span class="nc" id="L220">			SPDSettings.challenges(0);</span>
+<span class="nc" id="L221">			SPDSettings.customSeed(&quot;&quot;);</span>
+		}
+
+<span class="nc bnc" id="L224" title="All 2 branches missed.">		if (landscape()){</span>
+<span class="nc" id="L225">			float leftArea = Math.max(100, Camera.main.width/3f);</span>
+<span class="nc" id="L226">			float uiHeight = Math.min(Camera.main.height-20, 300);</span>
+<span class="nc" id="L227">			float uiSpacing = (uiHeight-120)/2f;</span>
+
+<span class="nc bnc" id="L229" title="All 2 branches missed.">			if (uiHeight &gt;= 160) uiSpacing -= 5;</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">			if (uiHeight &gt;= 180) uiSpacing -= 6;</span>
+
+<span class="nc" id="L232">			background.x += leftArea/6f;</span>
+
+<span class="nc" id="L234">			float fadeLeftScale = 47 * (leftArea - background.x)/leftArea;</span>
+<span class="nc" id="L235">			fadeLeft.scale = new PointF(3 + Math.max(0, fadeLeftScale), background.height());</span>
+
+<span class="nc" id="L237">			title.setPos( (leftArea - title.width())/2f, (Camera.main.height-uiHeight)/2f);</span>
+<span class="nc" id="L238">			align(title);</span>
+
+<span class="nc" id="L240">			int btnWidth = HeroBtn.MIN_WIDTH + 15;</span>
+<span class="nc" id="L241">			int btnHeight = HeroBtn.HEIGHT;</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">			if (uiHeight &gt;= 180){</span>
+<span class="nc" id="L243">				btnHeight += 6;</span>
+			}
+
+<span class="nc" id="L246">			int cols = (int)Math.ceil(heroBtns.size()/2f);</span>
+<span class="nc" id="L247">			float curX = (leftArea - btnWidth * cols + (cols-1))/2f;</span>
+<span class="nc" id="L248">			float curY = title.bottom() + uiSpacing;</span>
+
+<span class="nc" id="L250">			int count = 0;</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">			for (StyledButton button : heroBtns){</span>
+<span class="nc" id="L252">				button.setRect(curX, curY, btnWidth, btnHeight);</span>
+<span class="nc" id="L253">				align(button);</span>
+<span class="nc" id="L254">				curX += btnWidth+1;</span>
+<span class="nc" id="L255">				count++;</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">				if (count &gt;= (1+heroBtns.size())/2){</span>
+<span class="nc" id="L257">					curX -= btnWidth*count + count;</span>
+<span class="nc" id="L258">					curY += btnHeight+1;</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">					if (heroBtns.size()%2 != 0){</span>
+<span class="nc" id="L260">						curX += btnWidth/2f;</span>
+					}
+<span class="nc" id="L262">					count = 0;</span>
+				}
+<span class="nc" id="L264">			}</span>
+
+<span class="nc" id="L266">			heroName = renderTextBlock(9);</span>
+<span class="nc" id="L267">			heroName.setPos(0, heroBtns.get(heroBtns.size()-1).bottom()+5);</span>
+<span class="nc" id="L268">			add(heroName);</span>
+
+<span class="nc bnc" id="L270" title="All 2 branches missed.">			if (uiHeight &gt;= 160){</span>
+<span class="nc" id="L271">				heroDesc = renderTextBlock(6);</span>
+			} else {
+<span class="nc" id="L273">				heroDesc = renderTextBlock(5);</span>
+			}
+<span class="nc" id="L275">			heroDesc.align(RenderedTextBlock.CENTER_ALIGN);</span>
+<span class="nc" id="L276">			heroDesc.setPos(0, heroName.bottom()+5);</span>
+<span class="nc" id="L277">			add(heroDesc);</span>
+
+<span class="nc" id="L279">			startBtn.text(Messages.titleCase(Messages.get(this, &quot;start&quot;)));</span>
+<span class="nc" id="L280">			startBtn.setSize(startBtn.reqWidth()+8, 21);</span>
+<span class="nc" id="L281">			startBtn.setPos((leftArea - startBtn.width())/2f, title.top() + uiHeight - startBtn.height());</span>
+<span class="nc" id="L282">			align(startBtn);</span>
+
+<span class="nc" id="L284">			btnFade = new IconButton(Icons.CHEVRON.get()){</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L287">					enable(false);</span>
+<span class="nc" id="L288">					parent.add(new Tweener(parent, 0.5f) {</span>
+						@Override
+						protected void updateValues(float progress) {
+<span class="nc" id="L291">							uiAlpha = 1 - progress;</span>
+<span class="nc" id="L292">							updateFade();</span>
+<span class="nc" id="L293">						}</span>
+					});
+<span class="nc" id="L295">				}</span>
+			};
+<span class="nc" id="L297">			btnFade.icon().originToCenter();</span>
+<span class="nc" id="L298">			btnFade.icon().angle = 270f;</span>
+<span class="nc" id="L299">			btnFade.visible = btnFade.active = false;</span>
+<span class="nc" id="L300">			btnFade.setRect(startBtn.left()-20, startBtn.top(), 20, 21);</span>
+<span class="nc" id="L301">			align(btnFade);</span>
+<span class="nc" id="L302">			add(btnFade);</span>
+
+<span class="nc" id="L304">			btnOptions.setRect(startBtn.right(), startBtn.top(), 20, 21);</span>
+<span class="nc" id="L305">			optionsPane.setPos(btnOptions.right(), btnOptions.top() - optionsPane.height() - 2);</span>
+<span class="nc" id="L306">			align(optionsPane);</span>
+<span class="nc" id="L307">		} else {</span>
+<span class="nc" id="L308">			background.visible = false;</span>
+
+<span class="nc" id="L310">			int btnWidth = HeroBtn.MIN_WIDTH;</span>
+
+<span class="nc" id="L312">			float curX = (Camera.main.width - btnWidth * heroBtns.size()) / 2f;</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">			if (curX &gt; 0) {</span>
+<span class="nc" id="L314">				btnWidth += Math.min(curX / (heroBtns.size() / 2f), 15);</span>
+<span class="nc" id="L315">				curX = (Camera.main.width - btnWidth * heroBtns.size()) / 2f;</span>
+			}
+<span class="nc" id="L317">			float curY = Camera.main.height - HeroBtn.HEIGHT + 3;</span>
+
+<span class="nc bnc" id="L319" title="All 2 branches missed.">			for (StyledButton button : heroBtns) {</span>
+<span class="nc" id="L320">				button.setRect(curX, curY, btnWidth, HeroBtn.HEIGHT);</span>
+<span class="nc" id="L321">				curX += btnWidth;</span>
+<span class="nc" id="L322">			}</span>
+
+<span class="nc" id="L324">			title.setPos((Camera.main.width - title.width()) / 2f, (Camera.main.height - HeroBtn.HEIGHT - title.height() - 4));</span>
+
+<span class="nc" id="L326">			btnOptions.setRect(heroBtns.get(0).left() + 16, Camera.main.height-HeroBtn.HEIGHT-16, 20, 21);</span>
+<span class="nc" id="L327">			optionsPane.setPos(heroBtns.get(0).left(), 0);</span>
+		}
+
+<span class="nc" id="L330">		btnExit = new ExitButton();</span>
+<span class="nc" id="L331">		btnExit.setPos( Camera.main.width - btnExit.width(), 0 );</span>
+<span class="nc" id="L332">		add( btnExit );</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">		btnExit.visible = btnExit.active = !SPDSettings.intro();</span>
+
+<span class="nc" id="L335">		PointerArea fadeResetter = new PointerArea(0, 0, Camera.main.width, Camera.main.height){</span>
+			@Override
+			public boolean onSignal(PointerEvent event) {
+<span class="nc bnc" id="L338" title="All 4 branches missed.">				if (event != null &amp;&amp; event.type == PointerEvent.Type.UP){</span>
+<span class="nc bnc" id="L339" title="All 4 branches missed.">					if (uiAlpha == 0 &amp;&amp; landscape()){</span>
+<span class="nc" id="L340">						parent.add(new Tweener(parent, 0.5f) {</span>
+							@Override
+							protected void updateValues(float progress) {
+<span class="nc" id="L343">								uiAlpha = progress;</span>
+<span class="nc" id="L344">								updateFade();</span>
+<span class="nc" id="L345">							}</span>
+
+							@Override
+							protected void onComplete() {
+<span class="nc" id="L349">								resetFade();</span>
+<span class="nc" id="L350">							}</span>
+						});
+					} else {
+<span class="nc" id="L353">						resetFade();</span>
+					}
+				}
+<span class="nc" id="L356">				return false;</span>
+			}
+		};
+<span class="nc" id="L359">		add(fadeResetter);</span>
+<span class="nc" id="L360">		resetFade();</span>
+
+<span class="nc bnc" id="L362" title="All 2 branches missed.">		if (GamesInProgress.selectedClass != null){</span>
+<span class="nc" id="L363">			setSelectedHero(GamesInProgress.selectedClass);</span>
+		}
+
+<span class="nc bnc" id="L366" title="All 4 branches missed.">		if (Badges.isUnlocked(Badges.Badge.VICTORY) &amp;&amp; !SPDSettings.victoryNagged()) {</span>
+<span class="nc" id="L367">			SPDSettings.victoryNagged(true);</span>
+<span class="nc" id="L368">			add(new WndVictoryCongrats());</span>
+		}
+
+<span class="nc" id="L371">		fadeIn();</span>
+
+<span class="nc" id="L373">	}</span>
+
+	private void updateOptionsColor(){
+<span class="nc bnc" id="L376" title="All 2 branches missed.">		if (!SPDSettings.customSeed().isEmpty()){</span>
+<span class="nc" id="L377">			btnOptions.icon().hardlight(1f, 1.5f, 0.67f);</span>
+<span class="nc bnc" id="L378" title="All 2 branches missed.">		} else if (SPDSettings.challenges() != 0){</span>
+<span class="nc" id="L379">			btnOptions.icon().hardlight(2f, 1.33f, 0.5f);</span>
+		} else {
+<span class="nc" id="L381">			btnOptions.icon().resetColor();</span>
+		}
+<span class="nc" id="L383">	}</span>
+
+	private void setSelectedHero(HeroClass cl){
+<span class="nc" id="L386">		GamesInProgress.selectedClass = cl;</span>
+
+		try {
+			//loading these big jpgs fails sometimes, so we have a catch for it
+<span class="nc" id="L390">			background.texture(cl.splashArt());</span>
+<span class="nc" id="L391">		} catch (Exception e){</span>
+<span class="nc" id="L392">			Game.reportException(e);</span>
+<span class="nc" id="L393">			background.texture(TextureCache.createSolid(0xFF2d2f31));</span>
+<span class="nc" id="L394">			background.frame(0, 0, 800, 450);</span>
+<span class="nc" id="L395">		}</span>
+<span class="nc" id="L396">		background.visible = true;</span>
+<span class="nc" id="L397">		background.hardlight(1.5f,1.5f,1.5f);</span>
+
+<span class="nc" id="L399">		float leftPortion = Math.max(100, Camera.main.width/3f);</span>
+
+<span class="nc bnc" id="L401" title="All 2 branches missed.">		if (landscape()) {</span>
+
+<span class="nc" id="L403">			heroName.text(Messages.titleCase(cl.title()));</span>
+<span class="nc" id="L404">			heroName.hardlight(Window.TITLE_COLOR);</span>
+<span class="nc" id="L405">			heroName.setPos((leftPortion - heroName.width() - 20)/2f, heroName.top());</span>
+<span class="nc" id="L406">			align(heroName);</span>
+
+<span class="nc" id="L408">			heroDesc.text(cl.shortDesc());</span>
+<span class="nc" id="L409">			heroDesc.maxWidth(80);</span>
+<span class="nc" id="L410">			heroDesc.setPos((leftPortion - heroDesc.width())/2f, heroName.bottom() + 5);</span>
+<span class="nc" id="L411">			align(heroDesc);</span>
+
+<span class="nc bnc" id="L413" title="All 2 branches missed.">			while(startBtn.top() &lt; heroDesc.bottom()){</span>
+<span class="nc" id="L414">				heroDesc.maxWidth(heroDesc.maxWidth()+10);</span>
+<span class="nc" id="L415">				heroDesc.setPos(Math.max(0, (leftPortion - heroDesc.width())/2f), heroName.bottom() + 5);</span>
+<span class="nc" id="L416">				align(heroDesc);</span>
+			}
+
+<span class="nc" id="L419">			btnFade.visible = btnFade.active = true;</span>
+
+<span class="nc" id="L421">			startBtn.visible = startBtn.active = true;</span>
+
+<span class="nc" id="L423">			infoButton.visible = infoButton.active = true;</span>
+<span class="nc" id="L424">			infoButton.setPos(heroName.right(), heroName.top() + (heroName.height() - infoButton.height())/2f);</span>
+<span class="nc" id="L425">			align(infoButton);</span>
+
+<span class="nc bnc" id="L427" title="All 2 branches missed.">			btnOptions.visible = btnOptions.active = !SPDSettings.intro();</span>
+
+		} else {
+<span class="nc" id="L430">			title.visible = false;</span>
+
+<span class="nc" id="L432">			startBtn.visible = startBtn.active = true;</span>
+<span class="nc" id="L433">			startBtn.text(Messages.titleCase(cl.title()));</span>
+<span class="nc" id="L434">			startBtn.setSize(startBtn.reqWidth() + 8, 21);</span>
+
+<span class="nc" id="L436">			startBtn.setPos((Camera.main.width - startBtn.width())/2f, (Camera.main.height - HeroBtn.HEIGHT + 2 - startBtn.height()));</span>
+<span class="nc" id="L437">			PixelScene.align(startBtn);</span>
+
+<span class="nc" id="L439">			infoButton.visible = infoButton.active = true;</span>
+<span class="nc" id="L440">			infoButton.setPos(startBtn.right(), startBtn.top());</span>
+
+<span class="nc bnc" id="L442" title="All 2 branches missed.">			btnOptions.visible = btnOptions.active = !SPDSettings.intro();</span>
+<span class="nc" id="L443">			btnOptions.setPos(startBtn.left()-btnOptions.width(), startBtn.top());</span>
+
+<span class="nc" id="L445">			optionsPane.setPos(heroBtns.get(0).left(), startBtn.top() - optionsPane.height() - 2);</span>
+<span class="nc" id="L446">			align(optionsPane);</span>
+		}
+
+<span class="nc" id="L449">		updateOptionsColor();</span>
+<span class="nc" id="L450">	}</span>
+
+	private float uiAlpha;
+
+	@Override
+	public void update() {
+<span class="nc" id="L456">		super.update();</span>
+<span class="nc bnc" id="L457" title="All 4 branches missed.">		if (SPDSettings.intro() &amp;&amp; Rankings.INSTANCE.totalNumber &gt; 0){</span>
+<span class="nc" id="L458">			SPDSettings.intro(false);</span>
+		}
+<span class="nc bnc" id="L460" title="All 2 branches missed.">		btnExit.visible = btnExit.active = !SPDSettings.intro();</span>
+		//do not fade when a window is open
+<span class="nc bnc" id="L462" title="All 2 branches missed.">		for (Object v : members){</span>
+<span class="nc bnc" id="L463" title="All 2 branches missed.">			if (v instanceof Window) resetFade();</span>
+<span class="nc" id="L464">		}</span>
+<span class="nc bnc" id="L465" title="All 4 branches missed.">		if (!PixelScene.landscape() &amp;&amp; GamesInProgress.selectedClass != null) {</span>
+<span class="nc bnc" id="L466" title="All 2 branches missed.">			if (uiAlpha &gt; 0f){</span>
+<span class="nc" id="L467">				uiAlpha -= Game.elapsed/4f;</span>
+			}
+<span class="nc" id="L469">			updateFade();</span>
+		}
+<span class="nc" id="L471">	}</span>
+
+	private void updateFade(){
+<span class="nc" id="L474">		float alpha = GameMath.gate(0f, uiAlpha, 1f);</span>
+<span class="nc" id="L475">		title.alpha(alpha);</span>
+<span class="nc bnc" id="L476" title="All 2 branches missed.">		for (StyledButton b : heroBtns){</span>
+<span class="nc bnc" id="L477" title="All 2 branches missed.">			b.enable(alpha != 0);</span>
+<span class="nc" id="L478">			b.alpha(alpha);</span>
+<span class="nc" id="L479">		}</span>
+<span class="nc bnc" id="L480" title="All 2 branches missed.">		if (heroName != null){</span>
+<span class="nc" id="L481">			heroName.alpha(alpha);</span>
+<span class="nc" id="L482">			heroDesc.alpha(alpha);</span>
+<span class="nc bnc" id="L483" title="All 2 branches missed.">			btnFade.enable(alpha != 0);</span>
+<span class="nc" id="L484">			btnFade.icon().alpha(alpha);</span>
+		}
+<span class="nc bnc" id="L486" title="All 2 branches missed.">		startBtn.enable(alpha != 0);</span>
+<span class="nc" id="L487">		startBtn.alpha(alpha);</span>
+<span class="nc bnc" id="L488" title="All 4 branches missed.">		btnExit.enable(btnExit.visible &amp;&amp; alpha != 0);</span>
+<span class="nc" id="L489">		btnExit.icon().alpha(alpha);</span>
+<span class="nc bnc" id="L490" title="All 4 branches missed.">		optionsPane.active = optionsPane.visible &amp;&amp; alpha != 0;</span>
+<span class="nc" id="L491">		optionsPane.alpha(alpha);</span>
+<span class="nc bnc" id="L492" title="All 2 branches missed.">		btnOptions.enable(alpha != 0);</span>
+<span class="nc" id="L493">		btnOptions.icon().alpha(alpha);</span>
+<span class="nc bnc" id="L494" title="All 2 branches missed.">		infoButton.enable(alpha != 0);</span>
+<span class="nc" id="L495">		infoButton.icon().alpha(alpha);</span>
+
+<span class="nc bnc" id="L497" title="All 2 branches missed.">		if (landscape()){</span>
+
+<span class="nc" id="L499">			background.x = (Camera.main.width - background.width())/2f;</span>
+
+<span class="nc" id="L501">			float leftPortion = Math.max(100, Camera.main.width/3f);</span>
+
+<span class="nc" id="L503">			background.x += (leftPortion/2f)*alpha;</span>
+
+<span class="nc" id="L505">			float fadeLeftScale = 47 * (leftPortion - background.x)/leftPortion;</span>
+<span class="nc" id="L506">			fadeLeft.scale.x = 3 + Math.max(fadeLeftScale, 0)*alpha;</span>
+<span class="nc" id="L507">			fadeLeft.x = background.x-4;</span>
+<span class="nc" id="L508">			fadeRight.x = background.x + background.width() + 4;</span>
+		}
+
+<span class="nc" id="L511">		fadeLeft.x = background.x-5;</span>
+<span class="nc" id="L512">		fadeRight.x = background.x + background.width() + 5;</span>
+
+<span class="nc bnc" id="L514" title="All 6 branches missed.">		fadeLeft.visible = background.x &gt; 0 || (alpha &gt; 0 &amp;&amp; landscape());</span>
+<span class="nc bnc" id="L515" title="All 2 branches missed.">		fadeRight.visible = background.x + background.width() &lt; Camera.main.width;</span>
+<span class="nc" id="L516">	}</span>
+
+	private void resetFade(){
+		//starts fading after 4 seconds, fades over 4 seconds.
+<span class="nc" id="L520">		uiAlpha = 2f;</span>
+<span class="nc" id="L521">		updateFade();</span>
+<span class="nc" id="L522">	}</span>
+
+	@Override
+	protected void onBackPressed() {
+<span class="nc bnc" id="L526" title="All 2 branches missed.">		if (btnExit.active){</span>
+<span class="nc" id="L527">			ShatteredPixelDungeon.switchScene(TitleScene.class);</span>
+		} else {
+<span class="nc" id="L529">			super.onBackPressed();</span>
+		}
+<span class="nc" id="L531">	}</span>
+
+	private class HeroBtn extends StyledButton {
+
+		private HeroClass cl;
+
+		private static final int MIN_WIDTH = 20;
+		private static final int HEIGHT = 24;
+
+<span class="nc" id="L540">		HeroBtn ( HeroClass cl ){</span>
+<span class="nc" id="L541">			super(Chrome.Type.GREY_BUTTON_TR, &quot;&quot;);</span>
+
+<span class="nc" id="L543">			this.cl = cl;</span>
+
+<span class="nc" id="L545">			icon(new Image(cl.spritesheet(), 0, 90, 12, 15));</span>
+
+<span class="nc" id="L547">		}</span>
+
+		@Override
+		public void update() {
+<span class="nc" id="L551">			super.update();</span>
+<span class="nc bnc" id="L552" title="All 2 branches missed.">			if (cl != GamesInProgress.selectedClass){</span>
+<span class="nc bnc" id="L553" title="All 2 branches missed.">				if (!cl.isUnlocked()){</span>
+<span class="nc" id="L554">					icon.brightness(0.1f);</span>
+				} else {
+<span class="nc" id="L556">					icon.brightness(0.6f);</span>
+				}
+			} else {
+<span class="nc" id="L559">				icon.brightness(1f);</span>
+			}
+<span class="nc" id="L561">		}</span>
+
+		@Override
+		protected void onClick() {
+<span class="nc" id="L565">			super.onClick();</span>
+
+<span class="nc bnc" id="L567" title="All 2 branches missed.">			if( !cl.isUnlocked() ){</span>
+<span class="nc" id="L568">				ShatteredPixelDungeon.scene().addToFront( new WndMessage(cl.unlockMsg()));</span>
+<span class="nc bnc" id="L569" title="All 2 branches missed.">			} else if (GamesInProgress.selectedClass == cl) {</span>
+<span class="nc" id="L570">				Window w = new WndHeroInfo(cl);</span>
+<span class="nc bnc" id="L571" title="All 2 branches missed.">				if (landscape()){</span>
+<span class="nc" id="L572">					w.offset(Camera.main.width/6, 0);</span>
+				}
+<span class="nc" id="L574">				ShatteredPixelDungeon.scene().addToFront(w);</span>
+<span class="nc" id="L575">			} else {</span>
+<span class="nc" id="L576">				setSelectedHero(cl);</span>
+			}
+<span class="nc" id="L578">		}</span>
+	}
+
+<span class="nc" id="L581">	private class GameOptions extends Component {</span>
+
+		private NinePatch bg;
+
+		private ArrayList&lt;StyledButton&gt; buttons;
+		private ArrayList&lt;ColorBlock&gt; spacers;
+
+		@Override
+		protected void createChildren() {
+
+<span class="nc" id="L591">			bg = Chrome.get(Chrome.Type.GREY_BUTTON_TR);</span>
+<span class="nc" id="L592">			add(bg);</span>
+
+<span class="nc" id="L594">			buttons = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L595">			spacers = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L596">			StyledButton seedButton = new StyledButton(Chrome.Type.BLANK, Messages.get(HeroSelectScene.class, &quot;custom_seed&quot;), 6){</span>
+				@Override
+				protected void onClick() {
+<span class="nc bnc" id="L599" title="All 4 branches missed.">					if (!Badges.isUnlocked(Badges.Badge.VICTORY) &amp;&amp; !DeviceCompat.isDebug()){</span>
+<span class="nc" id="L600">						ShatteredPixelDungeon.scene().addToFront( new WndTitledMessage(</span>
+<span class="nc" id="L601">								Icons.get(Icons.SEED),</span>
+<span class="nc" id="L602">								Messages.get(HeroSelectScene.class, &quot;custom_seed&quot;),</span>
+<span class="nc" id="L603">								Messages.get(HeroSelectScene.class, &quot;custom_seed_nowin&quot;))</span>
+						);
+<span class="nc" id="L605">						return;</span>
+					}
+
+<span class="nc" id="L608">					String existingSeedtext = SPDSettings.customSeed();</span>
+<span class="nc" id="L609">					ShatteredPixelDungeon.scene().addToFront( new WndTextInput(Messages.get(HeroSelectScene.class, &quot;custom_seed_title&quot;),</span>
+<span class="nc" id="L610">							Messages.get(HeroSelectScene.class, &quot;custom_seed_desc&quot;),</span>
+							existingSeedtext,
+							20,
+							false,
+<span class="nc" id="L614">							Messages.get(HeroSelectScene.class, &quot;custom_seed_set&quot;),</span>
+<span class="nc" id="L615">							Messages.get(HeroSelectScene.class, &quot;custom_seed_clear&quot;)){</span>
+						@Override
+						public void onSelect(boolean positive, String text) {
+<span class="nc" id="L618">							text = DungeonSeed.formatText(text);</span>
+<span class="nc" id="L619">							long seed = DungeonSeed.convertFromText(text);</span>
+
+<span class="nc bnc" id="L621" title="All 4 branches missed.">							if (positive &amp;&amp; seed != -1){</span>
+
+<span class="nc bnc" id="L623" title="All 2 branches missed.">								for (GamesInProgress.Info info : GamesInProgress.checkAll()){</span>
+<span class="nc bnc" id="L624" title="All 4 branches missed.">									if (info.customSeed.isEmpty() &amp;&amp; info.seed == seed){</span>
+<span class="nc" id="L625">										SPDSettings.customSeed(&quot;&quot;);</span>
+<span class="nc" id="L626">										icon.resetColor();</span>
+<span class="nc" id="L627">										ShatteredPixelDungeon.scene().addToFront(new WndMessage(Messages.get(HeroSelectScene.class, &quot;custom_seed_duplicate&quot;)));</span>
+<span class="nc" id="L628">										return;</span>
+									}
+<span class="nc" id="L630">								}</span>
+
+<span class="nc" id="L632">								SPDSettings.customSeed(text);</span>
+<span class="nc" id="L633">								icon.hardlight(1f, 1.5f, 0.67f);</span>
+							} else {
+<span class="nc" id="L635">								SPDSettings.customSeed(&quot;&quot;);</span>
+<span class="nc" id="L636">								icon.resetColor();</span>
+							}
+<span class="nc" id="L638">							updateOptionsColor();</span>
+<span class="nc" id="L639">						}</span>
+					});
+<span class="nc" id="L641">				}</span>
+			};
+<span class="nc" id="L643">			seedButton.leftJustify = true;</span>
+<span class="nc" id="L644">			seedButton.icon(Icons.get(Icons.SEED));</span>
+<span class="nc bnc" id="L645" title="All 2 branches missed.">			if (!SPDSettings.customSeed().isEmpty()) seedButton.icon().hardlight(1f, 1.5f, 0.67f);;</span>
+<span class="nc" id="L646">			buttons.add(seedButton);</span>
+<span class="nc" id="L647">			add(seedButton);</span>
+
+<span class="nc" id="L649">			StyledButton dailyButton = new StyledButton(Chrome.Type.BLANK, Messages.get(HeroSelectScene.class, &quot;daily&quot;), 6){</span>
+
+				private static final long SECOND = 1000;
+				private static final long MINUTE = 60 * SECOND;
+				private static final long HOUR = 60 * MINUTE;
+				private static final long DAY = 24 * HOUR;
+
+				@Override
+				protected void onClick() {
+<span class="nc" id="L658">					super.onClick();</span>
+
+<span class="nc bnc" id="L660" title="All 4 branches missed.">					if (!Badges.isUnlocked(Badges.Badge.VICTORY) &amp;&amp; !DeviceCompat.isDebug()){</span>
+<span class="nc" id="L661">						ShatteredPixelDungeon.scene().addToFront( new WndTitledMessage(</span>
+<span class="nc" id="L662">								Icons.get(Icons.CALENDAR),</span>
+<span class="nc" id="L663">								Messages.get(HeroSelectScene.class, &quot;daily&quot;),</span>
+<span class="nc" id="L664">								Messages.get(HeroSelectScene.class, &quot;daily_nowin&quot;))</span>
+						);
+<span class="nc" id="L666">						return;</span>
+					}
+
+<span class="nc" id="L669">					long diff = (SPDSettings.lastDaily() + DAY) - Game.realTime;</span>
+<span class="nc bnc" id="L670" title="All 2 branches missed.">					if (diff &gt; 24*HOUR){</span>
+<span class="nc" id="L671">						ShatteredPixelDungeon.scene().addToFront(new WndMessage(Messages.get(HeroSelectScene.class, &quot;daily_unavailable_long&quot;, (diff / DAY)+1)));</span>
+<span class="nc" id="L672">						return;</span>
+					}
+
+<span class="nc bnc" id="L675" title="All 2 branches missed.">					for (GamesInProgress.Info game : GamesInProgress.checkAll()){</span>
+<span class="nc bnc" id="L676" title="All 2 branches missed.">						if (game.daily){</span>
+<span class="nc" id="L677">							ShatteredPixelDungeon.scene().addToFront(new WndMessage(Messages.get(HeroSelectScene.class, &quot;daily_existing&quot;)));</span>
+<span class="nc" id="L678">							return;</span>
+						}
+<span class="nc" id="L680">					}</span>
+
+<span class="nc" id="L682">					Image icon = Icons.get(Icons.CALENDAR);</span>
+<span class="nc bnc" id="L683" title="All 2 branches missed.">					if (diff &lt;= 0)  icon.hardlight(0.5f, 1f, 2f);</span>
+<span class="nc" id="L684">					else            icon.hardlight(1f, 0.5f, 2f);</span>
+<span class="nc" id="L685">					ShatteredPixelDungeon.scene().addToFront(new WndOptions(</span>
+							icon,
+<span class="nc" id="L687">							Messages.get(HeroSelectScene.class, &quot;daily&quot;),</span>
+<span class="nc bnc" id="L688" title="All 2 branches missed.">							diff &gt; 0 ?</span>
+<span class="nc" id="L689">								Messages.get(HeroSelectScene.class, &quot;daily_repeat&quot;) :</span>
+<span class="nc" id="L690">								Messages.get(HeroSelectScene.class, &quot;daily_desc&quot;),</span>
+<span class="nc" id="L691">							Messages.get(HeroSelectScene.class, &quot;daily_yes&quot;),</span>
+<span class="nc" id="L692">							Messages.get(HeroSelectScene.class, &quot;daily_no&quot;)){</span>
+						@Override
+						protected void onSelect(int index) {
+<span class="nc bnc" id="L695" title="All 2 branches missed.">							if (index == 0){</span>
+<span class="nc bnc" id="L696" title="All 2 branches missed.">								if (diff &lt;= 0) {</span>
+<span class="nc" id="L697">									long time = Game.realTime - (Game.realTime % DAY);</span>
+
+									//earliest possible daily for v3.0.1 is Mar 01 2025
+									//which is 20,148 days days after Jan 1 1970
+<span class="nc" id="L701">									time = Math.max(time, 20_148 * DAY);</span>
+
+<span class="nc" id="L703">									SPDSettings.lastDaily(time);</span>
+<span class="nc" id="L704">									Dungeon.dailyReplay = false;</span>
+<span class="nc" id="L705">								} else {</span>
+<span class="nc" id="L706">									Dungeon.dailyReplay = true;</span>
+								}
+
+<span class="nc" id="L709">								Dungeon.hero = null;</span>
+<span class="nc" id="L710">								Dungeon.daily = true;</span>
+<span class="nc" id="L711">								Dungeon.initSeed();</span>
+<span class="nc" id="L712">								ActionIndicator.clearAction();</span>
+<span class="nc" id="L713">								InterlevelScene.mode = InterlevelScene.Mode.DESCEND;</span>
+
+<span class="nc" id="L715">								Game.switchScene( InterlevelScene.class );</span>
+							}
+<span class="nc" id="L717">						}</span>
+					});
+<span class="nc" id="L719">				}</span>
+
+<span class="nc" id="L721">				private long timeToUpdate = 0;</span>
+
+<span class="nc" id="L723">				private final SimpleDateFormat dateFormat = new SimpleDateFormat(&quot;HH:mm:ss&quot;, Locale.ROOT);</span>
+				{
+<span class="nc" id="L725">					dateFormat.setTimeZone(TimeZone.getTimeZone(&quot;UTC&quot;));</span>
+<span class="nc" id="L726">				}</span>
+
+				@Override
+				public void update() {
+<span class="nc" id="L730">					super.update();</span>
+
+<span class="nc bnc" id="L732" title="All 4 branches missed.">					if (Game.realTime &gt; timeToUpdate &amp;&amp; visible){</span>
+<span class="nc" id="L733">						long diff = (SPDSettings.lastDaily() + DAY) - Game.realTime;</span>
+
+<span class="nc bnc" id="L735" title="All 2 branches missed.">						if (diff &gt; 0){</span>
+<span class="nc bnc" id="L736" title="All 2 branches missed.">							if (diff &gt; 30*HOUR){</span>
+<span class="nc" id="L737">								text(&quot;30:00:00+&quot;);</span>
+							} else {
+<span class="nc" id="L739">								text(dateFormat.format(new Date(diff)));</span>
+							}
+<span class="nc" id="L741">							timeToUpdate = Game.realTime + SECOND;</span>
+						} else {
+<span class="nc" id="L743">							text(Messages.get(HeroSelectScene.class, &quot;daily&quot;));</span>
+<span class="nc" id="L744">							timeToUpdate = Long.MAX_VALUE;</span>
+						}
+					}
+
+<span class="nc" id="L748">				}</span>
+			};
+<span class="nc" id="L750">			dailyButton.leftJustify = true;</span>
+<span class="nc" id="L751">			dailyButton.icon(Icons.get(Icons.CALENDAR));</span>
+<span class="nc" id="L752">			add(dailyButton);</span>
+<span class="nc" id="L753">			buttons.add(dailyButton);</span>
+
+<span class="nc" id="L755">			StyledButton challengeButton = new StyledButton(Chrome.Type.BLANK, Messages.get(WndChallenges.class, &quot;title&quot;), 6){</span>
+				@Override
+				protected void onClick() {
+<span class="nc bnc" id="L758" title="All 4 branches missed.">					if (!Badges.isUnlocked(Badges.Badge.VICTORY) &amp;&amp; !DeviceCompat.isDebug()){</span>
+<span class="nc" id="L759">						ShatteredPixelDungeon.scene().addToFront( new WndTitledMessage(</span>
+<span class="nc" id="L760">								Icons.get(Icons.CHALLENGE_GREY),</span>
+<span class="nc" id="L761">								Messages.get(WndChallenges.class, &quot;title&quot;),</span>
+<span class="nc" id="L762">								Messages.get(HeroSelectScene.class, &quot;challenges_nowin&quot;)</span>
+						));
+<span class="nc" id="L764">						return;</span>
+					}
+
+<span class="nc" id="L767">					ShatteredPixelDungeon.scene().addToFront(new WndChallenges(SPDSettings.challenges(), true) {</span>
+						public void onBackPressed() {
+<span class="nc" id="L769">							super.onBackPressed();</span>
+<span class="nc bnc" id="L770" title="All 2 branches missed.">							icon(Icons.get(SPDSettings.challenges() &gt; 0 ? Icons.CHALLENGE_COLOR : Icons.CHALLENGE_GREY));</span>
+<span class="nc" id="L771">							updateOptionsColor();</span>
+<span class="nc" id="L772">						}</span>
+					} );
+<span class="nc" id="L774">				}</span>
+			};
+<span class="nc" id="L776">			challengeButton.leftJustify = true;</span>
+<span class="nc bnc" id="L777" title="All 2 branches missed.">			challengeButton.icon(Icons.get(SPDSettings.challenges() &gt; 0 ? Icons.CHALLENGE_COLOR : Icons.CHALLENGE_GREY));</span>
+<span class="nc" id="L778">			add(challengeButton);</span>
+<span class="nc" id="L779">			buttons.add(challengeButton);</span>
+
+<span class="nc bnc" id="L781" title="All 2 branches missed.">			for (int i = 1; i &lt; buttons.size(); i++){</span>
+<span class="nc" id="L782">				ColorBlock spc = new ColorBlock(1, 1, 0xFF000000);</span>
+<span class="nc" id="L783">				add(spc);</span>
+<span class="nc" id="L784">				spacers.add(spc);</span>
+			}
+<span class="nc" id="L786">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L790">			super.layout();</span>
+
+<span class="nc" id="L792">			bg.x = x;</span>
+<span class="nc" id="L793">			bg.y = y;</span>
+
+<span class="nc" id="L795">			int width = 0;</span>
+<span class="nc bnc" id="L796" title="All 2 branches missed.">			for (StyledButton btn : buttons){</span>
+<span class="nc bnc" id="L797" title="All 2 branches missed.">				if (width &lt; btn.reqWidth()) width = (int)btn.reqWidth();</span>
+<span class="nc" id="L798">			}</span>
+<span class="nc" id="L799">			width += bg.marginHor();</span>
+
+<span class="nc" id="L801">			int top = (int)y + bg.marginTop() - 1;</span>
+<span class="nc" id="L802">			int i = 0;</span>
+<span class="nc bnc" id="L803" title="All 2 branches missed.">			for (StyledButton btn : buttons){</span>
+<span class="nc" id="L804">				btn.setRect(x+bg.marginLeft(), top, width - bg.marginHor(), 16);</span>
+<span class="nc" id="L805">				top = (int)btn.bottom();</span>
+<span class="nc bnc" id="L806" title="All 2 branches missed.">				if (i &lt; spacers.size()) {</span>
+<span class="nc" id="L807">					spacers.get(i).size(btn.width(), 1);</span>
+<span class="nc" id="L808">					spacers.get(i).x = btn.left();</span>
+<span class="nc" id="L809">					spacers.get(i).y = PixelScene.align(btn.bottom()-0.5f);</span>
+<span class="nc" id="L810">					i++;</span>
+				}
+<span class="nc" id="L812">			}</span>
+
+<span class="nc" id="L814">			this.width = width;</span>
+<span class="nc" id="L815">			this.height = top+bg.marginBottom()-y-1;</span>
+<span class="nc" id="L816">			bg.size(this.width, this.height);</span>
+
+<span class="nc" id="L818">		}</span>
+
+		private void alpha( float value ){
+<span class="nc" id="L821">			bg.alpha(value);</span>
+
+<span class="nc bnc" id="L823" title="All 2 branches missed.">			for (StyledButton btn : buttons){</span>
+<span class="nc" id="L824">				btn.alpha(value);</span>
+<span class="nc" id="L825">			}</span>
+
+<span class="nc bnc" id="L827" title="All 2 branches missed.">			for (ColorBlock spc : spacers){</span>
+<span class="nc" id="L828">				spc.alpha(value);</span>
+<span class="nc" id="L829">			}</span>
+<span class="nc" id="L830">		}</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

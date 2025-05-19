@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TerrainFeaturesTilemap.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.tiles</a> &gt; <span class="el_source">TerrainFeaturesTilemap.java</span></div><h1>TerrainFeaturesTilemap.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.tiles;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.levels.LastShopLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.tweeners.ScaleTweener;
+import com.watabou.utils.PointF;
+import com.watabou.utils.RectF;
+import com.watabou.utils.SparseArray;
+
+public class TerrainFeaturesTilemap extends DungeonTilemap {
+
+	private static TerrainFeaturesTilemap instance;
+
+	private SparseArray&lt;Plant&gt; plants;
+	private SparseArray&lt;Trap&gt; traps;
+
+	public TerrainFeaturesTilemap(SparseArray&lt;Plant&gt; plants, SparseArray&lt;Trap&gt; traps) {
+<span class="nc" id="L44">		super(Assets.Environment.TERRAIN_FEATURES);</span>
+
+<span class="nc" id="L46">		this.plants = plants;</span>
+<span class="nc" id="L47">		this.traps = traps;</span>
+
+<span class="nc bnc" id="L49" title="All 2 branches missed.">		if (Dungeon.level != null) {</span>
+<span class="nc" id="L50">			map(Dungeon.level.map, Dungeon.level.width());</span>
+		}
+
+<span class="nc" id="L53">		instance = this;</span>
+<span class="nc" id="L54">	}</span>
+
+	protected int getTileVisual(int pos, int tile, boolean flat){
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		if (traps.get(pos) != null){</span>
+<span class="nc" id="L58">			Trap trap = traps.get(pos);</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">			if (!trap.visible)</span>
+<span class="nc" id="L60">				return -1;</span>
+			else
+<span class="nc bnc" id="L62" title="All 2 branches missed.">				return (trap.active ? trap.color : Trap.BLACK) + (trap.shape * 16);</span>
+		}
+
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		if (plants.get(pos) != null){</span>
+<span class="nc" id="L66">			return plants.get(pos).image + 7*16;</span>
+		}
+
+<span class="nc" id="L69">		int stage = (Dungeon.depth-1)/5;</span>
+<span class="nc bnc" id="L70" title="All 4 branches missed.">		if (Dungeon.depth == 21 &amp;&amp; Dungeon.level instanceof LastShopLevel) stage--;</span>
+<span class="nc" id="L71">		stage = Math.min(stage, 4);</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">		if (tile == Terrain.HIGH_GRASS){</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">			return 9 + 16*stage + (DungeonTileSheet.tileVariance[pos] &gt;= 50 ? 1 : 0);</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		} else if (tile == Terrain.FURROWED_GRASS){</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">			return 11 + 16*stage + (DungeonTileSheet.tileVariance[pos] &gt;= 50 ? 1 : 0);</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		} else if (tile == Terrain.GRASS) {</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">			return 13 + 16*stage + (DungeonTileSheet.tileVariance[pos] &gt;= 50 ? 1 : 0);</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">		} else if (tile == Terrain.EMBERS) {</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">			return 9 + (16*5) + (DungeonTileSheet.tileVariance[pos] &gt;= 50 ? 1 : 0);</span>
+		}
+
+<span class="nc" id="L82">		return -1;</span>
+	}
+
+	public static Image getTrapVisual( Trap trap ){
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		if (instance == null) instance = new TerrainFeaturesTilemap(null, null);</span>
+
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		RectF uv = instance.tileset.get((trap.active ? trap.color : Trap.BLACK) + (trap.shape * 16));</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		if (uv == null) return null;</span>
+
+<span class="nc" id="L91">		Image img = new Image( instance.texture );</span>
+<span class="nc" id="L92">		img.frame(uv);</span>
+<span class="nc" id="L93">		return img;</span>
+	}
+
+	public static Image getPlantVisual( Plant plant ){
+<span class="nc bnc" id="L97" title="All 2 branches missed.">		if (instance == null) instance = new TerrainFeaturesTilemap(null, null);</span>
+
+<span class="nc" id="L99">		RectF uv = instance.tileset.get(plant.image + 7*16);</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">		if (uv == null) return null;</span>
+
+<span class="nc" id="L102">		Image img = new Image( instance.texture );</span>
+<span class="nc" id="L103">		img.frame(uv);</span>
+<span class="nc" id="L104">		return img;</span>
+	}
+
+	public static Image tile(int pos, int tile ) {
+<span class="nc" id="L108">		RectF uv = instance.tileset.get( instance.getTileVisual( pos, tile, true ) );</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		if (uv == null) return null;</span>
+		
+<span class="nc" id="L111">		Image img = new Image( instance.texture );</span>
+<span class="nc" id="L112">		img.frame(uv);</span>
+<span class="nc" id="L113">		return img;</span>
+	}
+
+	public void growPlant( final int pos ){
+<span class="nc" id="L117">		final Image plant = tile( pos, map[pos] );</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		if (plant == null) return;</span>
+		
+<span class="nc" id="L120">		plant.origin.set( 8, 12 );</span>
+<span class="nc" id="L121">		plant.scale.set( 0 );</span>
+<span class="nc" id="L122">		plant.point( DungeonTilemap.tileToWorld( pos ) );</span>
+
+<span class="nc" id="L124">		parent.add( plant );</span>
+
+<span class="nc" id="L126">		parent.add( new ScaleTweener( plant, new PointF(1, 1), 0.2f ) {</span>
+			protected void onComplete() {
+<span class="nc" id="L128">				plant.killAndErase();</span>
+<span class="nc" id="L129">				killAndErase();</span>
+<span class="nc" id="L130">				updateMapCell(pos);</span>
+<span class="nc" id="L131">			}</span>
+		} );
+<span class="nc" id="L133">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

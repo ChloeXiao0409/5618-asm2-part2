@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WellFed.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.buffs</a> &gt; <span class="el_source">WellFed.java</span></div><h1>WellFed.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.buffs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.SaltCube;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.watabou.utils.Bundle;
+
+<span class="nc" id="L34">public class WellFed extends Buff {</span>
+
+	{
+<span class="nc" id="L37">		type = buffType.POSITIVE;</span>
+<span class="nc" id="L38">		announced = true;</span>
+<span class="nc" id="L39">	}</span>
+	
+	int left;
+	
+	@Override
+	public boolean act() {
+<span class="nc" id="L45">		left --;</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">		if (left &lt; 0){</span>
+<span class="nc" id="L47">			detach();</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">			if (target instanceof Hero) {</span>
+<span class="nc" id="L49">				((Hero) target).resting = false;</span>
+			}
+<span class="nc" id="L51">			return true;</span>
+<span class="nc bnc" id="L52" title="All 4 branches missed.">		} else if (left % 18 == 0 &amp;&amp; target.HP &lt; target.HT){</span>
+<span class="nc" id="L53">			target.HP += 1;</span>
+<span class="nc" id="L54">			target.sprite.showStatusWithIcon(CharSprite.POSITIVE, &quot;1&quot;, FloatingText.HEALING);</span>
+
+<span class="nc bnc" id="L56" title="All 4 branches missed.">			if (target.HP == target.HT &amp;&amp; target instanceof Hero) {</span>
+<span class="nc" id="L57">				((Hero) target).resting = false;</span>
+			}
+		}
+
+		//salt cube does slow this buff down, but doesn't lessen the bonus health
+<span class="nc" id="L62">		spend(TICK / SaltCube.hungerGainMultiplier());</span>
+<span class="nc" id="L63">		return true;</span>
+	}
+	
+	public void reset(){
+		//heals one HP every 18 turns for 450 turns
+		//25 HP healed in total
+<span class="nc" id="L69">		left = (int)Hunger.STARVING;</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		if (Dungeon.isChallenged(Challenges.NO_FOOD)){</span>
+			//150 turns if on diet is enabled
+<span class="nc" id="L72">			left /= 3;</span>
+		}
+<span class="nc" id="L74">	}</span>
+
+	public void extend( float duration ) {
+<span class="nc" id="L77">		left += duration;</span>
+<span class="nc" id="L78">	}</span>
+	
+	@Override
+	public int icon() {
+<span class="nc" id="L82">		return BuffIndicator.WELL_FED;</span>
+	}
+
+	@Override
+	public float iconFadePercent() {
+<span class="nc" id="L87">		return Math.max(0, (Hunger.STARVING - left) / Hunger.STARVING);</span>
+	}
+
+	@Override
+	public String iconTextDisplay() {
+<span class="nc" id="L92">		int visualLeft = (int)(left / SaltCube.hungerGainMultiplier());</span>
+<span class="nc" id="L93">		return Integer.toString(visualLeft+1);</span>
+	}
+	
+	@Override
+	public String desc() {
+<span class="nc" id="L98">		int visualLeft = (int)(left / SaltCube.hungerGainMultiplier());</span>
+<span class="nc" id="L99">		return Messages.get(this, &quot;desc&quot;, visualLeft + 1);</span>
+	}
+	
+	private static final String LEFT = &quot;left&quot;;
+	
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L106">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L107">		bundle.put(LEFT, left);</span>
+<span class="nc" id="L108">	}</span>
+	
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L112">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L113">		left = bundle.getInt(LEFT);</span>
+<span class="nc" id="L114">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

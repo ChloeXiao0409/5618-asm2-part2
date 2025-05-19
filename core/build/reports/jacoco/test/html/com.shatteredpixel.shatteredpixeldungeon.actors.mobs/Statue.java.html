@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Statue.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">Statue.java</span></div><h1>Statue.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.RatSkull;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon.Enchantment;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Grim;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.StatueSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+
+public class Statue extends Mob {
+	
+	{
+<span class="nc" id="L43">		spriteClass = StatueSprite.class;</span>
+
+<span class="nc" id="L45">		EXP = 0;</span>
+<span class="nc" id="L46">		state = PASSIVE;</span>
+		
+<span class="nc" id="L48">		properties.add(Property.INORGANIC);</span>
+	}
+	
+	protected Weapon weapon;
+
+<span class="nc" id="L53">	public boolean levelGenStatue = true;</span>
+	
+	public Statue() {
+<span class="nc" id="L56">		super();</span>
+		
+<span class="nc" id="L58">		HP = HT = 15 + Dungeon.depth * 5;</span>
+<span class="nc" id="L59">		defenseSkill = 4 + Dungeon.depth;</span>
+<span class="nc" id="L60">	}</span>
+
+	public void createWeapon( boolean useDecks ){
+<span class="nc bnc" id="L63" title="All 2 branches missed.">		if (useDecks) {</span>
+<span class="nc" id="L64">			weapon = (MeleeWeapon) Generator.random(Generator.Category.WEAPON);</span>
+		} else {
+<span class="nc" id="L66">			weapon = (MeleeWeapon) Generator.randomUsingDefaults(Generator.Category.WEAPON);</span>
+		}
+<span class="nc" id="L68">		levelGenStatue = useDecks;</span>
+<span class="nc" id="L69">		weapon.cursed = false;</span>
+<span class="nc" id="L70">		weapon.enchant( Enchantment.random() );</span>
+<span class="nc" id="L71">	}</span>
+	
+	private static final String WEAPON	= &quot;weapon&quot;;
+	
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L77">		super.storeInBundle( bundle );</span>
+<span class="nc" id="L78">		bundle.put( WEAPON, weapon );</span>
+<span class="nc" id="L79">	}</span>
+	
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L83">		super.restoreFromBundle( bundle );</span>
+<span class="nc" id="L84">		weapon = (Weapon)bundle.get( WEAPON );</span>
+<span class="nc" id="L85">	}</span>
+	
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L89">		return weapon.damageRoll(this);</span>
+	}
+	
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L94">		return (int)((9 + Dungeon.depth) * weapon.accuracyFactor( this, target ));</span>
+	}
+	
+	@Override
+	public float attackDelay() {
+<span class="nc" id="L99">		return super.attackDelay()*weapon.delayFactor( this );</span>
+	}
+
+	@Override
+	protected boolean canAttack(Char enemy) {
+<span class="nc bnc" id="L104" title="All 4 branches missed.">		return super.canAttack(enemy) || weapon.canReach(this, enemy.pos);</span>
+	}
+
+	@Override
+	public int drRoll() {
+<span class="nc" id="L109">		return super.drRoll() + Random.NormalIntRange(0, Dungeon.depth + weapon.defenseFactor(this));</span>
+	}
+	
+	@Override
+	public boolean add(Buff buff) {
+<span class="nc bnc" id="L114" title="All 2 branches missed.">		if (super.add(buff)) {</span>
+<span class="nc bnc" id="L115" title="All 4 branches missed.">			if (state == PASSIVE &amp;&amp; buff.type == Buff.buffType.NEGATIVE) {</span>
+<span class="nc" id="L116">				state = HUNTING;</span>
+			}
+<span class="nc" id="L118">			return true;</span>
+		}
+<span class="nc" id="L120">		return false;</span>
+	}
+
+	@Override
+	public void damage( int dmg, Object src ) {
+
+<span class="nc bnc" id="L126" title="All 2 branches missed.">		if (state == PASSIVE) {</span>
+<span class="nc" id="L127">			state = HUNTING;</span>
+		}
+		
+<span class="nc" id="L130">		super.damage( dmg, src );</span>
+<span class="nc" id="L131">	}</span>
+	
+	@Override
+	public int attackProc( Char enemy, int damage ) {
+<span class="nc" id="L135">		damage = super.attackProc( enemy, damage );</span>
+<span class="nc" id="L136">		damage = weapon.proc( this, enemy, damage );</span>
+<span class="nc bnc" id="L137" title="All 4 branches missed.">		if (!enemy.isAlive() &amp;&amp; enemy == Dungeon.hero){</span>
+<span class="nc" id="L138">			Dungeon.fail(this);</span>
+<span class="nc" id="L139">			GLog.n( Messages.capitalize(Messages.get(Char.class, &quot;kill&quot;, name())) );</span>
+		}
+<span class="nc" id="L141">		return damage;</span>
+	}
+	
+	@Override
+	public void beckon( int cell ) {
+		// Do nothing
+<span class="nc" id="L147">	}</span>
+	
+	@Override
+	public void die( Object cause ) {
+<span class="nc" id="L151">		weapon.identify(false);</span>
+<span class="nc" id="L152">		Dungeon.level.drop( weapon, pos ).sprite.drop();</span>
+<span class="nc" id="L153">		super.die( cause );</span>
+<span class="nc" id="L154">	}</span>
+
+	@Override
+	public Notes.Landmark landmark() {
+<span class="nc bnc" id="L158" title="All 2 branches missed.">		return levelGenStatue ? Notes.Landmark.STATUE : null;</span>
+	}
+
+	@Override
+	public void destroy() {
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		if (landmark() != null) {</span>
+<span class="nc" id="L164">			Notes.remove( landmark() );</span>
+		}
+<span class="nc" id="L166">		super.destroy();</span>
+<span class="nc" id="L167">	}</span>
+
+	@Override
+	public float spawningWeight() {
+<span class="nc" id="L171">		return 0f;</span>
+	}
+
+	@Override
+	public boolean reset() {
+<span class="nc" id="L176">		return true;</span>
+	}
+
+	@Override
+	public String description() {
+<span class="nc" id="L181">		String desc = Messages.get(this, &quot;desc&quot;);</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">		if (weapon != null){</span>
+<span class="nc" id="L183">			desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_weapon&quot;, weapon.name());</span>
+		}
+<span class="nc" id="L185">		return desc;</span>
+	}
+	
+	{
+<span class="nc" id="L189">		resistances.add(Grim.class);</span>
+	}
+
+	public static Statue random(){
+<span class="nc" id="L193">		return random( true );</span>
+	}
+
+	public static Statue random( boolean useDecks ){
+		Statue statue;
+<span class="nc" id="L198">		float altChance = 1/10f * RatSkull.exoticChanceMultiplier();</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">		if (altChance &gt; 0.1f) altChance = (altChance+0.1f)/2f; //rat skull is 1/2 as effective here</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">		if (Random.Float() &lt; altChance){</span>
+<span class="nc" id="L201">			statue = new ArmoredStatue();</span>
+		} else {
+<span class="nc" id="L203">			statue = new Statue();</span>
+		}
+<span class="nc" id="L205">		statue.createWeapon(useDecks);</span>
+<span class="nc" id="L206">		return statue;</span>
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

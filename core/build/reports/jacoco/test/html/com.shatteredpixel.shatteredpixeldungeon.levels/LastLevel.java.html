@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LastLevel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels</a> &gt; <span class="el_source">LastLevel.java</span></div><h1>LastLevel.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.items.Amulet;
+import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTileSheet;
+import com.watabou.noosa.Group;
+import com.watabou.noosa.Tilemap;
+import com.watabou.noosa.audio.Music;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+
+<span class="nc" id="L46">public class LastLevel extends Level {</span>
+
+	{
+<span class="nc" id="L49">		color1 = 0x801500;</span>
+<span class="nc" id="L50">		color2 = 0xa68521;</span>
+
+<span class="nc" id="L52">		viewDistance = Math.min(4, viewDistance);</span>
+<span class="nc" id="L53">	}</span>
+
+	@Override
+	public void playLevelMusic() {
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		if (Statistics.amuletObtained) {</span>
+<span class="nc" id="L58">			Music.INSTANCE.end();</span>
+		} else {
+<span class="nc" id="L60">			Music.INSTANCE.play(Assets.Music.THEME_FINALE, true);</span>
+		}
+<span class="nc" id="L62">	}</span>
+
+	@Override
+	public String tilesTex() {
+<span class="nc" id="L66">		return Assets.Environment.TILES_HALLS;</span>
+	}
+
+	@Override
+	public String waterTex() {
+<span class="nc" id="L71">		return Assets.Environment.WATER_HALLS;</span>
+	}
+
+	@Override
+	public void create() {
+<span class="nc" id="L76">		super.create();</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">		for (int i=0; i &lt; length(); i++) {</span>
+<span class="nc" id="L78">			int flags = Terrain.flags[map[i]];</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">			if ((flags &amp; Terrain.PIT) != 0){</span>
+<span class="nc" id="L80">				passable[i] = avoid[i] = false;</span>
+<span class="nc" id="L81">				solid[i] = true;</span>
+			}
+		}
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		for (int i = (height-ROOM_TOP+2)*width; i &lt; length; i++){</span>
+<span class="nc" id="L85">			passable[i] = avoid[i] = false;</span>
+<span class="nc" id="L86">			solid[i] = true;</span>
+		}
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		for (int i = (height-ROOM_TOP+1)*width; i &lt; length; i++){</span>
+<span class="nc bnc" id="L89" title="All 6 branches missed.">			if (i % width &lt; 4 || i % width &gt; 12 || i &gt;= (length-width)){</span>
+<span class="nc" id="L90">				discoverable[i] = false;</span>
+			} else {
+<span class="nc" id="L92">				visited[i] = true;</span>
+			}
+		}
+<span class="nc" id="L95">	}</span>
+
+	private static final int ROOM_TOP = 10;
+	private static final int WIDTH = 16;
+	private static final int MID = WIDTH/2;
+<span class="nc" id="L100">	public static int AMULET_POS = 12*WIDTH + MID;</span>
+
+	@Override
+	protected boolean build() {
+		
+<span class="nc" id="L105">		setSize(16, 64);</span>
+<span class="nc" id="L106">		Arrays.fill( map, Terrain.CHASM );</span>
+
+<span class="nc" id="L108">		final int MID = width/2;</span>
+
+<span class="nc" id="L110">		Painter.fill( this, 0, height-1, width, 1, Terrain.WALL );</span>
+<span class="nc" id="L111">		Painter.fill( this, MID - 1, 10, 3, (height-11), Terrain.EMPTY);</span>
+<span class="nc" id="L112">		Painter.fill( this, MID - 2, height - 3, 5, 1, Terrain.EMPTY);</span>
+<span class="nc" id="L113">		Painter.fill( this, MID - 3, height - 2, 7, 1, Terrain.EMPTY);</span>
+
+<span class="nc" id="L115">		int entrance = (height-ROOM_TOP) * width() + MID;</span>
+<span class="nc" id="L116">		Painter.fill(this, 0, height - ROOM_TOP, width, 2, Terrain.WALL);</span>
+<span class="nc" id="L117">		map[entrance] = Terrain.ENTRANCE;</span>
+<span class="nc" id="L118">		map[entrance+width] = Terrain.ENTRANCE;</span>
+<span class="nc" id="L119">		LevelTransition entry = new LevelTransition(this, entrance, LevelTransition.Type.REGULAR_ENTRANCE);</span>
+<span class="nc" id="L120">		entry.left--;</span>
+<span class="nc" id="L121">		entry.right++;</span>
+<span class="nc" id="L122">		entry.bottom += 2;</span>
+<span class="nc" id="L123">		transitions.add(entry);</span>
+<span class="nc" id="L124">		Painter.fill(this, 0, height - ROOM_TOP + 2, width, 8, Terrain.EMPTY);</span>
+<span class="nc" id="L125">		Painter.fill(this, MID-1, height - ROOM_TOP + 2, 3, 1, Terrain.ENTRANCE);</span>
+
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		for (int i=0; i &lt; length(); i++) {</span>
+<span class="nc bnc" id="L128" title="All 4 branches missed.">			if (map[i] == Terrain.EMPTY &amp;&amp; Random.Int( 5 ) == 0) {</span>
+<span class="nc" id="L129">				map[i] = Terrain.EMPTY_DECO;</span>
+			}
+		}
+
+<span class="nc" id="L133">		Painter.fill( this, MID - 2, 9, 5, 7, Terrain.EMPTY);</span>
+<span class="nc" id="L134">		Painter.fill( this, MID - 3, 10, 7, 5, Terrain.EMPTY);</span>
+
+<span class="nc" id="L136">		feeling = Feeling.NONE;</span>
+<span class="nc" id="L137">		viewDistance = 4;</span>
+
+<span class="nc" id="L139">		CustomTilemap vis = new CustomFloor();</span>
+<span class="nc" id="L140">		vis.setRect( 5, 0, 7, height - ROOM_TOP);</span>
+<span class="nc" id="L141">		customTiles.add(vis);</span>
+
+<span class="nc" id="L143">		vis = new CenterPieceVisuals();</span>
+<span class="nc" id="L144">		vis.pos(0, height - ROOM_TOP);</span>
+<span class="nc" id="L145">		customTiles.add(vis);</span>
+
+<span class="nc" id="L147">		vis = new CenterPieceWalls();</span>
+<span class="nc" id="L148">		vis.pos(0, height - ROOM_TOP-1);</span>
+<span class="nc" id="L149">		customWalls.add(vis);</span>
+
+<span class="nc" id="L151">		return true;</span>
+	}
+	
+	@Override
+	public Mob createMob() {
+<span class="nc" id="L156">		return null;</span>
+	}
+	
+	@Override
+	protected void createMobs() {
+<span class="nc" id="L161">	}</span>
+
+	public Actor addRespawner() {
+<span class="nc" id="L164">		return null;</span>
+	}
+
+	@Override
+	protected void createItems() {
+<span class="nc" id="L169">		drop( new Amulet(), AMULET_POS );</span>
+<span class="nc" id="L170">	}</span>
+
+	@Override
+	public int randomRespawnCell( Char ch ) {
+<span class="nc" id="L174">		ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">		for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc" id="L176">			int cell = entrance() + i;</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">			if (passable[cell]</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">					&amp;&amp; Actor.findChar(cell) == null</span>
+<span class="nc bnc" id="L179" title="All 4 branches missed.">					&amp;&amp; (!Char.hasProp(ch, Char.Property.LARGE) || openSpace[cell])){</span>
+<span class="nc" id="L180">				candidates.add(cell);</span>
+			}
+		}
+
+<span class="nc bnc" id="L184" title="All 2 branches missed.">		if (candidates.isEmpty()){</span>
+<span class="nc" id="L185">			return -1;</span>
+		} else {
+<span class="nc" id="L187">			return Random.element(candidates);</span>
+		}
+	}
+
+	@Override
+	public String tileName( int tile ) {
+<span class="nc bnc" id="L193" title="All 5 branches missed.">		switch (tile) {</span>
+			case Terrain.WATER:
+<span class="nc" id="L195">				return Messages.get(HallsLevel.class, &quot;water_name&quot;);</span>
+			case Terrain.GRASS:
+<span class="nc" id="L197">				return Messages.get(HallsLevel.class, &quot;grass_name&quot;);</span>
+			case Terrain.HIGH_GRASS:
+<span class="nc" id="L199">				return Messages.get(HallsLevel.class, &quot;high_grass_name&quot;);</span>
+			case Terrain.STATUE:
+			case Terrain.STATUE_SP:
+<span class="nc" id="L202">				return Messages.get(HallsLevel.class, &quot;statue_name&quot;);</span>
+			default:
+<span class="nc" id="L204">				return super.tileName( tile );</span>
+		}
+	}
+
+	@Override
+	public String tileDesc(int tile) {
+<span class="nc bnc" id="L210" title="All 4 branches missed.">		switch (tile) {</span>
+			case Terrain.WATER:
+<span class="nc" id="L212">				return Messages.get(HallsLevel.class, &quot;water_desc&quot;);</span>
+			case Terrain.STATUE:
+			case Terrain.STATUE_SP:
+<span class="nc" id="L215">				return Messages.get(HallsLevel.class, &quot;statue_desc&quot;);</span>
+			case Terrain.BOOKSHELF:
+<span class="nc" id="L217">				return Messages.get(HallsLevel.class, &quot;bookshelf_desc&quot;);</span>
+			default:
+<span class="nc" id="L219">				return super.tileDesc( tile );</span>
+		}
+	}
+
+	@Override
+	public Group addVisuals () {
+<span class="nc" id="L225">		super.addVisuals();</span>
+<span class="nc" id="L226">		HallsLevel.addHallsVisuals(this, visuals);</span>
+<span class="nc" id="L227">		return visuals;</span>
+	}
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L232">		super.restoreFromBundle(bundle);</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">		for (int i=0; i &lt; length(); i++) {</span>
+<span class="nc" id="L234">			int flags = Terrain.flags[map[i]];</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">			if ((flags &amp; Terrain.PIT) != 0){</span>
+<span class="nc" id="L236">				passable[i] = avoid[i] = false;</span>
+<span class="nc" id="L237">				solid[i] = true;</span>
+			}
+		}
+<span class="nc bnc" id="L240" title="All 2 branches missed.">		for (int i = (height-ROOM_TOP+2)*width; i &lt; length; i++){</span>
+<span class="nc" id="L241">			passable[i] = avoid[i] = false;</span>
+<span class="nc" id="L242">			solid[i] = true;</span>
+		}
+<span class="nc bnc" id="L244" title="All 2 branches missed.">		for (int i = (height-ROOM_TOP+1)*width; i &lt; length; i++){</span>
+<span class="nc bnc" id="L245" title="All 6 branches missed.">			if (i % width &lt; 4 || i % width &gt; 12 || i &gt;= (length-width)){</span>
+<span class="nc" id="L246">				discoverable[i] = false;</span>
+			} else {
+<span class="nc" id="L248">				visited[i] = true;</span>
+			}
+		}
+<span class="nc" id="L251">	}</span>
+
+<span class="nc" id="L253">	public static class CustomFloor extends CustomTilemap {</span>
+
+		{
+<span class="nc" id="L256">			texture = Assets.Environment.HALLS_SP;</span>
+<span class="nc" id="L257">		}</span>
+
+<span class="nc" id="L259">		private static final int[] CANDLES = new int[]{</span>
+				-1, 42, 46, 46, 46, 43, -1,
+				42, 46, 46, 46, 46, 46, 43,
+				46, 46, 45, 19, 44, 46, 46,
+				46, 46, 19, 19, 19, 46, 46,
+				46, 46, 43, 19, 42, 46, 46,
+				44, 46, 46, 19, 46, 46, 45,
+				-1, 44, 45, 19, 44, 45, -1
+		};
+
+		@Override
+		public Tilemap create() {
+<span class="nc" id="L271">			Tilemap v = super.create();</span>
+
+<span class="nc" id="L273">			int candlesStart = AMULET_POS - 3 - 3*Dungeon.level.width();</span>
+
+<span class="nc" id="L275">			int cell = tileX + tileY * Dungeon.level.width();</span>
+<span class="nc" id="L276">			int[] map = Dungeon.level.map;</span>
+<span class="nc" id="L277">			int[] data = new int[tileW*tileH];</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">			for (int i = 0; i &lt; data.length; i++){</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">				if (i % tileW == 0){</span>
+<span class="nc" id="L280">					cell = tileX + (tileY + i / tileW) * Dungeon.level.width();</span>
+				}
+<span class="nc bnc" id="L282" title="All 2 branches missed.">				if (cell == candlesStart){</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">					for (int candle : CANDLES) {</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">						if (data[i] == 0) data[i] = candle;</span>
+
+<span class="nc bnc" id="L286" title="All 4 branches missed.">						if (data[i] == 46 &amp;&amp; DungeonTileSheet.tileVariance[cell] &gt;= 50){</span>
+<span class="nc" id="L287">							data[i] ++;</span>
+						}
+
+<span class="nc bnc" id="L290" title="All 4 branches missed.">						if (Statistics.amuletObtained &amp;&amp; data[i] &gt; 40){</span>
+<span class="nc" id="L291">							data[i] += 8;</span>
+						}
+
+<span class="nc bnc" id="L294" title="All 4 branches missed.">						if (map[cell] != Terrain.CHASM &amp;&amp; map[cell+Dungeon.level.width] == Terrain.CHASM) {</span>
+<span class="nc" id="L295">							data[i+tileW] = 6;</span>
+						}
+
+<span class="nc" id="L298">						i++;</span>
+<span class="nc" id="L299">						cell++;</span>
+<span class="nc bnc" id="L300" title="All 2 branches missed.">						if (i % tileW == 0){</span>
+<span class="nc" id="L301">							cell = tileX + (tileY + i / tileW) * Dungeon.level.width();</span>
+						}
+					}
+				}
+<span class="nc bnc" id="L305" title="All 2 branches missed.">				if (map[cell] == Terrain.EMPTY_DECO) {</span>
+<span class="nc bnc" id="L306" title="All 2 branches missed.">					if (Statistics.amuletObtained){</span>
+<span class="nc" id="L307">						data[i] = 31;</span>
+					} else {
+<span class="nc" id="L309">						data[i] = 27;</span>
+					}
+<span class="nc bnc" id="L311" title="All 2 branches missed.">				} else if (map[cell] == Terrain.EMPTY) {</span>
+<span class="nc" id="L312">					data[i] = 19;</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">				} else if (data[i] == 0) {</span>
+<span class="nc" id="L314">					data[i] = -1;</span>
+				}
+<span class="nc" id="L316">				cell++;</span>
+			}
+<span class="nc" id="L318">			v.map( data, tileW );</span>
+<span class="nc" id="L319">			return v;</span>
+		}
+
+	}
+
+<span class="nc" id="L324">	public static class CenterPieceVisuals extends CustomTilemap {</span>
+
+		{
+<span class="nc" id="L327">			texture = Assets.Environment.HALLS_SP;</span>
+
+<span class="nc" id="L329">			tileW = 16;</span>
+<span class="nc" id="L330">			tileH = 10;</span>
+<span class="nc" id="L331">		}</span>
+
+<span class="nc" id="L333">		private static final int[] map = new int[]{</span>
+				-1, -1, -1, -1, -1, -1, -1, -1, 19, -1, -1, -1, -1, -1, -1, -1,
+				 0,  0,  0,  0,  8,  9, 10, 11, 19, 11, 12, 13, 14,  0,  0,  0,
+				 0,  0,  0,  0, 16, 17, 18, 31, 19, 31, 20, 21, 22,  0,  0,  0,
+				 0,  0,  0,  0, 24, 25, 26, 19, 19, 19, 28, 29, 30,  0,  0,  0,
+				 0,  0,  0,  0, 24, 25, 26, 19, 19, 19, 28, 29, 30,  0,  0,  0,
+				 0,  0,  0,  0, 24, 25, 26, 19, 19, 19, 28, 29, 30,  0,  0,  0,
+				 0,  0,  0,  0, 24, 25, 34, 35, 35, 35, 34, 29, 30,  0,  0,  0,
+				 0,  0,  0,  0, 40, 41, 36, 36, 36, 36, 36, 40, 41,  0,  0,  0,
+				 0,  0,  0,  0, 48, 49, 36, 36, 36, 36, 36, 48, 49,  0,  0,  0,
+				 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+		};
+
+		@Override
+		public Tilemap create() {
+<span class="nc" id="L348">			Tilemap v = super.create();</span>
+<span class="nc" id="L349">			v.map(map, tileW);</span>
+<span class="nc" id="L350">			return v;</span>
+		}
+	}
+
+<span class="nc" id="L354">	public static class CenterPieceWalls extends CustomTilemap {</span>
+
+		{
+<span class="nc" id="L357">			texture = Assets.Environment.HALLS_SP;</span>
+
+<span class="nc" id="L359">			tileW = 16;</span>
+<span class="nc" id="L360">			tileH = 9;</span>
+<span class="nc" id="L361">		}</span>
+
+<span class="nc" id="L363">		private static final int[] map = new int[]{</span>
+				 4,  4,  4,  4,  4,  4,  4,  5,  7,  3,  4,  4,  4,  4,  4,  4,
+				 0,  0,  0,  0,  0,  0,  0,  1, 15,  2,  0,  0,  0,  0,  0,  0,
+				-1, -1, -1, -1, -1, -1, -1, -1, 23, -1, -1, -1, -1, -1, -1, -1,
+				-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+				-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+				-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+				-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+				-1, -1, -1, -1, 32, 33, -1, -1, -1, -1, -1, 32, 33, -1, -1, -1,
+				-1, -1, -1, -1, 40, 41, -1, -1, -1, -1, -1, 40, 41, -1, -1, -1,
+		};
+
+		@Override
+		public Tilemap create() {
+<span class="nc" id="L377">			Tilemap v = super.create();</span>
+<span class="nc" id="L378">			v.map(map, tileW);</span>
+<span class="nc" id="L379">			return v;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

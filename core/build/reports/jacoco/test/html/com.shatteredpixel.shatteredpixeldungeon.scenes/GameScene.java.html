@@ -1,0 +1,1721 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GameScene.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.scenes</a> &gt; <span class="el_source">GameScene.java</span></div><h1>GameScene.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.scenes;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
+import com.shatteredpixel.shatteredpixeldungeon.Rankings;
+import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AscensionChallenge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ChampionEnemy;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DemonSpawner;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Ghoul;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Snake;
+import com.shatteredpixel.shatteredpixeldungeon.effects.BannerSprites;
+import com.shatteredpixel.shatteredpixeldungeon.effects.BlobEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.EmoIcon;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Ripple;
+import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
+import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Honeypot;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose;
+import com.shatteredpixel.shatteredpixeldungeon.items.journal.Guidebook;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.DimensionalSundial;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.TrinketCatalyst;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Bestiary;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Document;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Journal;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.RegularLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret.SecretRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.DiscardedItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTerrainTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTileSheet;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonWallsTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.FogOfWar;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.GridTileMap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.RaisedTerrainTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.TerrainFeaturesTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.WallBlockingTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ActionIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.AttackIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Banner;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
+import com.shatteredpixel.shatteredpixeldungeon.ui.CharHealthIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.GameLog;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.InventoryPane;
+import com.shatteredpixel.shatteredpixeldungeon.ui.LootIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.MenuPane;
+import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ResumeIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RightClickMenu;
+import com.shatteredpixel.shatteredpixeldungeon.ui.StatusPane;
+import com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Tag;
+import com.shatteredpixel.shatteredpixeldungeon.ui.TargetHealthIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Toast;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Toolbar;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndGame;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndHero;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoCell;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoItem;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoMob;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoPlant;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoTrap;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndKeyBindings;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndMessage;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndResurrect;
+import com.watabou.glwrap.Blending;
+import com.watabou.input.ControllerHandler;
+import com.watabou.input.KeyBindings;
+import com.watabou.input.PointerEvent;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Gizmo;
+import com.watabou.noosa.Group;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.NoosaScript;
+import com.watabou.noosa.NoosaScriptNoLighting;
+import com.watabou.noosa.SkinnedBlock;
+import com.watabou.noosa.Visual;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.noosa.tweeners.Tweener;
+import com.watabou.utils.Callback;
+import com.watabou.utils.DeviceCompat;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.Point;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+import com.watabou.utils.RectF;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Locale;
+
+<span class="nc" id="L153">public class GameScene extends PixelScene {</span>
+
+	static GameScene scene;
+
+	private SkinnedBlock water;
+	private DungeonTerrainTilemap tiles;
+	private GridTileMap visualGrid;
+	private TerrainFeaturesTilemap terrainFeatures;
+	private RaisedTerrainTilemap raisedTerrain;
+	private DungeonWallsTilemap walls;
+	private WallBlockingTilemap wallBlocking;
+	private FogOfWar fog;
+	private HeroSprite hero;
+
+	private MenuPane menu;
+	private StatusPane status;
+
+	private BossHealthBar boss;
+
+	private GameLog log;
+	
+	private static CellSelector cellSelector;
+	
+	private Group terrain;
+	private Group customTiles;
+	private Group levelVisuals;
+	private Group levelWallVisuals;
+	private Group customWalls;
+	private Group ripples;
+	private Group plants;
+	private Group traps;
+	private Group heaps;
+	private Group mobs;
+	private Group floorEmitters;
+	private Group emitters;
+	private Group effects;
+	private Group gases;
+	private Group spells;
+	private Group statuses;
+	private Group emoicons;
+	private Group overFogEffects;
+	private Group healthIndicators;
+
+	private InventoryPane inventory;
+<span class="nc" id="L197">	private static boolean invVisible = true;</span>
+
+	private Toolbar toolbar;
+	private Toast prompt;
+
+	private AttackIndicator attack;
+	private LootIndicator loot;
+	private ActionIndicator action;
+	private ResumeIndicator resume;
+
+	{
+<span class="nc" id="L208">		inGameScene = true;</span>
+	}
+	
+	@Override
+	public void create() {
+		
+<span class="nc bnc" id="L214" title="All 4 branches missed.">		if (Dungeon.hero == null || Dungeon.level == null){</span>
+<span class="nc" id="L215">			ShatteredPixelDungeon.switchNoFade(TitleScene.class);</span>
+<span class="nc" id="L216">			return;</span>
+		}
+
+<span class="nc" id="L219">		Dungeon.level.playLevelMusic();</span>
+
+<span class="nc" id="L221">		SPDSettings.lastClass(Dungeon.hero.heroClass.ordinal());</span>
+		
+<span class="nc" id="L223">		super.create();</span>
+<span class="nc" id="L224">		Camera.main.zoom( GameMath.gate(minZoom, defaultZoom + SPDSettings.zoom(), maxZoom));</span>
+<span class="nc" id="L225">		Camera.main.edgeScroll.set(1);</span>
+
+<span class="nc bnc" id="L227" title="All 4 branches missed.">		switch (SPDSettings.cameraFollow()) {</span>
+<span class="nc" id="L228">			case 4: default:    Camera.main.setFollowDeadzone(0);      break;</span>
+<span class="nc" id="L229">			case 3:             Camera.main.setFollowDeadzone(0.2f);   break;</span>
+<span class="nc" id="L230">			case 2:             Camera.main.setFollowDeadzone(0.5f);   break;</span>
+<span class="nc" id="L231">			case 1:             Camera.main.setFollowDeadzone(0.9f);   break;</span>
+		}
+
+<span class="nc" id="L234">		scene = this;</span>
+
+<span class="nc" id="L236">		terrain = new Group();</span>
+<span class="nc" id="L237">		add( terrain );</span>
+
+<span class="nc" id="L239">		water = new SkinnedBlock(</span>
+<span class="nc" id="L240">			Dungeon.level.width() * DungeonTilemap.SIZE,</span>
+<span class="nc" id="L241">			Dungeon.level.height() * DungeonTilemap.SIZE,</span>
+<span class="nc" id="L242">			Dungeon.level.waterTex() ){</span>
+
+			@Override
+			protected NoosaScript script() {
+<span class="nc" id="L246">				return NoosaScriptNoLighting.get();</span>
+			}
+
+			@Override
+			public void draw() {
+				//water has no alpha component, this improves performance
+<span class="nc" id="L252">				Blending.disable();</span>
+<span class="nc" id="L253">				super.draw();</span>
+<span class="nc" id="L254">				Blending.enable();</span>
+<span class="nc" id="L255">			}</span>
+		};
+<span class="nc" id="L257">		water.autoAdjust = true;</span>
+<span class="nc" id="L258">		terrain.add( water );</span>
+
+<span class="nc" id="L260">		ripples = new Group();</span>
+<span class="nc" id="L261">		terrain.add( ripples );</span>
+
+<span class="nc" id="L263">		DungeonTileSheet.setupVariance(Dungeon.level.map.length, Dungeon.seedCurDepth());</span>
+		
+<span class="nc" id="L265">		tiles = new DungeonTerrainTilemap();</span>
+<span class="nc" id="L266">		terrain.add( tiles );</span>
+
+<span class="nc" id="L268">		customTiles = new Group();</span>
+<span class="nc" id="L269">		terrain.add(customTiles);</span>
+
+<span class="nc bnc" id="L271" title="All 2 branches missed.">		for( CustomTilemap visual : Dungeon.level.customTiles){</span>
+<span class="nc" id="L272">			addCustomTile(visual);</span>
+<span class="nc" id="L273">		}</span>
+
+<span class="nc" id="L275">		visualGrid = new GridTileMap();</span>
+<span class="nc" id="L276">		terrain.add( visualGrid );</span>
+
+<span class="nc" id="L278">		terrainFeatures = new TerrainFeaturesTilemap(Dungeon.level.plants, Dungeon.level.traps);</span>
+<span class="nc" id="L279">		terrain.add(terrainFeatures);</span>
+		
+<span class="nc" id="L281">		levelVisuals = Dungeon.level.addVisuals();</span>
+<span class="nc" id="L282">		add(levelVisuals);</span>
+
+<span class="nc" id="L284">		floorEmitters = new Group();</span>
+<span class="nc" id="L285">		add(floorEmitters);</span>
+
+<span class="nc" id="L287">		heaps = new Group();</span>
+<span class="nc" id="L288">		add( heaps );</span>
+		
+<span class="nc bnc" id="L290" title="All 2 branches missed.">		for ( Heap heap : Dungeon.level.heaps.valueList() ) {</span>
+<span class="nc" id="L291">			addHeapSprite( heap );</span>
+<span class="nc" id="L292">		}</span>
+
+<span class="nc" id="L294">		emitters = new Group();</span>
+<span class="nc" id="L295">		effects = new Group();</span>
+<span class="nc" id="L296">		healthIndicators = new Group();</span>
+<span class="nc" id="L297">		emoicons = new Group();</span>
+<span class="nc" id="L298">		overFogEffects = new Group();</span>
+		
+<span class="nc" id="L300">		mobs = new Group();</span>
+<span class="nc" id="L301">		add( mobs );</span>
+
+<span class="nc" id="L303">		hero = new HeroSprite();</span>
+<span class="nc" id="L304">		hero.place( Dungeon.hero.pos );</span>
+<span class="nc" id="L305">		hero.updateArmor();</span>
+<span class="nc" id="L306">		mobs.add( hero );</span>
+		
+<span class="nc bnc" id="L308" title="All 2 branches missed.">		for (Mob mob : Dungeon.level.mobs) {</span>
+<span class="nc" id="L309">			addMobSprite( mob );</span>
+<span class="nc" id="L310">		}</span>
+		
+<span class="nc" id="L312">		raisedTerrain = new RaisedTerrainTilemap();</span>
+<span class="nc" id="L313">		add( raisedTerrain );</span>
+
+<span class="nc" id="L315">		walls = new DungeonWallsTilemap();</span>
+<span class="nc" id="L316">		add(walls);</span>
+
+<span class="nc" id="L318">		customWalls = new Group();</span>
+<span class="nc" id="L319">		add(customWalls);</span>
+
+<span class="nc bnc" id="L321" title="All 2 branches missed.">		for( CustomTilemap visual : Dungeon.level.customWalls){</span>
+<span class="nc" id="L322">			addCustomWall(visual);</span>
+<span class="nc" id="L323">		}</span>
+
+<span class="nc" id="L325">		levelWallVisuals = Dungeon.level.addWallVisuals();</span>
+<span class="nc" id="L326">		add( levelWallVisuals );</span>
+
+<span class="nc" id="L328">		wallBlocking = new WallBlockingTilemap();</span>
+<span class="nc" id="L329">		add (wallBlocking);</span>
+
+<span class="nc" id="L331">		add( emitters );</span>
+<span class="nc" id="L332">		add( effects );</span>
+
+<span class="nc" id="L334">		gases = new Group();</span>
+<span class="nc" id="L335">		add( gases );</span>
+
+<span class="nc bnc" id="L337" title="All 2 branches missed.">		for (Blob blob : Dungeon.level.blobs.values()) {</span>
+<span class="nc" id="L338">			blob.emitter = null;</span>
+<span class="nc" id="L339">			addBlobSprite( blob );</span>
+<span class="nc" id="L340">		}</span>
+
+
+<span class="nc" id="L343">		fog = new FogOfWar( Dungeon.level.width(), Dungeon.level.height() );</span>
+<span class="nc" id="L344">		add( fog );</span>
+
+<span class="nc" id="L346">		spells = new Group();</span>
+<span class="nc" id="L347">		add( spells );</span>
+
+<span class="nc" id="L349">		add(overFogEffects);</span>
+		
+<span class="nc" id="L351">		statuses = new Group();</span>
+<span class="nc" id="L352">		add( statuses );</span>
+		
+<span class="nc" id="L354">		add( healthIndicators );</span>
+		//always appears ontop of other health indicators
+<span class="nc" id="L356">		add( new TargetHealthIndicator() );</span>
+		
+<span class="nc" id="L358">		add( emoicons );</span>
+		
+<span class="nc" id="L360">		add( cellSelector = new CellSelector( tiles ) );</span>
+
+<span class="nc" id="L362">		int uiSize = SPDSettings.interfaceSize();</span>
+
+<span class="nc" id="L364">		menu = new MenuPane();</span>
+<span class="nc" id="L365">		menu.camera = uiCamera;</span>
+<span class="nc bnc" id="L366" title="All 2 branches missed.">		menu.setPos( uiCamera.width-MenuPane.WIDTH, uiSize &gt; 0 ? 0 : 1);</span>
+<span class="nc" id="L367">		add(menu);</span>
+
+<span class="nc bnc" id="L369" title="All 2 branches missed.">		status = new StatusPane( SPDSettings.interfaceSize() &gt; 0 );</span>
+<span class="nc" id="L370">		status.camera = uiCamera;</span>
+<span class="nc bnc" id="L371" title="All 2 branches missed.">		status.setRect(0, uiSize &gt; 0 ? uiCamera.height-39 : 0, uiCamera.width, 0 );</span>
+<span class="nc" id="L372">		add(status);</span>
+
+<span class="nc" id="L374">		boss = new BossHealthBar();</span>
+<span class="nc" id="L375">		boss.camera = uiCamera;</span>
+<span class="nc" id="L376">		boss.setPos( 6 + (uiCamera.width - boss.width())/2, 20);</span>
+<span class="nc" id="L377">		add(boss);</span>
+
+<span class="nc" id="L379">		resume = new ResumeIndicator();</span>
+<span class="nc" id="L380">		resume.camera = uiCamera;</span>
+<span class="nc" id="L381">		add( resume );</span>
+
+<span class="nc" id="L383">		action = new ActionIndicator();</span>
+<span class="nc" id="L384">		action.camera = uiCamera;</span>
+<span class="nc" id="L385">		add( action );</span>
+
+<span class="nc" id="L387">		loot = new LootIndicator();</span>
+<span class="nc" id="L388">		loot.camera = uiCamera;</span>
+<span class="nc" id="L389">		add( loot );</span>
+
+<span class="nc" id="L391">		attack = new AttackIndicator();</span>
+<span class="nc" id="L392">		attack.camera = uiCamera;</span>
+<span class="nc" id="L393">		add( attack );</span>
+
+<span class="nc" id="L395">		log = new GameLog();</span>
+<span class="nc" id="L396">		log.camera = uiCamera;</span>
+<span class="nc" id="L397">		log.newLine();</span>
+<span class="nc" id="L398">		add( log );</span>
+
+<span class="nc bnc" id="L400" title="All 2 branches missed.">		if (uiSize &gt; 0){</span>
+<span class="nc" id="L401">			bringToFront(status);</span>
+		}
+
+<span class="nc" id="L404">		toolbar = new Toolbar();</span>
+<span class="nc" id="L405">		toolbar.camera = uiCamera;</span>
+<span class="nc" id="L406">		add( toolbar );</span>
+
+<span class="nc bnc" id="L408" title="All 2 branches missed.">		if (uiSize == 2) {</span>
+<span class="nc" id="L409">			inventory = new InventoryPane();</span>
+<span class="nc" id="L410">			inventory.camera = uiCamera;</span>
+<span class="nc" id="L411">			inventory.setPos(uiCamera.width - inventory.width(), uiCamera.height - inventory.height());</span>
+<span class="nc" id="L412">			add(inventory);</span>
+
+<span class="nc" id="L414">			toolbar.setRect( 0, uiCamera.height - toolbar.height() - inventory.height(), uiCamera.width, toolbar.height() );</span>
+		} else {
+<span class="nc" id="L416">			toolbar.setRect( 0, uiCamera.height - toolbar.height(), uiCamera.width, toolbar.height() );</span>
+		}
+
+<span class="nc" id="L419">		layoutTags();</span>
+		
+<span class="nc bnc" id="L421" title="All 4 branches missed.">		switch (InterlevelScene.mode) {</span>
+			case RESURRECT:
+<span class="nc" id="L423">				Sample.INSTANCE.play(Assets.Sounds.TELEPORT);</span>
+<span class="nc" id="L424">				ScrollOfTeleportation.appearVFX( Dungeon.hero );</span>
+<span class="nc" id="L425">				SpellSprite.show(Dungeon.hero, SpellSprite.ANKH);</span>
+<span class="nc" id="L426">				new Flare( 5, 16 ).color( 0xFFFF00, true ).show( hero, 4f ) ;</span>
+<span class="nc" id="L427">				break;</span>
+			case RETURN:
+<span class="nc" id="L429">				ScrollOfTeleportation.appearVFX( Dungeon.hero );</span>
+<span class="nc" id="L430">				break;</span>
+			case DESCEND:
+			case FALL:
+<span class="nc bnc" id="L433" title="All 2 branches missed.">				if (Dungeon.hero.isAlive()) {</span>
+<span class="nc" id="L434">					Badges.validateNoKilling();</span>
+				}
+				break;
+		}
+
+<span class="nc" id="L439">		ArrayList&lt;Item&gt; dropped = Dungeon.droppedItems.get( Dungeon.depth );</span>
+<span class="nc bnc" id="L440" title="All 2 branches missed.">		if (dropped != null) {</span>
+<span class="nc bnc" id="L441" title="All 2 branches missed.">			for (Item item : dropped) {</span>
+<span class="nc" id="L442">				int pos = Dungeon.level.randomRespawnCell( null );</span>
+<span class="nc bnc" id="L443" title="All 2 branches missed.">				if (pos == -1) pos = Dungeon.level.entrance();</span>
+<span class="nc bnc" id="L444" title="All 2 branches missed.">				if (item instanceof Potion) {</span>
+<span class="nc" id="L445">					((Potion) item).shatter(pos);</span>
+<span class="nc bnc" id="L446" title="All 4 branches missed.">				} else if (item instanceof Plant.Seed &amp;&amp; !Dungeon.isChallenged(Challenges.NO_HERBALISM)) {</span>
+<span class="nc" id="L447">					Dungeon.level.plant((Plant.Seed) item, pos);</span>
+<span class="nc bnc" id="L448" title="All 2 branches missed.">				} else if (item instanceof Honeypot) {</span>
+<span class="nc" id="L449">					Dungeon.level.drop(((Honeypot) item).shatter(null, pos), pos);</span>
+				} else {
+<span class="nc" id="L451">					Dungeon.level.drop(item, pos);</span>
+				}
+<span class="nc" id="L453">			}</span>
+<span class="nc" id="L454">			Dungeon.droppedItems.remove( Dungeon.depth );</span>
+		}
+
+<span class="nc" id="L457">		Dungeon.hero.next();</span>
+
+<span class="nc bnc" id="L459" title="All 3 branches missed.">		switch (InterlevelScene.mode){</span>
+			case FALL: case DESCEND: case CONTINUE:
+<span class="nc" id="L461">				Camera.main.snapTo(hero.center().x, hero.center().y - DungeonTilemap.SIZE * (defaultZoom/Camera.main.zoom));</span>
+<span class="nc" id="L462">				break;</span>
+			case ASCEND:
+<span class="nc" id="L464">				Camera.main.snapTo(hero.center().x, hero.center().y + DungeonTilemap.SIZE * (defaultZoom/Camera.main.zoom));</span>
+<span class="nc" id="L465">				break;</span>
+			default:
+<span class="nc" id="L467">				Camera.main.snapTo(hero.center().x, hero.center().y);</span>
+		}
+<span class="nc" id="L469">		Camera.main.panTo(hero.center(), 2.5f);</span>
+
+<span class="nc bnc" id="L471" title="All 2 branches missed.">		if (InterlevelScene.mode != InterlevelScene.Mode.NONE) {</span>
+<span class="nc bnc" id="L472" title="All 6 branches missed.">			if (Dungeon.depth == Statistics.deepestFloor</span>
+					&amp;&amp; (InterlevelScene.mode == InterlevelScene.Mode.DESCEND || InterlevelScene.mode == InterlevelScene.Mode.FALL)) {
+<span class="nc" id="L474">				GLog.h(Messages.get(this, &quot;descend&quot;), Dungeon.depth);</span>
+<span class="nc" id="L475">				Sample.INSTANCE.play(Assets.Sounds.DESCEND);</span>
+				
+<span class="nc bnc" id="L477" title="All 2 branches missed.">				for (Char ch : Actor.chars()){</span>
+<span class="nc bnc" id="L478" title="All 2 branches missed.">					if (ch instanceof DriedRose.GhostHero){</span>
+<span class="nc" id="L479">						((DriedRose.GhostHero) ch).sayAppeared();</span>
+					}
+<span class="nc" id="L481">				}</span>
+
+<span class="nc" id="L483">				int spawnersAbove = Statistics.spawnersAlive;</span>
+<span class="nc bnc" id="L484" title="All 4 branches missed.">				if (spawnersAbove &gt; 0 &amp;&amp; Dungeon.depth &lt;= 25) {</span>
+<span class="nc bnc" id="L485" title="All 2 branches missed.">					for (Mob m : Dungeon.level.mobs) {</span>
+<span class="nc bnc" id="L486" title="All 4 branches missed.">						if (m instanceof DemonSpawner &amp;&amp; ((DemonSpawner) m).spawnRecorded) {</span>
+<span class="nc" id="L487">							spawnersAbove--;</span>
+						}
+<span class="nc" id="L489">					}</span>
+
+<span class="nc bnc" id="L491" title="All 2 branches missed.">					if (spawnersAbove &gt; 0) {</span>
+<span class="nc bnc" id="L492" title="All 2 branches missed.">						if (Dungeon.bossLevel()) {</span>
+<span class="nc" id="L493">							GLog.n(Messages.get(this, &quot;spawner_warn_final&quot;));</span>
+						} else {
+<span class="nc" id="L495">							GLog.n(Messages.get(this, &quot;spawner_warn&quot;));</span>
+						}
+					}
+				}
+				
+<span class="nc bnc" id="L500" title="All 2 branches missed.">			} else if (InterlevelScene.mode == InterlevelScene.Mode.RESET) {</span>
+<span class="nc" id="L501">				GLog.h(Messages.get(this, &quot;warp&quot;));</span>
+<span class="nc bnc" id="L502" title="All 2 branches missed.">			} else if (InterlevelScene.mode == InterlevelScene.Mode.RESURRECT) {</span>
+<span class="nc" id="L503">				GLog.h(Messages.get(this, &quot;resurrect&quot;), Dungeon.depth);</span>
+			} else {
+<span class="nc" id="L505">				GLog.h(Messages.get(this, &quot;return&quot;), Dungeon.depth);</span>
+			}
+
+<span class="nc bnc" id="L508" title="All 6 branches missed.">			if (Dungeon.hero.hasTalent(Talent.ROGUES_FORESIGHT)</span>
+					&amp;&amp; Dungeon.level instanceof RegularLevel &amp;&amp; Dungeon.branch == 0){
+<span class="nc bnc" id="L510" title="All 2 branches missed.">				int reqSecrets = Dungeon.level.feeling == Level.Feeling.SECRETS ? 2 : 1;</span>
+<span class="nc bnc" id="L511" title="All 2 branches missed.">				for (Room r : ((RegularLevel) Dungeon.level).rooms()){</span>
+<span class="nc bnc" id="L512" title="All 2 branches missed.">					if (r instanceof SecretRoom) reqSecrets--;</span>
+<span class="nc" id="L513">				}</span>
+
+				//75%/100% chance, use level's seed so that we get the same result for the same level
+				//offset seed slightly to avoid output patterns
+<span class="nc" id="L517">				Random.pushGenerator(Dungeon.seedCurDepth()+1);</span>
+<span class="nc bnc" id="L518" title="All 4 branches missed.">					if (reqSecrets &lt;= 0 &amp;&amp; Random.Int(4) &lt; 2+Dungeon.hero.pointsInTalent(Talent.ROGUES_FORESIGHT)){</span>
+<span class="nc" id="L519">						GLog.p(Messages.get(this, &quot;secret_hint&quot;));</span>
+					}
+<span class="nc" id="L521">				Random.popGenerator();</span>
+			}
+
+<span class="nc" id="L524">			boolean unspentTalents = false;</span>
+<span class="nc bnc" id="L525" title="All 2 branches missed.">			for (int i = 1; i &lt;= Dungeon.hero.talents.size(); i++){</span>
+<span class="nc bnc" id="L526" title="All 2 branches missed.">				if (Dungeon.hero.talentPointsAvailable(i) &gt; 0){</span>
+<span class="nc" id="L527">					unspentTalents = true;</span>
+<span class="nc" id="L528">					break;</span>
+				}
+			}
+<span class="nc bnc" id="L531" title="All 2 branches missed.">			if (unspentTalents){</span>
+<span class="nc" id="L532">				GLog.newLine();</span>
+<span class="nc" id="L533">				GLog.w( Messages.get(Dungeon.hero, &quot;unspent&quot;) );</span>
+<span class="nc" id="L534">				StatusPane.talentBlink = 10f;</span>
+<span class="nc" id="L535">				WndHero.lastIdx = 1;</span>
+			}
+
+<span class="nc bnc" id="L538" title="All 8 branches missed.">			switch (Dungeon.level.feeling) {</span>
+				case CHASM:
+<span class="nc" id="L540">					GLog.w(Dungeon.level.feeling.desc());</span>
+<span class="nc" id="L541">					Notes.add(Notes.Landmark.CHASM_FLOOR);</span>
+<span class="nc" id="L542">					break;</span>
+				case WATER:
+<span class="nc" id="L544">					GLog.w(Dungeon.level.feeling.desc());</span>
+<span class="nc" id="L545">					Notes.add(Notes.Landmark.WATER_FLOOR);</span>
+<span class="nc" id="L546">					break;</span>
+				case GRASS:
+<span class="nc" id="L548">					GLog.w(Dungeon.level.feeling.desc());</span>
+<span class="nc" id="L549">					Notes.add(Notes.Landmark.GRASS_FLOOR);</span>
+<span class="nc" id="L550">					break;</span>
+				case DARK:
+<span class="nc" id="L552">					GLog.w(Dungeon.level.feeling.desc());</span>
+<span class="nc" id="L553">					Notes.add(Notes.Landmark.DARK_FLOOR);</span>
+<span class="nc" id="L554">					break;</span>
+				case LARGE:
+<span class="nc" id="L556">					GLog.w(Dungeon.level.feeling.desc());</span>
+<span class="nc" id="L557">					Notes.add(Notes.Landmark.LARGE_FLOOR);</span>
+<span class="nc" id="L558">					break;</span>
+				case TRAPS:
+<span class="nc" id="L560">					GLog.w(Dungeon.level.feeling.desc());</span>
+<span class="nc" id="L561">					Notes.add(Notes.Landmark.TRAPS_FLOOR);</span>
+<span class="nc" id="L562">					break;</span>
+				case SECRETS:
+<span class="nc" id="L564">					GLog.w(Dungeon.level.feeling.desc());</span>
+<span class="nc" id="L565">					Notes.add(Notes.Landmark.SECRETS_FLOOR);</span>
+					break;
+			}
+
+<span class="nc bnc" id="L569" title="All 2 branches missed.">			for (Mob mob : Dungeon.level.mobs) {</span>
+<span class="nc bnc" id="L570" title="All 2 branches missed.">				if (!mob.buffs(ChampionEnemy.class).isEmpty()) {</span>
+<span class="nc" id="L571">					GLog.w(Messages.get(ChampionEnemy.class, &quot;warn&quot;));</span>
+				}
+<span class="nc" id="L573">			}</span>
+
+<span class="nc bnc" id="L575" title="All 2 branches missed.">			if (Dungeon.hero.buff(AscensionChallenge.class) != null){</span>
+<span class="nc" id="L576">				Dungeon.hero.buff(AscensionChallenge.class).saySwitch();</span>
+			}
+
+<span class="nc" id="L579">			DimensionalSundial.sundialWarned = true;</span>
+<span class="nc bnc" id="L580" title="All 2 branches missed.">			if (DimensionalSundial.spawnMultiplierAtCurrentTime() &gt; 1){</span>
+<span class="nc" id="L581">				GLog.w(Messages.get(DimensionalSundial.class, &quot;warning&quot;));</span>
+			} else {
+<span class="nc" id="L583">				DimensionalSundial.sundialWarned = false;</span>
+			}
+
+<span class="nc" id="L586">			InterlevelScene.mode = InterlevelScene.Mode.NONE;</span>
+
+			
+		}
+
+		//Tutorial
+<span class="nc bnc" id="L592" title="All 2 branches missed.">		if (SPDSettings.intro()){</span>
+
+<span class="nc bnc" id="L594" title="All 2 branches missed.">			if (Document.ADVENTURERS_GUIDE.isPageFound(Document.GUIDE_INTRO)){</span>
+<span class="nc" id="L595">				GameScene.flashForDocument(Document.ADVENTURERS_GUIDE, Document.GUIDE_INTRO);</span>
+<span class="nc bnc" id="L596" title="All 2 branches missed.">			} else if (ControllerHandler.isControllerConnected()) {</span>
+<span class="nc" id="L597">				GameLog.wipe();</span>
+<span class="nc" id="L598">				GLog.p(Messages.get(GameScene.class, &quot;tutorial_move_controller&quot;));</span>
+<span class="nc bnc" id="L599" title="All 2 branches missed.">			} else if (SPDSettings.interfaceSize() == 0) {</span>
+<span class="nc" id="L600">				GameLog.wipe();</span>
+<span class="nc" id="L601">				GLog.p(Messages.get(GameScene.class, &quot;tutorial_move_mobile&quot;));</span>
+			} else {
+<span class="nc" id="L603">				GameLog.wipe();</span>
+<span class="nc" id="L604">				GLog.p(Messages.get(GameScene.class, &quot;tutorial_move_desktop&quot;));</span>
+			}
+<span class="nc" id="L606">			toolbar.visible = toolbar.active = false;</span>
+<span class="nc" id="L607">			status.visible = status.active = false;</span>
+<span class="nc bnc" id="L608" title="All 2 branches missed.">			if (inventory != null) inventory.visible = inventory.active = false;</span>
+		}
+
+<span class="nc bnc" id="L611" title="All 4 branches missed.">		if (!SPDSettings.intro() &amp;&amp;</span>
+				Rankings.INSTANCE.totalNumber &gt; 0 &amp;&amp;
+<span class="nc bnc" id="L613" title="All 2 branches missed.">				!Document.ADVENTURERS_GUIDE.isPageRead(Document.GUIDE_DIEING)){</span>
+<span class="nc" id="L614">			GameScene.flashForDocument(Document.ADVENTURERS_GUIDE, Document.GUIDE_DIEING);</span>
+		}
+
+<span class="nc" id="L617">		TrinketCatalyst cata = Dungeon.hero.belongings.getItem(TrinketCatalyst.class);</span>
+<span class="nc bnc" id="L618" title="All 4 branches missed.">		if (cata != null &amp;&amp; cata.hasRolledTrinkets()){</span>
+<span class="nc" id="L619">			addToFront(new TrinketCatalyst.WndTrinket(cata));</span>
+		}
+
+<span class="nc bnc" id="L622" title="All 2 branches missed.">		if (!invVisible) toggleInvPane();</span>
+<span class="nc" id="L623">		fadeIn();</span>
+
+		//re-show WndResurrect if needed
+<span class="nc bnc" id="L626" title="All 2 branches missed.">		if (!Dungeon.hero.isAlive()){</span>
+			//check if hero has an unblessed ankh
+<span class="nc" id="L628">			Ankh ankh = null;</span>
+<span class="nc bnc" id="L629" title="All 2 branches missed.">			for (Ankh i : Dungeon.hero.belongings.getAllItems(Ankh.class)){</span>
+<span class="nc bnc" id="L630" title="All 2 branches missed.">				if (!i.isBlessed()){</span>
+<span class="nc" id="L631">					ankh = i;</span>
+				}
+<span class="nc" id="L633">			}</span>
+<span class="nc bnc" id="L634" title="All 4 branches missed.">			if (ankh != null &amp;&amp; GamesInProgress.gameExists(GamesInProgress.curSlot)) {</span>
+<span class="nc" id="L635">				add(new WndResurrect(ankh));</span>
+			} else {
+<span class="nc" id="L637">				gameOver();</span>
+			}
+		}
+
+<span class="nc" id="L641">	}</span>
+	
+	public void destroy() {
+		
+		//tell the actor thread to finish, then wait for it to complete any actions it may be doing.
+<span class="nc bnc" id="L646" title="All 2 branches missed.">		if (!waitForActorThread( 4500, true )){</span>
+<span class="nc" id="L647">			Throwable t = new Throwable();</span>
+<span class="nc" id="L648">			t.setStackTrace(actorThread.getStackTrace());</span>
+<span class="nc" id="L649">			throw new RuntimeException(&quot;timeout waiting for actor thread! &quot;, t);</span>
+		}
+
+<span class="nc" id="L652">		Emitter.freezeEmitters = false;</span>
+		
+<span class="nc" id="L654">		scene = null;</span>
+<span class="nc" id="L655">		Badges.saveGlobal();</span>
+<span class="nc" id="L656">		Journal.saveGlobal();</span>
+		
+<span class="nc" id="L658">		super.destroy();</span>
+<span class="nc" id="L659">	}</span>
+	
+	public static void endActorThread(){
+<span class="nc bnc" id="L662" title="All 4 branches missed.">		if (actorThread != null &amp;&amp; actorThread.isAlive()){</span>
+<span class="nc" id="L663">			Actor.keepActorThreadAlive = false;</span>
+<span class="nc" id="L664">			actorThread.interrupt();</span>
+		}
+<span class="nc" id="L666">	}</span>
+
+	public boolean waitForActorThread(int msToWait, boolean interrupt){
+<span class="nc bnc" id="L669" title="All 4 branches missed.">		if (actorThread == null || !actorThread.isAlive()) {</span>
+<span class="nc" id="L670">			return true;</span>
+		}
+<span class="nc" id="L672">		synchronized (actorThread) {</span>
+<span class="nc bnc" id="L673" title="All 2 branches missed.">			if (interrupt) actorThread.interrupt();</span>
+			try {
+<span class="nc" id="L675">				actorThread.wait(msToWait);</span>
+<span class="nc" id="L676">			} catch (InterruptedException e) {</span>
+<span class="nc" id="L677">				ShatteredPixelDungeon.reportException(e);</span>
+<span class="nc" id="L678">			}</span>
+<span class="nc bnc" id="L679" title="All 2 branches missed.">			return !Actor.processing();</span>
+		}
+	}
+	
+	@Override
+	public synchronized void onPause() {
+		try {
+<span class="nc bnc" id="L686" title="All 2 branches missed.">			if (!Dungeon.hero.ready) waitForActorThread(500, false);</span>
+<span class="nc" id="L687">			Dungeon.saveAll();</span>
+<span class="nc" id="L688">			Badges.saveGlobal();</span>
+<span class="nc" id="L689">			Journal.saveGlobal();</span>
+<span class="nc" id="L690">		} catch (IOException e) {</span>
+<span class="nc" id="L691">			ShatteredPixelDungeon.reportException(e);</span>
+<span class="nc" id="L692">		}</span>
+<span class="nc" id="L693">	}</span>
+
+	private static Thread actorThread;
+	
+	//sometimes UI changes can be prompted by the actor thread.
+	// We queue any removed element destruction, rather than destroying them in the actor thread.
+<span class="nc" id="L699">	private ArrayList&lt;Gizmo&gt; toDestroy = new ArrayList&lt;&gt;();</span>
+
+	//the actor thread processes at a maximum of 60 times a second
+	//this caps the speed of resting for higher refresh rate displays
+<span class="nc" id="L703">	private float notifyDelay = 1/60f;</span>
+
+<span class="nc" id="L705">	public static boolean updateItemDisplays = false;</span>
+
+<span class="nc" id="L707">	public static boolean tagDisappeared = false;</span>
+<span class="nc" id="L708">	public static boolean updateTags = false;</span>
+
+<span class="nc" id="L710">	private static float waterOfs = 0;</span>
+	
+	@Override
+	public synchronized void update() {
+<span class="nc" id="L714">		lastOffset = null;</span>
+
+<span class="nc bnc" id="L716" title="All 2 branches missed.">		if (updateItemDisplays){</span>
+<span class="nc" id="L717">			updateItemDisplays = false;</span>
+<span class="nc" id="L718">			QuickSlotButton.refresh();</span>
+<span class="nc" id="L719">			InventoryPane.refresh();</span>
+<span class="nc bnc" id="L720" title="All 2 branches missed.">			if (ActionIndicator.action instanceof MeleeWeapon.Charger) {</span>
+				//Champion weapon swap uses items, needs refreshing whenever item displays are updated
+<span class="nc" id="L722">				ActionIndicator.refresh();</span>
+			}
+		}
+
+<span class="nc bnc" id="L726" title="All 4 branches missed.">		if (Dungeon.hero == null || scene == null) {</span>
+<span class="nc" id="L727">			return;</span>
+		}
+
+<span class="nc" id="L730">		super.update();</span>
+
+<span class="nc bnc" id="L732" title="All 2 branches missed.">		if (notifyDelay &gt; 0) notifyDelay -= Game.elapsed;</span>
+
+<span class="nc bnc" id="L734" title="All 2 branches missed.">		if (!Emitter.freezeEmitters) {</span>
+<span class="nc" id="L735">			waterOfs -= 5 * Game.elapsed;</span>
+<span class="nc" id="L736">			water.offsetTo( 0, waterOfs );</span>
+<span class="nc" id="L737">			waterOfs = water.offsetY(); //re-assign to account for auto adjust</span>
+		}
+
+<span class="nc bnc" id="L740" title="All 4 branches missed.">		if (!Actor.processing() &amp;&amp; Dungeon.hero.isAlive()) {</span>
+<span class="nc bnc" id="L741" title="All 4 branches missed.">			if (actorThread == null || !actorThread.isAlive()) {</span>
+				
+<span class="nc" id="L743">				actorThread = new Thread() {</span>
+					@Override
+					public void run() {
+<span class="nc" id="L746">						Actor.process();</span>
+<span class="nc" id="L747">					}</span>
+				};
+				
+				//if cpu cores are limited, game should prefer drawing the current frame
+<span class="nc bnc" id="L751" title="All 2 branches missed.">				if (Runtime.getRuntime().availableProcessors() == 1) {</span>
+<span class="nc" id="L752">					actorThread.setPriority(Thread.NORM_PRIORITY - 1);</span>
+				}
+<span class="nc" id="L754">				actorThread.setName(&quot;SHPD Actor Thread&quot;);</span>
+<span class="nc" id="L755">				Thread.currentThread().setName(&quot;SHPD Render Thread&quot;);</span>
+<span class="nc" id="L756">				Actor.keepActorThreadAlive = true;</span>
+<span class="nc" id="L757">				actorThread.start();</span>
+<span class="nc bnc" id="L758" title="All 2 branches missed.">			} else if (notifyDelay &lt;= 0f) {</span>
+<span class="nc" id="L759">				notifyDelay += 1/60f;</span>
+<span class="nc" id="L760">				synchronized (actorThread) {</span>
+<span class="nc" id="L761">					actorThread.notify();</span>
+<span class="nc" id="L762">				}</span>
+			}
+		}
+
+<span class="nc bnc" id="L766" title="All 4 branches missed.">		if (Dungeon.hero.ready &amp;&amp; Dungeon.hero.paralysed == 0) {</span>
+<span class="nc" id="L767">			log.newLine();</span>
+		}
+
+<span class="nc bnc" id="L770" title="All 2 branches missed.">		if (updateTags){</span>
+<span class="nc" id="L771">			tagAttack = attack.active;</span>
+<span class="nc" id="L772">			tagLoot = loot.visible;</span>
+<span class="nc" id="L773">			tagAction = action.visible;</span>
+<span class="nc" id="L774">			tagResume = resume.visible;</span>
+
+<span class="nc" id="L776">			layoutTags();</span>
+
+<span class="nc bnc" id="L778" title="All 8 branches missed.">		} else if (tagAttack != attack.active ||</span>
+				tagLoot != loot.visible ||
+				tagAction != action.visible ||
+				tagResume != resume.visible) {
+
+<span class="nc bnc" id="L783" title="All 16 branches missed.">			boolean tagAppearing = (attack.active &amp;&amp; !tagAttack) ||</span>
+									(loot.visible &amp;&amp; !tagLoot) ||
+									(action.visible &amp;&amp; !tagAction) ||
+									(resume.visible &amp;&amp; !tagResume);
+
+<span class="nc" id="L788">			tagAttack = attack.active;</span>
+<span class="nc" id="L789">			tagLoot = loot.visible;</span>
+<span class="nc" id="L790">			tagAction = action.visible;</span>
+<span class="nc" id="L791">			tagResume = resume.visible;</span>
+
+			//if a new tag appears, re-layout tags immediately
+			//otherwise, wait until the hero acts, so as to not suddenly change their position
+<span class="nc bnc" id="L795" title="All 2 branches missed.">			if (tagAppearing)   layoutTags();</span>
+<span class="nc" id="L796">			else                tagDisappeared = true;</span>
+
+		}
+
+<span class="nc" id="L800">		cellSelector.enable(Dungeon.hero.ready);</span>
+
+<span class="nc bnc" id="L802" title="All 2 branches missed.">		if (!toDestroy.isEmpty()) {</span>
+<span class="nc bnc" id="L803" title="All 2 branches missed.">			for (Gizmo g : toDestroy) {</span>
+<span class="nc" id="L804">				g.destroy();</span>
+<span class="nc" id="L805">			}</span>
+<span class="nc" id="L806">			toDestroy.clear();</span>
+		}
+<span class="nc" id="L808">	}</span>
+
+<span class="nc" id="L810">	private static Point lastOffset = null;</span>
+
+	@Override
+	public synchronized Gizmo erase (Gizmo g) {
+<span class="nc" id="L814">		Gizmo result = super.erase(g);</span>
+<span class="nc bnc" id="L815" title="All 2 branches missed.">		if (result instanceof Window){</span>
+<span class="nc" id="L816">			lastOffset = ((Window) result).getOffset();</span>
+		}
+<span class="nc" id="L818">		return result;</span>
+	}
+
+<span class="nc" id="L821">	private boolean tagAttack    = false;</span>
+<span class="nc" id="L822">	private boolean tagLoot      = false;</span>
+<span class="nc" id="L823">	private boolean tagAction    = false;</span>
+<span class="nc" id="L824">	private boolean tagResume    = false;</span>
+
+	public static void layoutTags() {
+
+<span class="nc" id="L828">		updateTags = false;</span>
+
+<span class="nc bnc" id="L830" title="All 2 branches missed.">		if (scene == null) return;</span>
+
+		//move the camera center up a bit if we're on full UI and it is taking up lots of space
+<span class="nc bnc" id="L833" title="All 8 branches missed.">		if (scene.inventory != null &amp;&amp; scene.inventory.visible</span>
+				&amp;&amp; (uiCamera.width &lt; 460 &amp;&amp; uiCamera.height &lt; 300)){
+<span class="nc" id="L835">			Camera.main.setCenterOffset(0, Math.min(300-uiCamera.height, 460-uiCamera.width) / Camera.main.zoom);</span>
+		} else {
+<span class="nc" id="L837">			Camera.main.setCenterOffset(0, 0);</span>
+		}
+		//Camera.main.panTo(Dungeon.hero.sprite.center(), 5f);
+
+		//primarily for phones displays with notches
+		//TODO Android never draws into notch atm, perhaps allow it for center notches?
+<span class="nc" id="L843">		RectF insets = DeviceCompat.getSafeInsets();</span>
+<span class="nc" id="L844">		insets = insets.scale(1f / uiCamera.zoom);</span>
+
+<span class="nc" id="L846">		boolean tagsOnLeft = SPDSettings.flipTags();</span>
+<span class="nc bnc" id="L847" title="All 2 branches missed.">		float tagWidth = Tag.SIZE + (tagsOnLeft ? insets.left : insets.right);</span>
+<span class="nc bnc" id="L848" title="All 2 branches missed.">		float tagLeft = tagsOnLeft ? 0 : uiCamera.width - tagWidth;</span>
+
+<span class="nc bnc" id="L850" title="All 2 branches missed.">		float y = SPDSettings.interfaceSize() == 0 ? scene.toolbar.top()-2 : scene.status.top()-2;</span>
+<span class="nc bnc" id="L851" title="All 2 branches missed.">		if (SPDSettings.interfaceSize() == 0){</span>
+<span class="nc bnc" id="L852" title="All 2 branches missed.">			if (tagsOnLeft) {</span>
+<span class="nc" id="L853">				scene.log.setRect(tagWidth, y, uiCamera.width - tagWidth - insets.right, 0);</span>
+			} else {
+<span class="nc" id="L855">				scene.log.setRect(insets.left, y, uiCamera.width - tagWidth - insets.left, 0);</span>
+			}
+		} else {
+<span class="nc bnc" id="L858" title="All 2 branches missed.">			if (tagsOnLeft) {</span>
+<span class="nc" id="L859">				scene.log.setRect(tagWidth, y, 160 - tagWidth, 0);</span>
+			} else {
+<span class="nc" id="L861">				scene.log.setRect(insets.left, y, 160 - insets.left, 0);</span>
+			}
+		}
+
+<span class="nc" id="L865">		float pos = scene.toolbar.top();</span>
+<span class="nc bnc" id="L866" title="All 4 branches missed.">		if (tagsOnLeft &amp;&amp; SPDSettings.interfaceSize() &gt; 0){</span>
+<span class="nc" id="L867">			pos = scene.status.top();</span>
+		}
+
+<span class="nc bnc" id="L870" title="All 2 branches missed.">		if (scene.tagAttack){</span>
+<span class="nc" id="L871">			scene.attack.setRect( tagLeft, pos - Tag.SIZE, tagWidth, Tag.SIZE );</span>
+<span class="nc" id="L872">			scene.attack.flip(tagsOnLeft);</span>
+<span class="nc" id="L873">			pos = scene.attack.top();</span>
+		}
+
+<span class="nc bnc" id="L876" title="All 2 branches missed.">		if (scene.tagLoot) {</span>
+<span class="nc" id="L877">			scene.loot.setRect( tagLeft, pos - Tag.SIZE, tagWidth, Tag.SIZE );</span>
+<span class="nc" id="L878">			scene.loot.flip(tagsOnLeft);</span>
+<span class="nc" id="L879">			pos = scene.loot.top();</span>
+		}
+
+<span class="nc bnc" id="L882" title="All 2 branches missed.">		if (scene.tagAction) {</span>
+<span class="nc" id="L883">			scene.action.setRect( tagLeft, pos - Tag.SIZE, tagWidth, Tag.SIZE );</span>
+<span class="nc" id="L884">			scene.action.flip(tagsOnLeft);</span>
+<span class="nc" id="L885">			pos = scene.action.top();</span>
+		}
+
+<span class="nc bnc" id="L888" title="All 2 branches missed.">		if (scene.tagResume) {</span>
+<span class="nc" id="L889">			scene.resume.setRect( tagLeft, pos - Tag.SIZE, tagWidth, Tag.SIZE );</span>
+<span class="nc" id="L890">			scene.resume.flip(tagsOnLeft);</span>
+		}
+<span class="nc" id="L892">	}</span>
+	
+	@Override
+	protected void onBackPressed() {
+<span class="nc bnc" id="L896" title="All 2 branches missed.">		if (!cancel()) {</span>
+<span class="nc" id="L897">			add( new WndGame() );</span>
+		}
+<span class="nc" id="L899">	}</span>
+
+	public void addCustomTile( CustomTilemap visual){
+<span class="nc" id="L902">		customTiles.add( visual.create() );</span>
+<span class="nc" id="L903">	}</span>
+
+	public void addCustomWall( CustomTilemap visual){
+<span class="nc" id="L906">		customWalls.add( visual.create() );</span>
+<span class="nc" id="L907">	}</span>
+	
+	private void addHeapSprite( Heap heap ) {
+<span class="nc" id="L910">		ItemSprite sprite = heap.sprite = (ItemSprite)heaps.recycle( ItemSprite.class );</span>
+<span class="nc" id="L911">		sprite.revive();</span>
+<span class="nc" id="L912">		sprite.link( heap );</span>
+<span class="nc" id="L913">		heaps.add( sprite );</span>
+<span class="nc" id="L914">	}</span>
+	
+	private void addDiscardedSprite( Heap heap ) {
+<span class="nc" id="L917">		heap.sprite = (DiscardedItemSprite)heaps.recycle( DiscardedItemSprite.class );</span>
+<span class="nc" id="L918">		heap.sprite.revive();</span>
+<span class="nc" id="L919">		heap.sprite.link( heap );</span>
+<span class="nc" id="L920">		heaps.add( heap.sprite );</span>
+<span class="nc" id="L921">	}</span>
+	
+	private void addPlantSprite( Plant plant ) {
+
+<span class="nc" id="L925">	}</span>
+
+	private void addTrapSprite( Trap trap ) {
+
+<span class="nc" id="L929">	}</span>
+	
+	private void addBlobSprite( final Blob gas ) {
+<span class="nc bnc" id="L932" title="All 2 branches missed.">		if (gas.emitter == null) {</span>
+<span class="nc" id="L933">			gases.add( new BlobEmitter( gas ) );</span>
+		}
+<span class="nc" id="L935">	}</span>
+	
+	private synchronized void addMobSprite( Mob mob ) {
+<span class="nc" id="L938">		CharSprite sprite = mob.sprite();</span>
+<span class="nc" id="L939">		sprite.visible = Dungeon.level.heroFOV[mob.pos];</span>
+<span class="nc" id="L940">		mobs.add( sprite );</span>
+<span class="nc" id="L941">		sprite.link( mob );</span>
+<span class="nc" id="L942">		sortMobSprites();</span>
+<span class="nc" id="L943">	}</span>
+
+	//ensures that mob sprites are drawn from top to bottom, in case of overlap
+	public static void sortMobSprites(){
+<span class="nc bnc" id="L947" title="All 2 branches missed.">		if (scene != null){</span>
+<span class="nc" id="L948">			synchronized (scene) {</span>
+<span class="nc" id="L949">				scene.mobs.sort(new Comparator() {</span>
+					@Override
+					public int compare(Object a, Object b) {
+						//elements that aren't visual go to the end of the list
+<span class="nc bnc" id="L953" title="All 4 branches missed.">						if (a instanceof Visual &amp;&amp; b instanceof Visual) {</span>
+<span class="nc" id="L954">							return (int) Math.signum((((Visual) a).y + ((Visual) a).height())</span>
+<span class="nc" id="L955">									- (((Visual) b).y + ((Visual) b).height()));</span>
+<span class="nc bnc" id="L956" title="All 2 branches missed.">						} else if (a instanceof Visual){</span>
+<span class="nc" id="L957">							return -1;</span>
+<span class="nc bnc" id="L958" title="All 2 branches missed.">						} else if (b instanceof Visual){</span>
+<span class="nc" id="L959">							return 1;</span>
+						} else {
+<span class="nc" id="L961">							return 0;</span>
+						}
+					}
+				});
+<span class="nc" id="L965">			}</span>
+		}
+<span class="nc" id="L967">	}</span>
+	
+	private synchronized void prompt( String text ) {
+		
+<span class="nc bnc" id="L971" title="All 2 branches missed.">		if (prompt != null) {</span>
+<span class="nc" id="L972">			prompt.killAndErase();</span>
+<span class="nc" id="L973">			toDestroy.add(prompt);</span>
+<span class="nc" id="L974">			prompt = null;</span>
+		}
+		
+<span class="nc bnc" id="L977" title="All 2 branches missed.">		if (text != null) {</span>
+<span class="nc" id="L978">			prompt = new Toast( text ) {</span>
+				@Override
+				protected void onClose() {
+<span class="nc" id="L981">					cancel();</span>
+<span class="nc" id="L982">				}</span>
+			};
+<span class="nc" id="L984">			prompt.camera = uiCamera;</span>
+<span class="nc" id="L985">			prompt.setPos( (uiCamera.width - prompt.width()) / 2, uiCamera.height - 60 );</span>
+
+<span class="nc bnc" id="L987" title="All 6 branches missed.">			if (inventory != null &amp;&amp; inventory.visible &amp;&amp; prompt.right() &gt; inventory.left() - 10){</span>
+<span class="nc" id="L988">				prompt.setPos(inventory.left() - prompt.width() - 10, prompt.top());</span>
+			}
+
+<span class="nc" id="L991">			add( prompt );</span>
+		}
+<span class="nc" id="L993">	}</span>
+	
+	private void showBanner( Banner banner ) {
+<span class="nc" id="L996">		banner.camera = uiCamera;</span>
+
+<span class="nc" id="L998">		float offset = Camera.main.centerOffset.y;</span>
+<span class="nc" id="L999">		banner.x = align( uiCamera, (uiCamera.width - banner.width) / 2 );</span>
+<span class="nc" id="L1000">		banner.y = align( uiCamera, (uiCamera.height - banner.height) / 2 - banner.height/2 - 16 - offset );</span>
+
+<span class="nc" id="L1002">		addToFront( banner );</span>
+<span class="nc" id="L1003">	}</span>
+	
+	// -------------------------------------------------------
+
+	public static void add( Plant plant ) {
+<span class="nc bnc" id="L1008" title="All 2 branches missed.">		if (scene != null) {</span>
+<span class="nc" id="L1009">			scene.addPlantSprite( plant );</span>
+		}
+<span class="nc" id="L1011">	}</span>
+
+	public static void add( Trap trap ) {
+<span class="nc bnc" id="L1014" title="All 2 branches missed.">		if (scene != null) {</span>
+<span class="nc" id="L1015">			scene.addTrapSprite( trap );</span>
+		}
+<span class="nc" id="L1017">	}</span>
+	
+	public static void add( Blob gas ) {
+<span class="nc" id="L1020">		Actor.add( gas );</span>
+<span class="nc bnc" id="L1021" title="All 2 branches missed.">		if (scene != null) {</span>
+<span class="nc" id="L1022">			scene.addBlobSprite( gas );</span>
+		}
+<span class="nc" id="L1024">	}</span>
+	
+	public static void add( Heap heap ) {
+<span class="nc bnc" id="L1027" title="All 2 branches missed.">		if (scene != null) {</span>
+			//heaps that aren't added as part of levelgen don't count for exploration bonus
+<span class="nc" id="L1029">			heap.autoExplored = true;</span>
+<span class="nc" id="L1030">			scene.addHeapSprite( heap );</span>
+		}
+<span class="nc" id="L1032">	}</span>
+	
+	public static void discard( Heap heap ) {
+<span class="nc bnc" id="L1035" title="All 2 branches missed.">		if (scene != null) {</span>
+<span class="nc" id="L1036">			scene.addDiscardedSprite( heap );</span>
+		}
+<span class="nc" id="L1038">	}</span>
+	
+	public static void add( Mob mob ) {
+<span class="nc" id="L1041">		Dungeon.level.mobs.add( mob );</span>
+<span class="nc bnc" id="L1042" title="All 2 branches missed.">		if (scene != null) {</span>
+<span class="nc" id="L1043">			scene.addMobSprite(mob);</span>
+<span class="nc" id="L1044">			Actor.add(mob);</span>
+		}
+<span class="nc" id="L1046">	}</span>
+
+	public static void addSprite( Mob mob ) {
+<span class="nc" id="L1049">		scene.addMobSprite( mob );</span>
+<span class="nc" id="L1050">	}</span>
+	
+	public static void add( Mob mob, float delay ) {
+<span class="nc" id="L1053">		Dungeon.level.mobs.add( mob );</span>
+<span class="nc" id="L1054">		scene.addMobSprite( mob );</span>
+<span class="nc" id="L1055">		Actor.addDelayed( mob, delay );</span>
+<span class="nc" id="L1056">	}</span>
+	
+	public static void add( EmoIcon icon ) {
+<span class="nc" id="L1059">		scene.emoicons.add( icon );</span>
+<span class="nc" id="L1060">	}</span>
+	
+	public static void add( CharHealthIndicator indicator ){
+<span class="nc bnc" id="L1063" title="All 2 branches missed.">		if (scene != null) scene.healthIndicators.add(indicator);</span>
+<span class="nc" id="L1064">	}</span>
+	
+	public static void add( CustomTilemap t, boolean wall ){
+<span class="nc bnc" id="L1067" title="All 2 branches missed.">		if (scene == null) return;</span>
+<span class="nc bnc" id="L1068" title="All 2 branches missed.">		if (wall){</span>
+<span class="nc" id="L1069">			scene.addCustomWall(t);</span>
+		} else {
+<span class="nc" id="L1071">			scene.addCustomTile(t);</span>
+		}
+<span class="nc" id="L1073">	}</span>
+	
+	public static void effect( Visual effect ) {
+<span class="nc bnc" id="L1076" title="All 2 branches missed.">		if (scene != null) scene.effects.add( effect );</span>
+<span class="nc" id="L1077">	}</span>
+
+	public static void effectOverFog( Visual effect ) {
+<span class="nc" id="L1080">		scene.overFogEffects.add( effect );</span>
+<span class="nc" id="L1081">	}</span>
+	
+	public static Ripple ripple( int pos ) {
+<span class="nc bnc" id="L1084" title="All 2 branches missed.">		if (scene != null) {</span>
+<span class="nc" id="L1085">			Ripple ripple = (Ripple) scene.ripples.recycle(Ripple.class);</span>
+<span class="nc" id="L1086">			ripple.reset(pos);</span>
+<span class="nc" id="L1087">			return ripple;</span>
+		} else {
+<span class="nc" id="L1089">			return null;</span>
+		}
+	}
+	
+	public static synchronized SpellSprite spellSprite() {
+<span class="nc" id="L1094">		return (SpellSprite)scene.spells.recycle( SpellSprite.class );</span>
+	}
+	
+	public static synchronized Emitter emitter() {
+<span class="nc bnc" id="L1098" title="All 2 branches missed.">		if (scene != null) {</span>
+<span class="nc" id="L1099">			Emitter emitter = (Emitter)scene.emitters.recycle( Emitter.class );</span>
+<span class="nc" id="L1100">			emitter.revive();</span>
+<span class="nc" id="L1101">			return emitter;</span>
+		} else {
+<span class="nc" id="L1103">			return null;</span>
+		}
+	}
+
+	public static synchronized Emitter floorEmitter() {
+<span class="nc bnc" id="L1108" title="All 2 branches missed.">		if (scene != null) {</span>
+<span class="nc" id="L1109">			Emitter emitter = (Emitter)scene.floorEmitters.recycle( Emitter.class );</span>
+<span class="nc" id="L1110">			emitter.revive();</span>
+<span class="nc" id="L1111">			return emitter;</span>
+		} else {
+<span class="nc" id="L1113">			return null;</span>
+		}
+	}
+	
+	public static FloatingText status() {
+<span class="nc bnc" id="L1118" title="All 2 branches missed.">		return scene != null ? (FloatingText)scene.statuses.recycle( FloatingText.class ) : null;</span>
+	}
+	
+	public static void pickUp( Item item, int pos ) {
+<span class="nc bnc" id="L1122" title="All 2 branches missed.">		if (scene != null) scene.toolbar.pickup( item, pos );</span>
+<span class="nc" id="L1123">	}</span>
+
+	public static void pickUpJournal( Item item, int pos ) {
+<span class="nc bnc" id="L1126" title="All 2 branches missed.">		if (scene != null) scene.menu.pickup( item, pos );</span>
+<span class="nc" id="L1127">	}</span>
+
+	public static void flashForDocument( Document doc, String page ){
+<span class="nc bnc" id="L1130" title="All 2 branches missed.">		if (scene != null) {</span>
+<span class="nc bnc" id="L1131" title="All 2 branches missed.">			if (doc == Document.ADVENTURERS_GUIDE){</span>
+<span class="nc bnc" id="L1132" title="All 2 branches missed.">				if (!page.equals(Document.GUIDE_INTRO)) {</span>
+<span class="nc bnc" id="L1133" title="All 2 branches missed.">					if (SPDSettings.interfaceSize() == 0) {</span>
+<span class="nc" id="L1134">						GLog.p(Messages.get(Guidebook.class, &quot;hint_mobile&quot;));</span>
+					} else {
+<span class="nc" id="L1136">						GLog.p(Messages.get(Guidebook.class, &quot;hint_desktop&quot;, KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(SPDAction.JOURNAL, ControllerHandler.isControllerConnected()))));</span>
+					}
+				}
+<span class="nc" id="L1139">				Dungeon.hero.sprite.showStatus(CharSprite.POSITIVE, Messages.get(Guidebook.class, &quot;hint_status&quot;));</span>
+			}
+<span class="nc" id="L1141">			scene.menu.flashForPage( doc, page );</span>
+		}
+<span class="nc" id="L1143">	}</span>
+
+	public static void endIntro(){
+<span class="nc bnc" id="L1146" title="All 2 branches missed.">		if (scene != null){</span>
+<span class="nc" id="L1147">			SPDSettings.intro(false);</span>
+<span class="nc" id="L1148">			scene.add(new Tweener(scene, 2f){</span>
+				@Override
+				protected void updateValues(float progress) {
+<span class="nc bnc" id="L1151" title="All 2 branches missed.">					if (progress &lt;= 0.5f) {</span>
+<span class="nc" id="L1152">						scene.status.alpha(2*progress);</span>
+<span class="nc" id="L1153">						scene.status.visible = scene.status.active = true;</span>
+<span class="nc" id="L1154">						scene.toolbar.visible = scene.toolbar.active = false;</span>
+<span class="nc bnc" id="L1155" title="All 2 branches missed.">						if (scene.inventory != null) scene.inventory.visible = scene.inventory.active = false;</span>
+					} else {
+<span class="nc" id="L1157">						scene.status.alpha(1f);</span>
+<span class="nc" id="L1158">						scene.status.visible = scene.status.active = true;</span>
+<span class="nc" id="L1159">						scene.toolbar.alpha((progress - 0.5f)*2);</span>
+<span class="nc" id="L1160">						scene.toolbar.visible = scene.toolbar.active = true;</span>
+<span class="nc bnc" id="L1161" title="All 2 branches missed.">						if (scene.inventory != null){</span>
+<span class="nc" id="L1162">							scene.inventory.visible = scene.inventory.active = true;</span>
+<span class="nc" id="L1163">							scene.inventory.alpha((progress - 0.5f)*2);</span>
+						}
+					}
+<span class="nc" id="L1166">				}</span>
+			});
+<span class="nc" id="L1168">			GameLog.wipe();</span>
+<span class="nc bnc" id="L1169" title="All 2 branches missed.">			if (SPDSettings.interfaceSize() == 0){</span>
+<span class="nc" id="L1170">				GLog.p(Messages.get(GameScene.class, &quot;tutorial_ui_mobile&quot;));</span>
+			} else {
+<span class="nc" id="L1172">				GLog.p(Messages.get(GameScene.class, &quot;tutorial_ui_desktop&quot;,</span>
+<span class="nc" id="L1173">						KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(SPDAction.HERO_INFO, ControllerHandler.isControllerConnected())),</span>
+<span class="nc" id="L1174">						KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(SPDAction.INVENTORY, ControllerHandler.isControllerConnected()))));</span>
+			}
+
+			//clear hidden doors, it's floor 1 so there are only the entrance ones
+<span class="nc bnc" id="L1178" title="All 2 branches missed.">			for (int i = 0; i &lt; Dungeon.level.length(); i++){</span>
+<span class="nc bnc" id="L1179" title="All 2 branches missed.">				if (Dungeon.level.map[i] == Terrain.SECRET_DOOR){</span>
+<span class="nc" id="L1180">					Dungeon.level.discover(i);</span>
+<span class="nc" id="L1181">					discoverTile(i, Terrain.SECRET_DOOR);</span>
+				}
+			}
+		}
+<span class="nc" id="L1185">	}</span>
+	
+	public static void updateKeyDisplay(){
+<span class="nc bnc" id="L1188" title="All 4 branches missed.">		if (scene != null &amp;&amp; scene.menu != null) scene.menu.updateKeys();</span>
+<span class="nc" id="L1189">	}</span>
+
+	public static void showlevelUpStars(){
+<span class="nc bnc" id="L1192" title="All 4 branches missed.">		if (scene != null &amp;&amp; scene.status != null) scene.status.showStarParticles();</span>
+<span class="nc" id="L1193">	}</span>
+
+	public static void updateAvatar(){
+<span class="nc bnc" id="L1196" title="All 4 branches missed.">		if (scene != null &amp;&amp; scene.status != null) scene.status.updateAvatar();</span>
+<span class="nc" id="L1197">	}</span>
+
+	public static void resetMap() {
+<span class="nc bnc" id="L1200" title="All 2 branches missed.">		if (scene != null) {</span>
+<span class="nc" id="L1201">			scene.tiles.map(Dungeon.level.map, Dungeon.level.width() );</span>
+<span class="nc" id="L1202">			scene.visualGrid.map(Dungeon.level.map, Dungeon.level.width() );</span>
+<span class="nc" id="L1203">			scene.terrainFeatures.map(Dungeon.level.map, Dungeon.level.width() );</span>
+<span class="nc" id="L1204">			scene.raisedTerrain.map(Dungeon.level.map, Dungeon.level.width() );</span>
+<span class="nc" id="L1205">			scene.walls.map(Dungeon.level.map, Dungeon.level.width() );</span>
+		}
+<span class="nc" id="L1207">		updateFog();</span>
+<span class="nc" id="L1208">	}</span>
+
+	//updates the whole map
+	public static void updateMap() {
+<span class="nc bnc" id="L1212" title="All 2 branches missed.">		if (scene != null) {</span>
+<span class="nc" id="L1213">			scene.tiles.updateMap();</span>
+<span class="nc" id="L1214">			scene.visualGrid.updateMap();</span>
+<span class="nc" id="L1215">			scene.terrainFeatures.updateMap();</span>
+<span class="nc" id="L1216">			scene.raisedTerrain.updateMap();</span>
+<span class="nc" id="L1217">			scene.walls.updateMap();</span>
+<span class="nc" id="L1218">			updateFog();</span>
+		}
+<span class="nc" id="L1220">	}</span>
+	
+	public static void updateMap( int cell ) {
+<span class="nc bnc" id="L1223" title="All 2 branches missed.">		if (scene != null) {</span>
+<span class="nc" id="L1224">			scene.tiles.updateMapCell( cell );</span>
+<span class="nc" id="L1225">			scene.visualGrid.updateMapCell( cell );</span>
+<span class="nc" id="L1226">			scene.terrainFeatures.updateMapCell( cell );</span>
+<span class="nc" id="L1227">			scene.raisedTerrain.updateMapCell( cell );</span>
+<span class="nc" id="L1228">			scene.walls.updateMapCell( cell );</span>
+			//update adjacent cells too
+<span class="nc" id="L1230">			updateFog( cell, 1 );</span>
+		}
+<span class="nc" id="L1232">	}</span>
+
+	public static void plantSeed( int cell ) {
+<span class="nc bnc" id="L1235" title="All 2 branches missed.">		if (scene != null) {</span>
+<span class="nc" id="L1236">			scene.terrainFeatures.growPlant( cell );</span>
+		}
+<span class="nc" id="L1238">	}</span>
+	
+	public static void discoverTile( int pos, int oldValue ) {
+<span class="nc bnc" id="L1241" title="All 2 branches missed.">		if (scene != null) {</span>
+<span class="nc" id="L1242">			scene.tiles.discover( pos, oldValue );</span>
+		}
+<span class="nc" id="L1244">	}</span>
+	
+	public static void show( Window wnd ) {
+<span class="nc bnc" id="L1247" title="All 2 branches missed.">		if (scene != null) {</span>
+<span class="nc" id="L1248">			cancel();</span>
+
+			//If a window is already present (or was just present)
+			// then inherit the offset it had
+<span class="nc bnc" id="L1252" title="All 4 branches missed.">			if (scene.inventory != null &amp;&amp; scene.inventory.visible){</span>
+<span class="nc" id="L1253">				Point offsetToInherit = null;</span>
+<span class="nc bnc" id="L1254" title="All 2 branches missed.">				for (Gizmo g : scene.members){</span>
+<span class="nc bnc" id="L1255" title="All 2 branches missed.">					if (g instanceof Window) offsetToInherit = ((Window) g).getOffset();</span>
+<span class="nc" id="L1256">				}</span>
+<span class="nc bnc" id="L1257" title="All 2 branches missed.">				if (lastOffset != null) {</span>
+<span class="nc" id="L1258">					offsetToInherit = lastOffset;</span>
+				}
+<span class="nc bnc" id="L1260" title="All 2 branches missed.">				if (offsetToInherit != null) {</span>
+<span class="nc" id="L1261">					wnd.offset(offsetToInherit);</span>
+<span class="nc" id="L1262">					wnd.boundOffsetWithMargin(3);</span>
+				}
+			}
+
+<span class="nc" id="L1266">			scene.addToFront(wnd);</span>
+		}
+<span class="nc" id="L1268">	}</span>
+
+	public static boolean showingWindow(){
+<span class="nc bnc" id="L1271" title="All 2 branches missed.">		if (scene == null) return false;</span>
+
+<span class="nc bnc" id="L1273" title="All 2 branches missed.">		for (Gizmo g : scene.members){</span>
+<span class="nc bnc" id="L1274" title="All 2 branches missed.">			if (g instanceof Window) return true;</span>
+<span class="nc" id="L1275">		}</span>
+
+<span class="nc" id="L1277">		return false;</span>
+	}
+
+	public static boolean interfaceBlockingHero(){
+<span class="nc bnc" id="L1281" title="All 2 branches missed.">		if (scene == null) return false;</span>
+
+<span class="nc bnc" id="L1283" title="All 2 branches missed.">		if (showingWindow()) return true;</span>
+
+<span class="nc bnc" id="L1285" title="All 4 branches missed.">		if (scene.inventory != null &amp;&amp; scene.inventory.isSelecting()){</span>
+<span class="nc" id="L1286">			return true;</span>
+		}
+
+<span class="nc" id="L1289">		return false;</span>
+	}
+
+	public static void toggleInvPane(){
+<span class="nc bnc" id="L1293" title="All 4 branches missed.">		if (scene != null &amp;&amp; scene.inventory != null){</span>
+<span class="nc bnc" id="L1294" title="All 2 branches missed.">			if (scene.inventory.visible){</span>
+<span class="nc" id="L1295">				scene.inventory.visible = scene.inventory.active = invVisible = false;</span>
+<span class="nc" id="L1296">				scene.toolbar.setPos(scene.toolbar.left(), uiCamera.height-scene.toolbar.height());</span>
+			} else {
+<span class="nc" id="L1298">				scene.inventory.visible = scene.inventory.active = invVisible = true;</span>
+<span class="nc" id="L1299">				scene.toolbar.setPos(scene.toolbar.left(), scene.inventory.top()-scene.toolbar.height());</span>
+			}
+<span class="nc" id="L1301">			layoutTags();</span>
+		}
+<span class="nc" id="L1303">	}</span>
+
+	public static void centerNextWndOnInvPane(){
+<span class="nc bnc" id="L1306" title="All 6 branches missed.">		if (scene != null &amp;&amp; scene.inventory != null &amp;&amp; scene.inventory.visible){</span>
+<span class="nc" id="L1307">			lastOffset = new Point((int)scene.inventory.centerX() - uiCamera.width/2,</span>
+<span class="nc" id="L1308">					(int)scene.inventory.centerY() - uiCamera.height/2);</span>
+		}
+<span class="nc" id="L1310">	}</span>
+
+	public static void updateFog(){
+<span class="nc bnc" id="L1313" title="All 2 branches missed.">		if (scene != null) {</span>
+<span class="nc" id="L1314">			scene.fog.updateFog();</span>
+<span class="nc" id="L1315">			scene.wallBlocking.updateMap();</span>
+		}
+<span class="nc" id="L1317">	}</span>
+
+	public static void updateFog(int x, int y, int w, int h){
+<span class="nc bnc" id="L1320" title="All 2 branches missed.">		if (scene != null) {</span>
+<span class="nc" id="L1321">			scene.fog.updateFogArea(x, y, w, h);</span>
+<span class="nc" id="L1322">			scene.wallBlocking.updateArea(x, y, w, h);</span>
+		}
+<span class="nc" id="L1324">	}</span>
+	
+	public static void updateFog( int cell, int radius ){
+<span class="nc bnc" id="L1327" title="All 2 branches missed.">		if (scene != null) {</span>
+<span class="nc" id="L1328">			scene.fog.updateFog( cell, radius );</span>
+<span class="nc" id="L1329">			scene.wallBlocking.updateArea( cell, radius );</span>
+		}
+<span class="nc" id="L1331">	}</span>
+	
+	public static void afterObserve() {
+<span class="nc bnc" id="L1334" title="All 2 branches missed.">		if (scene != null) {</span>
+<span class="nc bnc" id="L1335" title="All 2 branches missed.">			for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {</span>
+<span class="nc bnc" id="L1336" title="All 2 branches missed.">				if (mob.sprite != null) {</span>
+<span class="nc bnc" id="L1337" title="All 8 branches missed.">					if (mob instanceof Mimic &amp;&amp; mob.state == mob.PASSIVE &amp;&amp; ((Mimic) mob).stealthy() &amp;&amp; Dungeon.level.visited[mob.pos]){</span>
+						//mimics stay visible in fog of war after being first seen
+<span class="nc" id="L1339">						mob.sprite.visible = true;</span>
+					} else {
+<span class="nc" id="L1341">						mob.sprite.visible = Dungeon.level.heroFOV[mob.pos];</span>
+					}
+				}
+<span class="nc bnc" id="L1344" title="All 2 branches missed.">				if (mob instanceof Ghoul){</span>
+<span class="nc bnc" id="L1345" title="All 2 branches missed.">					for (Ghoul.GhoulLifeLink link : mob.buffs(Ghoul.GhoulLifeLink.class)){</span>
+<span class="nc" id="L1346">						link.updateVisibility();</span>
+<span class="nc" id="L1347">					}</span>
+				}
+			}
+		}
+<span class="nc" id="L1351">	}</span>
+
+	public static void flash( int color ) {
+<span class="nc" id="L1354">		flash( color, true);</span>
+<span class="nc" id="L1355">	}</span>
+
+	public static void flash( int color, boolean lightmode ) {
+<span class="nc bnc" id="L1358" title="All 2 branches missed.">		if (scene != null) {</span>
+			//don't want to do this on the actor thread
+<span class="nc" id="L1360">			ShatteredPixelDungeon.runOnRenderThread(new Callback() {</span>
+				@Override
+				public void call() {
+					//greater than 0 to account for negative values (which have the first bit set to 1)
+<span class="nc bnc" id="L1364" title="All 4 branches missed.">					if (color &gt; 0 &amp;&amp; color &lt; 0x01000000) {</span>
+<span class="nc" id="L1365">						scene.fadeIn(0xFF000000 | color, lightmode);</span>
+					} else {
+<span class="nc" id="L1367">						scene.fadeIn(color, lightmode);</span>
+					}
+<span class="nc" id="L1369">				}</span>
+			});
+		}
+<span class="nc" id="L1372">	}</span>
+
+	public static void gameOver() {
+<span class="nc bnc" id="L1375" title="All 2 branches missed.">		if (scene == null) return;</span>
+
+<span class="nc" id="L1377">		Banner gameOver = new Banner( BannerSprites.get( BannerSprites.Type.GAME_OVER ) );</span>
+<span class="nc" id="L1378">		gameOver.show( 0x000000, 2f );</span>
+<span class="nc" id="L1379">		scene.showBanner( gameOver );</span>
+
+<span class="nc" id="L1381">		StyledButton restart = new StyledButton(Chrome.Type.GREY_BUTTON_TR, Messages.get(StartScene.class, &quot;new&quot;), 9){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L1384">				GamesInProgress.selectedClass = Dungeon.hero.heroClass;</span>
+<span class="nc" id="L1385">				GamesInProgress.curSlot = GamesInProgress.firstEmpty();</span>
+<span class="nc" id="L1386">				ShatteredPixelDungeon.switchScene(HeroSelectScene.class);</span>
+<span class="nc" id="L1387">			}</span>
+
+			@Override
+			public void update() {
+<span class="nc" id="L1391">				alpha(gameOver.am);</span>
+<span class="nc" id="L1392">				super.update();</span>
+<span class="nc" id="L1393">			}</span>
+		};
+<span class="nc" id="L1395">		restart.icon(Icons.get(Icons.ENTER));</span>
+<span class="nc" id="L1396">		restart.alpha(0);</span>
+<span class="nc" id="L1397">		restart.camera = uiCamera;</span>
+<span class="nc" id="L1398">		float offset = Camera.main.centerOffset.y;</span>
+<span class="nc" id="L1399">		restart.setSize(Math.max(80, restart.reqWidth()), 20);</span>
+<span class="nc" id="L1400">		restart.setPos(</span>
+<span class="nc" id="L1401">				align(uiCamera, (restart.camera.width - restart.width()) / 2),</span>
+<span class="nc" id="L1402">				align(uiCamera, (restart.camera.height - restart.height()) / 2 + restart.height()/2 + 16 - offset)</span>
+		);
+<span class="nc" id="L1404">		scene.add(restart);</span>
+
+<span class="nc" id="L1406">		StyledButton menu = new StyledButton(Chrome.Type.GREY_BUTTON_TR, Messages.get(WndKeyBindings.class, &quot;menu&quot;), 9){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L1409">				GameScene.show(new WndGame());</span>
+<span class="nc" id="L1410">			}</span>
+
+			@Override
+			public void update() {
+<span class="nc" id="L1414">				alpha(gameOver.am);</span>
+<span class="nc" id="L1415">				super.update();</span>
+<span class="nc" id="L1416">			}</span>
+		};
+<span class="nc" id="L1418">		menu.icon(Icons.get(Icons.PREFS));</span>
+<span class="nc" id="L1419">		menu.alpha(0);</span>
+<span class="nc" id="L1420">		menu.camera = uiCamera;</span>
+<span class="nc" id="L1421">		menu.setSize(Math.max(80, menu.reqWidth()), 20);</span>
+<span class="nc" id="L1422">		menu.setPos(</span>
+<span class="nc" id="L1423">				align(uiCamera, (menu.camera.width - menu.width()) / 2),</span>
+<span class="nc" id="L1424">				restart.bottom() + 2</span>
+		);
+<span class="nc" id="L1426">		scene.add(menu);</span>
+<span class="nc" id="L1427">	}</span>
+	
+	public static void bossSlain() {
+<span class="nc bnc" id="L1430" title="All 2 branches missed.">		if (Dungeon.hero.isAlive()) {</span>
+<span class="nc" id="L1431">			Banner bossSlain = new Banner( BannerSprites.get( BannerSprites.Type.BOSS_SLAIN ) );</span>
+<span class="nc" id="L1432">			bossSlain.show( 0xFFFFFF, 0.3f, 5f );</span>
+<span class="nc" id="L1433">			scene.showBanner( bossSlain );</span>
+			
+<span class="nc" id="L1435">			Sample.INSTANCE.play( Assets.Sounds.BOSS );</span>
+		}
+<span class="nc" id="L1437">	}</span>
+	
+	public static void handleCell( int cell ) {
+<span class="nc" id="L1440">		cellSelector.select( cell, PointerEvent.LEFT );</span>
+<span class="nc" id="L1441">	}</span>
+	
+	public static void selectCell( CellSelector.Listener listener ) {
+<span class="nc bnc" id="L1444" title="All 4 branches missed.">		if (cellSelector.listener != null &amp;&amp; cellSelector.listener != defaultCellListener){</span>
+<span class="nc" id="L1445">			cellSelector.listener.onSelect(null);</span>
+		}
+<span class="nc" id="L1447">		cellSelector.listener = listener;</span>
+<span class="nc" id="L1448">		cellSelector.enabled = Dungeon.hero.ready;</span>
+<span class="nc bnc" id="L1449" title="All 2 branches missed.">		if (scene != null) {</span>
+<span class="nc" id="L1450">			scene.prompt(listener.prompt());</span>
+		}
+<span class="nc" id="L1452">	}</span>
+	
+	public static boolean cancelCellSelector() {
+<span class="nc bnc" id="L1455" title="All 4 branches missed.">		if (cellSelector.listener != null &amp;&amp; cellSelector.listener != defaultCellListener) {</span>
+<span class="nc" id="L1456">			cellSelector.resetKeyHold();</span>
+<span class="nc" id="L1457">			cellSelector.cancel();</span>
+<span class="nc" id="L1458">			return true;</span>
+		} else {
+<span class="nc" id="L1460">			return false;</span>
+		}
+	}
+	
+	public static WndBag selectItem( WndBag.ItemSelector listener ) {
+<span class="nc" id="L1465">		cancel();</span>
+
+<span class="nc bnc" id="L1467" title="All 2 branches missed.">		if (scene != null) {</span>
+			//TODO can the inventory pane work in these cases? bad to fallback to mobile window
+<span class="nc bnc" id="L1469" title="All 6 branches missed.">			if (scene.inventory != null &amp;&amp; scene.inventory.visible &amp;&amp; !showingWindow()){</span>
+<span class="nc" id="L1470">				scene.inventory.setSelector(listener);</span>
+<span class="nc" id="L1471">				return null;</span>
+			} else {
+<span class="nc" id="L1473">				WndBag wnd = WndBag.getBag( listener );</span>
+<span class="nc" id="L1474">				show(wnd);</span>
+<span class="nc" id="L1475">				return wnd;</span>
+			}
+		}
+		
+<span class="nc" id="L1479">		return null;</span>
+	}
+	
+	public static boolean cancel() {
+<span class="nc" id="L1483">		cellSelector.resetKeyHold();</span>
+<span class="nc bnc" id="L1484" title="All 6 branches missed.">		if (Dungeon.hero != null &amp;&amp; (Dungeon.hero.curAction != null || Dungeon.hero.resting)) {</span>
+			
+<span class="nc" id="L1486">			Dungeon.hero.curAction = null;</span>
+<span class="nc" id="L1487">			Dungeon.hero.resting = false;</span>
+<span class="nc" id="L1488">			return true;</span>
+			
+		} else {
+			
+<span class="nc" id="L1492">			return cancelCellSelector();</span>
+			
+		}
+	}
+	
+	public static void ready() {
+<span class="nc" id="L1498">		selectCell( defaultCellListener );</span>
+<span class="nc" id="L1499">		QuickSlotButton.cancel();</span>
+<span class="nc" id="L1500">		InventoryPane.cancelTargeting();</span>
+<span class="nc bnc" id="L1501" title="All 4 branches missed.">		if (scene != null &amp;&amp; scene.toolbar != null) scene.toolbar.examining = false;</span>
+<span class="nc bnc" id="L1502" title="All 2 branches missed.">		if (tagDisappeared) {</span>
+<span class="nc" id="L1503">			tagDisappeared = false;</span>
+<span class="nc" id="L1504">			updateTags = true;</span>
+		}
+<span class="nc" id="L1506">	}</span>
+	
+	public static void checkKeyHold(){
+<span class="nc" id="L1509">		cellSelector.processKeyHold();</span>
+<span class="nc" id="L1510">	}</span>
+	
+	public static void resetKeyHold(){
+<span class="nc" id="L1513">		cellSelector.resetKeyHold();</span>
+<span class="nc" id="L1514">	}</span>
+
+	public static void examineCell( Integer cell ) {
+<span class="nc bnc" id="L1517" title="All 2 branches missed.">		if (cell == null</span>
+<span class="nc bnc" id="L1518" title="All 2 branches missed.">				|| cell &lt; 0</span>
+<span class="nc bnc" id="L1519" title="All 2 branches missed.">				|| cell &gt; Dungeon.level.length()</span>
+<span class="nc bnc" id="L1520" title="All 4 branches missed.">				|| (!Dungeon.level.visited[cell] &amp;&amp; !Dungeon.level.mapped[cell])) {</span>
+<span class="nc" id="L1521">			return;</span>
+		}
+
+<span class="nc" id="L1524">		ArrayList&lt;Object&gt; objects = getObjectsAtCell(cell);</span>
+
+<span class="nc bnc" id="L1526" title="All 2 branches missed.">		if (objects.isEmpty()) {</span>
+<span class="nc" id="L1527">			GameScene.show(new WndInfoCell(cell));</span>
+<span class="nc bnc" id="L1528" title="All 2 branches missed.">		} else if (objects.size() == 1){</span>
+<span class="nc" id="L1529">			examineObject(objects.get(0));</span>
+		} else {
+<span class="nc" id="L1531">			String[] names = getObjectNames(objects).toArray(new String[0]);</span>
+
+<span class="nc" id="L1533">			GameScene.show(new WndOptions(Icons.get(Icons.INFO),</span>
+<span class="nc" id="L1534">					Messages.get(GameScene.class, &quot;choose_examine&quot;),</span>
+<span class="nc" id="L1535">					Messages.get(GameScene.class, &quot;multiple_examine&quot;),</span>
+<span class="nc" id="L1536">					names){</span>
+				@Override
+				protected void onSelect(int index) {
+<span class="nc" id="L1539">					examineObject(objects.get(index));</span>
+<span class="nc" id="L1540">				}</span>
+			});
+
+		}
+<span class="nc" id="L1544">	}</span>
+
+	private static ArrayList&lt;Object&gt; getObjectsAtCell( int cell ){
+<span class="nc" id="L1547">		ArrayList&lt;Object&gt; objects = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L1549" title="All 2 branches missed.">		if (cell == Dungeon.hero.pos) {</span>
+<span class="nc" id="L1550">			objects.add(Dungeon.hero);</span>
+
+<span class="nc bnc" id="L1552" title="All 2 branches missed.">		} else if (Dungeon.level.heroFOV[cell]) {</span>
+<span class="nc" id="L1553">			Mob mob = (Mob) Actor.findChar(cell);</span>
+<span class="nc bnc" id="L1554" title="All 2 branches missed.">			if (mob != null) objects.add(mob);</span>
+		}
+
+<span class="nc" id="L1557">		Heap heap = Dungeon.level.heaps.get(cell);</span>
+<span class="nc bnc" id="L1558" title="All 4 branches missed.">		if (heap != null &amp;&amp; heap.seen) objects.add(heap);</span>
+
+<span class="nc" id="L1560">		Plant plant = Dungeon.level.plants.get( cell );</span>
+<span class="nc bnc" id="L1561" title="All 2 branches missed.">		if (plant != null) objects.add(plant);</span>
+
+<span class="nc" id="L1563">		Trap trap = Dungeon.level.traps.get( cell );</span>
+<span class="nc bnc" id="L1564" title="All 4 branches missed.">		if (trap != null &amp;&amp; trap.visible) objects.add(trap);</span>
+
+<span class="nc" id="L1566">		return objects;</span>
+	}
+
+	private static ArrayList&lt;String&gt; getObjectNames( ArrayList&lt;Object&gt; objects ){
+<span class="nc" id="L1570">		ArrayList&lt;String&gt; names = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L1571" title="All 2 branches missed.">		for (Object obj : objects){</span>
+<span class="nc bnc" id="L1572" title="All 2 branches missed.">			if (obj instanceof Hero)        names.add(((Hero) obj).className().toUpperCase(Locale.ENGLISH));</span>
+<span class="nc bnc" id="L1573" title="All 2 branches missed.">			else if (obj instanceof Mob)    names.add(Messages.titleCase( ((Mob)obj).name() ));</span>
+<span class="nc bnc" id="L1574" title="All 2 branches missed.">			else if (obj instanceof Heap)   names.add(Messages.titleCase( ((Heap)obj).title() ));</span>
+<span class="nc bnc" id="L1575" title="All 2 branches missed.">			else if (obj instanceof Plant)  names.add(Messages.titleCase( ((Plant) obj).name() ));</span>
+<span class="nc bnc" id="L1576" title="All 2 branches missed.">			else if (obj instanceof Trap)   names.add(Messages.titleCase( ((Trap) obj).name() ));</span>
+<span class="nc" id="L1577">		}</span>
+<span class="nc" id="L1578">		return names;</span>
+	}
+
+	public static void examineObject(Object o){
+<span class="nc bnc" id="L1582" title="All 2 branches missed.">		if (o == Dungeon.hero){</span>
+<span class="nc" id="L1583">			GameScene.show( new WndHero() );</span>
+<span class="nc bnc" id="L1584" title="All 4 branches missed.">		} else if ( o instanceof Mob &amp;&amp; ((Mob) o).isActive() ){</span>
+<span class="nc" id="L1585">			GameScene.show(new WndInfoMob((Mob) o));</span>
+<span class="nc bnc" id="L1586" title="All 4 branches missed.">			if (o instanceof Snake &amp;&amp; !Document.ADVENTURERS_GUIDE.isPageRead(Document.GUIDE_SURPRISE_ATKS)){</span>
+<span class="nc" id="L1587">				GameScene.flashForDocument(Document.ADVENTURERS_GUIDE, Document.GUIDE_SURPRISE_ATKS);</span>
+			}
+<span class="nc bnc" id="L1589" title="All 4 branches missed.">		} else if ( o instanceof Heap &amp;&amp; !((Heap) o).isEmpty() ){</span>
+<span class="nc" id="L1590">			GameScene.show(new WndInfoItem((Heap)o));</span>
+<span class="nc bnc" id="L1591" title="All 2 branches missed.">		} else if ( o instanceof Plant ){</span>
+<span class="nc" id="L1592">			GameScene.show( new WndInfoPlant((Plant) o) );</span>
+			//plants can be harmful to trample, so let the player ID just by examine
+<span class="nc" id="L1594">			Bestiary.setSeen(o.getClass());</span>
+<span class="nc bnc" id="L1595" title="All 2 branches missed.">		} else if ( o instanceof Trap ){</span>
+<span class="nc" id="L1596">			GameScene.show( new WndInfoTrap((Trap) o));</span>
+			//traps are often harmful to trigger, so let the player ID just by examine
+<span class="nc" id="L1598">			Bestiary.setSeen(o.getClass());</span>
+		} else {
+<span class="nc" id="L1600">			GameScene.show( new WndMessage( Messages.get(GameScene.class, &quot;dont_know&quot;) ) ) ;</span>
+		}
+<span class="nc" id="L1602">	}</span>
+
+	
+<span class="nc" id="L1605">	private static final CellSelector.Listener defaultCellListener = new CellSelector.Listener() {</span>
+		@Override
+		public void onSelect( Integer cell ) {
+<span class="nc bnc" id="L1608" title="All 2 branches missed.">			if (Dungeon.hero.handle( cell )) {</span>
+<span class="nc" id="L1609">				Dungeon.hero.next();</span>
+			}
+<span class="nc" id="L1611">		}</span>
+
+		@Override
+		public void onRightClick(Integer cell) {
+<span class="nc bnc" id="L1615" title="All 2 branches missed.">			if (cell == null</span>
+<span class="nc bnc" id="L1616" title="All 2 branches missed.">					|| cell &lt; 0</span>
+<span class="nc bnc" id="L1617" title="All 2 branches missed.">					|| cell &gt; Dungeon.level.length()</span>
+<span class="nc bnc" id="L1618" title="All 4 branches missed.">					|| (!Dungeon.level.visited[cell] &amp;&amp; !Dungeon.level.mapped[cell])) {</span>
+<span class="nc" id="L1619">				return;</span>
+			}
+
+<span class="nc" id="L1622">			ArrayList&lt;Object&gt; objects = getObjectsAtCell(cell);</span>
+<span class="nc" id="L1623">			ArrayList&lt;String&gt; textLines = getObjectNames(objects);</span>
+
+			//determine title and image
+<span class="nc" id="L1626">			String title = null;</span>
+<span class="nc" id="L1627">			Image image = null;</span>
+<span class="nc bnc" id="L1628" title="All 2 branches missed.">			if (objects.isEmpty()) {</span>
+<span class="nc" id="L1629">				title = WndInfoCell.cellName(cell);</span>
+<span class="nc" id="L1630">				image = WndInfoCell.cellImage(cell);</span>
+<span class="nc bnc" id="L1631" title="All 2 branches missed.">			} else if (objects.size() &gt; 1){</span>
+<span class="nc" id="L1632">				title = Messages.get(GameScene.class, &quot;multiple&quot;);</span>
+<span class="nc" id="L1633">				image = Icons.get(Icons.INFO);</span>
+<span class="nc bnc" id="L1634" title="All 2 branches missed.">			} else if (objects.get(0) instanceof Hero) {</span>
+<span class="nc" id="L1635">				title = textLines.remove(0);</span>
+<span class="nc" id="L1636">				image = HeroSprite.avatar((Hero) objects.get(0));</span>
+<span class="nc bnc" id="L1637" title="All 2 branches missed.">			} else if (objects.get(0) instanceof Mob) {</span>
+<span class="nc" id="L1638">				title = textLines.remove(0);</span>
+<span class="nc" id="L1639">				image = ((Mob) objects.get(0)).sprite();</span>
+<span class="nc bnc" id="L1640" title="All 2 branches missed.">			} else if (objects.get(0) instanceof Heap) {</span>
+<span class="nc" id="L1641">				title = textLines.remove(0);</span>
+<span class="nc" id="L1642">				image = new ItemSprite((Heap) objects.get(0));</span>
+<span class="nc bnc" id="L1643" title="All 2 branches missed.">			} else if (objects.get(0) instanceof Plant) {</span>
+<span class="nc" id="L1644">				title = textLines.remove(0);</span>
+<span class="nc" id="L1645">				image = TerrainFeaturesTilemap.tile(cell, Dungeon.level.map[cell]);</span>
+<span class="nc bnc" id="L1646" title="All 2 branches missed.">			} else if (objects.get(0) instanceof Trap) {</span>
+<span class="nc" id="L1647">				title = textLines.remove(0);</span>
+<span class="nc" id="L1648">				image = TerrainFeaturesTilemap.tile(cell, Dungeon.level.map[cell]);</span>
+			}
+
+			//determine first text line
+<span class="nc bnc" id="L1652" title="All 2 branches missed.">			if (objects.isEmpty()) {</span>
+<span class="nc" id="L1653">				textLines.add(0, Messages.get(GameScene.class, &quot;go_here&quot;));</span>
+<span class="nc bnc" id="L1654" title="All 2 branches missed.">			} else if (objects.get(0) instanceof Hero) {</span>
+<span class="nc" id="L1655">				textLines.add(0, Messages.get(GameScene.class, &quot;go_here&quot;));</span>
+<span class="nc bnc" id="L1656" title="All 2 branches missed.">			} else if (objects.get(0) instanceof Mob) {</span>
+<span class="nc bnc" id="L1657" title="All 2 branches missed.">				if (((Mob) objects.get(0)).alignment != Char.Alignment.ENEMY) {</span>
+<span class="nc" id="L1658">					textLines.add(0, Messages.get(GameScene.class, &quot;interact&quot;));</span>
+				} else {
+<span class="nc" id="L1660">					textLines.add(0, Messages.get(GameScene.class, &quot;attack&quot;));</span>
+				}
+<span class="nc bnc" id="L1662" title="All 2 branches missed.">			} else if (objects.get(0) instanceof Heap) {</span>
+<span class="nc bnc" id="L1663" title="All 3 branches missed.">				switch (((Heap) objects.get(0)).type) {</span>
+					case HEAP:
+<span class="nc" id="L1665">						textLines.add(0, Messages.get(GameScene.class, &quot;pick_up&quot;));</span>
+<span class="nc" id="L1666">						break;</span>
+					case FOR_SALE:
+<span class="nc" id="L1668">						textLines.add(0, Messages.get(GameScene.class, &quot;purchase&quot;));</span>
+<span class="nc" id="L1669">						break;</span>
+					default:
+<span class="nc" id="L1671">						textLines.add(0, Messages.get(GameScene.class, &quot;interact&quot;));</span>
+<span class="nc" id="L1672">						break;</span>
+				}
+<span class="nc bnc" id="L1674" title="All 2 branches missed.">			} else if (objects.get(0) instanceof Plant) {</span>
+<span class="nc" id="L1675">				textLines.add(0, Messages.get(GameScene.class, &quot;trample&quot;));</span>
+<span class="nc bnc" id="L1676" title="All 2 branches missed.">			} else if (objects.get(0) instanceof Trap) {</span>
+<span class="nc" id="L1677">				textLines.add(0, Messages.get(GameScene.class, &quot;interact&quot;));</span>
+			}
+
+			//final text formatting
+<span class="nc bnc" id="L1681" title="All 2 branches missed.">			if (objects.size() &gt; 1){</span>
+<span class="nc" id="L1682">				textLines.add(0, &quot;_&quot; + textLines.remove(0) + &quot;:_ &quot; + textLines.get(0));</span>
+<span class="nc bnc" id="L1683" title="All 2 branches missed.">				for (int i = 1; i &lt; textLines.size(); i++){</span>
+<span class="nc" id="L1684">					textLines.add(i, &quot;_&quot; + Messages.get(GameScene.class, &quot;examine&quot;) + &quot;:_ &quot; + textLines.remove(i));</span>
+				}
+			} else {
+<span class="nc" id="L1687">				textLines.add(0, &quot;_&quot; + textLines.remove(0) + &quot;_&quot;);</span>
+<span class="nc" id="L1688">				textLines.add(1, &quot;_&quot; + Messages.get(GameScene.class, &quot;examine&quot;) + &quot;_&quot;);</span>
+			}
+
+<span class="nc" id="L1691">			RightClickMenu menu = new RightClickMenu(image,</span>
+					title,
+<span class="nc" id="L1693">					textLines.toArray(new String[0])){</span>
+				@Override
+				public void onSelect(int index) {
+<span class="nc bnc" id="L1696" title="All 2 branches missed.">					if (index == 0){</span>
+<span class="nc" id="L1697">						handleCell(cell);</span>
+					} else {
+<span class="nc bnc" id="L1699" title="All 2 branches missed.">						if (objects.size() == 0){</span>
+<span class="nc" id="L1700">							GameScene.show(new WndInfoCell(cell));</span>
+						} else {
+<span class="nc" id="L1702">							examineObject(objects.get(index-1));</span>
+						}
+					}
+<span class="nc" id="L1705">				}</span>
+			};
+<span class="nc" id="L1707">			scene.addToFront(menu);</span>
+<span class="nc" id="L1708">			menu.camera = PixelScene.uiCamera;</span>
+<span class="nc" id="L1709">			PointF mousePos = PointerEvent.currentHoverPos();</span>
+<span class="nc" id="L1710">			mousePos = menu.camera.screenToCamera((int)mousePos.x, (int)mousePos.y);</span>
+<span class="nc" id="L1711">			menu.setPos(mousePos.x-3, mousePos.y-3);</span>
+
+<span class="nc" id="L1713">		}</span>
+
+		@Override
+		public String prompt() {
+<span class="nc" id="L1717">			return null;</span>
+		}
+	};
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

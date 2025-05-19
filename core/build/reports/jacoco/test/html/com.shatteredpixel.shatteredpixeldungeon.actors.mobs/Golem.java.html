@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Golem.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">Golem.java</span></div><h1>Golem.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Imp;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.GolemSprite;
+import com.watabou.utils.BArray;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L40">public class Golem extends Mob {</span>
+	
+	{
+<span class="nc" id="L43">		spriteClass = GolemSprite.class;</span>
+		
+<span class="nc" id="L45">		HP = HT = 120;</span>
+<span class="nc" id="L46">		defenseSkill = 15;</span>
+		
+<span class="nc" id="L48">		EXP = 12;</span>
+<span class="nc" id="L49">		maxLvl = 22;</span>
+
+<span class="nc" id="L51">		loot = Random.oneOf(Generator.Category.WEAPON, Generator.Category.ARMOR);</span>
+<span class="nc" id="L52">		lootChance = 0.2f; //initially, see lootChance()</span>
+
+<span class="nc" id="L54">		properties.add(Property.INORGANIC);</span>
+<span class="nc" id="L55">		properties.add(Property.LARGE);</span>
+
+<span class="nc" id="L57">		WANDERING = new Wandering();</span>
+<span class="nc" id="L58">		HUNTING = new Hunting();</span>
+	}
+
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L63">		return Random.NormalIntRange( 25, 30 );</span>
+	}
+	
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L68">		return 28;</span>
+	}
+	
+	@Override
+	public int drRoll() {
+<span class="nc" id="L73">		return super.drRoll() + Random.NormalIntRange(0, 12);</span>
+	}
+
+	@Override
+	public float lootChance() {
+		//each drop makes future drops 1/3 as likely
+		// so loot chance looks like: 1/5, 1/15, 1/45, 1/135, etc.
+<span class="nc" id="L80">		return super.lootChance() * (float)Math.pow(1/3f, Dungeon.LimitedDrops.GOLEM_EQUIP.count);</span>
+	}
+
+	@Override
+	public void rollToDropLoot() {
+<span class="nc" id="L85">		Imp.Quest.process( this );</span>
+<span class="nc" id="L86">		super.rollToDropLoot();</span>
+<span class="nc" id="L87">	}</span>
+
+	public Item createLoot() {
+<span class="nc" id="L90">		Dungeon.LimitedDrops.GOLEM_EQUIP.count++;</span>
+		//uses probability tables for demon halls
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		if (loot == Generator.Category.WEAPON){</span>
+<span class="nc" id="L93">			return Generator.randomWeapon(5, true);</span>
+		} else {
+<span class="nc" id="L95">			return Generator.randomArmor(5);</span>
+		}
+	}
+
+<span class="nc" id="L99">	private boolean teleporting = false;</span>
+<span class="nc" id="L100">	private int selfTeleCooldown = 0;</span>
+<span class="nc" id="L101">	private int enemyTeleCooldown = 0;</span>
+
+	private static final String TELEPORTING = &quot;teleporting&quot;;
+	private static final String SELF_COOLDOWN = &quot;self_cooldown&quot;;
+	private static final String ENEMY_COOLDOWN = &quot;enemy_cooldown&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L109">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L110">		bundle.put(TELEPORTING, teleporting);</span>
+<span class="nc" id="L111">		bundle.put(SELF_COOLDOWN, selfTeleCooldown);</span>
+<span class="nc" id="L112">		bundle.put(ENEMY_COOLDOWN, enemyTeleCooldown);</span>
+<span class="nc" id="L113">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L117">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L118">		teleporting = bundle.getBoolean( TELEPORTING );</span>
+<span class="nc" id="L119">		selfTeleCooldown = bundle.getInt( SELF_COOLDOWN );</span>
+<span class="nc" id="L120">		enemyTeleCooldown = bundle.getInt( ENEMY_COOLDOWN );</span>
+<span class="nc" id="L121">	}</span>
+
+	@Override
+	protected boolean act() {
+<span class="nc" id="L125">		selfTeleCooldown--;</span>
+<span class="nc" id="L126">		enemyTeleCooldown--;</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		if (teleporting){</span>
+<span class="nc" id="L128">			((GolemSprite)sprite).teleParticles(false);</span>
+<span class="nc bnc" id="L129" title="All 4 branches missed.">			if (Actor.findChar(target) == null &amp;&amp; Dungeon.level.openSpace[target]) {</span>
+<span class="nc" id="L130">				ScrollOfTeleportation.appear(this, target);</span>
+<span class="nc" id="L131">				selfTeleCooldown = 30;</span>
+			} else {
+<span class="nc" id="L133">				target = Dungeon.level.randomDestination(this);</span>
+			}
+<span class="nc" id="L135">			teleporting = false;</span>
+<span class="nc" id="L136">			spend(TICK);</span>
+<span class="nc" id="L137">			return true;</span>
+		}
+<span class="nc" id="L139">		return super.act();</span>
+	}
+
+	public void onZapComplete(){
+<span class="nc" id="L143">		teleportEnemy();</span>
+<span class="nc" id="L144">		next();</span>
+<span class="nc" id="L145">	}</span>
+
+	public void teleportEnemy(){
+<span class="nc" id="L148">		spend(TICK);</span>
+
+<span class="nc" id="L150">		int bestPos = enemy.pos;</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">		for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">			if (Dungeon.level.passable[pos + i]</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">				&amp;&amp; Actor.findChar(pos+i) == null</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">				&amp;&amp; Dungeon.level.trueDistance(pos+i, enemy.pos) &gt; Dungeon.level.trueDistance(bestPos, enemy.pos)){</span>
+<span class="nc" id="L155">				bestPos = pos+i;</span>
+			}
+		}
+
+<span class="nc bnc" id="L159" title="All 2 branches missed.">		if (enemy.buff(MagicImmune.class) != null){</span>
+<span class="nc" id="L160">			bestPos = enemy.pos;</span>
+		}
+
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		if (bestPos != enemy.pos){</span>
+<span class="nc" id="L164">			ScrollOfTeleportation.appear(enemy, bestPos);</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">			if (enemy instanceof Hero){</span>
+<span class="nc" id="L166">				((Hero) enemy).interrupt();</span>
+<span class="nc" id="L167">				Dungeon.observe();</span>
+<span class="nc" id="L168">				GameScene.updateFog();</span>
+			}
+		}
+
+<span class="nc" id="L172">		enemyTeleCooldown = 20;</span>
+<span class="nc" id="L173">	}</span>
+
+	private boolean canTele(int target){
+<span class="nc bnc" id="L176" title="All 2 branches missed.">		if (enemyTeleCooldown &gt; 0) return false;</span>
+<span class="nc" id="L177">		PathFinder.buildDistanceMap(target, BArray.not(Dungeon.level.solid, null), Dungeon.level.distance(pos, target)+1);</span>
+		//zaps can go around blocking terrain, but not through it
+<span class="nc bnc" id="L179" title="All 2 branches missed.">		if (PathFinder.distance[pos] == Integer.MAX_VALUE){</span>
+<span class="nc" id="L180">			return false;</span>
+		}
+<span class="nc" id="L182">		return true;</span>
+	}
+
+<span class="nc" id="L185">	private class Wandering extends Mob.Wandering{</span>
+
+		@Override
+		protected boolean continueWandering() {
+<span class="nc" id="L189">			enemySeen = false;</span>
+
+<span class="nc" id="L191">			int oldPos = pos;</span>
+<span class="nc bnc" id="L192" title="All 4 branches missed.">			if (target != -1 &amp;&amp; getCloser( target )) {</span>
+<span class="nc" id="L193">				spend( 1 / speed() );</span>
+<span class="nc" id="L194">				return moveSprite( oldPos, pos );</span>
+<span class="nc bnc" id="L195" title="All 8 branches missed.">			} else if (!Dungeon.bossLevel() &amp;&amp; target != -1 &amp;&amp; target != pos &amp;&amp; selfTeleCooldown &lt;= 0) {</span>
+<span class="nc" id="L196">				((GolemSprite)sprite).teleParticles(true);</span>
+<span class="nc" id="L197">				teleporting = true;</span>
+<span class="nc" id="L198">				spend( 2*TICK );</span>
+			} else {
+<span class="nc" id="L200">				target = randomDestination();</span>
+<span class="nc" id="L201">				spend( TICK );</span>
+			}
+
+<span class="nc" id="L204">			return true;</span>
+		}
+	}
+
+<span class="nc" id="L208">	private class Hunting extends Mob.Hunting{</span>
+
+		@Override
+		public boolean act(boolean enemyInFOV, boolean justAlerted) {
+<span class="nc bnc" id="L212" title="All 4 branches missed.">			if (!enemyInFOV || canAttack(enemy)) {</span>
+<span class="nc" id="L213">				return super.act(enemyInFOV, justAlerted);</span>
+			} else {
+<span class="nc" id="L215">				enemySeen = true;</span>
+<span class="nc" id="L216">				target = enemy.pos;</span>
+
+<span class="nc" id="L218">				int oldPos = pos;</span>
+
+<span class="nc bnc" id="L220" title="All 4 branches missed.">				if (distance(enemy) &gt;= 1 &amp;&amp; Random.Int(100/distance(enemy)) == 0</span>
+<span class="nc bnc" id="L221" title="All 4 branches missed.">						&amp;&amp; !Char.hasProp(enemy, Property.IMMOVABLE) &amp;&amp; canTele(target)){</span>
+<span class="nc bnc" id="L222" title="All 6 branches missed.">					if (sprite != null &amp;&amp; (sprite.visible || enemy.sprite.visible)) {</span>
+<span class="nc" id="L223">						sprite.zap( enemy.pos );</span>
+<span class="nc" id="L224">						return false;</span>
+					} else {
+<span class="nc" id="L226">						teleportEnemy();</span>
+<span class="nc" id="L227">						return true;</span>
+					}
+
+<span class="nc bnc" id="L230" title="All 2 branches missed.">				} else if (getCloser( target )) {</span>
+<span class="nc" id="L231">					spend( 1 / speed() );</span>
+<span class="nc" id="L232">					return moveSprite( oldPos,  pos );</span>
+
+<span class="nc bnc" id="L234" title="All 4 branches missed.">				} else if (!Char.hasProp(enemy, Property.IMMOVABLE) &amp;&amp; canTele(target)) {</span>
+<span class="nc bnc" id="L235" title="All 6 branches missed.">					if (sprite != null &amp;&amp; (sprite.visible || enemy.sprite.visible)) {</span>
+<span class="nc" id="L236">						sprite.zap( enemy.pos );</span>
+<span class="nc" id="L237">						return false;</span>
+					} else {
+<span class="nc" id="L239">						teleportEnemy();</span>
+<span class="nc" id="L240">						return true;</span>
+					}
+
+				} else {
+<span class="nc" id="L244">					spend( TICK );</span>
+<span class="nc" id="L245">					return true;</span>
+				}
+
+			}
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

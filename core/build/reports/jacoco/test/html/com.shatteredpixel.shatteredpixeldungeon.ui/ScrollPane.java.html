@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScrollPane.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">ScrollPane.java</span></div><h1>ScrollPane.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.watabou.input.GameAction;
+import com.watabou.input.KeyBindings;
+import com.watabou.input.KeyEvent;
+import com.watabou.input.PointerEvent;
+import com.watabou.input.ScrollEvent;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.ColorBlock;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.ScrollArea;
+import com.watabou.noosa.ui.Component;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.Point;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Signal;
+
+public class ScrollPane extends Component {
+
+	protected static final int THUMB_COLOR		= 0xFF7b8073;
+	protected static final float THUMB_ALPHA	= 0.5f;
+
+	protected PointerController controller;
+	protected Signal.Listener&lt;KeyEvent&gt; keyListener;
+	protected Component content;
+	protected ColorBlock thumb;
+
+<span class="nc" id="L51">	private float keyScroll = 0;</span>
+
+	public ScrollPane( Component content ) {
+<span class="nc" id="L54">		super();</span>
+
+<span class="nc" id="L56">		this.content = content;</span>
+<span class="nc" id="L57">		addToBack( content );</span>
+
+<span class="nc" id="L59">		width = content.width();</span>
+<span class="nc" id="L60">		height = content.height();</span>
+
+<span class="nc" id="L62">		content.camera = new Camera( 0, 0, 1, 1, PixelScene.defaultZoom );</span>
+<span class="nc" id="L63">		Camera.add( content.camera );</span>
+
+<span class="nc" id="L65">		KeyEvent.addKeyListener(keyListener = new Signal.Listener&lt;KeyEvent&gt;() {</span>
+			@Override
+			public boolean onSignal(KeyEvent keyEvent) {
+<span class="nc" id="L68">				GameAction action = KeyBindings.getActionForKey(keyEvent);</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">				if (action == SPDAction.ZOOM_IN){</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">					if (keyEvent.pressed){</span>
+<span class="nc" id="L71">						keyScroll += 1;</span>
+					} else {
+<span class="nc" id="L73">						keyScroll -= 1;</span>
+					}
+<span class="nc" id="L75">					keyScroll = GameMath.gate(-1f, keyScroll, +1f);</span>
+<span class="nc" id="L76">					return true;</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">				} else if (action == SPDAction.ZOOM_OUT){</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">					if (keyEvent.pressed){</span>
+<span class="nc" id="L79">						keyScroll -= 1;</span>
+					} else {
+<span class="nc" id="L81">						keyScroll += 1;</span>
+					}
+<span class="nc" id="L83">					keyScroll = GameMath.gate(-1f, keyScroll, +1f);</span>
+<span class="nc" id="L84">					return true;</span>
+				}
+<span class="nc" id="L86">				return false;</span>
+			}
+		});
+<span class="nc" id="L89">	}</span>
+
+	@Override
+	public void destroy() {
+<span class="nc" id="L93">		super.destroy();</span>
+<span class="nc" id="L94">		Camera.remove( content.camera );</span>
+<span class="nc" id="L95">		KeyEvent.removeKeyListener(keyListener);</span>
+<span class="nc" id="L96">	}</span>
+
+	public void scrollTo( float x, float y ) {
+<span class="nc" id="L99">		Camera c = content.camera;</span>
+<span class="nc" id="L100">		c.scroll.set( x, y );</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (c.scroll.x + width &gt; content.width()) {</span>
+<span class="nc" id="L102">			c.scroll.x = content.width() - width;</span>
+		}
+<span class="nc bnc" id="L104" title="All 2 branches missed.">		if (c.scroll.x &lt; 0) {</span>
+<span class="nc" id="L105">			c.scroll.x = 0;</span>
+		}
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		if (c.scroll.y + height &gt; content.height()) {</span>
+<span class="nc" id="L108">			c.scroll.y = content.height() - height;</span>
+		}
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		if (c.scroll.y &lt; 0) {</span>
+<span class="nc" id="L111">			c.scroll.y = 0;</span>
+		}
+<span class="nc" id="L113">		thumb.y = this.y + height * c.scroll.y / content.height();</span>
+<span class="nc" id="L114">	}</span>
+
+	@Override
+	public synchronized void update() {
+<span class="nc" id="L118">		super.update();</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">		if (keyScroll != 0){</span>
+<span class="nc" id="L120">			scrollTo(content.camera.scroll.x, content.camera.scroll.y + (keyScroll * 150 * Game.elapsed));</span>
+		}
+<span class="nc" id="L122">	}</span>
+
+	@Override
+	protected void createChildren() {
+<span class="nc" id="L126">		controller = new PointerController();</span>
+<span class="nc" id="L127">		add( controller );</span>
+
+<span class="nc" id="L129">		thumb = new ColorBlock( 1, 1, THUMB_COLOR );</span>
+<span class="nc" id="L130">		thumb.am = THUMB_ALPHA;</span>
+<span class="nc" id="L131">		add( thumb );</span>
+<span class="nc" id="L132">	}</span>
+
+	@Override
+	protected void layout() {
+
+<span class="nc" id="L137">		content.setPos( 0, 0 );</span>
+<span class="nc" id="L138">		controller.x = x;</span>
+<span class="nc" id="L139">		controller.y = y;</span>
+<span class="nc" id="L140">		controller.width = width;</span>
+<span class="nc" id="L141">		controller.height = height;</span>
+
+<span class="nc" id="L143">		Point p = camera().cameraToScreen( x, y );</span>
+<span class="nc" id="L144">		Camera cs = content.camera;</span>
+<span class="nc" id="L145">		cs.x = p.x;</span>
+<span class="nc" id="L146">		cs.y = p.y;</span>
+<span class="nc" id="L147">		cs.resize( (int)width, (int)height );</span>
+
+<span class="nc bnc" id="L149" title="All 2 branches missed.">		thumb.visible = height &lt; content.height();</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">		if (thumb.visible) {</span>
+<span class="nc" id="L151">			thumb.scale.set( 2, height * height / content.height() );</span>
+<span class="nc" id="L152">			thumb.x = right() - thumb.width();</span>
+<span class="nc" id="L153">			thumb.y = y + height * content.camera.scroll.y / content.height();</span>
+		}
+<span class="nc" id="L155">	}</span>
+
+	public Component content() {
+<span class="nc" id="L158">		return content;</span>
+	}
+
+	public void onClick( float x, float y ) {
+<span class="nc" id="L162">	}</span>
+
+	public class PointerController extends ScrollArea {
+
+		private float dragThreshold;
+
+<span class="nc" id="L168">		public PointerController() {</span>
+<span class="nc" id="L169">			super( 0, 0, 0, 0 );</span>
+<span class="nc" id="L170">			dragThreshold = PixelScene.defaultZoom * 8;</span>
+<span class="nc" id="L171">		}</span>
+		
+		@Override
+		protected void onScroll(ScrollEvent event) {
+<span class="nc" id="L175">			PointF newPt = new PointF(lastPos);</span>
+<span class="nc" id="L176">			newPt.y -= event.amount * content.camera.zoom * 10;</span>
+<span class="nc" id="L177">			scroll(newPt);</span>
+<span class="nc" id="L178">			dragging = false;</span>
+<span class="nc" id="L179">		}</span>
+
+		@Override
+		protected void onPointerUp( PointerEvent event ) {
+<span class="nc bnc" id="L183" title="All 2 branches missed.">			if (dragging) {</span>
+
+<span class="nc" id="L185">				dragging = false;</span>
+<span class="nc" id="L186">				thumb.am = THUMB_ALPHA;</span>
+
+			} else {
+
+<span class="nc" id="L190">				PointF p = content.camera.screenToCamera( (int) event.current.x, (int) event.current.y );</span>
+<span class="nc" id="L191">				ScrollPane.this.onClick( p.x, p.y );</span>
+
+			}
+<span class="nc" id="L194">		}</span>
+
+<span class="nc" id="L196">		private boolean dragging = false;</span>
+<span class="nc" id="L197">		private PointF lastPos = new PointF();</span>
+
+		@Override
+		protected void onDrag( PointerEvent event ) {
+<span class="nc bnc" id="L201" title="All 2 branches missed.">			if (dragging) {</span>
+
+<span class="nc" id="L203">				scroll(event.current);</span>
+
+<span class="nc bnc" id="L205" title="All 2 branches missed.">			} else if (PointF.distance( event.current, event.start ) &gt; dragThreshold) {</span>
+
+<span class="nc" id="L207">				dragging = true;</span>
+<span class="nc" id="L208">				lastPos.set( event.current );</span>
+<span class="nc" id="L209">				thumb.am = 1;</span>
+
+			}
+<span class="nc" id="L212">		}</span>
+		
+		private void scroll( PointF current ){
+			
+<span class="nc" id="L216">			Camera c = content.camera;</span>
+			
+<span class="nc" id="L218">			c.shift( PointF.diff( lastPos, current ).invScale( c.zoom ) );</span>
+<span class="nc bnc" id="L219" title="All 2 branches missed.">			if (c.scroll.x + width &gt; content.width()) {</span>
+<span class="nc" id="L220">				c.scroll.x = content.width() - width;</span>
+			}
+<span class="nc bnc" id="L222" title="All 2 branches missed.">			if (c.scroll.x &lt; 0) {</span>
+<span class="nc" id="L223">				c.scroll.x = 0;</span>
+			}
+<span class="nc bnc" id="L225" title="All 2 branches missed.">			if (c.scroll.y + height &gt; content.height()) {</span>
+<span class="nc" id="L226">				c.scroll.y = content.height() - height;</span>
+			}
+<span class="nc bnc" id="L228" title="All 2 branches missed.">			if (c.scroll.y &lt; 0) {</span>
+<span class="nc" id="L229">				c.scroll.y = 0;</span>
+			}
+			
+<span class="nc" id="L232">			thumb.y = y + height * c.scroll.y / content.height();</span>
+			
+<span class="nc" id="L234">			lastPos.set( current );</span>
+			
+<span class="nc" id="L236">		}</span>
+		
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Ballistica.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.mechanics</a> &gt; <span class="el_source">Ballistica.java</span></div><h1>Ballistica.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.mechanics;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Ballistica {
+
+	//note that the path is the FULL path of the projectile, including tiles after collision.
+	//make sure to generate a subPath for the common case of going source to collision.
+<span class="nc" id="L35">	public ArrayList&lt;Integer&gt; path = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L36">	public Integer sourcePos = null;</span>
+<span class="nc" id="L37">	public Integer collisionPos = null;</span>
+<span class="nc" id="L38">	public Integer collisionProperties = null;</span>
+<span class="nc" id="L39">	public Integer dist = 0;</span>
+
+	//parameters to specify the colliding cell
+	public static final int STOP_TARGET = 1;    //ballistica will stop at the target cell
+	public static final int STOP_CHARS = 2;     //ballistica will stop on first char hit
+	public static final int STOP_SOLID = 4;     //ballistica will stop on solid terrain
+	public static final int IGNORE_SOFT_SOLID = 8; //ballistica will ignore soft solid terrain, such as doors and webs
+
+	public static final int PROJECTILE =  	STOP_TARGET	| STOP_CHARS	| STOP_SOLID;
+
+	public static final int MAGIC_BOLT =    STOP_CHARS  | STOP_SOLID;
+
+	public static final int WONT_STOP =     0;
+
+
+<span class="nc" id="L54">	public Ballistica( int from, int to, int params ){</span>
+<span class="nc" id="L55">		sourcePos = from;</span>
+<span class="nc" id="L56">		collisionProperties = params;</span>
+<span class="nc bnc" id="L57" title="All 8 branches missed.">		build(from, to,</span>
+				(params &amp; STOP_TARGET) &gt; 0,
+				(params &amp; STOP_CHARS) &gt; 0,
+				(params &amp; STOP_SOLID) &gt; 0,
+				(params &amp; IGNORE_SOFT_SOLID) &gt; 0);
+
+<span class="nc bnc" id="L63" title="All 2 branches missed.">		if (collisionPos != null) {</span>
+<span class="nc" id="L64">			dist = path.indexOf(collisionPos);</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		} else if (!path.isEmpty()) {</span>
+<span class="nc" id="L66">			collisionPos = path.get(dist = path.size() - 1);</span>
+		} else {
+<span class="nc" id="L68">			path.add(from);</span>
+<span class="nc" id="L69">			collisionPos = from;</span>
+<span class="nc" id="L70">			dist = 0;</span>
+		}
+<span class="nc" id="L72">	}</span>
+
+	private void build( int from, int to, boolean stopTarget, boolean stopChars, boolean stopTerrain, boolean ignoreSoftSolid ) {
+<span class="nc" id="L75">		int w = Dungeon.level.width();</span>
+
+<span class="nc" id="L77">		int x0 = from % w;</span>
+<span class="nc" id="L78">		int x1 = to % w;</span>
+<span class="nc" id="L79">		int y0 = from / w;</span>
+<span class="nc" id="L80">		int y1 = to / w;</span>
+
+<span class="nc" id="L82">		int dx = x1 - x0;</span>
+<span class="nc" id="L83">		int dy = y1 - y0;</span>
+
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		int stepX = dx &gt; 0 ? +1 : -1;</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		int stepY = dy &gt; 0 ? +1 : -1;</span>
+
+<span class="nc" id="L88">		dx = Math.abs( dx );</span>
+<span class="nc" id="L89">		dy = Math.abs( dy );</span>
+
+		int stepA;
+		int stepB;
+		int dA;
+		int dB;
+
+<span class="nc bnc" id="L96" title="All 2 branches missed.">		if (dx &gt; dy) {</span>
+
+<span class="nc" id="L98">			stepA = stepX;</span>
+<span class="nc" id="L99">			stepB = stepY * w;</span>
+<span class="nc" id="L100">			dA = dx;</span>
+<span class="nc" id="L101">			dB = dy;</span>
+
+		} else {
+
+<span class="nc" id="L105">			stepA = stepY * w;</span>
+<span class="nc" id="L106">			stepB = stepX;</span>
+<span class="nc" id="L107">			dA = dy;</span>
+<span class="nc" id="L108">			dB = dx;</span>
+
+		}
+
+<span class="nc" id="L112">		int cell = from;</span>
+
+<span class="nc" id="L114">		int err = dA / 2;</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">		while (Dungeon.level.insideMap(cell)) {</span>
+
+			//if we're in solid terrain, and there's no char there, collide with the previous cell.
+			// we don't use solid here because we don't want to stop short of closed doors.
+<span class="nc bnc" id="L119" title="All 4 branches missed.">			if (collisionPos == null</span>
+					&amp;&amp; stopTerrain
+<span class="nc bnc" id="L121" title="All 6 branches missed.">					&amp;&amp; cell != sourcePos</span>
+					&amp;&amp; !Dungeon.level.passable[cell]
+					&amp;&amp; !Dungeon.level.avoid[cell]
+<span class="nc bnc" id="L124" title="All 2 branches missed.">					&amp;&amp; Actor.findChar(cell) == null) {</span>
+<span class="nc" id="L125">				collide(path.get(path.size() - 1));</span>
+			}
+
+<span class="nc" id="L128">			path.add(cell);</span>
+
+<span class="nc bnc" id="L130" title="All 8 branches missed.">			if (collisionPos == null &amp;&amp; stopTerrain &amp;&amp; cell != sourcePos &amp;&amp; Dungeon.level.solid[cell]) {</span>
+<span class="nc bnc" id="L131" title="All 6 branches missed.">				if (ignoreSoftSolid &amp;&amp; (Dungeon.level.passable[cell] || Dungeon.level.avoid[cell])) {</span>
+					//do nothing
+				} else {
+<span class="nc" id="L134">					collide(cell);</span>
+				}
+			}
+<span class="nc bnc" id="L137" title="All 8 branches missed.">			if (collisionPos == null &amp;&amp; cell != sourcePos &amp;&amp; stopChars &amp;&amp; Actor.findChar( cell ) != null) {</span>
+<span class="nc" id="L138">				collide(cell);</span>
+			}
+<span class="nc bnc" id="L140" title="All 6 branches missed.">			if (collisionPos == null &amp;&amp; cell == to &amp;&amp; stopTarget){</span>
+<span class="nc" id="L141">				collide(cell);</span>
+			}
+
+<span class="nc" id="L144">			cell += stepA;</span>
+
+<span class="nc" id="L146">			err += dB;</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">			if (err &gt;= dA) {</span>
+<span class="nc" id="L148">				err = err - dA;</span>
+<span class="nc" id="L149">				cell = cell + stepB;</span>
+			}
+		}
+<span class="nc" id="L152">	}</span>
+
+	//we only want to record the first position collision occurs at.
+	private void collide(int cell){
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		if (collisionPos == null) {</span>
+<span class="nc" id="L157">			collisionPos = cell;</span>
+		}
+<span class="nc" id="L159">	}</span>
+
+	//returns a segment of the path from start to end, inclusive.
+	//if there is an error, returns an empty arraylist instead.
+	public List&lt;Integer&gt; subPath(int start, int end){
+		try {
+<span class="nc" id="L165">			end = Math.min( end, path.size()-1);</span>
+<span class="nc" id="L166">			return path.subList(start, end+1);</span>
+<span class="nc" id="L167">		} catch (Exception e){</span>
+<span class="nc" id="L168">			ShatteredPixelDungeon.reportException(e);</span>
+<span class="nc" id="L169">			return new ArrayList&lt;&gt;();</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

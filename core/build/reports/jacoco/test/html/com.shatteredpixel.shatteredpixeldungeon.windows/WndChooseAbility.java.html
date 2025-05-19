@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WndChooseAbility.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.windows</a> &gt; <span class="el_source">WndChooseAbility.java</span></div><h1>WndChooseAbility.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.windows;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.Trinity;
+import com.shatteredpixel.shatteredpixeldungeon.items.KingsCrown;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.ui.IconButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+
+public class WndChooseAbility extends Window {
+
+	private static final int WIDTH		= 130;
+	private static final float GAP		= 2;
+
+	public WndChooseAbility(final KingsCrown crown, final Armor armor, final Hero hero){
+
+<span class="nc" id="L48">		super();</span>
+
+		//crown can be null if hero is choosing from armor
+<span class="nc" id="L51">		IconTitle titlebar = new IconTitle();</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">		titlebar.icon( new ItemSprite( crown == null ? armor.image() : crown.image(), null ) );</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">		titlebar.label( Messages.titleCase(crown == null ? armor.name() : crown.name()) );</span>
+<span class="nc" id="L54">		titlebar.setRect( 0, 0, WIDTH, 0 );</span>
+<span class="nc" id="L55">		add( titlebar );</span>
+
+<span class="nc" id="L57">		RenderedTextBlock body = PixelScene.renderTextBlock( 6 );</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">		if (crown != null) {</span>
+<span class="nc" id="L59">			body.text(Messages.get(this, &quot;message&quot;), WIDTH);</span>
+		} else {
+<span class="nc" id="L61">			body.text(Messages.get(this, &quot;message_no_crown&quot;), WIDTH);</span>
+		}
+<span class="nc" id="L63">		body.setPos( titlebar.left(), titlebar.bottom() + GAP );</span>
+<span class="nc" id="L64">		add( body );</span>
+
+<span class="nc" id="L66">		float pos = body.bottom() + 3*GAP;</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">		for (ArmorAbility ability : hero.heroClass.armorAbilities()) {</span>
+
+			String warn;
+<span class="nc bnc" id="L70" title="All 4 branches missed.">			if (Dungeon.initialVersion &lt; 821 &amp;&amp; ability instanceof Trinity){</span>
+<span class="nc" id="L71">				warn = &quot;_WARNING, code to track which items you have found for use in trinity was added in BETA-2.2. This run was started before that, and so some items you have encountered may not be usable with Trinity. Any items you currently hold can be made selectable by dropping and picking them back up._\n\n&quot;;</span>
+			} else {
+<span class="nc" id="L73">				warn = &quot;&quot;;</span>
+			}
+<span class="nc" id="L75">			RedButton abilityButton = new RedButton(ability.shortDesc(), 6){</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L78">					GameScene.show(new WndOptions( new HeroIcon( ability ),</span>
+<span class="nc" id="L79">							Messages.titleCase(ability.name()),</span>
+<span class="nc" id="L80">							warn + Messages.get(WndChooseAbility.this, &quot;are_you_sure&quot;),</span>
+<span class="nc" id="L81">							Messages.get(WndChooseAbility.this, &quot;yes&quot;),</span>
+<span class="nc" id="L82">							Messages.get(WndChooseAbility.this, &quot;no&quot;)){</span>
+
+						@Override
+						protected void onSelect(int index) {
+<span class="nc" id="L86">							hide();</span>
+<span class="nc bnc" id="L87" title="All 4 branches missed.">							if (index == 0 &amp;&amp; WndChooseAbility.this.parent != null){</span>
+<span class="nc" id="L88">								WndChooseAbility.this.hide();</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">								if (crown != null) {</span>
+<span class="nc" id="L90">									crown.upgradeArmor(hero, armor, ability);</span>
+								} else {
+<span class="nc" id="L92">									new KingsCrown().upgradeArmor(hero, null, ability);</span>
+								}
+							}
+<span class="nc" id="L95">						}</span>
+					});
+<span class="nc" id="L97">				}</span>
+			};
+<span class="nc" id="L99">			abilityButton.leftJustify = true;</span>
+<span class="nc" id="L100">			abilityButton.multiline = true;</span>
+<span class="nc" id="L101">			abilityButton.setSize(WIDTH-20, abilityButton.reqHeight()+2);</span>
+<span class="nc" id="L102">			abilityButton.setRect(0, pos, WIDTH-20, abilityButton.reqHeight()+2);</span>
+<span class="nc" id="L103">			add(abilityButton);</span>
+
+<span class="nc" id="L105">			IconButton abilityInfo = new IconButton(Icons.get(Icons.INFO)){</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L108">					GameScene.show(new WndInfoArmorAbility(Dungeon.hero.heroClass, ability));</span>
+<span class="nc" id="L109">				}</span>
+			};
+<span class="nc" id="L111">			abilityInfo.setRect(WIDTH-20, abilityButton.top() + (abilityButton.height()-20)/2, 20, 20);</span>
+<span class="nc" id="L112">			add(abilityInfo);</span>
+
+<span class="nc" id="L114">			pos = abilityButton.bottom() + GAP;</span>
+		}
+
+<span class="nc" id="L117">		RedButton cancelButton = new RedButton(Messages.get(this, &quot;cancel&quot;)){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L120">				hide();</span>
+<span class="nc" id="L121">			}</span>
+		};
+<span class="nc" id="L123">		cancelButton.setRect(0, pos, WIDTH, 18);</span>
+<span class="nc" id="L124">		add(cancelButton);</span>
+<span class="nc" id="L125">		pos = cancelButton.bottom() + GAP;</span>
+
+<span class="nc" id="L127">		resize(WIDTH, (int)pos);</span>
+
+<span class="nc" id="L129">	}</span>
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

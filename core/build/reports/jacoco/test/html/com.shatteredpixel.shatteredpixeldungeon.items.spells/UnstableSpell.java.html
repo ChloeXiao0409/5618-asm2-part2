@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UnstableSpell.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.spells</a> &gt; <span class="el_source">UnstableSpell.java</span></div><h1>UnstableSpell.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.spells;
+
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfIdentify;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfLullaby;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfMagicMapping;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfMirrorImage;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRage;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRecharging;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRemoveCurse;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRetribution;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTerror;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTransmutation;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ExoticScroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.Runestone;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+
+<span class="nc" id="L50">public class UnstableSpell extends Spell {</span>
+
+	{
+<span class="nc" id="L53">		image = ItemSpriteSheet.UNSTABLE_SPELL;</span>
+<span class="nc" id="L54">	}</span>
+	
+<span class="nc" id="L56">	private static HashMap&lt;Class&lt;? extends Scroll&gt;, Float&gt; scrollChances = new HashMap&lt;&gt;();</span>
+	static{
+<span class="nc" id="L58">		scrollChances.put( ScrollOfIdentify.class,      3f );</span>
+<span class="nc" id="L59">		scrollChances.put( ScrollOfRemoveCurse.class,   2f );</span>
+<span class="nc" id="L60">		scrollChances.put( ScrollOfMagicMapping.class,  2f );</span>
+<span class="nc" id="L61">		scrollChances.put( ScrollOfMirrorImage.class,   2f );</span>
+<span class="nc" id="L62">		scrollChances.put( ScrollOfRecharging.class,    2f );</span>
+<span class="nc" id="L63">		scrollChances.put( ScrollOfLullaby.class,       2f );</span>
+<span class="nc" id="L64">		scrollChances.put( ScrollOfRetribution.class,   2f );</span>
+<span class="nc" id="L65">		scrollChances.put( ScrollOfRage.class,          2f );</span>
+<span class="nc" id="L66">		scrollChances.put( ScrollOfTeleportation.class, 2f );</span>
+<span class="nc" id="L67">		scrollChances.put( ScrollOfTerror.class,        2f );</span>
+<span class="nc" id="L68">		scrollChances.put( ScrollOfTransmutation.class, 1f );</span>
+	}
+
+<span class="nc" id="L71">	private static HashSet&lt;Class&lt;? extends Scroll&gt;&gt; nonCombatScrolls = new HashSet&lt;&gt;();</span>
+	static {
+<span class="nc" id="L73">		nonCombatScrolls.add( ScrollOfIdentify.class );</span>
+<span class="nc" id="L74">		nonCombatScrolls.add( ScrollOfRemoveCurse.class );</span>
+<span class="nc" id="L75">		nonCombatScrolls.add( ScrollOfMagicMapping.class );</span>
+<span class="nc" id="L76">		nonCombatScrolls.add( ScrollOfRecharging.class );</span>
+<span class="nc" id="L77">		nonCombatScrolls.add( ScrollOfLullaby.class );</span>
+<span class="nc" id="L78">		nonCombatScrolls.add( ScrollOfTeleportation.class );</span>
+<span class="nc" id="L79">		nonCombatScrolls.add( ScrollOfTransmutation.class );</span>
+	}
+
+<span class="nc" id="L82">	private static HashSet&lt;Class&lt;? extends Scroll&gt;&gt; combatScrolls = new HashSet&lt;&gt;();</span>
+	static {
+<span class="nc" id="L84">		combatScrolls.add( ScrollOfMirrorImage.class );</span>
+<span class="nc" id="L85">		combatScrolls.add( ScrollOfRecharging.class );</span>
+<span class="nc" id="L86">		combatScrolls.add( ScrollOfLullaby.class );</span>
+<span class="nc" id="L87">		combatScrolls.add( ScrollOfRetribution.class );</span>
+<span class="nc" id="L88">		combatScrolls.add( ScrollOfRage.class );</span>
+<span class="nc" id="L89">		combatScrolls.add( ScrollOfTeleportation.class );</span>
+<span class="nc" id="L90">		combatScrolls.add( ScrollOfTerror.class );</span>
+<span class="nc" id="L91">	}</span>
+	
+	@Override
+	protected void onCast(Hero hero) {
+		
+<span class="nc" id="L96">		detach( curUser.belongings.backpack );</span>
+<span class="nc" id="L97">		updateQuickslot();</span>
+		
+<span class="nc" id="L99">		Scroll s = Reflection.newInstance(Random.chances(scrollChances));</span>
+
+		//reroll the scroll until it is relevant for the situation (whether there are visible enemies)
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if (hero.visibleEnemies() == 0){</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			while (!nonCombatScrolls.contains(s.getClass())){</span>
+<span class="nc" id="L104">				s = Reflection.newInstance(Random.chances(scrollChances));</span>
+			}
+		} else {
+<span class="nc bnc" id="L107" title="All 2 branches missed.">			while (!combatScrolls.contains(s.getClass())){</span>
+<span class="nc" id="L108">				s = Reflection.newInstance(Random.chances(scrollChances));</span>
+			}
+		}
+
+<span class="nc" id="L112">		s.anonymize();</span>
+<span class="nc" id="L113">		curItem = s;</span>
+<span class="nc" id="L114">		s.doRead();</span>
+
+<span class="nc" id="L116">		Catalog.countUse(getClass());</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		if (Random.Float() &lt; talentChance){</span>
+<span class="nc" id="L118">			Talent.onScrollUsed(curUser, curUser.pos, talentFactor, getClass());</span>
+		}
+<span class="nc" id="L120">	}</span>
+
+	//lower values, as it's cheaper to make
+	@Override
+	public int value() {
+<span class="nc" id="L125">		return 40 * quantity;</span>
+	}
+
+	@Override
+	public int energyVal() {
+<span class="nc" id="L130">		return 8 * quantity;</span>
+	}
+
+<span class="nc" id="L133">	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe {</span>
+
+		@Override
+		public boolean testIngredients(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc" id="L137">			boolean scroll = false;</span>
+<span class="nc" id="L138">			boolean stone = false;</span>
+
+<span class="nc bnc" id="L140" title="All 2 branches missed.">			for (Item i : ingredients){</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">				if (i instanceof Runestone){</span>
+<span class="nc" id="L142">					stone = true;</span>
+					//if it is a regular or exotic potion
+<span class="nc bnc" id="L144" title="All 2 branches missed.">				} else if (ExoticScroll.regToExo.containsKey(i.getClass())</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">						|| ExoticScroll.regToExo.containsValue(i.getClass())) {</span>
+<span class="nc" id="L146">					scroll = true;</span>
+				}
+<span class="nc" id="L148">			}</span>
+
+<span class="nc bnc" id="L150" title="All 4 branches missed.">			return scroll &amp;&amp; stone;</span>
+		}
+		
+		@Override
+		public int cost(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc" id="L155">			return 1;</span>
+		}
+
+		@Override
+		public Item brew(ArrayList&lt;Item&gt; ingredients) {
+
+<span class="nc bnc" id="L161" title="All 2 branches missed.">			for (Item i : ingredients){</span>
+<span class="nc" id="L162">				i.quantity(i.quantity()-1);</span>
+<span class="nc" id="L163">			}</span>
+
+<span class="nc" id="L165">			return sampleOutput(null);</span>
+		}
+
+		@Override
+		public Item sampleOutput(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc" id="L170">			return new UnstableSpell();</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

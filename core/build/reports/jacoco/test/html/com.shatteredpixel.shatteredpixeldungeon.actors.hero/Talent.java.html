@@ -1,0 +1,1207 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Talent.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero</a> &gt; <span class="el_source">Talent.java</span></div><h1>Talent.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ArtifactRecharge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.CounterBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.EnhancedRings;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Haste;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.PhysicalEmpower;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Recharging;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.RevealedArea;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Roots;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ScrollEmpower;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.WandEmpower;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.Ratmogrify;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.DivineSense;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.RecallInscription;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.LeafParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CloakOfShadows;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HornOfPlenty;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRecharging;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.Runestone;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfIntuition;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.ShardOfOblivion;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Gloves;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+
+<span class="nc" id="L95">public enum Talent {</span>
+
+	//Warrior T1
+<span class="nc" id="L98">	HEARTY_MEAL(0), VETERANS_INTUITION(1), PROVOKED_ANGER(2), IRON_WILL(3),</span>
+	//Warrior T2
+<span class="nc" id="L100">	IRON_STOMACH(4), LIQUID_WILLPOWER(5), RUNIC_TRANSFERENCE(6), LETHAL_MOMENTUM(7), IMPROVISED_PROJECTILES(8),</span>
+	//Warrior T3
+<span class="nc" id="L102">	HOLD_FAST(9, 3), STRONGMAN(10, 3),</span>
+	//Berserker T3
+<span class="nc" id="L104">	ENDLESS_RAGE(11, 3), DEATHLESS_FURY(12, 3), ENRAGED_CATALYST(13, 3),</span>
+	//Gladiator T3
+<span class="nc" id="L106">	CLEAVE(14, 3), LETHAL_DEFENSE(15, 3), ENHANCED_COMBO(16, 3),</span>
+	//Heroic Leap T4
+<span class="nc" id="L108">	BODY_SLAM(17, 4), IMPACT_WAVE(18, 4), DOUBLE_JUMP(19, 4),</span>
+	//Shockwave T4
+<span class="nc" id="L110">	EXPANDING_WAVE(20, 4), STRIKING_WAVE(21, 4), SHOCK_FORCE(22, 4),</span>
+	//Endure T4
+<span class="nc" id="L112">	SUSTAINED_RETRIBUTION(23, 4), SHRUG_IT_OFF(24, 4), EVEN_THE_ODDS(25, 4),</span>
+
+	//Mage T1
+<span class="nc" id="L115">	EMPOWERING_MEAL(32), SCHOLARS_INTUITION(33), LINGERING_MAGIC(34), BACKUP_BARRIER(35),</span>
+	//Mage T2
+<span class="nc" id="L117">	ENERGIZING_MEAL(36), INSCRIBED_POWER(37), WAND_PRESERVATION(38), ARCANE_VISION(39), SHIELD_BATTERY(40),</span>
+	//Mage T3
+<span class="nc" id="L119">	DESPERATE_POWER(41, 3), ALLY_WARP(42, 3),</span>
+	//Battlemage T3
+<span class="nc" id="L121">	EMPOWERED_STRIKE(43, 3), MYSTICAL_CHARGE(44, 3), EXCESS_CHARGE(45, 3),</span>
+	//Warlock T3
+<span class="nc" id="L123">	SOUL_EATER(46, 3), SOUL_SIPHON(47, 3), NECROMANCERS_MINIONS(48, 3),</span>
+	//Elemental Blast T4
+<span class="nc" id="L125">	BLAST_RADIUS(49, 4), ELEMENTAL_POWER(50, 4), REACTIVE_BARRIER(51, 4),</span>
+	//Wild Magic T4
+<span class="nc" id="L127">	WILD_POWER(52, 4), FIRE_EVERYTHING(53, 4), CONSERVED_MAGIC(54, 4),</span>
+	//Warp Beacon T4
+<span class="nc" id="L129">	TELEFRAG(55, 4), REMOTE_BEACON(56, 4), LONGRANGE_WARP(57, 4),</span>
+
+	//Rogue T1
+<span class="nc" id="L132">	CACHED_RATIONS(64), THIEFS_INTUITION(65), SUCKER_PUNCH(66), PROTECTIVE_SHADOWS(67),</span>
+	//Rogue T2
+<span class="nc" id="L134">	MYSTICAL_MEAL(68), INSCRIBED_STEALTH(69), WIDE_SEARCH(70), SILENT_STEPS(71), ROGUES_FORESIGHT(72),</span>
+	//Rogue T3
+<span class="nc" id="L136">	ENHANCED_RINGS(73, 3), LIGHT_CLOAK(74, 3),</span>
+	//Assassin T3
+<span class="nc" id="L138">	ENHANCED_LETHALITY(75, 3), ASSASSINS_REACH(76, 3), BOUNTY_HUNTER(77, 3),</span>
+	//Freerunner T3
+<span class="nc" id="L140">	EVASIVE_ARMOR(78, 3), PROJECTILE_MOMENTUM(79, 3), SPEEDY_STEALTH(80, 3),</span>
+	//Smoke Bomb T4
+<span class="nc" id="L142">	HASTY_RETREAT(81, 4), BODY_REPLACEMENT(82, 4), SHADOW_STEP(83, 4),</span>
+	//Death Mark T4
+<span class="nc" id="L144">	FEAR_THE_REAPER(84, 4), DEATHLY_DURABILITY(85, 4), DOUBLE_MARK(86, 4),</span>
+	//Shadow Clone T4
+<span class="nc" id="L146">	SHADOW_BLADE(87, 4), CLONED_ARMOR(88, 4), PERFECT_COPY(89, 4),</span>
+
+	//Huntress T1
+<span class="nc" id="L149">	NATURES_BOUNTY(96), SURVIVALISTS_INTUITION(97), FOLLOWUP_STRIKE(98), NATURES_AID(99),</span>
+	//Huntress T2
+<span class="nc" id="L151">	INVIGORATING_MEAL(100), LIQUID_NATURE(101), REJUVENATING_STEPS(102), HEIGHTENED_SENSES(103), DURABLE_PROJECTILES(104),</span>
+	//Huntress T3
+<span class="nc" id="L153">	POINT_BLANK(105, 3), SEER_SHOT(106, 3),</span>
+	//Sniper T3
+<span class="nc" id="L155">	FARSIGHT(107, 3), SHARED_ENCHANTMENT(108, 3), SHARED_UPGRADES(109, 3),</span>
+	//Warden T3
+<span class="nc" id="L157">	DURABLE_TIPS(110, 3), BARKSKIN(111, 3), SHIELDING_DEW(112, 3),</span>
+	//Spectral Blades T4
+<span class="nc" id="L159">	FAN_OF_BLADES(113, 4), PROJECTING_BLADES(114, 4), SPIRIT_BLADES(115, 4),</span>
+	//Natures Power T4
+<span class="nc" id="L161">	GROWING_POWER(116, 4), NATURES_WRATH(117, 4), WILD_MOMENTUM(118, 4),</span>
+	//Spirit Hawk T4
+<span class="nc" id="L163">	EAGLE_EYE(119, 4), GO_FOR_THE_EYES(120, 4), SWIFT_SPIRIT(121, 4),</span>
+
+	//Duelist T1
+<span class="nc" id="L166">	STRENGTHENING_MEAL(128), ADVENTURERS_INTUITION(129), PATIENT_STRIKE(130), AGGRESSIVE_BARRIER(131),</span>
+	//Duelist T2
+<span class="nc" id="L168">	FOCUSED_MEAL(132), LIQUID_AGILITY(133), WEAPON_RECHARGING(134), LETHAL_HASTE(135), SWIFT_EQUIP(136),</span>
+	//Duelist T3
+<span class="nc" id="L170">	PRECISE_ASSAULT(137, 3), DEADLY_FOLLOWUP(138, 3),</span>
+	//Champion T3
+<span class="nc" id="L172">	VARIED_CHARGE(139, 3), TWIN_UPGRADES(140, 3), COMBINED_LETHALITY(141, 3),</span>
+	//Monk T3
+<span class="nc" id="L174">	UNENCUMBERED_SPIRIT(142, 3), MONASTIC_VIGOR(143, 3), COMBINED_ENERGY(144, 3),</span>
+	//Challenge T4
+<span class="nc" id="L176">	CLOSE_THE_GAP(145, 4), INVIGORATING_VICTORY(146, 4), ELIMINATION_MATCH(147, 4),</span>
+	//Elemental Strike T4
+<span class="nc" id="L178">	ELEMENTAL_REACH(148, 4), STRIKING_FORCE(149, 4), DIRECTED_POWER(150, 4),</span>
+	//Feint T4
+<span class="nc" id="L180">	FEIGNED_RETREAT(151, 4), EXPOSE_WEAKNESS(152, 4), COUNTER_ABILITY(153, 4),</span>
+
+	//Cleric T1
+<span class="nc" id="L183">	SATIATED_SPELLS(160), HOLY_INTUITION(161), SEARING_LIGHT(162), SHIELD_OF_LIGHT(163),</span>
+	//Cleric T2
+<span class="nc" id="L185">	ENLIGHTENING_MEAL(164), RECALL_INSCRIPTION(165), SUNRAY(166), DIVINE_SENSE(167), BLESS(168),</span>
+	//Cleric T3
+<span class="nc" id="L187">	CLEANSE(169, 3), LIGHT_READING(170, 3),</span>
+	//Priest T3
+<span class="nc" id="L189">	HOLY_LANCE(171, 3), HALLOWED_GROUND(172, 3), MNEMONIC_PRAYER(173, 3),</span>
+	//Paladin T3
+<span class="nc" id="L191">	LAY_ON_HANDS(174, 3), AURA_OF_PROTECTION(175, 3), WALL_OF_LIGHT(176, 3),</span>
+	//Ascended Form T4
+<span class="nc" id="L193">	DIVINE_INTERVENTION(177, 4), JUDGEMENT(178, 4), FLASH(179, 4),</span>
+	//Trinity T4
+<span class="nc" id="L195">	BODY_FORM(180, 4), MIND_FORM(181, 4), SPIRIT_FORM(182, 4),</span>
+	//Power of Many T4
+<span class="nc" id="L197">	BEAMING_RAY(183, 4), LIFE_LINK(184, 4), STASIS(185, 4),</span>
+
+	//universal T4
+<span class="nc" id="L200">	HEROIC_ENERGY(26, 4), //See icon() and title() for special logic for this one</span>
+	//Ratmogrify T4
+<span class="nc" id="L202">	RATSISTANCE(215, 4), RATLOMACY(216, 4), RATFORCEMENTS(217, 4);</span>
+
+<span class="nc" id="L204">	public static class ImprovisedProjectileCooldown extends FlavourBuff{</span>
+<span class="nc" id="L205">		public int icon() { return BuffIndicator.TIME; }</span>
+<span class="nc" id="L206">		public void tintIcon(Image icon) { icon.hardlight(0.15f, 0.2f, 0.5f); }</span>
+<span class="nc" id="L207">		public float iconFadePercent() { return Math.max(0, visualcooldown() / 50); }</span>
+	};
+<span class="nc" id="L209">	public static class LethalMomentumTracker extends FlavourBuff{};</span>
+<span class="nc" id="L210">	public static class StrikingWaveTracker extends FlavourBuff{};</span>
+<span class="nc" id="L211">	public static class WandPreservationCounter extends CounterBuff{{revivePersists = true;}};</span>
+<span class="nc" id="L212">	public static class EmpoweredStrikeTracker extends FlavourBuff{</span>
+		//blast wave on-hit doesn't resolve instantly, so we delay detaching for it
+<span class="nc" id="L214">		public boolean delayedDetach = false;</span>
+	};
+<span class="nc" id="L216">	public static class ProtectiveShadowsTracker extends Buff {</span>
+<span class="nc" id="L217">		float barrierInc = 0.5f;</span>
+
+		@Override
+		public boolean act() {
+			//barrier every 2/1 turns, to a max of 3/5
+<span class="nc bnc" id="L222" title="All 4 branches missed.">			if (((Hero)target).hasTalent(Talent.PROTECTIVE_SHADOWS) &amp;&amp; target.invisible &gt; 0){</span>
+<span class="nc" id="L223">				Barrier barrier = Buff.affect(target, Barrier.class);</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">				if (barrier.shielding() &lt; 1 + 2*((Hero)target).pointsInTalent(Talent.PROTECTIVE_SHADOWS)) {</span>
+<span class="nc" id="L225">					barrierInc += 0.5f * ((Hero) target).pointsInTalent(Talent.PROTECTIVE_SHADOWS);</span>
+				}
+<span class="nc bnc" id="L227" title="All 2 branches missed.">				if (barrierInc &gt;= 1){</span>
+<span class="nc" id="L228">					barrierInc = 0;</span>
+<span class="nc" id="L229">					barrier.incShield(1);</span>
+				} else {
+<span class="nc" id="L231">					barrier.incShield(0); //resets barrier decay</span>
+				}
+<span class="nc" id="L233">			} else {</span>
+<span class="nc" id="L234">				detach();</span>
+			}
+<span class="nc" id="L236">			spend( TICK );</span>
+<span class="nc" id="L237">			return true;</span>
+		}
+
+		private static final String BARRIER_INC = &quot;barrier_inc&quot;;
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L243">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L244">			bundle.put( BARRIER_INC, barrierInc);</span>
+<span class="nc" id="L245">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L249">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L250">			barrierInc = bundle.getFloat( BARRIER_INC );</span>
+<span class="nc" id="L251">		}</span>
+	}
+<span class="nc" id="L253">	public static class BountyHunterTracker extends FlavourBuff{};</span>
+<span class="nc" id="L254">	public static class RejuvenatingStepsCooldown extends FlavourBuff{</span>
+<span class="nc" id="L255">		public int icon() { return BuffIndicator.TIME; }</span>
+<span class="nc" id="L256">		public void tintIcon(Image icon) { icon.hardlight(0f, 0.35f, 0.15f); }</span>
+<span class="nc" id="L257">		public float iconFadePercent() { return GameMath.gate(0, visualcooldown() / (15 - 5*Dungeon.hero.pointsInTalent(REJUVENATING_STEPS)), 1); }</span>
+	};
+<span class="nc" id="L259">	public static class RejuvenatingStepsFurrow extends CounterBuff{{revivePersists = true;}};</span>
+<span class="nc" id="L260">	public static class SeerShotCooldown extends FlavourBuff{</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">		public int icon() { return target.buff(RevealedArea.class) != null ? BuffIndicator.NONE : BuffIndicator.TIME; }</span>
+<span class="nc" id="L262">		public void tintIcon(Image icon) { icon.hardlight(0.7f, 0.4f, 0.7f); }</span>
+<span class="nc" id="L263">		public float iconFadePercent() { return Math.max(0, visualcooldown() / 20); }</span>
+	};
+<span class="nc" id="L265">	public static class SpiritBladesTracker extends FlavourBuff{};</span>
+<span class="nc" id="L266">	public static class PatientStrikeTracker extends Buff {</span>
+		public int pos;
+<span class="nc" id="L268">		{ type = Buff.buffType.POSITIVE; }</span>
+<span class="nc" id="L269">		public int icon() { return BuffIndicator.TIME; }</span>
+<span class="nc" id="L270">		public void tintIcon(Image icon) { icon.hardlight(0.5f, 0f, 1f); }</span>
+		@Override
+		public boolean act() {
+<span class="nc bnc" id="L273" title="All 2 branches missed.">			if (pos != target.pos) {</span>
+<span class="nc" id="L274">				detach();</span>
+			} else {
+<span class="nc" id="L276">				spend(TICK);</span>
+			}
+<span class="nc" id="L278">			return true;</span>
+		}
+		private static final String POS = &quot;pos&quot;;
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L283">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L284">			bundle.put(POS, pos);</span>
+<span class="nc" id="L285">		}</span>
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L288">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L289">			pos = bundle.getInt(POS);</span>
+<span class="nc" id="L290">		}</span>
+	};
+<span class="nc" id="L292">	public static class AggressiveBarrierCooldown extends FlavourBuff{</span>
+<span class="nc" id="L293">		public int icon() { return BuffIndicator.TIME; }</span>
+<span class="nc" id="L294">		public void tintIcon(Image icon) { icon.hardlight(0.35f, 0f, 0.7f); }</span>
+<span class="nc" id="L295">		public float iconFadePercent() { return Math.max(0, visualcooldown() / 50); }</span>
+	};
+<span class="nc" id="L297">	public static class LiquidAgilEVATracker extends FlavourBuff{};</span>
+<span class="nc" id="L298">	public static class LiquidAgilACCTracker extends FlavourBuff{</span>
+		public int uses;
+
+<span class="nc" id="L301">		{ type = buffType.POSITIVE; }</span>
+<span class="nc" id="L302">		public int icon() { return BuffIndicator.INVERT_MARK; }</span>
+<span class="nc" id="L303">		public void tintIcon(Image icon) { icon.hardlight(0.5f, 0f, 1f); }</span>
+<span class="nc" id="L304">		public float iconFadePercent() { return Math.max(0, 1f - (visualcooldown() / 5)); }</span>
+
+		private static final String USES = &quot;uses&quot;;
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L309">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L310">			bundle.put(USES, uses);</span>
+<span class="nc" id="L311">		}</span>
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L314">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L315">			uses = bundle.getInt(USES);</span>
+<span class="nc" id="L316">		}</span>
+	};
+<span class="nc" id="L318">	public static class LethalHasteCooldown extends FlavourBuff{</span>
+<span class="nc" id="L319">		public int icon() { return BuffIndicator.TIME; }</span>
+<span class="nc" id="L320">		public void tintIcon(Image icon) { icon.hardlight(0.35f, 0f, 0.7f); }</span>
+<span class="nc" id="L321">		public float iconFadePercent() { return Math.max(0, visualcooldown() / 100); }</span>
+	};
+<span class="nc" id="L323">	public static class SwiftEquipCooldown extends FlavourBuff{</span>
+		public boolean secondUse;
+		public boolean hasSecondUse(){
+<span class="nc" id="L326">			return secondUse;</span>
+		}
+
+<span class="nc" id="L329">		public int icon() { return BuffIndicator.TIME; }</span>
+		public void tintIcon(Image icon) {
+<span class="nc bnc" id="L331" title="All 2 branches missed.">			if (hasSecondUse()) icon.hardlight(0.85f, 0f, 1.0f);</span>
+<span class="nc" id="L332">			else                icon.hardlight(0.35f, 0f, 0.7f);</span>
+<span class="nc" id="L333">		}</span>
+<span class="nc" id="L334">		public float iconFadePercent() { return GameMath.gate(0, visualcooldown() / 20f, 1); }</span>
+
+		private static final String SECOND_USE = &quot;second_use&quot;;
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L339">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L340">			bundle.put(SECOND_USE, secondUse);</span>
+<span class="nc" id="L341">		}</span>
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L344">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L345">			secondUse = bundle.getBoolean(SECOND_USE);</span>
+<span class="nc" id="L346">		}</span>
+	};
+<span class="nc" id="L348">	public static class DeadlyFollowupTracker extends FlavourBuff{</span>
+		public int object;
+<span class="nc" id="L350">		{ type = Buff.buffType.POSITIVE; }</span>
+<span class="nc" id="L351">		public int icon() { return BuffIndicator.INVERT_MARK; }</span>
+<span class="nc" id="L352">		public void tintIcon(Image icon) { icon.hardlight(0.5f, 0f, 1f); }</span>
+<span class="nc" id="L353">		public float iconFadePercent() { return Math.max(0, 1f - (visualcooldown() / 5)); }</span>
+		private static final String OBJECT    = &quot;object&quot;;
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L357">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L358">			bundle.put(OBJECT, object);</span>
+<span class="nc" id="L359">		}</span>
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L362">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L363">			object = bundle.getInt(OBJECT);</span>
+<span class="nc" id="L364">		}</span>
+	}
+<span class="nc" id="L366">	public static class PreciseAssaultTracker extends FlavourBuff{</span>
+<span class="nc" id="L367">		{ type = buffType.POSITIVE; }</span>
+<span class="nc" id="L368">		public int icon() { return BuffIndicator.INVERT_MARK; }</span>
+<span class="nc" id="L369">		public void tintIcon(Image icon) { icon.hardlight(1f, 1f, 0.0f); }</span>
+<span class="nc" id="L370">		public float iconFadePercent() { return Math.max(0, 1f - (visualcooldown() / 5)); }</span>
+	};
+<span class="nc" id="L372">	public static class VariedChargeTracker extends Buff{</span>
+		public Class weapon;
+
+		private static final String WEAPON    = &quot;weapon&quot;;
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L378">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L379">			bundle.put(WEAPON, weapon);</span>
+<span class="nc" id="L380">		}</span>
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L383">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L384">			weapon = bundle.getClass(WEAPON);</span>
+<span class="nc" id="L385">		}</span>
+	}
+<span class="nc" id="L387">	public static class CombinedLethalityAbilityTracker extends FlavourBuff{</span>
+		public MeleeWeapon weapon;
+	};
+<span class="nc" id="L390">	public static class CombinedEnergyAbilityTracker extends FlavourBuff{</span>
+<span class="nc" id="L391">		public boolean monkAbilused = false;</span>
+<span class="nc" id="L392">		public boolean wepAbilUsed = false;</span>
+
+		private static final String MONK_ABIL_USED  = &quot;monk_abil_used&quot;;
+		private static final String WEP_ABIL_USED   = &quot;wep_abil_used&quot;;
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L398">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L399">			bundle.put(MONK_ABIL_USED, monkAbilused);</span>
+<span class="nc" id="L400">			bundle.put(WEP_ABIL_USED, wepAbilUsed);</span>
+<span class="nc" id="L401">		}</span>
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L404">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L405">			monkAbilused = bundle.getBoolean(MONK_ABIL_USED);</span>
+<span class="nc" id="L406">			wepAbilUsed = bundle.getBoolean(WEP_ABIL_USED);</span>
+<span class="nc" id="L407">		}</span>
+	}
+<span class="nc" id="L409">	public static class CounterAbilityTacker extends FlavourBuff{}</span>
+<span class="nc" id="L410">	public static class SatiatedSpellsTracker extends Buff{</span>
+		@Override
+		public int icon() {
+<span class="nc" id="L413">			return BuffIndicator.SPELL_FOOD;</span>
+		}
+	}
+	//used for metamorphed searing light
+<span class="nc" id="L417">	public static class SearingLightCooldown extends FlavourBuff{</span>
+		@Override
+		public int icon() {
+<span class="nc" id="L420">			return BuffIndicator.TIME;</span>
+		}
+<span class="nc" id="L422">		public void tintIcon(Image icon) { icon.hardlight(0f, 0f, 1f); }</span>
+<span class="nc" id="L423">		public float iconFadePercent() { return Math.max(0, visualcooldown() / 20); }</span>
+	}
+
+	int icon;
+	int maxPoints;
+
+	// tiers 1/2/3/4 start at levels 2/7/13/21
+<span class="nc" id="L430">	public static int[] tierLevelThresholds = new int[]{0, 2, 7, 13, 21, 31};</span>
+
+	Talent( int icon ){
+<span class="nc" id="L433">		this(icon, 2);</span>
+<span class="nc" id="L434">	}</span>
+
+<span class="nc" id="L436">	Talent( int icon, int maxPoints ){</span>
+<span class="nc" id="L437">		this.icon = icon;</span>
+<span class="nc" id="L438">		this.maxPoints = maxPoints;</span>
+<span class="nc" id="L439">	}</span>
+
+	public int icon(){
+<span class="nc bnc" id="L442" title="All 2 branches missed.">		if (this == HEROIC_ENERGY){</span>
+<span class="nc bnc" id="L443" title="All 2 branches missed.">			if (Ratmogrify.useRatroicEnergy){</span>
+<span class="nc" id="L444">				return 218;</span>
+			}
+<span class="nc bnc" id="L446" title="All 2 branches missed.">			HeroClass cls = Dungeon.hero != null ? Dungeon.hero.heroClass : GamesInProgress.selectedClass;</span>
+<span class="nc bnc" id="L447" title="All 6 branches missed.">			switch (cls){</span>
+				case WARRIOR: default:
+<span class="nc" id="L449">					return 26;</span>
+				case MAGE:
+<span class="nc" id="L451">					return 58;</span>
+				case ROGUE:
+<span class="nc" id="L453">					return 90;</span>
+				case HUNTRESS:
+<span class="nc" id="L455">					return 122;</span>
+				case DUELIST:
+<span class="nc" id="L457">					return 154;</span>
+				case CLERIC:
+<span class="nc" id="L459">					return 186;</span>
+			}
+		} else {
+<span class="nc" id="L462">			return icon;</span>
+		}
+	}
+
+	public int maxPoints(){
+<span class="nc" id="L467">		return maxPoints;</span>
+	}
+
+	public String title(){
+<span class="nc bnc" id="L471" title="All 4 branches missed.">		if (this == HEROIC_ENERGY &amp;&amp; Ratmogrify.useRatroicEnergy){</span>
+<span class="nc" id="L472">			return Messages.get(this, name() + &quot;.rat_title&quot;);</span>
+		}
+<span class="nc" id="L474">		return Messages.get(this, name() + &quot;.title&quot;);</span>
+	}
+
+	public final String desc(){
+<span class="nc" id="L478">		return desc(false);</span>
+	}
+
+	public String desc(boolean metamorphed){
+<span class="nc bnc" id="L482" title="All 2 branches missed.">		if (metamorphed){</span>
+<span class="nc" id="L483">			String metaDesc = Messages.get(this, name() + &quot;.meta_desc&quot;);</span>
+<span class="nc bnc" id="L484" title="All 2 branches missed.">			if (!metaDesc.equals(Messages.NO_TEXT_FOUND)){</span>
+<span class="nc" id="L485">				return Messages.get(this, name() + &quot;.desc&quot;) + &quot;\n\n&quot; + metaDesc;</span>
+			}
+		}
+<span class="nc" id="L488">		return Messages.get(this, name() + &quot;.desc&quot;);</span>
+	}
+
+	public static void onTalentUpgraded( Hero hero, Talent talent ){
+		//for metamorphosis
+<span class="nc bnc" id="L493" title="All 4 branches missed.">		if (talent == IRON_WILL &amp;&amp; hero.heroClass != HeroClass.WARRIOR){</span>
+<span class="nc" id="L494">			Buff.affect(hero, BrokenSeal.WarriorShield.class);</span>
+		}
+
+<span class="nc bnc" id="L497" title="All 4 branches missed.">		if (talent == VETERANS_INTUITION &amp;&amp; hero.pointsInTalent(VETERANS_INTUITION) == 2){</span>
+<span class="nc bnc" id="L498" title="All 4 branches missed.">			if (hero.belongings.armor() != null &amp;&amp; !ShardOfOblivion.passiveIDDisabled())  {</span>
+<span class="nc" id="L499">				hero.belongings.armor.identify();</span>
+			}
+		}
+<span class="nc bnc" id="L502" title="All 4 branches missed.">		if (talent == THIEFS_INTUITION &amp;&amp; hero.pointsInTalent(THIEFS_INTUITION) == 2){</span>
+<span class="nc bnc" id="L503" title="All 4 branches missed.">			if (hero.belongings.ring instanceof Ring &amp;&amp; !ShardOfOblivion.passiveIDDisabled()) {</span>
+<span class="nc" id="L504">				hero.belongings.ring.identify();</span>
+			}
+<span class="nc bnc" id="L506" title="All 4 branches missed.">			if (hero.belongings.misc instanceof Ring &amp;&amp; !ShardOfOblivion.passiveIDDisabled()) {</span>
+<span class="nc" id="L507">				hero.belongings.misc.identify();</span>
+			}
+<span class="nc bnc" id="L509" title="All 2 branches missed.">			for (Item item : Dungeon.hero.belongings){</span>
+<span class="nc bnc" id="L510" title="All 2 branches missed.">				if (item instanceof Ring){</span>
+<span class="nc" id="L511">					((Ring) item).setKnown();</span>
+				}
+<span class="nc" id="L513">			}</span>
+		}
+<span class="nc bnc" id="L515" title="All 4 branches missed.">		if (talent == THIEFS_INTUITION &amp;&amp; hero.pointsInTalent(THIEFS_INTUITION) == 1){</span>
+<span class="nc bnc" id="L516" title="All 2 branches missed.">			if (hero.belongings.ring instanceof Ring) hero.belongings.ring.setKnown();</span>
+<span class="nc bnc" id="L517" title="All 2 branches missed.">			if (hero.belongings.misc instanceof Ring) ((Ring) hero.belongings.misc).setKnown();</span>
+		}
+<span class="nc bnc" id="L519" title="All 4 branches missed.">		if (talent == ADVENTURERS_INTUITION &amp;&amp; hero.pointsInTalent(ADVENTURERS_INTUITION) == 2){</span>
+<span class="nc bnc" id="L520" title="All 4 branches missed.">			if (hero.belongings.weapon() != null &amp;&amp; !ShardOfOblivion.passiveIDDisabled()){</span>
+<span class="nc" id="L521">				hero.belongings.weapon().identify();</span>
+			}
+		}
+
+<span class="nc bnc" id="L525" title="All 4 branches missed.">		if (talent == PROTECTIVE_SHADOWS &amp;&amp; hero.invisible &gt; 0){</span>
+<span class="nc" id="L526">			Buff.affect(hero, Talent.ProtectiveShadowsTracker.class);</span>
+		}
+
+<span class="nc bnc" id="L529" title="All 4 branches missed.">		if (talent == LIGHT_CLOAK &amp;&amp; hero.heroClass == HeroClass.ROGUE){</span>
+<span class="nc bnc" id="L530" title="All 2 branches missed.">			for (Item item : Dungeon.hero.belongings.backpack){</span>
+<span class="nc bnc" id="L531" title="All 2 branches missed.">				if (item instanceof CloakOfShadows){</span>
+<span class="nc bnc" id="L532" title="All 4 branches missed.">					if (!hero.belongings.lostInventory() || item.keptThroughLostInventory()) {</span>
+<span class="nc" id="L533">						((CloakOfShadows) item).activate(Dungeon.hero);</span>
+					}
+				}
+<span class="nc" id="L536">			}</span>
+		}
+
+<span class="nc bnc" id="L539" title="All 6 branches missed.">		if (talent == HEIGHTENED_SENSES || talent == FARSIGHT || talent == DIVINE_SENSE){</span>
+<span class="nc" id="L540">			Dungeon.observe();</span>
+		}
+
+<span class="nc bnc" id="L543" title="All 8 branches missed.">		if (talent == TWIN_UPGRADES || talent == DESPERATE_POWER</span>
+				|| talent == STRONGMAN || talent == DURABLE_PROJECTILES){
+<span class="nc" id="L545">			Item.updateQuickslot();</span>
+		}
+
+<span class="nc bnc" id="L548" title="All 4 branches missed.">		if (talent == UNENCUMBERED_SPIRIT &amp;&amp; hero.pointsInTalent(talent) == 3){</span>
+<span class="nc" id="L549">			Item toGive = new ClothArmor().identify();</span>
+<span class="nc bnc" id="L550" title="All 2 branches missed.">			if (!toGive.collect()){</span>
+<span class="nc" id="L551">				Dungeon.level.drop(toGive, hero.pos).sprite.drop();</span>
+			}
+<span class="nc" id="L553">			toGive = new Gloves().identify();</span>
+<span class="nc bnc" id="L554" title="All 2 branches missed.">			if (!toGive.collect()){</span>
+<span class="nc" id="L555">				Dungeon.level.drop(toGive, hero.pos).sprite.drop();</span>
+			}
+		}
+
+<span class="nc bnc" id="L559" title="All 4 branches missed.">		if (talent == LIGHT_READING &amp;&amp; hero.heroClass == HeroClass.CLERIC){</span>
+<span class="nc bnc" id="L560" title="All 2 branches missed.">			for (Item item : Dungeon.hero.belongings.backpack){</span>
+<span class="nc bnc" id="L561" title="All 2 branches missed.">				if (item instanceof HolyTome){</span>
+<span class="nc bnc" id="L562" title="All 4 branches missed.">					if (!hero.belongings.lostInventory() || item.keptThroughLostInventory()) {</span>
+<span class="nc" id="L563">						((HolyTome) item).activate(Dungeon.hero);</span>
+					}
+				}
+<span class="nc" id="L566">			}</span>
+		}
+
+		//if we happen to have spirit form applied with a ring of might
+<span class="nc bnc" id="L570" title="All 2 branches missed.">		if (talent == SPIRIT_FORM){</span>
+<span class="nc" id="L571">			Dungeon.hero.updateHT(false);</span>
+		}
+<span class="nc" id="L573">	}</span>
+
+<span class="nc" id="L575">	public static class CachedRationsDropped extends CounterBuff{{revivePersists = true;}};</span>
+<span class="nc" id="L576">	public static class NatureBerriesDropped extends CounterBuff{{revivePersists = true;}};</span>
+
+	public static void onFoodEaten( Hero hero, float foodVal, Item foodSource ){
+<span class="nc bnc" id="L579" title="All 2 branches missed.">		if (hero.hasTalent(HEARTY_MEAL)){</span>
+			//3/5 HP healed, when hero is below 30% health
+<span class="nc bnc" id="L581" title="All 2 branches missed.">			if (hero.HP/(float)hero.HT &lt;= 0.3f) {</span>
+<span class="nc" id="L582">				int healing = 1 + 2 * hero.pointsInTalent(HEARTY_MEAL);</span>
+<span class="nc" id="L583">				hero.HP = Math.min(hero.HP + healing, hero.HT);</span>
+<span class="nc" id="L584">				hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(healing), FloatingText.HEALING);</span>
+
+			}
+		}
+<span class="nc bnc" id="L588" title="All 2 branches missed.">		if (hero.hasTalent(IRON_STOMACH)){</span>
+<span class="nc bnc" id="L589" title="All 2 branches missed.">			if (hero.cooldown() &gt; 0) {</span>
+<span class="nc" id="L590">				Buff.affect(hero, WarriorFoodImmunity.class, hero.cooldown());</span>
+			}
+		}
+<span class="nc bnc" id="L593" title="All 2 branches missed.">		if (hero.hasTalent(EMPOWERING_MEAL)){</span>
+			//2/3 bonus wand damage for next 3 zaps
+<span class="nc" id="L595">			Buff.affect( hero, WandEmpower.class).set(1 + hero.pointsInTalent(EMPOWERING_MEAL), 3);</span>
+<span class="nc" id="L596">			ScrollOfRecharging.charge( hero );</span>
+		}
+<span class="nc bnc" id="L598" title="All 2 branches missed.">		if (hero.hasTalent(ENERGIZING_MEAL)){</span>
+			//5/8 turns of recharging
+<span class="nc" id="L600">			Buff.prolong( hero, Recharging.class, 2 + 3*(hero.pointsInTalent(ENERGIZING_MEAL)) );</span>
+<span class="nc" id="L601">			ScrollOfRecharging.charge( hero );</span>
+<span class="nc" id="L602">			SpellSprite.show(hero, SpellSprite.CHARGE);</span>
+		}
+<span class="nc bnc" id="L604" title="All 2 branches missed.">		if (hero.hasTalent(MYSTICAL_MEAL)){</span>
+			//3/5 turns of recharging
+<span class="nc" id="L606">			ArtifactRecharge buff = Buff.affect( hero, ArtifactRecharge.class);</span>
+<span class="nc bnc" id="L607" title="All 2 branches missed.">			if (buff.left() &lt; 1 + 2*(hero.pointsInTalent(MYSTICAL_MEAL))){</span>
+<span class="nc" id="L608">				Buff.affect( hero, ArtifactRecharge.class).set(1 + 2*(hero.pointsInTalent(MYSTICAL_MEAL))).ignoreHornOfPlenty = foodSource instanceof HornOfPlenty;</span>
+			}
+<span class="nc" id="L610">			ScrollOfRecharging.charge( hero );</span>
+<span class="nc" id="L611">			SpellSprite.show(hero, SpellSprite.CHARGE, 0, 1, 1);</span>
+		}
+<span class="nc bnc" id="L613" title="All 2 branches missed.">		if (hero.hasTalent(INVIGORATING_MEAL)){</span>
+			//effectively 1/2 turns of haste
+<span class="nc" id="L615">			Buff.prolong( hero, Haste.class, 0.67f+hero.pointsInTalent(INVIGORATING_MEAL));</span>
+		}
+<span class="nc bnc" id="L617" title="All 2 branches missed.">		if (hero.hasTalent(STRENGTHENING_MEAL)){</span>
+			//3 bonus physical damage for next 2/3 attacks
+<span class="nc" id="L619">			Buff.affect( hero, PhysicalEmpower.class).set(3, 1 + hero.pointsInTalent(STRENGTHENING_MEAL));</span>
+		}
+<span class="nc bnc" id="L621" title="All 2 branches missed.">		if (hero.hasTalent(FOCUSED_MEAL)){</span>
+<span class="nc bnc" id="L622" title="All 2 branches missed.">			if (hero.heroClass == HeroClass.DUELIST){</span>
+				//0.67/1 charge for the duelist
+<span class="nc" id="L624">				Buff.affect( hero, MeleeWeapon.Charger.class ).gainCharge((hero.pointsInTalent(FOCUSED_MEAL)+1)/3f);</span>
+<span class="nc" id="L625">				ScrollOfRecharging.charge( hero );</span>
+			} else {
+				// lvl/3 / lvl/2 bonus dmg on next hit for other classes
+<span class="nc" id="L628">				Buff.affect( hero, PhysicalEmpower.class).set(Math.round(hero.lvl / (4f - hero.pointsInTalent(FOCUSED_MEAL))), 1);</span>
+			}
+		}
+<span class="nc bnc" id="L631" title="All 2 branches missed.">		if (hero.hasTalent(SATIATED_SPELLS)){</span>
+<span class="nc bnc" id="L632" title="All 2 branches missed.">			if (hero.heroClass == HeroClass.CLERIC) {</span>
+<span class="nc" id="L633">				Buff.affect(hero, SatiatedSpellsTracker.class);</span>
+			} else {
+				//3/5 shielding, delayed up to 10 turns
+<span class="nc" id="L636">				int amount = 1 + 2*hero.pointsInTalent(SATIATED_SPELLS);</span>
+<span class="nc" id="L637">				Barrier b = Buff.affect(hero, Barrier.class);</span>
+<span class="nc bnc" id="L638" title="All 2 branches missed.">				if (b.shielding() &lt;= amount){</span>
+<span class="nc" id="L639">					b.setShield(amount);</span>
+<span class="nc" id="L640">					b.delay(Math.max(10-b.cooldown(), 0));</span>
+				}
+			}
+		}
+<span class="nc bnc" id="L644" title="All 2 branches missed.">		if (hero.hasTalent(ENLIGHTENING_MEAL)){</span>
+<span class="nc bnc" id="L645" title="All 2 branches missed.">			if (hero.heroClass == HeroClass.CLERIC) {</span>
+<span class="nc" id="L646">				HolyTome tome = hero.belongings.getItem(HolyTome.class);</span>
+<span class="nc bnc" id="L647" title="All 2 branches missed.">				if (tome != null) {</span>
+<span class="nc" id="L648">					tome.directCharge( 0.5f * (1+hero.pointsInTalent(ENLIGHTENING_MEAL)));</span>
+<span class="nc" id="L649">					ScrollOfRecharging.charge(hero);</span>
+				}
+<span class="nc" id="L651">			} else {</span>
+				//2/3 turns of recharging
+<span class="nc" id="L653">				ArtifactRecharge buff = Buff.affect( hero, ArtifactRecharge.class);</span>
+<span class="nc bnc" id="L654" title="All 2 branches missed.">				if (buff.left() &lt; 1 + (hero.pointsInTalent(ENLIGHTENING_MEAL))){</span>
+<span class="nc" id="L655">					Buff.affect( hero, ArtifactRecharge.class).set(1 + (hero.pointsInTalent(ENLIGHTENING_MEAL))).ignoreHornOfPlenty = foodSource instanceof HornOfPlenty;</span>
+				}
+<span class="nc" id="L657">				Buff.prolong( hero, Recharging.class, 1 + (hero.pointsInTalent(ENLIGHTENING_MEAL)) );</span>
+<span class="nc" id="L658">				ScrollOfRecharging.charge( hero );</span>
+<span class="nc" id="L659">				SpellSprite.show(hero, SpellSprite.CHARGE);</span>
+			}
+		}
+<span class="nc" id="L662">	}</span>
+
+<span class="nc" id="L664">	public static class WarriorFoodImmunity extends FlavourBuff{</span>
+<span class="nc" id="L665">		{ actPriority = HERO_PRIO+1; }</span>
+	}
+
+	public static float itemIDSpeedFactor( Hero hero, Item item ){
+		// 1.75x/2.5x speed with Huntress talent
+<span class="nc" id="L670">		float factor = 1f + 0.75f*hero.pointsInTalent(SURVIVALISTS_INTUITION);</span>
+
+		// Affected by both Warrior(1.75x/2.5x) and Duelist(2.5x/inst.) talents
+<span class="nc bnc" id="L673" title="All 2 branches missed.">		if (item instanceof MeleeWeapon){</span>
+<span class="nc" id="L674">			factor *= 1f + 1.5f*hero.pointsInTalent(ADVENTURERS_INTUITION); //instant at +2 (see onItemEquipped)</span>
+<span class="nc" id="L675">			factor *= 1f + 0.75f*hero.pointsInTalent(VETERANS_INTUITION);</span>
+		}
+		// Affected by both Warrior(2.5x/inst.) and Duelist(1.75x/2.5x) talents
+<span class="nc bnc" id="L678" title="All 2 branches missed.">		if (item instanceof Armor){</span>
+<span class="nc" id="L679">			factor *= 1f + 0.75f*hero.pointsInTalent(ADVENTURERS_INTUITION);</span>
+<span class="nc" id="L680">			factor *= 1f + hero.pointsInTalent(VETERANS_INTUITION); //instant at +2 (see onItemEquipped)</span>
+		}
+		// 3x/instant for Mage (see Wand.wandUsed())
+<span class="nc bnc" id="L683" title="All 2 branches missed.">		if (item instanceof Wand){</span>
+<span class="nc" id="L684">			factor *= 1f + 2.0f*hero.pointsInTalent(SCHOLARS_INTUITION);</span>
+		}
+		// 2x/instant for Rogue (see onItemEqupped), also id's type on equip/on pickup
+<span class="nc bnc" id="L687" title="All 2 branches missed.">		if (item instanceof Ring){</span>
+<span class="nc" id="L688">			factor *= 1f + hero.pointsInTalent(THIEFS_INTUITION);</span>
+		}
+<span class="nc" id="L690">		return factor;</span>
+	}
+
+	public static void onPotionUsed( Hero hero, int cell, float factor ){
+<span class="nc bnc" id="L694" title="All 2 branches missed.">		if (hero.hasTalent(LIQUID_WILLPOWER)){</span>
+<span class="nc bnc" id="L695" title="All 2 branches missed.">			if (hero.heroClass == HeroClass.WARRIOR) {</span>
+<span class="nc" id="L696">				BrokenSeal.WarriorShield shield = hero.buff(BrokenSeal.WarriorShield.class);</span>
+<span class="nc bnc" id="L697" title="All 2 branches missed.">				if (shield != null) {</span>
+					// 50/75% of total shield
+<span class="nc" id="L699">					int shieldToGive = Math.round(factor * shield.maxShield() * 0.25f * (1 + hero.pointsInTalent(LIQUID_WILLPOWER)));</span>
+<span class="nc" id="L700">					hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shieldToGive), FloatingText.SHIELDING);</span>
+<span class="nc" id="L701">					shield.supercharge(shieldToGive);</span>
+				}
+<span class="nc" id="L703">			} else {</span>
+				// 5/7.5% of max HP
+<span class="nc" id="L705">				int shieldToGive = Math.round( factor * hero.HT * (0.025f * (1+hero.pointsInTalent(LIQUID_WILLPOWER))));</span>
+<span class="nc" id="L706">				hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shieldToGive), FloatingText.SHIELDING);</span>
+<span class="nc" id="L707">				Buff.affect(hero, Barrier.class).setShield(shieldToGive);</span>
+			}
+		}
+<span class="nc bnc" id="L710" title="All 2 branches missed.">		if (hero.hasTalent(LIQUID_NATURE)){</span>
+<span class="nc" id="L711">			ArrayList&lt;Integer&gt; grassCells = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L712" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS9){</span>
+<span class="nc" id="L713">				grassCells.add(cell+i);</span>
+			}
+<span class="nc" id="L715">			Random.shuffle(grassCells);</span>
+<span class="nc bnc" id="L716" title="All 2 branches missed.">			for (int grassCell : grassCells){</span>
+<span class="nc" id="L717">				Char ch = Actor.findChar(grassCell);</span>
+<span class="nc bnc" id="L718" title="All 4 branches missed.">				if (ch != null &amp;&amp; ch.alignment == Char.Alignment.ENEMY){</span>
+					//1/2 turns of roots
+<span class="nc" id="L720">					Buff.affect(ch, Roots.class, factor * hero.pointsInTalent(LIQUID_NATURE));</span>
+				}
+<span class="nc bnc" id="L722" title="All 6 branches missed.">				if (Dungeon.level.map[grassCell] == Terrain.EMPTY ||</span>
+						Dungeon.level.map[grassCell] == Terrain.EMBERS ||
+						Dungeon.level.map[grassCell] == Terrain.EMPTY_DECO){
+<span class="nc" id="L725">					Level.set(grassCell, Terrain.GRASS);</span>
+<span class="nc" id="L726">					GameScene.updateMap(grassCell);</span>
+				}
+<span class="nc" id="L728">				CellEmitter.get(grassCell).burst(LeafParticle.LEVEL_SPECIFIC, 4);</span>
+<span class="nc" id="L729">			}</span>
+			// 4/6 cells total
+<span class="nc" id="L731">			int totalGrassCells = (int) (factor * (2 + 2 * hero.pointsInTalent(LIQUID_NATURE)));</span>
+<span class="nc bnc" id="L732" title="All 2 branches missed.">			while (grassCells.size() &gt; totalGrassCells){</span>
+<span class="nc" id="L733">				grassCells.remove(0);</span>
+			}
+<span class="nc bnc" id="L735" title="All 2 branches missed.">			for (int grassCell : grassCells){</span>
+<span class="nc" id="L736">				int t = Dungeon.level.map[grassCell];</span>
+<span class="nc bnc" id="L737" title="All 10 branches missed.">				if ((t == Terrain.EMPTY || t == Terrain.EMPTY_DECO || t == Terrain.EMBERS</span>
+						|| t == Terrain.GRASS || t == Terrain.FURROWED_GRASS)
+<span class="nc bnc" id="L739" title="All 2 branches missed.">						&amp;&amp; Dungeon.level.plants.get(grassCell) == null){</span>
+<span class="nc" id="L740">					Level.set(grassCell, Terrain.HIGH_GRASS);</span>
+<span class="nc" id="L741">					GameScene.updateMap(grassCell);</span>
+				}
+<span class="nc" id="L743">			}</span>
+<span class="nc" id="L744">			Dungeon.observe();</span>
+		}
+<span class="nc bnc" id="L746" title="All 2 branches missed.">		if (hero.hasTalent(LIQUID_AGILITY)){</span>
+<span class="nc" id="L747">			Buff.prolong(hero, LiquidAgilEVATracker.class, hero.cooldown() + Math.max(0, factor-1));</span>
+<span class="nc bnc" id="L748" title="All 2 branches missed.">			if (factor &gt;= 0.5f){</span>
+<span class="nc" id="L749">				Buff.prolong(hero, LiquidAgilACCTracker.class, 5f).uses = Math.round(factor);</span>
+			}
+		}
+<span class="nc" id="L752">	}</span>
+
+	public static void onScrollUsed( Hero hero, int pos, float factor, Class&lt;?extends Item&gt; cls ){
+<span class="nc bnc" id="L755" title="All 2 branches missed.">		if (hero.hasTalent(INSCRIBED_POWER)){</span>
+			// 2/3 empowered wand zaps
+<span class="nc" id="L757">			Buff.affect(hero, ScrollEmpower.class).reset((int) (factor * (1 + hero.pointsInTalent(INSCRIBED_POWER))));</span>
+		}
+<span class="nc bnc" id="L759" title="All 2 branches missed.">		if (hero.hasTalent(INSCRIBED_STEALTH)){</span>
+			// 3/5 turns of stealth
+<span class="nc" id="L761">			Buff.affect(hero, Invisibility.class, factor * (1 + 2*hero.pointsInTalent(INSCRIBED_STEALTH)));</span>
+<span class="nc" id="L762">			Sample.INSTANCE.play( Assets.Sounds.MELD );</span>
+		}
+<span class="nc bnc" id="L764" title="All 6 branches missed.">		if (hero.hasTalent(RECALL_INSCRIPTION) &amp;&amp; Scroll.class.isAssignableFrom(cls) &amp;&amp; cls != ScrollOfUpgrade.class){</span>
+<span class="nc bnc" id="L765" title="All 2 branches missed.">			if (hero.heroClass == HeroClass.CLERIC){</span>
+<span class="nc bnc" id="L766" title="All 2 branches missed.">				Buff.prolong(hero, RecallInscription.UsedItemTracker.class, hero.pointsInTalent(RECALL_INSCRIPTION) == 2 ? 300 : 10).item = cls;</span>
+			} else {
+				// 10/15%
+<span class="nc bnc" id="L769" title="All 2 branches missed.">				if (Random.Int(20) &lt; 1 + hero.pointsInTalent(RECALL_INSCRIPTION)){</span>
+<span class="nc" id="L770">					Reflection.newInstance(cls).collect();</span>
+<span class="nc" id="L771">					GLog.p(&quot;refunded!&quot;);</span>
+				}
+			}
+		}
+<span class="nc" id="L775">	}</span>
+
+	public static void onRunestoneUsed( Hero hero, int pos, Class&lt;?extends Item&gt; cls ){
+<span class="nc bnc" id="L778" title="All 4 branches missed.">		if (hero.hasTalent(RECALL_INSCRIPTION) &amp;&amp; Runestone.class.isAssignableFrom(cls)){</span>
+<span class="nc bnc" id="L779" title="All 2 branches missed.">			if (hero.heroClass == HeroClass.CLERIC){</span>
+<span class="nc bnc" id="L780" title="All 2 branches missed.">				Buff.prolong(hero, RecallInscription.UsedItemTracker.class, hero.pointsInTalent(RECALL_INSCRIPTION) == 2 ? 300 : 10).item = cls;</span>
+			} else {
+
+				//don't trigger on 1st intuition use
+<span class="nc bnc" id="L784" title="All 4 branches missed.">				if (cls.equals(StoneOfIntuition.class) &amp;&amp; hero.buff(StoneOfIntuition.IntuitionUseTracker.class) != null){</span>
+<span class="nc" id="L785">					return;</span>
+				}
+				// 10/15%
+<span class="nc bnc" id="L788" title="All 2 branches missed.">				if (Random.Int(20) &lt; 1 + hero.pointsInTalent(RECALL_INSCRIPTION)){</span>
+<span class="nc" id="L789">					Reflection.newInstance(cls).collect();</span>
+<span class="nc" id="L790">					GLog.p(&quot;refunded!&quot;);</span>
+				}
+			}
+		}
+<span class="nc" id="L794">	}</span>
+
+	public static void onArtifactUsed( Hero hero ){
+<span class="nc bnc" id="L797" title="All 2 branches missed.">		if (hero.hasTalent(ENHANCED_RINGS)){</span>
+<span class="nc" id="L798">			Buff.prolong(hero, EnhancedRings.class, 3f*hero.pointsInTalent(ENHANCED_RINGS));</span>
+		}
+
+<span class="nc bnc" id="L801" title="All 2 branches missed.">		if (Dungeon.hero.heroClass != HeroClass.CLERIC</span>
+<span class="nc bnc" id="L802" title="All 2 branches missed.">				&amp;&amp; Dungeon.hero.hasTalent(Talent.DIVINE_SENSE)){</span>
+<span class="nc" id="L803">			Buff.prolong(Dungeon.hero, DivineSense.DivineSenseTracker.class, Dungeon.hero.cooldown()+1);</span>
+		}
+
+		// 10/20/30%
+<span class="nc bnc" id="L807" title="All 2 branches missed.">		if (Dungeon.hero.heroClass != HeroClass.CLERIC</span>
+<span class="nc bnc" id="L808" title="All 2 branches missed.">				&amp;&amp; Dungeon.hero.hasTalent(Talent.CLEANSE)</span>
+<span class="nc bnc" id="L809" title="All 2 branches missed.">				&amp;&amp; Random.Int(10) &lt; Dungeon.hero.pointsInTalent(Talent.CLEANSE)){</span>
+<span class="nc" id="L810">			boolean removed = false;</span>
+<span class="nc bnc" id="L811" title="All 2 branches missed.">			for (Buff b : Dungeon.hero.buffs()) {</span>
+<span class="nc bnc" id="L812" title="All 2 branches missed.">				if (b.type == Buff.buffType.NEGATIVE) {</span>
+<span class="nc" id="L813">					b.detach();</span>
+<span class="nc" id="L814">					removed = true;</span>
+				}
+<span class="nc" id="L816">			}</span>
+<span class="nc bnc" id="L817" title="All 4 branches missed.">			if (removed &amp;&amp; Dungeon.hero.sprite != null) {</span>
+<span class="nc" id="L818">				new Flare( 6, 32 ).color(0xFF4CD2, true).show( Dungeon.hero.sprite, 2f );</span>
+			}
+		}
+<span class="nc" id="L821">	}</span>
+
+	public static void onItemEquipped( Hero hero, Item item ){
+<span class="nc" id="L824">		boolean identify = false;</span>
+<span class="nc bnc" id="L825" title="All 4 branches missed.">		if (hero.pointsInTalent(VETERANS_INTUITION) == 2 &amp;&amp; item instanceof Armor){</span>
+<span class="nc" id="L826">			identify = true;</span>
+		}
+<span class="nc bnc" id="L828" title="All 4 branches missed.">		if (hero.hasTalent(THIEFS_INTUITION) &amp;&amp; item instanceof Ring){</span>
+<span class="nc bnc" id="L829" title="All 2 branches missed.">			if (hero.pointsInTalent(THIEFS_INTUITION) == 2){</span>
+<span class="nc" id="L830">				identify = true;</span>
+			}
+<span class="nc" id="L832">			((Ring) item).setKnown();</span>
+		}
+<span class="nc bnc" id="L834" title="All 4 branches missed.">		if (hero.pointsInTalent(ADVENTURERS_INTUITION) == 2 &amp;&amp; item instanceof Weapon){</span>
+<span class="nc" id="L835">			identify = true;</span>
+		}
+
+<span class="nc bnc" id="L838" title="All 4 branches missed.">		if (identify &amp;&amp; !ShardOfOblivion.passiveIDDisabled()){</span>
+<span class="nc" id="L839">			item.identify();</span>
+		}
+<span class="nc" id="L841">	}</span>
+
+	public static void onItemCollected( Hero hero, Item item ){
+<span class="nc bnc" id="L844" title="All 2 branches missed.">		if (hero.pointsInTalent(THIEFS_INTUITION) == 2){</span>
+<span class="nc bnc" id="L845" title="All 2 branches missed.">			if (item instanceof Ring) ((Ring) item).setKnown();</span>
+		}
+<span class="nc" id="L847">	}</span>
+
+	public static int onAttackProc( Hero hero, Char enemy, int dmg ){
+
+<span class="nc bnc" id="L851" title="All 2 branches missed.">		if (hero.hasTalent(Talent.PROVOKED_ANGER)</span>
+<span class="nc bnc" id="L852" title="All 2 branches missed.">			&amp;&amp; hero.buff(ProvokedAngerTracker.class) != null){</span>
+<span class="nc" id="L853">			dmg += 1 + hero.pointsInTalent(Talent.PROVOKED_ANGER);</span>
+<span class="nc" id="L854">			hero.buff(ProvokedAngerTracker.class).detach();</span>
+		}
+
+<span class="nc bnc" id="L857" title="All 2 branches missed.">		if (hero.hasTalent(Talent.LINGERING_MAGIC)</span>
+<span class="nc bnc" id="L858" title="All 2 branches missed.">				&amp;&amp; hero.buff(LingeringMagicTracker.class) != null){</span>
+<span class="nc" id="L859">			dmg += Random.IntRange(hero.pointsInTalent(Talent.LINGERING_MAGIC) , 2);</span>
+<span class="nc" id="L860">			hero.buff(LingeringMagicTracker.class).detach();</span>
+		}
+
+<span class="nc bnc" id="L863" title="All 4 branches missed.">		if (hero.hasTalent(Talent.SUCKER_PUNCH)</span>
+<span class="nc bnc" id="L864" title="All 2 branches missed.">				&amp;&amp; enemy instanceof Mob &amp;&amp; ((Mob) enemy).surprisedBy(hero)</span>
+<span class="nc bnc" id="L865" title="All 2 branches missed.">				&amp;&amp; enemy.buff(SuckerPunchTracker.class) == null){</span>
+<span class="nc" id="L866">			dmg += Random.IntRange(hero.pointsInTalent(Talent.SUCKER_PUNCH) , 2);</span>
+<span class="nc" id="L867">			Buff.affect(enemy, SuckerPunchTracker.class);</span>
+		}
+
+<span class="nc bnc" id="L870" title="All 6 branches missed.">		if (hero.hasTalent(Talent.FOLLOWUP_STRIKE) &amp;&amp; enemy.isAlive() &amp;&amp; enemy.alignment == Char.Alignment.ENEMY) {</span>
+<span class="nc bnc" id="L871" title="All 2 branches missed.">			if (hero.belongings.attackingWeapon() instanceof MissileWeapon) {</span>
+<span class="nc" id="L872">				Buff.prolong(hero, FollowupStrikeTracker.class, 5f).object = enemy.id();</span>
+<span class="nc bnc" id="L873" title="All 2 branches missed.">			} else if (hero.buff(FollowupStrikeTracker.class) != null</span>
+<span class="nc bnc" id="L874" title="All 2 branches missed.">					&amp;&amp; hero.buff(FollowupStrikeTracker.class).object == enemy.id()){</span>
+<span class="nc" id="L875">				dmg += 1 + hero.pointsInTalent(FOLLOWUP_STRIKE);</span>
+<span class="nc" id="L876">				hero.buff(FollowupStrikeTracker.class).detach();</span>
+			}
+		}
+
+<span class="nc bnc" id="L880" title="All 2 branches missed.">		if (hero.buff(Talent.SpiritBladesTracker.class) != null</span>
+<span class="nc bnc" id="L881" title="All 2 branches missed.">				&amp;&amp; Random.Int(10) &lt; 3*hero.pointsInTalent(Talent.SPIRIT_BLADES)){</span>
+<span class="nc" id="L882">			SpiritBow bow = hero.belongings.getItem(SpiritBow.class);</span>
+<span class="nc bnc" id="L883" title="All 2 branches missed.">			if (bow != null) dmg = bow.proc( hero, enemy, dmg );</span>
+<span class="nc" id="L884">			hero.buff(Talent.SpiritBladesTracker.class).detach();</span>
+		}
+
+<span class="nc bnc" id="L887" title="All 2 branches missed.">		if (hero.hasTalent(PATIENT_STRIKE)){</span>
+<span class="nc bnc" id="L888" title="All 2 branches missed.">			if (hero.buff(PatientStrikeTracker.class) != null</span>
+<span class="nc bnc" id="L889" title="All 2 branches missed.">					&amp;&amp; !(hero.belongings.attackingWeapon() instanceof MissileWeapon)){</span>
+<span class="nc" id="L890">				hero.buff(PatientStrikeTracker.class).detach();</span>
+<span class="nc" id="L891">				dmg += Random.IntRange(hero.pointsInTalent(Talent.PATIENT_STRIKE), 2);</span>
+			}
+		}
+
+<span class="nc bnc" id="L895" title="All 4 branches missed.">		if (hero.hasTalent(DEADLY_FOLLOWUP) &amp;&amp; enemy.alignment == Char.Alignment.ENEMY) {</span>
+<span class="nc bnc" id="L896" title="All 2 branches missed.">			if (hero.belongings.attackingWeapon() instanceof MissileWeapon) {</span>
+<span class="nc bnc" id="L897" title="All 2 branches missed.">				if (!(hero.belongings.attackingWeapon() instanceof SpiritBow.SpiritArrow)) {</span>
+<span class="nc" id="L898">					Buff.prolong(hero, DeadlyFollowupTracker.class, 5f).object = enemy.id();</span>
+				}
+<span class="nc bnc" id="L900" title="All 2 branches missed.">			} else if (hero.buff(DeadlyFollowupTracker.class) != null</span>
+<span class="nc bnc" id="L901" title="All 2 branches missed.">					&amp;&amp; hero.buff(DeadlyFollowupTracker.class).object == enemy.id()){</span>
+<span class="nc" id="L902">				dmg = Math.round(dmg * (1.0f + .1f*hero.pointsInTalent(DEADLY_FOLLOWUP)));</span>
+			}
+		}
+
+<span class="nc" id="L906">		return dmg;</span>
+	}
+
+<span class="nc" id="L909">	public static class ProvokedAngerTracker extends FlavourBuff{</span>
+<span class="nc" id="L910">		{ type = Buff.buffType.POSITIVE; }</span>
+<span class="nc" id="L911">		public int icon() { return BuffIndicator.WEAPON; }</span>
+<span class="nc" id="L912">		public void tintIcon(Image icon) { icon.hardlight(1.43f, 1.43f, 1.43f); }</span>
+<span class="nc" id="L913">		public float iconFadePercent() { return Math.max(0, 1f - (visualcooldown() / 5)); }</span>
+	}
+<span class="nc" id="L915">	public static class LingeringMagicTracker extends FlavourBuff{</span>
+<span class="nc" id="L916">		{ type = Buff.buffType.POSITIVE; }</span>
+<span class="nc" id="L917">		public int icon() { return BuffIndicator.WEAPON; }</span>
+<span class="nc" id="L918">		public void tintIcon(Image icon) { icon.hardlight(1.43f, 1.43f, 0f); }</span>
+<span class="nc" id="L919">		public float iconFadePercent() { return Math.max(0, 1f - (visualcooldown() / 5)); }</span>
+	}
+<span class="nc" id="L921">	public static class SuckerPunchTracker extends Buff{};</span>
+<span class="nc" id="L922">	public static class FollowupStrikeTracker extends FlavourBuff{</span>
+		public int object;
+<span class="nc" id="L924">		{ type = Buff.buffType.POSITIVE; }</span>
+<span class="nc" id="L925">		public int icon() { return BuffIndicator.INVERT_MARK; }</span>
+<span class="nc" id="L926">		public void tintIcon(Image icon) { icon.hardlight(0f, 0.75f, 1f); }</span>
+<span class="nc" id="L927">		public float iconFadePercent() { return Math.max(0, 1f - (visualcooldown() / 5)); }</span>
+		private static final String OBJECT    = &quot;object&quot;;
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L931">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L932">			bundle.put(OBJECT, object);</span>
+<span class="nc" id="L933">		}</span>
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L936">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L937">			object = bundle.getInt(OBJECT);</span>
+<span class="nc" id="L938">		}</span>
+	};
+
+	public static final int MAX_TALENT_TIERS = 4;
+
+	public static void initClassTalents( Hero hero ){
+<span class="nc" id="L944">		initClassTalents( hero.heroClass, hero.talents, hero.metamorphedTalents );</span>
+<span class="nc" id="L945">	}</span>
+
+	public static void initClassTalents( HeroClass cls, ArrayList&lt;LinkedHashMap&lt;Talent, Integer&gt;&gt; talents){
+<span class="nc" id="L948">		initClassTalents( cls, talents, new LinkedHashMap&lt;&gt;());</span>
+<span class="nc" id="L949">	}</span>
+
+	public static void initClassTalents( HeroClass cls, ArrayList&lt;LinkedHashMap&lt;Talent, Integer&gt;&gt; talents, LinkedHashMap&lt;Talent, Talent&gt; replacements ){
+<span class="nc bnc" id="L952" title="All 2 branches missed.">		while (talents.size() &lt; MAX_TALENT_TIERS){</span>
+<span class="nc" id="L953">			talents.add(new LinkedHashMap&lt;&gt;());</span>
+		}
+
+<span class="nc" id="L956">		ArrayList&lt;Talent&gt; tierTalents = new ArrayList&lt;&gt;();</span>
+
+		//tier 1
+<span class="nc bnc" id="L959" title="All 6 branches missed.">		switch (cls){</span>
+			case WARRIOR: default:
+<span class="nc" id="L961">				Collections.addAll(tierTalents, HEARTY_MEAL, VETERANS_INTUITION, PROVOKED_ANGER, IRON_WILL);</span>
+<span class="nc" id="L962">				break;</span>
+			case MAGE:
+<span class="nc" id="L964">				Collections.addAll(tierTalents, EMPOWERING_MEAL, SCHOLARS_INTUITION, LINGERING_MAGIC, BACKUP_BARRIER);</span>
+<span class="nc" id="L965">				break;</span>
+			case ROGUE:
+<span class="nc" id="L967">				Collections.addAll(tierTalents, CACHED_RATIONS, THIEFS_INTUITION, SUCKER_PUNCH, PROTECTIVE_SHADOWS);</span>
+<span class="nc" id="L968">				break;</span>
+			case HUNTRESS:
+<span class="nc" id="L970">				Collections.addAll(tierTalents, NATURES_BOUNTY, SURVIVALISTS_INTUITION, FOLLOWUP_STRIKE, NATURES_AID);</span>
+<span class="nc" id="L971">				break;</span>
+			case DUELIST:
+<span class="nc" id="L973">				Collections.addAll(tierTalents, STRENGTHENING_MEAL, ADVENTURERS_INTUITION, PATIENT_STRIKE, AGGRESSIVE_BARRIER);</span>
+<span class="nc" id="L974">				break;</span>
+			case CLERIC:
+<span class="nc" id="L976">				Collections.addAll(tierTalents, SATIATED_SPELLS, HOLY_INTUITION, SEARING_LIGHT, SHIELD_OF_LIGHT);</span>
+				break;
+		}
+<span class="nc bnc" id="L979" title="All 2 branches missed.">		for (Talent talent : tierTalents){</span>
+<span class="nc bnc" id="L980" title="All 2 branches missed.">			if (replacements.containsKey(talent)){</span>
+<span class="nc" id="L981">				talent = replacements.get(talent);</span>
+			}
+<span class="nc" id="L983">			talents.get(0).put(talent, 0);</span>
+<span class="nc" id="L984">		}</span>
+<span class="nc" id="L985">		tierTalents.clear();</span>
+
+		//tier 2
+<span class="nc bnc" id="L988" title="All 6 branches missed.">		switch (cls){</span>
+			case WARRIOR: default:
+<span class="nc" id="L990">				Collections.addAll(tierTalents, IRON_STOMACH, LIQUID_WILLPOWER, RUNIC_TRANSFERENCE, LETHAL_MOMENTUM, IMPROVISED_PROJECTILES);</span>
+<span class="nc" id="L991">				break;</span>
+			case MAGE:
+<span class="nc" id="L993">				Collections.addAll(tierTalents, ENERGIZING_MEAL, INSCRIBED_POWER, WAND_PRESERVATION, ARCANE_VISION, SHIELD_BATTERY);</span>
+<span class="nc" id="L994">				break;</span>
+			case ROGUE:
+<span class="nc" id="L996">				Collections.addAll(tierTalents, MYSTICAL_MEAL, INSCRIBED_STEALTH, WIDE_SEARCH, SILENT_STEPS, ROGUES_FORESIGHT);</span>
+<span class="nc" id="L997">				break;</span>
+			case HUNTRESS:
+<span class="nc" id="L999">				Collections.addAll(tierTalents, INVIGORATING_MEAL, LIQUID_NATURE, REJUVENATING_STEPS, HEIGHTENED_SENSES, DURABLE_PROJECTILES);</span>
+<span class="nc" id="L1000">				break;</span>
+			case DUELIST:
+<span class="nc" id="L1002">				Collections.addAll(tierTalents, FOCUSED_MEAL, LIQUID_AGILITY, WEAPON_RECHARGING, LETHAL_HASTE, SWIFT_EQUIP);</span>
+<span class="nc" id="L1003">				break;</span>
+			case CLERIC:
+<span class="nc" id="L1005">				Collections.addAll(tierTalents, ENLIGHTENING_MEAL, RECALL_INSCRIPTION, SUNRAY, DIVINE_SENSE, BLESS);</span>
+				break;
+		}
+<span class="nc bnc" id="L1008" title="All 2 branches missed.">		for (Talent talent : tierTalents){</span>
+<span class="nc bnc" id="L1009" title="All 2 branches missed.">			if (replacements.containsKey(talent)){</span>
+<span class="nc" id="L1010">				talent = replacements.get(talent);</span>
+			}
+<span class="nc" id="L1012">			talents.get(1).put(talent, 0);</span>
+<span class="nc" id="L1013">		}</span>
+<span class="nc" id="L1014">		tierTalents.clear();</span>
+
+		//tier 3
+<span class="nc bnc" id="L1017" title="All 6 branches missed.">		switch (cls){</span>
+			case WARRIOR: default:
+<span class="nc" id="L1019">				Collections.addAll(tierTalents, HOLD_FAST, STRONGMAN);</span>
+<span class="nc" id="L1020">				break;</span>
+			case MAGE:
+<span class="nc" id="L1022">				Collections.addAll(tierTalents, DESPERATE_POWER, ALLY_WARP);</span>
+<span class="nc" id="L1023">				break;</span>
+			case ROGUE:
+<span class="nc" id="L1025">				Collections.addAll(tierTalents, ENHANCED_RINGS, LIGHT_CLOAK);</span>
+<span class="nc" id="L1026">				break;</span>
+			case HUNTRESS:
+<span class="nc" id="L1028">				Collections.addAll(tierTalents, POINT_BLANK, SEER_SHOT);</span>
+<span class="nc" id="L1029">				break;</span>
+			case DUELIST:
+<span class="nc" id="L1031">				Collections.addAll(tierTalents, PRECISE_ASSAULT, DEADLY_FOLLOWUP);</span>
+<span class="nc" id="L1032">				break;</span>
+			case CLERIC:
+<span class="nc" id="L1034">				Collections.addAll(tierTalents, CLEANSE, LIGHT_READING);</span>
+				break;
+		}
+<span class="nc bnc" id="L1037" title="All 2 branches missed.">		for (Talent talent : tierTalents){</span>
+<span class="nc bnc" id="L1038" title="All 2 branches missed.">			if (replacements.containsKey(talent)){</span>
+<span class="nc" id="L1039">				talent = replacements.get(talent);</span>
+			}
+<span class="nc" id="L1041">			talents.get(2).put(talent, 0);</span>
+<span class="nc" id="L1042">		}</span>
+<span class="nc" id="L1043">		tierTalents.clear();</span>
+
+		//tier4
+		//TBD
+<span class="nc" id="L1047">	}</span>
+
+	public static void initSubclassTalents( Hero hero ){
+<span class="nc" id="L1050">		initSubclassTalents( hero.subClass, hero.talents );</span>
+<span class="nc" id="L1051">	}</span>
+
+	public static void initSubclassTalents( HeroSubClass cls, ArrayList&lt;LinkedHashMap&lt;Talent, Integer&gt;&gt; talents ){
+<span class="nc bnc" id="L1054" title="All 2 branches missed.">		if (cls == HeroSubClass.NONE) return;</span>
+
+<span class="nc bnc" id="L1056" title="All 2 branches missed.">		while (talents.size() &lt; MAX_TALENT_TIERS){</span>
+<span class="nc" id="L1057">			talents.add(new LinkedHashMap&lt;&gt;());</span>
+		}
+
+<span class="nc" id="L1060">		ArrayList&lt;Talent&gt; tierTalents = new ArrayList&lt;&gt;();</span>
+
+		//tier 3
+<span class="nc bnc" id="L1063" title="All 12 branches missed.">		switch (cls){</span>
+			case BERSERKER: default:
+<span class="nc" id="L1065">				Collections.addAll(tierTalents, ENDLESS_RAGE, DEATHLESS_FURY, ENRAGED_CATALYST);</span>
+<span class="nc" id="L1066">				break;</span>
+			case GLADIATOR:
+<span class="nc" id="L1068">				Collections.addAll(tierTalents, CLEAVE, LETHAL_DEFENSE, ENHANCED_COMBO);</span>
+<span class="nc" id="L1069">				break;</span>
+			case BATTLEMAGE:
+<span class="nc" id="L1071">				Collections.addAll(tierTalents, EMPOWERED_STRIKE, MYSTICAL_CHARGE, EXCESS_CHARGE);</span>
+<span class="nc" id="L1072">				break;</span>
+			case WARLOCK:
+<span class="nc" id="L1074">				Collections.addAll(tierTalents, SOUL_EATER, SOUL_SIPHON, NECROMANCERS_MINIONS);</span>
+<span class="nc" id="L1075">				break;</span>
+			case ASSASSIN:
+<span class="nc" id="L1077">				Collections.addAll(tierTalents, ENHANCED_LETHALITY, ASSASSINS_REACH, BOUNTY_HUNTER);</span>
+<span class="nc" id="L1078">				break;</span>
+			case FREERUNNER:
+<span class="nc" id="L1080">				Collections.addAll(tierTalents, EVASIVE_ARMOR, PROJECTILE_MOMENTUM, SPEEDY_STEALTH);</span>
+<span class="nc" id="L1081">				break;</span>
+			case SNIPER:
+<span class="nc" id="L1083">				Collections.addAll(tierTalents, FARSIGHT, SHARED_ENCHANTMENT, SHARED_UPGRADES);</span>
+<span class="nc" id="L1084">				break;</span>
+			case WARDEN:
+<span class="nc" id="L1086">				Collections.addAll(tierTalents, DURABLE_TIPS, BARKSKIN, SHIELDING_DEW);</span>
+<span class="nc" id="L1087">				break;</span>
+			case CHAMPION:
+<span class="nc" id="L1089">				Collections.addAll(tierTalents, VARIED_CHARGE, TWIN_UPGRADES, COMBINED_LETHALITY);</span>
+<span class="nc" id="L1090">				break;</span>
+			case MONK:
+<span class="nc" id="L1092">				Collections.addAll(tierTalents, UNENCUMBERED_SPIRIT, MONASTIC_VIGOR, COMBINED_ENERGY);</span>
+<span class="nc" id="L1093">				break;</span>
+			case PRIEST:
+<span class="nc" id="L1095">				Collections.addAll(tierTalents, HOLY_LANCE, HALLOWED_GROUND, MNEMONIC_PRAYER);</span>
+<span class="nc" id="L1096">				break;</span>
+			case PALADIN:
+<span class="nc" id="L1098">				Collections.addAll(tierTalents, LAY_ON_HANDS, AURA_OF_PROTECTION, WALL_OF_LIGHT);</span>
+				break;
+		}
+<span class="nc bnc" id="L1101" title="All 2 branches missed.">		for (Talent talent : tierTalents){</span>
+<span class="nc" id="L1102">			talents.get(2).put(talent, 0);</span>
+<span class="nc" id="L1103">		}</span>
+<span class="nc" id="L1104">		tierTalents.clear();</span>
+
+<span class="nc" id="L1106">	}</span>
+
+	public static void initArmorTalents( Hero hero ){
+<span class="nc" id="L1109">		initArmorTalents( hero.armorAbility, hero.talents);</span>
+<span class="nc" id="L1110">	}</span>
+
+	public static void initArmorTalents(ArmorAbility abil, ArrayList&lt;LinkedHashMap&lt;Talent, Integer&gt;&gt; talents ){
+<span class="nc bnc" id="L1113" title="All 2 branches missed.">		if (abil == null) return;</span>
+
+<span class="nc bnc" id="L1115" title="All 2 branches missed.">		while (talents.size() &lt; MAX_TALENT_TIERS){</span>
+<span class="nc" id="L1116">			talents.add(new LinkedHashMap&lt;&gt;());</span>
+		}
+
+<span class="nc bnc" id="L1119" title="All 2 branches missed.">		for (Talent t : abil.talents()){</span>
+<span class="nc" id="L1120">			talents.get(3).put(t, 0);</span>
+		}
+<span class="nc" id="L1122">	}</span>
+
+	private static final String TALENT_TIER = &quot;talents_tier_&quot;;
+
+	public static void storeTalentsInBundle( Bundle bundle, Hero hero ){
+<span class="nc bnc" id="L1127" title="All 2 branches missed.">		for (int i = 0; i &lt; MAX_TALENT_TIERS; i++){</span>
+<span class="nc" id="L1128">			LinkedHashMap&lt;Talent, Integer&gt; tier = hero.talents.get(i);</span>
+<span class="nc" id="L1129">			Bundle tierBundle = new Bundle();</span>
+
+<span class="nc bnc" id="L1131" title="All 2 branches missed.">			for (Talent talent : tier.keySet()){</span>
+<span class="nc bnc" id="L1132" title="All 2 branches missed.">				if (tier.get(talent) &gt; 0){</span>
+<span class="nc" id="L1133">					tierBundle.put(talent.name(), tier.get(talent));</span>
+				}
+<span class="nc bnc" id="L1135" title="All 2 branches missed.">				if (tierBundle.contains(talent.name())){</span>
+<span class="nc" id="L1136">					tier.put(talent, Math.min(tierBundle.getInt(talent.name()), talent.maxPoints()));</span>
+				}
+<span class="nc" id="L1138">			}</span>
+<span class="nc" id="L1139">			bundle.put(TALENT_TIER+(i+1), tierBundle);</span>
+		}
+
+<span class="nc" id="L1142">		Bundle replacementsBundle = new Bundle();</span>
+<span class="nc bnc" id="L1143" title="All 2 branches missed.">		for (Talent t : hero.metamorphedTalents.keySet()){</span>
+<span class="nc" id="L1144">			replacementsBundle.put(t.name(), hero.metamorphedTalents.get(t));</span>
+<span class="nc" id="L1145">		}</span>
+<span class="nc" id="L1146">		bundle.put(&quot;replacements&quot;, replacementsBundle);</span>
+<span class="nc" id="L1147">	}</span>
+
+<span class="nc" id="L1149">	private static final HashSet&lt;String&gt; removedTalents = new HashSet&lt;&gt;();</span>
+	static{
+		//v2.4.0
+<span class="nc" id="L1152">		removedTalents.add(&quot;TEST_SUBJECT&quot;);</span>
+<span class="nc" id="L1153">		removedTalents.add(&quot;TESTED_HYPOTHESIS&quot;);</span>
+	}
+
+<span class="nc" id="L1156">	private static final HashMap&lt;String, String&gt; renamedTalents = new HashMap&lt;&gt;();</span>
+	static{
+		//v2.4.0
+<span class="nc" id="L1159">		renamedTalents.put(&quot;SECONDARY_CHARGE&quot;,          &quot;VARIED_CHARGE&quot;);</span>
+<span class="nc" id="L1160">	}</span>
+
+	public static void restoreTalentsFromBundle( Bundle bundle, Hero hero ){
+<span class="nc bnc" id="L1163" title="All 2 branches missed.">		if (bundle.contains(&quot;replacements&quot;)){</span>
+<span class="nc" id="L1164">			Bundle replacements = bundle.getBundle(&quot;replacements&quot;);</span>
+<span class="nc bnc" id="L1165" title="All 2 branches missed.">			for (String key : replacements.getKeys()){</span>
+<span class="nc" id="L1166">				String value = replacements.getString(key);</span>
+<span class="nc bnc" id="L1167" title="All 2 branches missed.">				if (renamedTalents.containsKey(key)) key = renamedTalents.get(key);</span>
+<span class="nc bnc" id="L1168" title="All 2 branches missed.">				if (renamedTalents.containsKey(value)) value = renamedTalents.get(value);</span>
+<span class="nc bnc" id="L1169" title="All 4 branches missed.">				if (!removedTalents.contains(key) &amp;&amp; !removedTalents.contains(value)){</span>
+					try {
+<span class="nc" id="L1171">						hero.metamorphedTalents.put(Talent.valueOf(key), Talent.valueOf(value));</span>
+<span class="nc" id="L1172">					} catch (Exception e) {</span>
+<span class="nc" id="L1173">						ShatteredPixelDungeon.reportException(e);</span>
+<span class="nc" id="L1174">					}</span>
+				}
+<span class="nc" id="L1176">			}</span>
+		}
+
+<span class="nc bnc" id="L1179" title="All 2 branches missed.">		if (hero.heroClass != null)     initClassTalents(hero);</span>
+<span class="nc bnc" id="L1180" title="All 2 branches missed.">		if (hero.subClass != null)      initSubclassTalents(hero);</span>
+<span class="nc bnc" id="L1181" title="All 2 branches missed.">		if (hero.armorAbility != null)  initArmorTalents(hero);</span>
+
+<span class="nc bnc" id="L1183" title="All 2 branches missed.">		for (int i = 0; i &lt; MAX_TALENT_TIERS; i++){</span>
+<span class="nc" id="L1184">			LinkedHashMap&lt;Talent, Integer&gt; tier = hero.talents.get(i);</span>
+<span class="nc bnc" id="L1185" title="All 2 branches missed.">			Bundle tierBundle = bundle.contains(TALENT_TIER+(i+1)) ? bundle.getBundle(TALENT_TIER+(i+1)) : null;</span>
+
+<span class="nc bnc" id="L1187" title="All 2 branches missed.">			if (tierBundle != null){</span>
+<span class="nc bnc" id="L1188" title="All 2 branches missed.">				for (String tName : tierBundle.getKeys()){</span>
+<span class="nc" id="L1189">					int points = tierBundle.getInt(tName);</span>
+<span class="nc bnc" id="L1190" title="All 2 branches missed.">					if (renamedTalents.containsKey(tName)) tName = renamedTalents.get(tName);</span>
+<span class="nc bnc" id="L1191" title="All 2 branches missed.">					if (!removedTalents.contains(tName)) {</span>
+						try {
+<span class="nc" id="L1193">							Talent talent = Talent.valueOf(tName);</span>
+<span class="nc bnc" id="L1194" title="All 2 branches missed.">							if (tier.containsKey(talent)) {</span>
+<span class="nc" id="L1195">								tier.put(talent, Math.min(points, talent.maxPoints()));</span>
+							}
+<span class="nc" id="L1197">						} catch (Exception e) {</span>
+<span class="nc" id="L1198">							ShatteredPixelDungeon.reportException(e);</span>
+<span class="nc" id="L1199">						}</span>
+					}
+<span class="nc" id="L1201">				}</span>
+			}
+		}
+<span class="nc" id="L1204">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

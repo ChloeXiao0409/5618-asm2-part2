@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PoisonDartTrap.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.traps</a> &gt; <span class="el_source">PoisonDartTrap.java</span></div><h1>PoisonDartTrap.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.traps;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Poison;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.PoisonDart;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Callback;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L43">public class PoisonDartTrap extends Trap {</span>
+
+	{
+<span class="nc" id="L46">		color = GREEN;</span>
+<span class="nc" id="L47">		shape = CROSSHAIR;</span>
+		
+<span class="nc" id="L49">		canBeHidden = false;</span>
+<span class="nc" id="L50">		avoidsHallways = true;</span>
+<span class="nc" id="L51">	}</span>
+	
+	protected int poisonAmount(){
+<span class="nc" id="L54">		return 8 + Math.round(2*scalingDepth() / 3f);</span>
+	}
+	
+	protected boolean canTarget( Char ch ){
+<span class="nc" id="L58">		return true;</span>
+	}
+	
+	@Override
+	public void activate() {
+
+		//we handle this inside of a separate actor as the trap may produce a visual effect we need to pause for
+<span class="nc" id="L65">		Actor.add(new Actor() {</span>
+
+			{
+<span class="nc" id="L68">				actPriority = VFX_PRIO;</span>
+<span class="nc" id="L69">			}</span>
+
+			@Override
+			protected boolean act() {
+<span class="nc" id="L73">				Actor.remove(this);</span>
+<span class="nc" id="L74">				Char target = Actor.findChar(pos);</span>
+
+<span class="nc bnc" id="L76" title="All 4 branches missed.">				if (target != null &amp;&amp; !canTarget(target)){</span>
+<span class="nc" id="L77">					target = null;</span>
+				}
+
+				//find the closest char that can be aimed at
+				//can't target beyond view distance, with a min of 6 (torch range)
+<span class="nc" id="L82">				int range = Math.max(6, Dungeon.level.viewDistance);</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">				if (target == null){</span>
+<span class="nc" id="L84">					float closestDist = Float.MAX_VALUE;</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">					for (Char ch : Actor.chars()){</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">						if (!ch.isAlive()) continue;</span>
+<span class="nc" id="L87">						float curDist = Dungeon.level.trueDistance(pos, ch.pos);</span>
+						//invis targets are considered to be at max range
+<span class="nc bnc" id="L89" title="All 2 branches missed.">						if (ch.invisible &gt; 0) curDist = Math.max(curDist, range);</span>
+<span class="nc" id="L90">						Ballistica bolt = new Ballistica(pos, ch.pos, Ballistica.PROJECTILE);</span>
+<span class="nc bnc" id="L91" title="All 10 branches missed.">						if (canTarget(ch) &amp;&amp; bolt.collisionPos == ch.pos</span>
+								&amp;&amp; ( curDist &lt; closestDist || (curDist == closestDist &amp;&amp; target instanceof Hero))){
+<span class="nc" id="L93">							target = ch;</span>
+<span class="nc" id="L94">							closestDist = curDist;</span>
+						}
+<span class="nc" id="L96">					}</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">					if (closestDist &gt; range){</span>
+<span class="nc" id="L98">						target = null;</span>
+					}
+				}
+
+<span class="nc bnc" id="L102" title="All 2 branches missed.">				if (target != null) {</span>
+<span class="nc" id="L103">					final Char finalTarget = target;</span>
+<span class="nc bnc" id="L104" title="All 4 branches missed.">					if (Dungeon.level.heroFOV[pos] || Dungeon.level.heroFOV[target.pos]) {</span>
+<span class="nc" id="L105">						((MissileSprite) ShatteredPixelDungeon.scene().recycle(MissileSprite.class)).</span>
+<span class="nc" id="L106">								reset(pos, finalTarget.sprite, new PoisonDart(), new Callback() {</span>
+									@Override
+									public void call() {
+<span class="nc" id="L109">										int dmg = Random.NormalIntRange(4, 8) - finalTarget.drRoll();</span>
+<span class="nc" id="L110">										finalTarget.damage(dmg, PoisonDartTrap.this);</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">										if (finalTarget == Dungeon.hero){</span>
+											//for the poison dart traps in the Tengu fight
+<span class="nc bnc" id="L113" title="All 2 branches missed.">											if (Dungeon.depth == 10) {</span>
+<span class="nc" id="L114">												Statistics.qualifiedForBossChallengeBadge = false;</span>
+<span class="nc" id="L115">												Statistics.bossScores[1] -= 100;</span>
+											}
+<span class="nc bnc" id="L117" title="All 2 branches missed.">											if (!finalTarget.isAlive()) {</span>
+<span class="nc" id="L118">												Dungeon.fail(PoisonDartTrap.this);</span>
+<span class="nc" id="L119">												GLog.n(Messages.get(PoisonDartTrap.class, &quot;ondeath&quot;));</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">												if (reclaimed) Badges.validateDeathFromFriendlyMagic();</span>
+											}
+										}
+<span class="nc" id="L123">										Buff.affect( finalTarget, Poison.class ).set( poisonAmount() );</span>
+<span class="nc" id="L124">										Sample.INSTANCE.play(Assets.Sounds.HIT, 1, 1, Random.Float(0.8f, 1.25f));</span>
+<span class="nc" id="L125">										finalTarget.sprite.bloodBurstA(finalTarget.sprite.center(), dmg);</span>
+<span class="nc" id="L126">										finalTarget.sprite.flash();</span>
+<span class="nc" id="L127">										next();</span>
+<span class="nc" id="L128">									}</span>
+								});
+<span class="nc" id="L130">						return false;</span>
+					} else {
+<span class="nc" id="L132">						finalTarget.damage(Random.NormalIntRange(4, 8) - finalTarget.drRoll(), PoisonDartTrap.this);</span>
+<span class="nc" id="L133">						Buff.affect( finalTarget, Poison.class ).set( poisonAmount() );</span>
+<span class="nc" id="L134">						return true;</span>
+					}
+				} else {
+<span class="nc" id="L137">					return true;</span>
+				}
+			}
+
+		});
+<span class="nc" id="L142">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

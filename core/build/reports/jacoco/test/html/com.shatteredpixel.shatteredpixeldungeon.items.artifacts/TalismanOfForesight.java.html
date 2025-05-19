@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TalismanOfForesight.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.artifacts</a> &gt; <span class="el_source">TalismanOfForesight.java</span></div><h1>TalismanOfForesight.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CheckedCell;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfMagicMapping;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.ConeAOE;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L55">public class TalismanOfForesight extends Artifact {</span>
+
+	{
+<span class="nc" id="L58">		image = ItemSpriteSheet.ARTIFACT_TALISMAN;</span>
+
+<span class="nc" id="L60">		exp = 0;</span>
+<span class="nc" id="L61">		levelCap = 10;</span>
+
+<span class="nc" id="L63">		charge = 0;</span>
+<span class="nc" id="L64">		partialCharge = 0;</span>
+<span class="nc" id="L65">		chargeCap = 100;</span>
+
+<span class="nc" id="L67">		defaultAction = AC_SCRY;</span>
+	}
+
+	public static final String AC_SCRY = &quot;SCRY&quot;;
+
+	@Override
+	public ArrayList&lt;String&gt; actions( Hero hero ) {
+<span class="nc" id="L74">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc bnc" id="L75" title="All 4 branches missed.">		if (isEquipped( hero )</span>
+				&amp;&amp; !cursed
+<span class="nc bnc" id="L77" title="All 2 branches missed.">				&amp;&amp; hero.buff(MagicImmune.class) == null) {</span>
+<span class="nc" id="L78">			actions.add(AC_SCRY);</span>
+		}
+<span class="nc" id="L80">		return actions;</span>
+	}
+
+	@Override
+	public void execute( Hero hero, String action ) {
+<span class="nc" id="L85">		super.execute(hero, action);</span>
+
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		if (hero.buff(MagicImmune.class) != null) return;</span>
+
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		if (action.equals(AC_SCRY)){</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">			if (!isEquipped(hero))  GLog.i( Messages.get(Artifact.class, &quot;need_to_equip&quot;) );</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">			else if (charge &lt; 5)    GLog.i( Messages.get(this, &quot;low_charge&quot;) );</span>
+<span class="nc" id="L92">			else                    GameScene.selectCell(scry);</span>
+		}
+<span class="nc" id="L94">	}</span>
+
+	@Override
+	protected ArtifactBuff passiveBuff() {
+<span class="nc" id="L98">		return new Foresight();</span>
+	}
+	
+	@Override
+	public void charge(Hero target, float amount) {
+<span class="nc bnc" id="L103" title="All 4 branches missed.">		if (cursed || target.buff(MagicImmune.class) != null) return;</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">		if (charge &lt; chargeCap){</span>
+<span class="nc" id="L105">			partialCharge += 2*amount;</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			while (partialCharge &gt;= 1f){</span>
+<span class="nc" id="L107">				charge++;</span>
+<span class="nc" id="L108">				partialCharge--;</span>
+			}
+<span class="nc bnc" id="L110" title="All 2 branches missed.">			if (charge &gt;= chargeCap) {</span>
+<span class="nc" id="L111">				charge = chargeCap;</span>
+<span class="nc" id="L112">				partialCharge = 0;</span>
+<span class="nc" id="L113">				GLog.p( Messages.get(TalismanOfForesight.class, &quot;full_charge&quot;) );</span>
+			}
+<span class="nc" id="L115">			updateQuickslot();</span>
+		}
+<span class="nc" id="L117">	}</span>
+
+	@Override
+	public String desc() {
+<span class="nc" id="L121">		String desc = super.desc();</span>
+
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		if ( isEquipped( Dungeon.hero ) ){</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">			if (!cursed) {</span>
+<span class="nc" id="L125">				desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_worn&quot;);</span>
+
+			} else {
+<span class="nc" id="L128">				desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_cursed&quot;);</span>
+			}
+		}
+
+<span class="nc" id="L132">		return desc;</span>
+	}
+
+	private float maxDist(){
+<span class="nc" id="L136">		return Math.min(5 + 2*level(), (charge-3)/1.08f);</span>
+	}
+
+<span class="nc" id="L139">	public CellSelector.Listener scry = new CellSelector.Listener(){</span>
+
+		@Override
+		public void onSelect(Integer target) {
+<span class="nc bnc" id="L143" title="All 4 branches missed.">			if (target != null &amp;&amp; target != curUser.pos){</span>
+
+				//enforces at least 2 tiles of distance
+<span class="nc bnc" id="L146" title="All 2 branches missed.">				if (Dungeon.level.adjacent(target, curUser.pos)){</span>
+<span class="nc" id="L147">					target += (target - curUser.pos);</span>
+				}
+
+<span class="nc" id="L150">				float dist = Dungeon.level.trueDistance(curUser.pos, target);</span>
+
+<span class="nc bnc" id="L152" title="All 4 branches missed.">				if (dist &gt;= 3 &amp;&amp; dist &gt; maxDist()){</span>
+<span class="nc" id="L153">					Ballistica trajectory = new Ballistica(curUser.pos, target, Ballistica.STOP_TARGET);</span>
+<span class="nc" id="L154">					int i = 0;</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">					while (i &lt; trajectory.path.size()</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">							&amp;&amp; Dungeon.level.trueDistance(curUser.pos, trajectory.path.get(i)) &lt;= maxDist()){</span>
+<span class="nc" id="L157">						target = trajectory.path.get(i);</span>
+<span class="nc" id="L158">						i++;</span>
+					}
+<span class="nc" id="L160">					dist = Dungeon.level.trueDistance(curUser.pos, target);</span>
+				}
+
+				//starts at 200 degrees, loses 8% per tile of distance
+<span class="nc" id="L164">				float angle = Math.round(200*(float)Math.pow(0.92, dist));</span>
+<span class="nc" id="L165">				ConeAOE cone = new ConeAOE(new Ballistica(curUser.pos, target, Ballistica.STOP_TARGET), angle);</span>
+
+<span class="nc" id="L167">				int earnedExp = 0;</span>
+<span class="nc" id="L168">				boolean noticed = false;</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">				for (int cell : cone.cells){</span>
+<span class="nc" id="L170">					GameScene.effectOverFog(new CheckedCell( cell, curUser.pos ));</span>
+<span class="nc bnc" id="L171" title="All 6 branches missed.">					if (Dungeon.level.discoverable[cell] &amp;&amp; !(Dungeon.level.mapped[cell] || Dungeon.level.visited[cell])){</span>
+<span class="nc" id="L172">						Dungeon.level.mapped[cell] = true;</span>
+<span class="nc" id="L173">						earnedExp++;</span>
+					}
+
+<span class="nc bnc" id="L176" title="All 2 branches missed.">					if (Dungeon.level.secret[cell]) {</span>
+<span class="nc" id="L177">						int oldValue = Dungeon.level.map[cell];</span>
+<span class="nc" id="L178">						GameScene.discoverTile(cell, oldValue);</span>
+<span class="nc" id="L179">						Dungeon.level.discover( cell );</span>
+<span class="nc" id="L180">						ScrollOfMagicMapping.discover(cell);</span>
+<span class="nc" id="L181">						noticed = true;</span>
+
+<span class="nc bnc" id="L183" title="All 2 branches missed.">						if (oldValue == Terrain.SECRET_TRAP){</span>
+<span class="nc" id="L184">							earnedExp += 10;</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">						} else if (oldValue == Terrain.SECRET_DOOR){</span>
+<span class="nc" id="L186">							earnedExp += 100;</span>
+						}
+					}
+
+<span class="nc" id="L190">					Char ch = Actor.findChar(cell);</span>
+<span class="nc bnc" id="L191" title="All 6 branches missed.">					if (ch != null</span>
+							&amp;&amp; (ch.alignment != Char.Alignment.NEUTRAL || ch instanceof Mimic)
+<span class="nc bnc" id="L193" title="All 2 branches missed.">							&amp;&amp; ch.alignment != curUser.alignment){</span>
+<span class="nc" id="L194">						Buff.append(curUser, CharAwareness.class, 5 + 2*level()).charID = ch.id();</span>
+
+<span class="nc" id="L196">						artifactProc(ch, visiblyUpgraded(), (int)(3 + dist*1.08f));</span>
+
+<span class="nc bnc" id="L198" title="All 2 branches missed.">						if (!curUser.fieldOfView[ch.pos]){</span>
+<span class="nc" id="L199">							earnedExp += 10;</span>
+						}
+					}
+
+<span class="nc" id="L203">					Heap h = Dungeon.level.heaps.get(cell);</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">					if (h != null){</span>
+<span class="nc" id="L205">						Buff.append(curUser, HeapAwareness.class, 5 + 2*level()).pos = h.pos;</span>
+
+<span class="nc bnc" id="L207" title="All 2 branches missed.">						if (!h.seen){</span>
+<span class="nc" id="L208">							earnedExp += 10;</span>
+						}
+					}
+
+<span class="nc" id="L212">				}</span>
+
+<span class="nc" id="L214">				exp += earnedExp;</span>
+<span class="nc bnc" id="L215" title="All 4 branches missed.">				if (exp &gt;= 100 + 50*level() &amp;&amp; level() &lt; levelCap) {</span>
+<span class="nc" id="L216">					exp -= 100 + 50*level();</span>
+<span class="nc" id="L217">					upgrade();</span>
+<span class="nc" id="L218">					Catalog.countUse(TalismanOfForesight.class);</span>
+<span class="nc" id="L219">					GLog.p( Messages.get(TalismanOfForesight.class, &quot;levelup&quot;) );</span>
+				}
+<span class="nc" id="L221">				updateQuickslot();</span>
+
+				//5 charge at 2 tiles, up to 30 charge at 25 tiles
+<span class="nc" id="L224">				charge -= 3 + dist*1.08f;</span>
+<span class="nc" id="L225">				partialCharge -= (dist*1.08f)%1f;</span>
+<span class="nc bnc" id="L226" title="All 4 branches missed.">				if (partialCharge &lt; 0 &amp;&amp; charge &gt; 0){</span>
+<span class="nc" id="L227">					partialCharge ++;</span>
+<span class="nc" id="L228">					charge --;</span>
+				}
+<span class="nc bnc" id="L230" title="All 2 branches missed.">				while (charge &lt; 0){</span>
+<span class="nc" id="L231">					charge++;</span>
+<span class="nc" id="L232">					partialCharge--;</span>
+				}
+<span class="nc" id="L234">				Invisibility.dispel(curUser);</span>
+<span class="nc" id="L235">				Talent.onArtifactUsed(Dungeon.hero);</span>
+<span class="nc" id="L236">				updateQuickslot();</span>
+<span class="nc" id="L237">				Dungeon.observe();</span>
+<span class="nc" id="L238">				Dungeon.hero.checkVisibleMobs();</span>
+<span class="nc" id="L239">				GameScene.updateFog();</span>
+
+<span class="nc" id="L241">				curUser.sprite.zap(target);</span>
+<span class="nc" id="L242">				curUser.spendAndNext(Actor.TICK);</span>
+<span class="nc" id="L243">				Sample.INSTANCE.play(Assets.Sounds.SCAN);</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">				if (noticed) Sample.INSTANCE.play(Assets.Sounds.SECRET);</span>
+
+			}
+
+<span class="nc" id="L248">		}</span>
+
+		@Override
+		public String prompt() {
+<span class="nc" id="L252">			return Messages.get(TalismanOfForesight.class, &quot;prompt&quot;);</span>
+		}
+	};
+
+	private static final String WARN = &quot;warn&quot;;
+	
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L260">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L261">		bundle.put(WARN, warn);</span>
+<span class="nc" id="L262">	}</span>
+	
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L266">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L267">		warn = bundle.getBoolean(WARN);</span>
+<span class="nc" id="L268">	}</span>
+	
+<span class="nc" id="L270">	private boolean warn = false;</span>
+	
+<span class="nc" id="L272">	public class Foresight extends ArtifactBuff{</span>
+
+		@Override
+		public boolean act() {
+<span class="nc" id="L276">			spend( TICK );</span>
+
+<span class="nc" id="L278">			checkAwareness();</span>
+
+<span class="nc bnc" id="L280" title="All 4 branches missed.">			if (charge &lt; chargeCap</span>
+					&amp;&amp; !cursed
+<span class="nc bnc" id="L282" title="All 2 branches missed.">					&amp;&amp; target.buff(MagicImmune.class) == null</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">					&amp;&amp; Regeneration.regenOn()) {</span>
+				//fully charges in 2000 turns at +0, scaling to 1000 turns at +10.
+<span class="nc" id="L285">				float chargeGain = (0.05f+(level()*0.005f));</span>
+<span class="nc" id="L286">				chargeGain *= RingOfEnergy.artifactChargeMultiplier(target);</span>
+<span class="nc" id="L287">				partialCharge += chargeGain;</span>
+
+<span class="nc bnc" id="L289" title="All 2 branches missed.">				while (partialCharge &gt;= 1){</span>
+<span class="nc" id="L290">					partialCharge--;</span>
+<span class="nc" id="L291">					charge++;</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">					if (charge &gt;= chargeCap) {</span>
+<span class="nc" id="L293">						partialCharge = 0;</span>
+<span class="nc" id="L294">						GLog.p(Messages.get(TalismanOfForesight.class, &quot;full_charge&quot;));</span>
+					}
+<span class="nc" id="L296">					updateQuickslot();</span>
+				}
+			}
+
+<span class="nc" id="L300">			return true;</span>
+		}
+
+		public void checkAwareness(){
+<span class="nc" id="L304">			boolean smthFound = false;</span>
+
+<span class="nc" id="L306">			int distance = 3;</span>
+
+<span class="nc" id="L308">			int cx = target.pos % Dungeon.level.width();</span>
+<span class="nc" id="L309">			int cy = target.pos / Dungeon.level.width();</span>
+<span class="nc" id="L310">			int ax = cx - distance;</span>
+<span class="nc bnc" id="L311" title="All 2 branches missed.">			if (ax &lt; 0) {</span>
+<span class="nc" id="L312">				ax = 0;</span>
+			}
+<span class="nc" id="L314">			int bx = cx + distance;</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">			if (bx &gt;= Dungeon.level.width()) {</span>
+<span class="nc" id="L316">				bx = Dungeon.level.width() - 1;</span>
+			}
+<span class="nc" id="L318">			int ay = cy - distance;</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">			if (ay &lt; 0) {</span>
+<span class="nc" id="L320">				ay = 0;</span>
+			}
+<span class="nc" id="L322">			int by = cy + distance;</span>
+<span class="nc bnc" id="L323" title="All 2 branches missed.">			if (by &gt;= Dungeon.level.height()) {</span>
+<span class="nc" id="L324">				by = Dungeon.level.height() - 1;</span>
+			}
+
+<span class="nc bnc" id="L327" title="All 2 branches missed.">			for (int y = ay; y &lt;= by; y++) {</span>
+<span class="nc bnc" id="L328" title="All 2 branches missed.">				for (int x = ax, p = ax + y * Dungeon.level.width(); x &lt;= bx; x++, p++) {</span>
+
+<span class="nc bnc" id="L330" title="All 6 branches missed.">					if (Dungeon.level.heroFOV[p]</span>
+							&amp;&amp; Dungeon.level.secret[p]
+							&amp;&amp; Dungeon.level.map[p] != Terrain.SECRET_DOOR) {
+<span class="nc bnc" id="L333" title="All 4 branches missed.">						if (Dungeon.level.traps.get(p) != null &amp;&amp; Dungeon.level.traps.get(p).canBeSearched) {</span>
+<span class="nc" id="L334">							smthFound = true;</span>
+						}
+					}
+				}
+			}
+
+<span class="nc bnc" id="L340" title="All 4 branches missed.">			if (smthFound</span>
+					&amp;&amp; !cursed
+<span class="nc bnc" id="L342" title="All 2 branches missed.">					&amp;&amp; target.buff(MagicImmune.class) == null){</span>
+<span class="nc bnc" id="L343" title="All 2 branches missed.">				if (!warn){</span>
+<span class="nc" id="L344">					GLog.w( Messages.get(this, &quot;uneasy&quot;) );</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">					if (target instanceof Hero){</span>
+<span class="nc" id="L346">						((Hero)target).interrupt();</span>
+					}
+<span class="nc" id="L348">					warn = true;</span>
+				}
+			} else {
+<span class="nc" id="L351">				warn = false;</span>
+			}
+<span class="nc" id="L353">		}</span>
+
+		public void charge(int boost){
+<span class="nc bnc" id="L356" title="All 4 branches missed.">			if (!cursed &amp;&amp; target.buff(MagicImmune.class) == null) {</span>
+<span class="nc" id="L357">				charge = Math.min((charge + boost), chargeCap);</span>
+<span class="nc" id="L358">				updateQuickslot();</span>
+			}
+<span class="nc" id="L360">		}</span>
+
+		@Override
+		public int icon() {
+<span class="nc bnc" id="L364" title="All 2 branches missed.">			if (warn)</span>
+<span class="nc" id="L365">				return BuffIndicator.FORESIGHT;</span>
+			else
+<span class="nc" id="L367">				return BuffIndicator.NONE;</span>
+		}
+	}
+
+<span class="nc" id="L371">	public static class CharAwareness extends FlavourBuff {</span>
+
+		public int charID;
+
+		private static final String CHAR_ID = &quot;char_id&quot;;
+
+		@Override
+		public void detach() {
+<span class="nc" id="L379">			super.detach();</span>
+<span class="nc" id="L380">			Dungeon.observe();</span>
+<span class="nc" id="L381">			GameScene.updateFog();</span>
+<span class="nc" id="L382">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L386">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L387">			charID = bundle.getInt(CHAR_ID);</span>
+<span class="nc" id="L388">		}</span>
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L392">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L393">			bundle.put(CHAR_ID, charID);</span>
+<span class="nc" id="L394">		}</span>
+
+	}
+
+<span class="nc" id="L398">	public static class HeapAwareness extends FlavourBuff {</span>
+
+		public int pos;
+<span class="nc" id="L401">		public int depth = Dungeon.depth;</span>
+<span class="nc" id="L402">		public int branch = Dungeon.branch;</span>
+
+		private static final String POS = &quot;pos&quot;;
+		private static final String DEPTH = &quot;depth&quot;;
+		private static final String BRANCH = &quot;branch&quot;;
+
+		@Override
+		public void detach() {
+<span class="nc" id="L410">			super.detach();</span>
+<span class="nc" id="L411">			Dungeon.observe();</span>
+<span class="nc" id="L412">			GameScene.updateFog();</span>
+<span class="nc" id="L413">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L417">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L418">			pos = bundle.getInt(POS);</span>
+<span class="nc" id="L419">			depth = bundle.getInt(DEPTH);</span>
+<span class="nc" id="L420">			branch = bundle.getInt(BRANCH);</span>
+<span class="nc" id="L421">		}</span>
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L425">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L426">			bundle.put(POS, pos);</span>
+<span class="nc" id="L427">			bundle.put(DEPTH, depth);</span>
+<span class="nc" id="L428">			bundle.put(BRANCH, branch);</span>
+<span class="nc" id="L429">		}</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Explosive.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.weapon.curses</a> &gt; <span class="el_source">Explosive.java</span></div><h1>Explosive.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.weapon.curses;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.BlastParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SmokeParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L39">public class Explosive extends Weapon.Enchantment {</span>
+
+<span class="nc" id="L41">	private static ItemSprite.Glowing BLACK = new ItemSprite.Glowing( 0x000000 );</span>
+<span class="nc" id="L42">	private static ItemSprite.Glowing WARM = new ItemSprite.Glowing( 0x000000, 0.5f );</span>
+<span class="nc" id="L43">	private static ItemSprite.Glowing HOT = new ItemSprite.Glowing( 0x000000, 0.25f );</span>
+<span class="nc" id="L44">	private int durability = 100;</span>
+
+	@Override
+	public int proc( Weapon weapon, Char attacker, Char defender, int damage ) {
+
+		//average value of 5, or 20 hits to an explosion
+<span class="nc" id="L50">		int durToReduce = Math.round(Random.IntRange(0, 10) * procChanceMultiplier(attacker));</span>
+<span class="nc" id="L51">		int currentDurability = durability;</span>
+<span class="nc" id="L52">		durability -= durToReduce;</span>
+
+<span class="nc bnc" id="L54" title="All 4 branches missed.">		if (currentDurability &gt; 50 &amp;&amp; durability &lt;= 50){</span>
+<span class="nc" id="L55">			attacker.sprite.showStatus(CharSprite.WARNING, Messages.get(this, &quot;warm&quot;));</span>
+<span class="nc" id="L56">			GLog.w(Messages.get(this, &quot;desc_warm&quot;));</span>
+<span class="nc" id="L57">			attacker.sprite.emitter().burst(SmokeParticle.FACTORY, 4);</span>
+<span class="nc" id="L58">			Item.updateQuickslot();</span>
+<span class="nc bnc" id="L59" title="All 4 branches missed.">		} else if (currentDurability &gt; 10 &amp;&amp; durability &lt;= 10){</span>
+<span class="nc" id="L60">			attacker.sprite.showStatus(CharSprite.WARNING, Messages.get(this, &quot;hot&quot;));</span>
+<span class="nc" id="L61">			GLog.n(Messages.get(this, &quot;desc_hot&quot;));</span>
+<span class="nc" id="L62">			attacker.sprite.emitter().burst(BlastParticle.FACTORY, 5);</span>
+<span class="nc" id="L63">			Item.updateQuickslot();</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">		} else if (durability &lt;= 0) {</span>
+			//explosion position is the closest adjacent cell to the defender
+			// this will be the attacker's position if they are adjacent
+<span class="nc" id="L67">			int explosionPos = -1;</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L69" title="All 4 branches missed.">				if (!Dungeon.level.solid[defender.pos+i] &amp;&amp;</span>
+						(explosionPos == -1 ||
+<span class="nc bnc" id="L71" title="All 2 branches missed.">						Dungeon.level.trueDistance(attacker.pos, defender.pos+i) &lt; Dungeon.level.trueDistance(attacker.pos, explosionPos))){</span>
+<span class="nc" id="L72">					explosionPos = defender.pos+i;</span>
+				}
+			}
+<span class="nc bnc" id="L75" title="All 2 branches missed.">			if (explosionPos == -1) {</span>
+<span class="nc" id="L76">				explosionPos = defender.pos;</span>
+			}
+
+<span class="nc" id="L79">			new Bomb.ConjuredBomb().explode(explosionPos);</span>
+
+<span class="nc" id="L81">			durability = 100;</span>
+<span class="nc" id="L82">			Item.updateQuickslot();</span>
+		}
+
+<span class="nc" id="L85">		return damage;</span>
+	}
+
+	@Override
+	public boolean curse() {
+<span class="nc" id="L90">		return true;</span>
+	}
+
+	@Override
+	public ItemSprite.Glowing glowing() {
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		if (durability &gt; 50){</span>
+<span class="nc" id="L96">			return BLACK;</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">		} else if (durability &gt; 10){</span>
+<span class="nc" id="L98">			return WARM;</span>
+		} else {
+<span class="nc" id="L100">			return HOT;</span>
+		}
+	}
+
+	@Override
+	public String desc() {
+<span class="nc" id="L106">		String desc = super.desc();</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		if (durability &gt; 50){</span>
+<span class="nc" id="L108">			desc += &quot; &quot; + Messages.get(this, &quot;desc_cool&quot;);</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		} else if (durability &gt; 10){</span>
+<span class="nc" id="L110">			desc += &quot; &quot; + Messages.get(this, &quot;desc_warm&quot;);</span>
+		} else {
+<span class="nc" id="L112">			desc += &quot; _&quot; + Messages.get(this, &quot;desc_hot&quot;) + &quot;_&quot;;</span>
+		}
+<span class="nc" id="L114">		return desc;</span>
+	}
+
+	private static final String DURABILITY = &quot;durability&quot;;
+
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L121">		durability = bundle.getInt(DURABILITY);</span>
+		//pre-1.3 saves
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		if (durability &lt;= 0){</span>
+<span class="nc" id="L124">			durability = 100;</span>
+		}
+<span class="nc" id="L126">	}</span>
+
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L130">		bundle.put(DURABILITY, durability);</span>
+<span class="nc" id="L131">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

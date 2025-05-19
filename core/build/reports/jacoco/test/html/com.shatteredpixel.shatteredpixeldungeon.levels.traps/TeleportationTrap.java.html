@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TeleportationTrap.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.traps</a> &gt; <span class="el_source">TeleportationTrap.java</span></div><h1>TeleportationTrap.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.traps;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Honeypot;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.PathFinder;
+
+<span class="nc" id="L38">public class TeleportationTrap extends Trap {</span>
+
+	{
+<span class="nc" id="L41">		color = TEAL;</span>
+<span class="nc" id="L42">		shape = DOTS;</span>
+<span class="nc" id="L43">	}</span>
+
+	@Override
+	public void activate() {
+
+<span class="nc bnc" id="L48" title="All 2 branches missed.">		for (int i : PathFinder.NEIGHBOURS9){</span>
+<span class="nc" id="L49">			Char ch = Actor.findChar(pos + i);</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">			if (ch != null){</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">				if (ScrollOfTeleportation.teleportChar(ch)) {</span>
+<span class="nc bnc" id="L52" title="All 4 branches missed.">					if (ch instanceof Mob &amp;&amp; ((Mob) ch).state == ((Mob) ch).HUNTING) {</span>
+<span class="nc" id="L53">						((Mob) ch).state = ((Mob) ch).WANDERING;</span>
+					}
+				}
+			}
+<span class="nc" id="L57">			Heap heap = Dungeon.level.heaps.get(pos + i);</span>
+<span class="nc bnc" id="L58" title="All 4 branches missed.">			if (heap != null &amp;&amp; heap.type == Heap.Type.HEAP){</span>
+<span class="nc" id="L59">				int cell = Dungeon.level.randomRespawnCell( null );</span>
+
+<span class="nc" id="L61">				Item item = heap.pickUp();</span>
+
+<span class="nc bnc" id="L63" title="All 2 branches missed.">				if (cell != -1) {</span>
+<span class="nc" id="L64">					Dungeon.level.drop( item, cell );</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">					if (item instanceof Honeypot.ShatteredPot){</span>
+<span class="nc" id="L66">						((Honeypot.ShatteredPot)item).movePot(pos, cell);</span>
+					}
+<span class="nc" id="L68">					Sample.INSTANCE.play(Assets.Sounds.TELEPORT);</span>
+<span class="nc" id="L69">					CellEmitter.get(pos).burst(Speck.factory(Speck.LIGHT), 4);</span>
+				}
+			}
+		}
+
+<span class="nc" id="L74">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WildMagic.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.mage</a> &gt; <span class="el_source">WildMagic.java</span></div><h1>WildMagic.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.mage;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.WondrousResin;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.CursedWand;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.tweeners.Delayer;
+import com.watabou.utils.Callback;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L49">public class WildMagic extends ArmorAbility {</span>
+
+	{
+<span class="nc" id="L52">		baseChargeUse = 25f;</span>
+	}
+
+	@Override
+	public String targetingPrompt() {
+<span class="nc" id="L57">		return Messages.get(this, &quot;prompt&quot;);</span>
+	}
+
+	@Override
+	protected void activate(ClassArmor armor, Hero hero, Integer target) {
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		if (target == null){</span>
+<span class="nc" id="L63">			return;</span>
+		}
+
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (target == hero.pos){</span>
+<span class="nc" id="L67">			GLog.w(Messages.get(this, &quot;self_target&quot;));</span>
+<span class="nc" id="L68">			return;</span>
+		}
+
+<span class="nc" id="L71">		ArrayList&lt;Wand&gt; wands = hero.belongings.getAllItems(Wand.class);</span>
+<span class="nc" id="L72">		Random.shuffle(wands);</span>
+
+<span class="nc" id="L74">		float chargeUsePerShot = 0.5f * (float)Math.pow(0.67f, hero.pointsInTalent(Talent.CONSERVED_MAGIC));</span>
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		for (Wand w : wands.toArray(new Wand[0])){</span>
+<span class="nc bnc" id="L77" title="All 4 branches missed.">			if (w.curCharges &lt; 1 &amp;&amp; w.partialCharge &lt; chargeUsePerShot){</span>
+<span class="nc" id="L78">				wands.remove(w);</span>
+			}
+		}
+
+<span class="nc" id="L82">		int maxWands = 4 + Dungeon.hero.pointsInTalent(Talent.FIRE_EVERYTHING);</span>
+
+		//second and third shots
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if (wands.size() &lt; maxWands){</span>
+<span class="nc" id="L86">			ArrayList&lt;Wand&gt; seconds = new ArrayList&lt;&gt;(wands);</span>
+<span class="nc" id="L87">			ArrayList&lt;Wand&gt; thirds = new ArrayList&lt;&gt;(wands);</span>
+
+<span class="nc bnc" id="L89" title="All 2 branches missed.">			for (Wand w : wands){</span>
+<span class="nc" id="L90">				float totalCharge = w.curCharges + w.partialCharge;</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">				if (totalCharge &lt; 2*chargeUsePerShot){</span>
+<span class="nc" id="L92">					seconds.remove(w);</span>
+				}
+<span class="nc bnc" id="L94" title="All 2 branches missed.">				if (totalCharge &lt; 3*chargeUsePerShot</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">					|| Random.Int(4) &gt;= Dungeon.hero.pointsInTalent(Talent.FIRE_EVERYTHING)){</span>
+<span class="nc" id="L96">					thirds.remove(w);</span>
+				}
+<span class="nc" id="L98">			}</span>
+
+<span class="nc" id="L100">			Random.shuffle(seconds);</span>
+<span class="nc bnc" id="L101" title="All 4 branches missed.">			while (!seconds.isEmpty() &amp;&amp; wands.size() &lt; maxWands){</span>
+<span class="nc" id="L102">				wands.add(seconds.remove(0));</span>
+			}
+
+<span class="nc" id="L105">			Random.shuffle(thirds);</span>
+<span class="nc bnc" id="L106" title="All 4 branches missed.">			while (!thirds.isEmpty() &amp;&amp; wands.size() &lt; maxWands){</span>
+<span class="nc" id="L107">				wands.add(thirds.remove(0));</span>
+			}
+		}
+
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		if (wands.size() == 0){</span>
+<span class="nc" id="L112">			GLog.w(Messages.get(this, &quot;no_wands&quot;));</span>
+<span class="nc" id="L113">			return;</span>
+		}
+
+<span class="nc" id="L116">		hero.busy();</span>
+
+<span class="nc" id="L118">		Random.shuffle(wands);</span>
+
+<span class="nc" id="L120">		Buff.affect(hero, WildMagicTracker.class, 0f);</span>
+
+<span class="nc" id="L122">		armor.charge -= chargeUse(hero);</span>
+<span class="nc" id="L123">		armor.updateQuickslot();</span>
+
+<span class="nc" id="L125">		zapWand(wands, hero, target);</span>
+
+<span class="nc" id="L127">	}</span>
+
+<span class="nc" id="L129">	public static class WildMagicTracker extends FlavourBuff{};</span>
+
+<span class="nc" id="L131">	Actor wildMagicActor = null;</span>
+
+	private void zapWand( ArrayList&lt;Wand&gt; wands, Hero hero, int cell){
+<span class="nc" id="L134">		Wand cur = wands.remove(0);</span>
+
+<span class="nc" id="L136">		Ballistica aim = new Ballistica(hero.pos, cell, cur.collisionProperties(cell));</span>
+
+<span class="nc" id="L138">		hero.sprite.zap(cell);</span>
+
+<span class="nc" id="L140">		float startTime = Game.timeTotal;</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">		if (cur.tryToZap(hero, cell)) {</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">			if (!cur.cursed) {</span>
+<span class="nc" id="L143">				cur.fx(aim, new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L146">						cur.onZap(aim);</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">						boolean alsoCursedZap = Random.Float() &lt; WondrousResin.extraCurseEffectChance();</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">						if (Game.timeTotal - startTime &lt; 0.33f) {</span>
+<span class="nc" id="L149">							hero.sprite.parent.add(new Delayer(0.33f - (Game.timeTotal - startTime)) {</span>
+								@Override
+								protected void onComplete() {
+<span class="nc bnc" id="L152" title="All 2 branches missed.">									if (alsoCursedZap){</span>
+<span class="nc" id="L153">										WondrousResin.forcePositive = true;</span>
+<span class="nc" id="L154">										CursedWand.cursedZap(cur,</span>
+												hero,
+												new Ballistica(hero.pos, cell, Ballistica.MAGIC_BOLT),
+<span class="nc" id="L157">												new Callback() {</span>
+													@Override
+													public void call() {
+<span class="nc" id="L160">														WondrousResin.forcePositive = false;</span>
+<span class="nc" id="L161">														afterZap(cur, wands, hero, cell);</span>
+<span class="nc" id="L162">													}</span>
+												});
+									} else {
+<span class="nc" id="L165">										afterZap(cur, wands, hero, cell);</span>
+									}
+<span class="nc" id="L167">								}</span>
+							});
+						} else {
+<span class="nc bnc" id="L170" title="All 2 branches missed.">							if (alsoCursedZap){</span>
+<span class="nc" id="L171">								WondrousResin.forcePositive = true;</span>
+<span class="nc" id="L172">								CursedWand.cursedZap(cur,</span>
+										hero,
+										new Ballistica(hero.pos, cell, Ballistica.MAGIC_BOLT),
+<span class="nc" id="L175">										new Callback() {</span>
+											@Override
+											public void call() {
+<span class="nc" id="L178">												WondrousResin.forcePositive = false;</span>
+<span class="nc" id="L179">												afterZap(cur, wands, hero, cell);</span>
+<span class="nc" id="L180">											}</span>
+										});
+							} else {
+<span class="nc" id="L183">								afterZap(cur, wands, hero, cell);</span>
+							}
+						}
+<span class="nc" id="L186">					}</span>
+				});
+
+			} else {
+<span class="nc" id="L190">				CursedWand.cursedZap(cur,</span>
+						hero,
+						new Ballistica(hero.pos, cell, Ballistica.MAGIC_BOLT),
+<span class="nc" id="L193">						new Callback() {</span>
+							@Override
+							public void call() {
+<span class="nc bnc" id="L196" title="All 2 branches missed.">								if (Game.timeTotal - startTime &lt; 0.33f) {</span>
+<span class="nc" id="L197">									hero.sprite.parent.add(new Delayer(0.33f - (Game.timeTotal - startTime)) {</span>
+										@Override
+										protected void onComplete() {
+<span class="nc" id="L200">											afterZap(cur, wands, hero, cell);</span>
+<span class="nc" id="L201">										}</span>
+									});
+								} else {
+<span class="nc" id="L204">									afterZap(cur, wands, hero, cell);</span>
+								}
+<span class="nc" id="L206">							}</span>
+						});
+			}
+		} else {
+<span class="nc" id="L210">			afterZap(cur, wands, hero, cell);</span>
+		}
+<span class="nc" id="L212">	}</span>
+
+	private void afterZap( Wand cur, ArrayList&lt;Wand&gt; wands, Hero hero, int target){
+<span class="nc" id="L215">		cur.partialCharge -= 0.5f * (float)Math.pow(0.67f, hero.pointsInTalent(Talent.CONSERVED_MAGIC));</span>
+<span class="nc bnc" id="L216" title="All 2 branches missed.">		if (cur.partialCharge &lt; 0) {</span>
+<span class="nc" id="L217">			cur.partialCharge++;</span>
+<span class="nc" id="L218">			cur.curCharges--;</span>
+		}
+<span class="nc bnc" id="L220" title="All 2 branches missed.">		if (wildMagicActor != null){</span>
+<span class="nc" id="L221">			wildMagicActor.next();</span>
+<span class="nc" id="L222">			wildMagicActor = null;</span>
+		}
+
+<span class="nc" id="L225">		Char ch = Actor.findChar(target);</span>
+<span class="nc bnc" id="L226" title="All 4 branches missed.">		if (!wands.isEmpty() &amp;&amp; hero.isAlive()) {</span>
+<span class="nc" id="L227">			Actor.add(new Actor() {</span>
+				{
+<span class="nc" id="L229">					actPriority = VFX_PRIO-1;</span>
+<span class="nc" id="L230">				}</span>
+
+				@Override
+				protected boolean act() {
+<span class="nc" id="L234">					wildMagicActor = this;</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">					zapWand(wands, hero, ch == null ? target : ch.pos);</span>
+<span class="nc" id="L236">					Actor.remove(this);</span>
+<span class="nc" id="L237">					return false;</span>
+				}
+			});
+<span class="nc" id="L240">			hero.next();</span>
+		} else {
+<span class="nc bnc" id="L242" title="All 2 branches missed.">			if (hero.buff(WildMagicTracker.class) != null) {</span>
+<span class="nc" id="L243">				hero.buff(WildMagicTracker.class).detach();</span>
+			}
+<span class="nc" id="L245">			Item.updateQuickslot();</span>
+<span class="nc" id="L246">			Invisibility.dispel();</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">			if (Random.Int(4) &gt;= hero.pointsInTalent(Talent.CONSERVED_MAGIC)) {</span>
+<span class="nc" id="L248">				hero.spendAndNext(Actor.TICK);</span>
+			} else {
+<span class="nc" id="L250">				hero.next();</span>
+			}
+		}
+<span class="nc" id="L253">	}</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L257">		return HeroIcon.WILD_MAGIC;</span>
+	}
+
+	@Override
+	public Talent[] talents() {
+<span class="nc" id="L262">		return new Talent[]{Talent.WILD_POWER, Talent.FIRE_EVERYTHING, Talent.CONSERVED_MAGIC, Talent.HEROIC_ENERGY};</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

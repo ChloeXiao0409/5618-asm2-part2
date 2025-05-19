@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GooBossRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.sewerboss</a> &gt; <span class="el_source">GooBossRoom.java</span></div><h1>GooBossRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.sewerboss;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.StandardRoom;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.Tilemap;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L34">public abstract class GooBossRoom extends StandardRoom {</span>
+
+	@Override
+	public float[] sizeCatProbs() {
+<span class="nc" id="L38">		return new float[]{0, 1, 0};</span>
+	}
+
+	@Override
+	public boolean canMerge(Level l, Room other, Point p, int mergeTerrain) {
+<span class="nc" id="L43">		return false;</span>
+	}
+
+	public static GooBossRoom randomGooRoom(){
+<span class="nc bnc" id="L47" title="All 4 branches missed.">		switch (Random.Int(4)){</span>
+			case 0: default:
+<span class="nc" id="L49">				return new DiamondGooRoom();</span>
+			case 1:
+<span class="nc" id="L51">				return new WalledGooRoom();</span>
+			case 2:
+<span class="nc" id="L53">				return new ThinPillarsGooRoom();</span>
+			case 3:
+<span class="nc" id="L55">				return new ThickPillarsGooRoom();</span>
+		}
+	}
+	
+	protected void setupGooNest( Level level ){
+<span class="nc" id="L60">		GooNest nest = new GooNest();</span>
+<span class="nc" id="L61">		nest.setRect(left + width()/2 - 2, top + height()/2 - 2, 4 + width()%2, 4 + height()%2);</span>
+		
+<span class="nc" id="L63">		level.customTiles.add(nest);</span>
+<span class="nc" id="L64">	}</span>
+	
+<span class="nc" id="L66">	public static class GooNest extends CustomTilemap {</span>
+		
+		{
+<span class="nc" id="L69">			texture = Assets.Environment.SEWER_BOSS;</span>
+<span class="nc" id="L70">		}</span>
+		
+		@Override
+		public Tilemap create() {
+<span class="nc" id="L74">			Tilemap v = super.create();</span>
+<span class="nc" id="L75">			int[] data = new int[tileW*tileH];</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">			for (int x = 0; x &lt; tileW; x++){</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">				for (int y = 0; y &lt; tileH; y++){</span>
+					
+					//corners
+<span class="nc bnc" id="L80" title="All 8 branches missed.">					if ((x == 0 || x == tileW-1) &amp;&amp; (y == 0 || y == tileH-1)){</span>
+<span class="nc" id="L81">						data[x + tileW*y] = -1;</span>
+					
+					//adjacent to corners
+<span class="nc bnc" id="L84" title="All 8 branches missed.">					} else if ((x == 1 &amp;&amp; y == 0) || (x == 0 &amp;&amp; y == 1)){</span>
+<span class="nc" id="L85">						data[x + tileW*y] = 0;</span>
+						
+<span class="nc bnc" id="L87" title="All 8 branches missed.">					} else if ((x == tileW-2 &amp;&amp; y == 0) || (x == tileW-1 &amp;&amp; y == 1)){</span>
+<span class="nc" id="L88">						data[x + tileW*y] = 1;</span>
+						
+<span class="nc bnc" id="L90" title="All 8 branches missed.">					} else if ((x == 1 &amp;&amp; y == tileH-1) || (x == 0 &amp;&amp; y == tileH-2)){</span>
+<span class="nc" id="L91">						data[x + tileW*y] = 2;</span>
+					
+<span class="nc bnc" id="L93" title="All 8 branches missed.">					} else if ((x == tileW-2 &amp;&amp; y == tileH-1) || (x == tileW-1 &amp;&amp; y == tileH-2)) {</span>
+<span class="nc" id="L94">						data[x + tileW*y] = 3;</span>
+					
+					//sides
+<span class="nc bnc" id="L97" title="All 2 branches missed.">					} else if (x == 0){</span>
+<span class="nc" id="L98">						data[x + tileW*y] = 4;</span>
+					
+<span class="nc bnc" id="L100" title="All 2 branches missed.">					} else if (y == 0){</span>
+<span class="nc" id="L101">						data[x + tileW*y] = 5;</span>
+					
+<span class="nc bnc" id="L103" title="All 2 branches missed.">					} else if (x == tileW-1){</span>
+<span class="nc" id="L104">						data[x + tileW*y] = 6;</span>
+					
+<span class="nc bnc" id="L106" title="All 2 branches missed.">					} else if (y == tileH-1){</span>
+<span class="nc" id="L107">						data[x + tileW*y] = 7;</span>
+					
+					//inside
+					} else {
+<span class="nc" id="L111">						data[x + tileW*y] = 8;</span>
+					}
+					
+				}
+			}
+<span class="nc" id="L116">			v.map( data, tileW );</span>
+<span class="nc" id="L117">			return v;</span>
+		}
+		
+		@Override
+		public Image image(int tileX, int tileY) {
+<span class="nc" id="L122">			return null;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

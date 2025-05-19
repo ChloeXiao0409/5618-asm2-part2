@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StatusPane.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">StatusPane.java</span></div><h1>StatusPane.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CircleArc;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndHero;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndKeyBindings;
+import com.watabou.input.GameAction;
+import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.NinePatch;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.noosa.ui.Component;
+import com.watabou.utils.ColorMath;
+import com.watabou.utils.GameMath;
+
+public class StatusPane extends Component {
+
+	private NinePatch bg;
+	private Image avatar;
+	private Button heroInfo;
+	public static float talentBlink;
+	private float warning;
+
+	public static final float FLASH_RATE = (float)(Math.PI*1.5f); //1.5 blinks per second
+
+<span class="nc" id="L58">	private int lastTier = 0;</span>
+
+	private Image rawShielding;
+	private Image shieldedHP;
+	private Image hp;
+	private BitmapText hpText;
+	private Button heroInfoOnBar;
+
+	private Image exp;
+	private BitmapText expText;
+
+<span class="nc" id="L69">	private int lastLvl = -1;</span>
+
+	private BitmapText level;
+
+	private BuffIndicator buffs;
+	private Compass compass;
+
+	private BusyIndicator busy;
+	private CircleArc counter;
+
+	private boolean large;
+
+	public StatusPane( boolean large ){
+<span class="nc" id="L82">		super();</span>
+
+<span class="nc" id="L84">		String asset = Assets.Interfaces.STATUS;</span>
+
+<span class="nc" id="L86">		this.large = large;</span>
+
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		if (large)  bg = new NinePatch( asset, 0, 64, 41, 39, 33, 0, 4, 0 );</span>
+<span class="nc" id="L89">		else        bg = new NinePatch( asset, 0, 0, 128, 36, 85, 0, 45, 0 );</span>
+<span class="nc" id="L90">		add( bg );</span>
+
+<span class="nc" id="L92">		heroInfo = new Button(){</span>
+			@Override
+			protected void onClick () {
+<span class="nc" id="L95">				Camera.main.panTo( Dungeon.hero.sprite.center(), 5f );</span>
+<span class="nc" id="L96">				GameScene.show( new WndHero() );</span>
+<span class="nc" id="L97">			}</span>
+			
+			@Override
+			public GameAction keyAction() {
+<span class="nc" id="L101">				return SPDAction.HERO_INFO;</span>
+			}
+
+			@Override
+			protected String hoverText() {
+<span class="nc" id="L106">				return Messages.titleCase(Messages.get(WndKeyBindings.class, &quot;hero_info&quot;));</span>
+			}
+		};
+<span class="nc" id="L109">		add(heroInfo);</span>
+
+<span class="nc" id="L111">		avatar = HeroSprite.avatar( Dungeon.hero );</span>
+<span class="nc" id="L112">		add( avatar );</span>
+
+<span class="nc" id="L114">		talentBlink = 0;</span>
+
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		compass = new Compass( Statistics.amuletObtained ? Dungeon.level.entrance() : Dungeon.level.exit() );</span>
+<span class="nc" id="L117">		add( compass );</span>
+
+<span class="nc bnc" id="L119" title="All 2 branches missed.">		if (large)  rawShielding = new Image(asset, 0, 112, 128, 9);</span>
+<span class="nc" id="L120">		else        rawShielding = new Image(asset, 0, 40, 50, 4);</span>
+<span class="nc" id="L121">		rawShielding.alpha(0.5f);</span>
+<span class="nc" id="L122">		add(rawShielding);</span>
+
+<span class="nc bnc" id="L124" title="All 2 branches missed.">		if (large)  shieldedHP = new Image(asset, 0, 112, 128, 9);</span>
+<span class="nc" id="L125">		else        shieldedHP = new Image(asset, 0, 40, 50, 4);</span>
+<span class="nc" id="L126">		add(shieldedHP);</span>
+
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		if (large)  hp = new Image(asset, 0, 103, 128, 9);</span>
+<span class="nc" id="L129">		else        hp = new Image(asset, 0, 36, 50, 4);</span>
+<span class="nc" id="L130">		add( hp );</span>
+
+<span class="nc" id="L132">		hpText = new BitmapText(PixelScene.pixelFont);</span>
+<span class="nc" id="L133">		hpText.alpha(0.6f);</span>
+<span class="nc" id="L134">		add(hpText);</span>
+
+<span class="nc" id="L136">		heroInfoOnBar = new Button(){</span>
+			@Override
+			protected void onClick () {
+<span class="nc" id="L139">				Camera.main.panTo( Dungeon.hero.sprite.center(), 5f );</span>
+<span class="nc" id="L140">				GameScene.show( new WndHero() );</span>
+<span class="nc" id="L141">			}</span>
+		};
+<span class="nc" id="L143">		add(heroInfoOnBar);</span>
+
+<span class="nc bnc" id="L145" title="All 2 branches missed.">		if (large)  exp = new Image(asset, 0, 121, 128, 7);</span>
+<span class="nc" id="L146">		else        exp = new Image(asset, 0, 44, 16, 1);</span>
+<span class="nc" id="L147">		add( exp );</span>
+
+<span class="nc bnc" id="L149" title="All 2 branches missed.">		if (large){</span>
+<span class="nc" id="L150">			expText = new BitmapText(PixelScene.pixelFont);</span>
+<span class="nc" id="L151">			expText.hardlight( 0xFFFFAA );</span>
+<span class="nc" id="L152">			expText.alpha(0.6f);</span>
+<span class="nc" id="L153">			add(expText);</span>
+		}
+
+<span class="nc" id="L156">		level = new BitmapText( PixelScene.pixelFont);</span>
+<span class="nc" id="L157">		level.hardlight( 0xFFFFAA );</span>
+<span class="nc" id="L158">		add( level );</span>
+
+<span class="nc" id="L160">		buffs = new BuffIndicator( Dungeon.hero, large );</span>
+<span class="nc" id="L161">		add( buffs );</span>
+
+<span class="nc" id="L163">		busy = new BusyIndicator();</span>
+<span class="nc" id="L164">		add( busy );</span>
+
+<span class="nc" id="L166">		counter = new CircleArc(18, 4.25f);</span>
+<span class="nc" id="L167">		counter.color( 0x808080, true );</span>
+<span class="nc" id="L168">		counter.show(this, busy.center(), 0f);</span>
+<span class="nc" id="L169">	}</span>
+
+	@Override
+	protected void layout() {
+
+<span class="nc bnc" id="L174" title="All 2 branches missed.">		height = large ? 39 : 32;</span>
+
+<span class="nc" id="L176">		bg.x = x;</span>
+<span class="nc" id="L177">		bg.y = y;</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">		if (large)  bg.size( 160, bg.height ); //HP bars must be 128px wide atm</span>
+<span class="nc" id="L179">		else        bg.size( width, bg.height );</span>
+
+<span class="nc" id="L181">		avatar.x = bg.x - avatar.width / 2f + 15;</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">		avatar.y = bg.y - avatar.height / 2f + (large ? 15 : 16);</span>
+<span class="nc" id="L183">		PixelScene.align(avatar);</span>
+
+<span class="nc bnc" id="L185" title="All 4 branches missed.">		heroInfo.setRect( x, y+(large ? 0 : 1), 30, large ? 40 : 30 );</span>
+
+<span class="nc" id="L187">		compass.x = avatar.x + avatar.width / 2f - compass.origin.x;</span>
+<span class="nc" id="L188">		compass.y = avatar.y + avatar.height / 2f - compass.origin.y;</span>
+<span class="nc" id="L189">		PixelScene.align(compass);</span>
+
+<span class="nc bnc" id="L191" title="All 2 branches missed.">		if (large) {</span>
+<span class="nc" id="L192">			exp.x = x + 30;</span>
+<span class="nc" id="L193">			exp.y = y + 30;</span>
+
+<span class="nc" id="L195">			hp.x = shieldedHP.x = rawShielding.x = x + 30;</span>
+<span class="nc" id="L196">			hp.y = shieldedHP.y = rawShielding.y = y + 19;</span>
+
+<span class="nc" id="L198">			hpText.x = hp.x + (128 - hpText.width())/2f;</span>
+<span class="nc" id="L199">			hpText.y = hp.y + 1;</span>
+<span class="nc" id="L200">			PixelScene.align(hpText);</span>
+
+<span class="nc" id="L202">			expText.x = exp.x + (128 - expText.width())/2f;</span>
+<span class="nc" id="L203">			expText.y = exp.y;</span>
+<span class="nc" id="L204">			PixelScene.align(expText);</span>
+
+<span class="nc" id="L206">			heroInfoOnBar.setRect(heroInfo.right(), y + 19, 130, 20);</span>
+
+<span class="nc" id="L208">			buffs.setRect(x + 31, y, 128, 16);</span>
+
+<span class="nc" id="L210">			busy.x = x + bg.width + 1;</span>
+<span class="nc" id="L211">			busy.y = y + bg.height - 9;</span>
+		} else {
+<span class="nc" id="L213">			exp.x = x;</span>
+<span class="nc" id="L214">			exp.y = y;</span>
+
+<span class="nc" id="L216">			hp.x = shieldedHP.x = rawShielding.x = x + 30;</span>
+<span class="nc" id="L217">			hp.y = shieldedHP.y = rawShielding.y = y + 3;</span>
+
+<span class="nc" id="L219">			hpText.scale.set(PixelScene.align(0.5f));</span>
+<span class="nc" id="L220">			hpText.x = hp.x + 1;</span>
+<span class="nc" id="L221">			hpText.y = hp.y + (hp.height - (hpText.baseLine()+hpText.scale.y))/2f;</span>
+<span class="nc" id="L222">			hpText.y -= 0.001f; //prefer to be slightly higher</span>
+<span class="nc" id="L223">			PixelScene.align(hpText);</span>
+
+<span class="nc" id="L225">			heroInfoOnBar.setRect(heroInfo.right(), y, 50, 9);</span>
+
+<span class="nc" id="L227">			buffs.setRect( x + 31, y + 9, 50, 8 );</span>
+
+<span class="nc" id="L229">			busy.x = x + 1;</span>
+<span class="nc" id="L230">			busy.y = y + 33;</span>
+		}
+
+<span class="nc" id="L233">		counter.point(busy.center());</span>
+<span class="nc" id="L234">	}</span>
+	
+<span class="nc" id="L236">	private static final int[] warningColors = new int[]{0x660000, 0xCC0000, 0x660000};</span>
+
+<span class="nc" id="L238">	private int oldHP = 0;</span>
+<span class="nc" id="L239">	private int oldShield = 0;</span>
+<span class="nc" id="L240">	private int oldMax = 0;</span>
+
+	@Override
+	public void update() {
+<span class="nc" id="L244">		super.update();</span>
+		
+<span class="nc" id="L246">		int health = Dungeon.hero.HP;</span>
+<span class="nc" id="L247">		int shield = Dungeon.hero.shielding();</span>
+<span class="nc" id="L248">		int max = Dungeon.hero.HT;</span>
+
+<span class="nc bnc" id="L250" title="All 2 branches missed.">		if (!Dungeon.hero.isAlive()) {</span>
+<span class="nc" id="L251">			avatar.tint(0x000000, 0.5f);</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">		} else if ((health/(float)max) &lt;= 0.3f) {</span>
+<span class="nc" id="L253">			warning += Game.elapsed * 5f *(0.4f - (health/(float)max));</span>
+<span class="nc" id="L254">			warning %= 1f;</span>
+<span class="nc" id="L255">			avatar.tint(ColorMath.interpolate(warning, warningColors), 0.5f );</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">		} else if (talentBlink &gt; 0.33f){ //stops early so it doesn't end in the middle of a blink</span>
+<span class="nc" id="L257">			talentBlink -= Game.elapsed;</span>
+<span class="nc" id="L258">			avatar.tint(1, 1, 0, (float)Math.abs(Math.cos(talentBlink*FLASH_RATE))/2f);</span>
+		} else {
+<span class="nc" id="L260">			avatar.resetColor();</span>
+		}
+
+<span class="nc" id="L263">		hp.scale.x = Math.max( 0, (health-shield)/(float)max);</span>
+<span class="nc" id="L264">		shieldedHP.scale.x = health/(float)max;</span>
+
+<span class="nc bnc" id="L266" title="All 2 branches missed.">		if (shield &gt; health) {</span>
+<span class="nc" id="L267">			rawShielding.scale.x = Math.min(1, shield / (float) max);</span>
+		} else {
+<span class="nc" id="L269">			rawShielding.scale.x = 0;</span>
+		}
+
+<span class="nc bnc" id="L272" title="All 6 branches missed.">		if (oldHP != health || oldShield != shield || oldMax != max){</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">			if (shield &lt;= 0) {</span>
+<span class="nc" id="L274">				hpText.text(health + &quot;/&quot; + max);</span>
+			} else {
+<span class="nc" id="L276">				hpText.text(health + &quot;+&quot; + shield + &quot;/&quot; + max);</span>
+			}
+<span class="nc" id="L278">			oldHP = health;</span>
+<span class="nc" id="L279">			oldShield = shield;</span>
+<span class="nc" id="L280">			oldMax = max;</span>
+		}
+
+<span class="nc bnc" id="L283" title="All 2 branches missed.">		if (large) {</span>
+<span class="nc" id="L284">			exp.scale.x = (128 / exp.width) * Dungeon.hero.exp / Dungeon.hero.maxExp();</span>
+
+<span class="nc" id="L286">			hpText.measure();</span>
+<span class="nc" id="L287">			hpText.x = hp.x + (128 - hpText.width())/2f;</span>
+
+<span class="nc" id="L289">			expText.text(Dungeon.hero.exp + &quot;/&quot; + Dungeon.hero.maxExp());</span>
+<span class="nc" id="L290">			expText.measure();</span>
+<span class="nc" id="L291">			expText.x = hp.x + (128 - expText.width())/2f;</span>
+
+		} else {
+<span class="nc" id="L294">			exp.scale.x = (width / exp.width) * Dungeon.hero.exp / Dungeon.hero.maxExp();</span>
+		}
+
+<span class="nc bnc" id="L297" title="All 2 branches missed.">		if (Dungeon.hero.lvl != lastLvl) {</span>
+
+<span class="nc bnc" id="L299" title="All 2 branches missed.">			if (lastLvl != -1) {</span>
+<span class="nc" id="L300">				showStarParticles();</span>
+			}
+
+<span class="nc" id="L303">			lastLvl = Dungeon.hero.lvl;</span>
+
+<span class="nc bnc" id="L305" title="All 2 branches missed.">			if (large){</span>
+<span class="nc" id="L306">				level.text( &quot;lv. &quot; + lastLvl );</span>
+<span class="nc" id="L307">				level.measure();</span>
+<span class="nc" id="L308">				level.x = x + (30f - level.width()) / 2f;</span>
+<span class="nc" id="L309">				level.y = y + 33f - level.baseLine() / 2f;</span>
+			} else {
+<span class="nc" id="L311">				level.text( Integer.toString( lastLvl ) );</span>
+<span class="nc" id="L312">				level.measure();</span>
+<span class="nc" id="L313">				level.x = x + 27.5f - level.width() / 2f;</span>
+<span class="nc" id="L314">				level.y = y + 28.0f - level.baseLine() / 2f;</span>
+			}
+<span class="nc" id="L316">			PixelScene.align(level);</span>
+		}
+
+<span class="nc" id="L319">		int tier = Dungeon.hero.tier();</span>
+<span class="nc bnc" id="L320" title="All 2 branches missed.">		if (tier != lastTier) {</span>
+<span class="nc" id="L321">			lastTier = tier;</span>
+<span class="nc" id="L322">			avatar.copy( HeroSprite.avatar( Dungeon.hero ) );</span>
+		}
+
+<span class="nc" id="L325">		counter.setSweep((1f - Actor.now()%1f)%1f);</span>
+<span class="nc" id="L326">	}</span>
+
+	public void updateAvatar(){
+<span class="nc" id="L329">		avatar.copy( HeroSprite.avatar( Dungeon.hero ) );</span>
+<span class="nc" id="L330">	}</span>
+
+	public void alpha( float value ){
+<span class="nc" id="L333">		value = GameMath.gate(0, value, 1f);</span>
+<span class="nc" id="L334">		bg.alpha(value);</span>
+<span class="nc" id="L335">		avatar.alpha(value);</span>
+<span class="nc" id="L336">		rawShielding.alpha(0.5f*value);</span>
+<span class="nc" id="L337">		shieldedHP.alpha(value);</span>
+<span class="nc" id="L338">		hp.alpha(value);</span>
+<span class="nc" id="L339">		hpText.alpha(0.6f*value);</span>
+<span class="nc" id="L340">		exp.alpha(value);</span>
+<span class="nc bnc" id="L341" title="All 2 branches missed.">		if (expText != null) expText.alpha(0.6f*value);</span>
+<span class="nc" id="L342">		level.alpha(value);</span>
+<span class="nc" id="L343">		compass.alpha(value);</span>
+<span class="nc" id="L344">		busy.alpha(value);</span>
+<span class="nc" id="L345">		counter.alpha(value);</span>
+<span class="nc" id="L346">	}</span>
+
+	public void showStarParticles(){
+<span class="nc" id="L349">		Emitter emitter = (Emitter)recycle( Emitter.class );</span>
+<span class="nc" id="L350">		emitter.revive();</span>
+<span class="nc" id="L351">		emitter.pos( avatar.center() );</span>
+<span class="nc" id="L352">		emitter.burst( Speck.factory( Speck.STAR ), 12 );</span>
+<span class="nc" id="L353">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

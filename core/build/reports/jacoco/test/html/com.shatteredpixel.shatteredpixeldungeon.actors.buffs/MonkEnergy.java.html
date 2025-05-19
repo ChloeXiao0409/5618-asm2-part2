@@ -1,0 +1,674 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MonkEnergy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.buffs</a> &gt; <span class="el_source">MonkEnergy.java</span></div><h1>MonkEnergy.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.buffs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Ghoul;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.RipperDemon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Wraith;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.YogDzewa;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfBlastWave;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.features.Door;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ActionIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.AttackIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndMonkAbilities;
+import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.Visual;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.GameMath;
+
+<span class="nc" id="L60">public class MonkEnergy extends Buff implements ActionIndicator.Action {</span>
+
+	{
+<span class="nc" id="L63">		type = buffType.POSITIVE;</span>
+<span class="nc" id="L64">		revivePersists = true;</span>
+<span class="nc" id="L65">	}</span>
+
+	public float energy;
+	public int cooldown; //currently unused, abilities had cooldowns prior to v2.5
+
+	private static final float MAX_COOLDOWN = 5;
+
+	@Override
+	public int icon() {
+<span class="nc" id="L74">		return BuffIndicator.MONK_ENERGY;</span>
+	}
+
+	@Override
+	public void tintIcon(Image icon) {
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if (cooldown &gt; 0){</span>
+<span class="nc" id="L80">			icon.hardlight(0.33f, 0.33f, 1f);</span>
+		} else {
+<span class="nc" id="L82">			icon.resetColor();</span>
+		}
+<span class="nc" id="L84">	}</span>
+
+	@Override
+	public float iconFadePercent() {
+<span class="nc" id="L88">		return GameMath.gate(0, cooldown/MAX_COOLDOWN, 1);</span>
+	}
+
+	@Override
+	public String iconTextDisplay() {
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		if (cooldown &gt; 0){</span>
+<span class="nc" id="L94">			return Integer.toString(cooldown);</span>
+		} else {
+<span class="nc" id="L96">			return &quot;&quot;;</span>
+		}
+	}
+
+	@Override
+	public boolean act() {
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if (cooldown &gt; 0){</span>
+<span class="nc" id="L103">			cooldown--;</span>
+<span class="nc bnc" id="L104" title="All 4 branches missed.">			if (cooldown == 0 &amp;&amp; energy &gt;= 1){</span>
+<span class="nc" id="L105">				ActionIndicator.setAction(this);</span>
+			}
+<span class="nc" id="L107">			BuffIndicator.refreshHero();</span>
+		}
+
+<span class="nc" id="L110">		spend(TICK);</span>
+<span class="nc" id="L111">		return true;</span>
+	}
+
+	@Override
+	public String desc() {
+<span class="nc" id="L116">		String desc = Messages.get(this, &quot;desc&quot;, (int)energy, energyCap());</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		if (cooldown &gt; 0){</span>
+<span class="nc" id="L118">			desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_cooldown&quot;, cooldown);</span>
+		}
+<span class="nc" id="L120">		return desc;</span>
+	}
+
+<span class="nc" id="L123">	public static String ENERGY = &quot;energy&quot;;</span>
+<span class="nc" id="L124">	public static String COOLDOWN = &quot;cooldown&quot;;</span>
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L128">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L129">		bundle.put(ENERGY, energy);</span>
+<span class="nc" id="L130">		bundle.put(COOLDOWN, cooldown);</span>
+<span class="nc" id="L131">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L135">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L136">		energy = bundle.getFloat(ENERGY);</span>
+<span class="nc" id="L137">		cooldown = bundle.getInt(COOLDOWN);</span>
+
+<span class="nc bnc" id="L139" title="All 4 branches missed.">		if (energy &gt;= 1 &amp;&amp; cooldown == 0){</span>
+<span class="nc" id="L140">			ActionIndicator.setAction(this);</span>
+		}
+<span class="nc" id="L142">	}</span>
+
+	public void gainEnergy(Mob enemy ){
+<span class="nc bnc" id="L145" title="All 2 branches missed.">		if (target == null) return;</span>
+
+<span class="nc bnc" id="L147" title="All 2 branches missed.">		if (!Regeneration.regenOn()){</span>
+<span class="nc" id="L148">			return; //to prevent farming boss minions</span>
+		}
+
+		float energyGain;
+
+		//bosses and minibosses give extra energy, certain enemies give half, otherwise give 1
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		if (Char.hasProp(enemy, Char.Property.BOSS))            energyGain = 5;</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		else if (Char.hasProp(enemy, Char.Property.MINIBOSS))   energyGain = 3;</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		else if (enemy instanceof Ghoul)                        energyGain = 0.5f;</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		else if (enemy instanceof RipperDemon)                  energyGain = 0.5f;</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">		else if (enemy instanceof YogDzewa.Larva)               energyGain = 0.5f;</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">		else if (enemy instanceof Wraith)                       energyGain = 0.5f;</span>
+<span class="nc" id="L160">		else                                                    energyGain = 1;</span>
+
+<span class="nc" id="L162">		float enGainMulti = 1f;</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		if (target instanceof Hero) {</span>
+<span class="nc" id="L164">			Hero hero = (Hero) target;</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">			if (hero.hasTalent(Talent.UNENCUMBERED_SPIRIT)) {</span>
+<span class="nc" id="L166">				int points = hero.pointsInTalent(Talent.UNENCUMBERED_SPIRIT);</span>
+
+<span class="nc bnc" id="L168" title="All 2 branches missed.">				if (hero.belongings.armor() != null){</span>
+<span class="nc bnc" id="L169" title="All 4 branches missed.">					if (hero.belongings.armor().tier &lt;= 1 &amp;&amp; points &gt;= 3){</span>
+<span class="nc" id="L170">						enGainMulti += 1.00f;</span>
+<span class="nc bnc" id="L171" title="All 4 branches missed.">					} else if (hero.belongings.armor().tier &lt;= 2 &amp;&amp; points &gt;= 2){</span>
+<span class="nc" id="L172">						enGainMulti += 0.75f;</span>
+<span class="nc bnc" id="L173" title="All 4 branches missed.">					} else if (hero.belongings.armor().tier &lt;= 3 &amp;&amp; points &gt;= 1){</span>
+<span class="nc" id="L174">						enGainMulti += 0.50f;</span>
+					}
+				}
+
+<span class="nc bnc" id="L178" title="All 2 branches missed.">				if (hero.belongings.weapon() instanceof MeleeWeapon</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">						&amp;&amp; (hero.buff(RingOfForce.BrawlersStance.class) == null</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">						|| !hero.buff(RingOfForce.BrawlersStance.class).active)){</span>
+<span class="nc bnc" id="L181" title="All 4 branches missed.">					if (((MeleeWeapon) hero.belongings.weapon()).tier &lt;= 1 &amp;&amp; points &gt;= 3){</span>
+<span class="nc" id="L182">						enGainMulti += 1.00f;</span>
+<span class="nc bnc" id="L183" title="All 4 branches missed.">					} else if (((MeleeWeapon) hero.belongings.weapon()).tier &lt;= 2 &amp;&amp; points &gt;= 2){</span>
+<span class="nc" id="L184">						enGainMulti += 0.75f;</span>
+<span class="nc bnc" id="L185" title="All 4 branches missed.">					} else if (((MeleeWeapon) hero.belongings.weapon()).tier &lt;= 3 &amp;&amp; points &gt;= 1){</span>
+<span class="nc" id="L186">						enGainMulti += 0.50f;</span>
+					}
+				}
+
+			}
+		}
+<span class="nc" id="L192">		energyGain *= enGainMulti;</span>
+
+<span class="nc" id="L194">		energy = Math.min(energy+energyGain, energyCap());</span>
+
+<span class="nc bnc" id="L196" title="All 4 branches missed.">		if (energy &gt;= 1 &amp;&amp; cooldown == 0){</span>
+<span class="nc" id="L197">			ActionIndicator.setAction(this);</span>
+		}
+<span class="nc" id="L199">		BuffIndicator.refreshHero();</span>
+<span class="nc" id="L200">	}</span>
+
+	//10 at base, 20 at level 30
+	public int energyCap(){
+<span class="nc" id="L204">		return Math.max(10, 5 + Dungeon.hero.lvl/2);</span>
+	}
+
+	public void abilityUsed( MonkAbility abil ){
+<span class="nc" id="L208">		energy -= abil.energyCost();</span>
+
+<span class="nc bnc" id="L210" title="All 4 branches missed.">		if (target instanceof Hero &amp;&amp; ((Hero) target).hasTalent(Talent.COMBINED_ENERGY)</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">				&amp;&amp; abil.energyCost() &gt;= 5-((Hero) target).pointsInTalent(Talent.COMBINED_ENERGY)) {</span>
+<span class="nc" id="L212">			Talent.CombinedEnergyAbilityTracker tracker = target.buff(Talent.CombinedEnergyAbilityTracker.class);</span>
+<span class="nc bnc" id="L213" title="All 4 branches missed.">			if (tracker == null || !tracker.wepAbilUsed){</span>
+<span class="nc" id="L214">				Buff.prolong(target, Talent.CombinedEnergyAbilityTracker.class, 5f).monkAbilused = true;</span>
+			} else {
+<span class="nc" id="L216">				tracker.monkAbilused = true;</span>
+<span class="nc" id="L217">				processCombinedEnergy(tracker);</span>
+			}
+		}
+
+<span class="nc bnc" id="L221" title="All 4 branches missed.">		if (cooldown &gt; 0 || energy &lt; 1){</span>
+<span class="nc" id="L222">			ActionIndicator.clearAction(this);</span>
+		} else {
+<span class="nc" id="L224">			ActionIndicator.refresh();</span>
+		}
+<span class="nc" id="L226">		BuffIndicator.refreshHero();</span>
+<span class="nc" id="L227">	}</span>
+
+	public boolean abilitiesEmpowered( Hero hero ){
+		//100%/80%/60% energy at +1/+2/+3
+<span class="nc bnc" id="L231" title="All 2 branches missed.">		return energy/energyCap() &gt;= 1.2f - 0.2f*hero.pointsInTalent(Talent.MONASTIC_VIGOR);</span>
+	}
+
+	public void processCombinedEnergy(Talent.CombinedEnergyAbilityTracker tracker){
+<span class="nc" id="L235">		energy = Math.min(energy+1, energyCap());</span>
+<span class="nc" id="L236">		tracker.detach();</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">		if (energy &gt;= 1){</span>
+<span class="nc" id="L238">			ActionIndicator.setAction(this);</span>
+		}
+<span class="nc" id="L240">		BuffIndicator.refreshHero();</span>
+<span class="nc" id="L241">	}</span>
+
+	@Override
+	public String actionName() {
+<span class="nc" id="L245">		return Messages.get(this, &quot;action&quot;);</span>
+	}
+
+	@Override
+	public int actionIcon() {
+<span class="nc" id="L250">		return HeroIcon.MONK_ABILITIES;</span>
+	}
+
+	@Override
+	public Visual secondaryVisual() {
+<span class="nc" id="L255">		BitmapText txt = new BitmapText(PixelScene.pixelFont);</span>
+<span class="nc" id="L256">		txt.text( Integer.toString((int)energy) );</span>
+<span class="nc" id="L257">		txt.hardlight(CharSprite.POSITIVE);</span>
+<span class="nc" id="L258">		txt.measure();</span>
+<span class="nc" id="L259">		return txt;</span>
+	}
+
+	@Override
+	public int indicatorColor() {
+<span class="nc bnc" id="L264" title="All 2 branches missed.">		if (abilitiesEmpowered(Dungeon.hero)){</span>
+<span class="nc" id="L265">			return 0xAAEE22;</span>
+		} else {
+<span class="nc" id="L267">			return 0xA08840;</span>
+		}
+	}
+
+	@Override
+	public void doAction() {
+<span class="nc" id="L273">		GameScene.show(new WndMonkAbilities(this));</span>
+<span class="nc" id="L274">	}</span>
+
+<span class="nc" id="L276">	public static abstract class MonkAbility {</span>
+
+<span class="nc" id="L278">		public static MonkAbility[] abilities = new MonkAbility[]{</span>
+				new Flurry(),
+				new Focus(),
+				new Dash(),
+				new DragonKick(),
+				new Meditate()
+		};
+
+		public String name(){
+<span class="nc" id="L287">			return Messages.get(this, &quot;name&quot;);</span>
+		}
+
+		public String desc(){
+<span class="nc bnc" id="L291" title="All 2 branches missed.">			if (Buff.affect(Dungeon.hero, MonkEnergy.class).abilitiesEmpowered(Dungeon.hero)){</span>
+<span class="nc" id="L292">				return Messages.get(this, &quot;empower_desc&quot;);</span>
+			} else {
+<span class="nc" id="L294">				return Messages.get(this, &quot;desc&quot;);</span>
+			}
+		}
+
+		public abstract int energyCost();
+
+		public boolean usable(MonkEnergy buff){
+<span class="nc bnc" id="L301" title="All 2 branches missed.">			return buff.energy &gt;= energyCost();</span>
+		}
+
+		public String targetingPrompt(){
+<span class="nc" id="L305">			return null; //return a string if uses targeting</span>
+		}
+
+		public abstract void doAbility(Hero hero, Integer target );
+
+<span class="nc" id="L310">		public static class UnarmedAbilityTracker extends FlavourBuff{};</span>
+
+<span class="nc" id="L312">		public static class FlurryEmpowerTracker extends FlavourBuff{};</span>
+
+<span class="nc" id="L314">		public static class FlurryCooldownTracker extends FlavourBuff{};</span>
+
+<span class="nc" id="L316">		public static class Flurry extends MonkAbility {</span>
+
+			@Override
+			public int energyCost() {
+<span class="nc" id="L320">				return 1;</span>
+			}
+
+			@Override
+			public boolean usable(MonkEnergy buff) {
+<span class="nc bnc" id="L325" title="All 4 branches missed.">				return super.usable(buff) &amp;&amp; buff.target.buff(FlurryCooldownTracker.class) == null;</span>
+			}
+
+			@Override
+			public String desc() {
+<span class="nc bnc" id="L330" title="All 2 branches missed.">				if (Buff.affect(Dungeon.hero, MonkEnergy.class).abilitiesEmpowered(Dungeon.hero)){</span>
+					//1.5x hero unarmed damage (rounds the result)
+<span class="nc" id="L332">					return Messages.get(this, &quot;empower_desc&quot;, 2, Math.round(1.5f*(Dungeon.hero.STR()-8)));</span>
+				} else {
+					//1.5x hero unarmed damage (rounds the result)
+<span class="nc" id="L335">					return Messages.get(this, &quot;desc&quot;, 2, Math.round(1.5f*(Dungeon.hero.STR()-8)));</span>
+				}
+
+			}
+
+			@Override
+			public String targetingPrompt() {
+<span class="nc" id="L342">				return Messages.get(MeleeWeapon.class, &quot;prompt&quot;);</span>
+			}
+
+			@Override
+			public void doAbility(Hero hero, Integer target) {
+<span class="nc bnc" id="L347" title="All 4 branches missed.">				if (target == null || target == -1){</span>
+<span class="nc" id="L348">					return;</span>
+				}
+
+<span class="nc" id="L351">				Char enemy = Actor.findChar(target);</span>
+<span class="nc bnc" id="L352" title="All 8 branches missed.">				if (enemy == null || enemy == hero || hero.isCharmedBy(enemy) || !Dungeon.level.heroFOV[target]) {</span>
+<span class="nc" id="L353">					GLog.w(Messages.get(MeleeWeapon.class, &quot;ability_no_target&quot;));</span>
+<span class="nc" id="L354">					return;</span>
+				}
+
+<span class="nc bnc" id="L357" title="All 2 branches missed.">				if (Buff.affect(hero, MonkEnergy.class).abilitiesEmpowered(hero)){</span>
+<span class="nc" id="L358">					Buff.affect(hero, FlurryEmpowerTracker.class, 0f);</span>
+				}
+
+<span class="nc" id="L361">				UnarmedAbilityTracker tracker = Buff.affect(hero, UnarmedAbilityTracker.class);</span>
+<span class="nc bnc" id="L362" title="All 2 branches missed.">				if (!hero.canAttack(enemy)){</span>
+<span class="nc" id="L363">					GLog.w(Messages.get(MeleeWeapon.class, &quot;ability_target_range&quot;));</span>
+<span class="nc" id="L364">					tracker.detach();</span>
+<span class="nc bnc" id="L365" title="All 2 branches missed.">					if (hero.buff(FlurryEmpowerTracker.class) != null){</span>
+<span class="nc" id="L366">						hero.buff(FlurryEmpowerTracker.class).detach();</span>
+					}
+<span class="nc" id="L368">					return;</span>
+				}
+
+<span class="nc" id="L371">				hero.sprite.attack(enemy.pos, new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L374">						AttackIndicator.target(enemy);</span>
+<span class="nc" id="L375">						hero.attack(enemy, 1.5f, 0, Char.INFINITE_ACCURACY);</span>
+
+<span class="nc bnc" id="L377" title="All 2 branches missed.">						if (enemy.isAlive()){</span>
+<span class="nc" id="L378">							hero.sprite.attack(enemy.pos, new Callback() {</span>
+								@Override
+								public void call() {
+<span class="nc" id="L381">									hero.attack(enemy, 1.5f, 0, Char.INFINITE_ACCURACY);</span>
+<span class="nc" id="L382">									Invisibility.dispel();</span>
+<span class="nc" id="L383">									hero.next();</span>
+<span class="nc" id="L384">									tracker.detach();</span>
+<span class="nc" id="L385">									Buff.affect(hero, MonkEnergy.class).abilityUsed(Flurry.this);</span>
+<span class="nc bnc" id="L386" title="All 2 branches missed.">									if (hero.buff(FlurryEmpowerTracker.class) != null){</span>
+<span class="nc" id="L387">										hero.buff(FlurryEmpowerTracker.class).detach();</span>
+									}
+<span class="nc" id="L389">									Buff.affect(hero, FlurryCooldownTracker.class, 0f);</span>
+<span class="nc" id="L390">								}</span>
+							});
+						} else {
+<span class="nc" id="L393">							Invisibility.dispel();</span>
+<span class="nc" id="L394">							hero.next();</span>
+<span class="nc" id="L395">							tracker.detach();</span>
+<span class="nc" id="L396">							Buff.affect(hero, MonkEnergy.class).abilityUsed(Flurry.this);</span>
+<span class="nc bnc" id="L397" title="All 2 branches missed.">							if (hero.buff(FlurryEmpowerTracker.class) != null){</span>
+<span class="nc" id="L398">								hero.buff(FlurryEmpowerTracker.class).detach();</span>
+							}
+<span class="nc" id="L400">							Buff.affect(hero, FlurryCooldownTracker.class, 0f);</span>
+						}
+<span class="nc" id="L402">					}</span>
+				});
+<span class="nc" id="L404">			}</span>
+		}
+
+<span class="nc" id="L407">		public static class Focus extends MonkAbility {</span>
+
+			@Override
+			public int energyCost() {
+<span class="nc" id="L411">				return 2;</span>
+			}
+
+			@Override
+			public boolean usable(MonkEnergy buff) {
+<span class="nc bnc" id="L416" title="All 4 branches missed.">				return super.usable(buff) &amp;&amp; buff.target.buff(FocusBuff.class) == null;</span>
+			}
+
+			@Override
+			public void doAbility(Hero hero, Integer target) {
+<span class="nc" id="L421">				Buff.affect(hero, FocusBuff.class);</span>
+
+<span class="nc bnc" id="L423" title="All 2 branches missed.">				if (Buff.affect(hero, MonkEnergy.class).abilitiesEmpowered(hero)){</span>
+<span class="nc" id="L424">					hero.next();</span>
+				} else {
+<span class="nc" id="L426">					hero.spendAndNext(1f);</span>
+				}
+<span class="nc" id="L428">				Buff.affect(hero, MonkEnergy.class).abilityUsed(this);</span>
+<span class="nc" id="L429">			}</span>
+
+<span class="nc" id="L431">			public static class FocusBuff extends Buff {</span>
+
+				{
+<span class="nc" id="L434">					type = buffType.POSITIVE;</span>
+<span class="nc" id="L435">					announced = true;</span>
+<span class="nc" id="L436">				}</span>
+
+				@Override
+				public int icon() {
+<span class="nc" id="L440">					return BuffIndicator.MIND_VISION;</span>
+				}
+
+				@Override
+				public void tintIcon(Image icon) {
+<span class="nc" id="L445">					icon.hardlight(0.25f, 1.5f, 1f);</span>
+<span class="nc" id="L446">				}</span>
+
+			}
+
+		}
+
+<span class="nc" id="L452">		public static class Dash extends MonkAbility {</span>
+
+			@Override
+			public int energyCost() {
+<span class="nc" id="L456">				return 3;</span>
+			}
+
+			@Override
+			public String targetingPrompt() {
+<span class="nc" id="L461">				return Messages.get(this, &quot;prompt&quot;);</span>
+			}
+
+			@Override
+			public void doAbility(Hero hero, Integer target) {
+<span class="nc bnc" id="L466" title="All 4 branches missed.">				if (target == null || target == -1){</span>
+<span class="nc" id="L467">					return;</span>
+				}
+
+<span class="nc" id="L470">				int range = 4;</span>
+<span class="nc bnc" id="L471" title="All 2 branches missed.">				if (Buff.affect(hero, MonkEnergy.class).abilitiesEmpowered(hero)){</span>
+<span class="nc" id="L472">					range += 4;</span>
+				}
+
+<span class="nc bnc" id="L475" title="All 2 branches missed.">				if (Dungeon.hero.rooted){</span>
+<span class="nc" id="L476">					PixelScene.shake( 1, 1f );</span>
+<span class="nc" id="L477">					GLog.w(Messages.get(MeleeWeapon.class, &quot;ability_target_range&quot;));</span>
+<span class="nc" id="L478">					return;</span>
+				}
+
+<span class="nc bnc" id="L481" title="All 2 branches missed.">				if (Dungeon.level.distance(hero.pos, target) &gt; range){</span>
+<span class="nc" id="L482">					GLog.w(Messages.get(MeleeWeapon.class, &quot;ability_target_range&quot;));</span>
+<span class="nc" id="L483">					return;</span>
+				}
+
+<span class="nc bnc" id="L486" title="All 2 branches missed.">				if (Actor.findChar(target) != null){</span>
+<span class="nc" id="L487">					GLog.w(Messages.get(MeleeWeapon.class, &quot;ability_occupied&quot;));</span>
+<span class="nc" id="L488">					return;</span>
+				}
+
+<span class="nc" id="L491">				Ballistica dash = new Ballistica(hero.pos, target, Ballistica.PROJECTILE);</span>
+
+<span class="nc bnc" id="L493" title="All 2 branches missed.">				if (!dash.collisionPos.equals(target)</span>
+<span class="nc bnc" id="L494" title="All 4 branches missed.">						|| (Dungeon.level.solid[target] &amp;&amp; !Dungeon.level.passable[target])){</span>
+<span class="nc" id="L495">					GLog.w(Messages.get(MeleeWeapon.class, &quot;ability_target_range&quot;));</span>
+<span class="nc" id="L496">					return;</span>
+				}
+
+<span class="nc" id="L499">				hero.busy();</span>
+<span class="nc" id="L500">				Sample.INSTANCE.play(Assets.Sounds.MISS);</span>
+<span class="nc" id="L501">				hero.sprite.emitter().start(Speck.factory(Speck.JET), 0.01f, Math.round(4 + 2*Dungeon.level.trueDistance(hero.pos, target)));</span>
+<span class="nc" id="L502">				hero.sprite.jump(hero.pos, target, 0, 0.1f, new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc bnc" id="L505" title="All 2 branches missed.">						if (Dungeon.level.map[hero.pos] == Terrain.OPEN_DOOR) {</span>
+<span class="nc" id="L506">							Door.leave( hero.pos );</span>
+						}
+<span class="nc" id="L508">						hero.pos = target;</span>
+<span class="nc" id="L509">						Dungeon.level.occupyCell(hero);</span>
+<span class="nc" id="L510">						hero.next();</span>
+<span class="nc" id="L511">					}</span>
+				});
+
+<span class="nc" id="L514">				Buff.affect(hero, MonkEnergy.class).abilityUsed(this);</span>
+<span class="nc" id="L515">			}</span>
+		}
+
+<span class="nc" id="L518">		public static class DragonKick extends MonkAbility {</span>
+
+			@Override
+			public int energyCost() {
+<span class="nc" id="L522">				return 4;</span>
+			}
+
+			@Override
+			public String desc() {
+<span class="nc bnc" id="L527" title="All 2 branches missed.">				if (Buff.affect(Dungeon.hero, MonkEnergy.class).abilitiesEmpowered(Dungeon.hero)){</span>
+					//9x hero unarmed damage
+<span class="nc" id="L529">					return Messages.get(this, &quot;empower_desc&quot;, 9, 9*(Dungeon.hero.STR()-8));</span>
+				} else {
+					//6x hero unarmed damage
+<span class="nc" id="L532">					return Messages.get(this, &quot;desc&quot;, 6, 6*(Dungeon.hero.STR()-8));</span>
+				}
+			}
+
+			@Override
+			public String targetingPrompt() {
+<span class="nc" id="L538">				return Messages.get(MeleeWeapon.class, &quot;prompt&quot;);</span>
+			}
+
+			@Override
+			public void doAbility(Hero hero, Integer target) {
+<span class="nc bnc" id="L543" title="All 4 branches missed.">				if (target == null || target == -1){</span>
+<span class="nc" id="L544">					return;</span>
+				}
+
+<span class="nc" id="L547">				Char enemy = Actor.findChar(target);</span>
+<span class="nc bnc" id="L548" title="All 8 branches missed.">				if (enemy == null || enemy == hero || hero.isCharmedBy(enemy) || !Dungeon.level.heroFOV[target]) {</span>
+<span class="nc" id="L549">					GLog.w(Messages.get(MeleeWeapon.class, &quot;ability_no_target&quot;));</span>
+<span class="nc" id="L550">					return;</span>
+				}
+
+<span class="nc" id="L553">				UnarmedAbilityTracker tracker = Buff.affect(hero, UnarmedAbilityTracker.class);</span>
+<span class="nc bnc" id="L554" title="All 2 branches missed.">				if (!hero.canAttack(enemy)){</span>
+<span class="nc" id="L555">					GLog.w(Messages.get(MeleeWeapon.class, &quot;ability_target_range&quot;));</span>
+<span class="nc" id="L556">					tracker.detach();</span>
+<span class="nc" id="L557">					return;</span>
+				}
+
+<span class="nc" id="L560">				hero.sprite.attack(enemy.pos, new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L563">						AttackIndicator.target(enemy);</span>
+<span class="nc" id="L564">						boolean empowered = Buff.affect(hero, MonkEnergy.class).abilitiesEmpowered(hero);</span>
+
+<span class="nc" id="L566">						int oldPos = enemy.pos;</span>
+<span class="nc bnc" id="L567" title="All 4 branches missed.">						if (hero.attack(enemy, empowered ? 9f : 6f, 0, Char.INFINITE_ACCURACY)){</span>
+<span class="nc" id="L568">							Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);</span>
+						}
+
+<span class="nc bnc" id="L571" title="All 2 branches missed.">						if (oldPos == enemy.pos){</span>
+							//trace a ballistica to our target (which will also extend past them
+<span class="nc" id="L573">							Ballistica trajectory = new Ballistica(hero.pos, enemy.pos, Ballistica.STOP_TARGET);</span>
+							//trim it to just be the part that goes past them
+<span class="nc" id="L575">							trajectory = new Ballistica(trajectory.collisionPos, trajectory.path.get(trajectory.path.size() - 1), Ballistica.PROJECTILE);</span>
+							//knock them back along that ballistica
+<span class="nc" id="L577">							WandOfBlastWave.throwChar(enemy, trajectory, 6, true, false, hero);</span>
+
+<span class="nc bnc" id="L579" title="All 4 branches missed.">							if (trajectory.dist &gt; 0 &amp;&amp; enemy.isActive()) {</span>
+<span class="nc" id="L580">								Buff.affect(enemy, Paralysis.class, Math.min( 6, trajectory.dist));</span>
+							}
+						}
+<span class="nc" id="L583">						Invisibility.dispel();</span>
+<span class="nc" id="L584">						hero.spendAndNext(hero.attackDelay());</span>
+<span class="nc" id="L585">						tracker.detach();</span>
+<span class="nc" id="L586">						Buff.affect(hero, MonkEnergy.class).abilityUsed(DragonKick.this);</span>
+
+<span class="nc bnc" id="L588" title="All 2 branches missed.">						if (empowered){</span>
+<span class="nc bnc" id="L589" title="All 2 branches missed.">							for (Char ch : Actor.chars()){</span>
+<span class="nc bnc" id="L590" title="All 4 branches missed.">								if (ch != enemy</span>
+										&amp;&amp; ch.alignment == Char.Alignment.ENEMY
+<span class="nc bnc" id="L592" title="All 2 branches missed.">										&amp;&amp; Dungeon.level.adjacent(ch.pos, hero.pos)){</span>
+									//trace a ballistica to our target (which will also extend past them
+<span class="nc" id="L594">									Ballistica trajectory = new Ballistica(hero.pos, ch.pos, Ballistica.STOP_TARGET);</span>
+									//trim it to just be the part that goes past them
+<span class="nc" id="L596">									trajectory = new Ballistica(trajectory.collisionPos, trajectory.path.get(trajectory.path.size() - 1), Ballistica.PROJECTILE);</span>
+									//knock them back along that ballistica
+<span class="nc" id="L598">									WandOfBlastWave.throwChar(ch, trajectory, 6, true, false, hero);</span>
+
+<span class="nc bnc" id="L600" title="All 4 branches missed.">									if (trajectory.dist &gt; 0 &amp;&amp; enemy.isActive()) {</span>
+<span class="nc" id="L601">										Buff.affect(ch, Paralysis.class, Math.min( 6, trajectory.dist));</span>
+									}
+								}
+<span class="nc" id="L604">							}</span>
+						}
+<span class="nc" id="L606">					}</span>
+				});
+<span class="nc" id="L608">			}</span>
+		}
+
+<span class="nc" id="L611">		public static class Meditate extends MonkAbility {</span>
+
+			@Override
+			public int energyCost() {
+<span class="nc" id="L615">				return 5;</span>
+			}
+
+			@Override
+			public void doAbility(Hero hero, Integer target) {
+
+<span class="nc" id="L621">				hero.sprite.operate(hero.pos);</span>
+<span class="nc" id="L622">				GameScene.flash(0x88000000, false);</span>
+<span class="nc" id="L623">				Sample.INSTANCE.play(Assets.Sounds.SCAN);</span>
+
+<span class="nc bnc" id="L625" title="All 2 branches missed.">				for (Buff b : hero.buffs()){</span>
+<span class="nc bnc" id="L626" title="All 6 branches missed.">					if (b.type == Buff.buffType.NEGATIVE</span>
+							&amp;&amp; !(b instanceof AllyBuff)
+							&amp;&amp; !(b instanceof LostInventory)){
+<span class="nc" id="L629">						b.detach();</span>
+					}
+<span class="nc" id="L631">				}</span>
+
+				//we process this as 5x wait actions instead of one 5 tick action to prevent
+				// effects like time freeze from eating the whole action duration
+<span class="nc bnc" id="L635" title="All 2 branches missed.">				for (int i = 0; i &lt; 5; i++) hero.spendConstant(Actor.TICK);</span>
+
+<span class="nc bnc" id="L637" title="All 2 branches missed.">				if (Buff.affect(hero, MonkEnergy.class).abilitiesEmpowered(hero)){</span>
+<span class="nc" id="L638">					int toHeal = Math.round((hero.HT - hero.HP)/5f);</span>
+<span class="nc bnc" id="L639" title="All 2 branches missed.">					if (toHeal &gt; 0) {</span>
+<span class="nc" id="L640">						Buff.affect(hero, Healing.class).setHeal(toHeal, 0, 1);</span>
+					}
+<span class="nc" id="L642">					Buff.affect(hero, MeditateResistance.class, hero.cooldown());</span>
+				}
+
+<span class="nc" id="L645">				Actor.addDelayed(new Actor() {</span>
+
+					{
+<span class="nc" id="L648">						actPriority = VFX_PRIO;</span>
+<span class="nc" id="L649">					}</span>
+
+					@Override
+					protected boolean act() {
+<span class="nc" id="L653">						Buff.affect(hero, Recharging.class, 8f);</span>
+<span class="nc" id="L654">						Buff.affect(hero, ArtifactRecharge.class).extend(8f).ignoreHornOfPlenty = false;</span>
+<span class="nc" id="L655">						Actor.remove(this);</span>
+<span class="nc" id="L656">						return true;</span>
+					}
+<span class="nc" id="L658">				}, hero.cooldown()-1);</span>
+
+<span class="nc" id="L660">				hero.next();</span>
+<span class="nc" id="L661">				hero.busy();</span>
+<span class="nc" id="L662">				Buff.affect(hero, MonkEnergy.class).abilityUsed(this);</span>
+<span class="nc" id="L663">			}</span>
+
+<span class="nc" id="L665">			public static class MeditateResistance extends FlavourBuff{</span>
+				{
+<span class="nc" id="L667">					actPriority = HERO_PRIO+1; //ends just before the hero acts</span>
+<span class="nc" id="L668">				}</span>
+			};
+		}
+
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

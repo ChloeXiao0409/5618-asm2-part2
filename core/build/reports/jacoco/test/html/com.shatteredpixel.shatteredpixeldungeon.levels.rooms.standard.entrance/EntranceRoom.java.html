@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EntranceRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.entrance</a> &gt; <span class="el_source">EntranceRoom.java</span></div><h1>EntranceRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.entrance;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.items.journal.GuidePage;
+import com.shatteredpixel.shatteredpixeldungeon.items.journal.Guidebook;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Document;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.StandardRoom;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L41">public class EntranceRoom extends StandardRoom {</span>
+	
+	@Override
+	public int minWidth() {
+<span class="nc" id="L45">		return Math.max(super.minWidth(), 5);</span>
+	}
+	
+	@Override
+	public int minHeight() {
+<span class="nc" id="L50">		return Math.max(super.minHeight(), 5);</span>
+	}
+
+	@Override
+	public boolean isEntrance() {
+<span class="nc" id="L55">		return true;</span>
+	}
+
+	@Override
+	public boolean canMerge(Level l, Room other, Point p, int mergeTerrain) {
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		if (Dungeon.depth &lt;= 2) {</span>
+<span class="nc" id="L61">			return false;</span>
+		} else {
+<span class="nc" id="L63">			return super.canMerge(l, other, p, mergeTerrain);</span>
+		}
+	}
+
+	@Override
+	public boolean canPlaceTrap(Point p) {
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		if (Dungeon.depth == 1) {</span>
+<span class="nc" id="L70">			return false;</span>
+		} else {
+<span class="nc" id="L72">			return super.canPlaceTrap(p);</span>
+		}
+	}
+
+	public void paint(Level level ) {
+		
+<span class="nc" id="L78">		Painter.fill( level, this, Terrain.WALL );</span>
+<span class="nc" id="L79">		Painter.fill( level, this, 1, Terrain.EMPTY );</span>
+		
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		for (Room.Door door : connected.values()) {</span>
+<span class="nc" id="L82">			door.set( Room.Door.Type.REGULAR );</span>
+<span class="nc" id="L83">		}</span>
+
+		int entrance;
+		do {
+<span class="nc" id="L87">			entrance = level.pointToCell(random(2));</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		} while (level.findMob(entrance) != null);</span>
+<span class="nc" id="L89">		Painter.set( level, entrance, Terrain.ENTRANCE );</span>
+
+<span class="nc bnc" id="L91" title="All 2 branches missed.">		if (Dungeon.depth == 1){</span>
+<span class="nc" id="L92">			level.transitions.add(new LevelTransition(level, entrance, LevelTransition.Type.SURFACE));</span>
+		} else {
+<span class="nc" id="L94">			level.transitions.add(new LevelTransition(level, entrance, LevelTransition.Type.REGULAR_ENTRANCE));</span>
+		}
+
+		//use a separate generator here so meta progression doesn't affect levelgen
+<span class="nc" id="L98">		Random.pushGenerator();</span>
+
+		//places the first guidebook page on floor 1
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (Dungeon.depth == 1 &amp;&amp;</span>
+<span class="nc bnc" id="L102" title="All 4 branches missed.">				(!Document.ADVENTURERS_GUIDE.isPageRead(Document.GUIDE_INTRO) || SPDSettings.intro() )){</span>
+			int pos;
+			do {
+				//can't be on bottom row of tiles
+<span class="nc" id="L106">				pos = level.pointToCell(new Point( Random.IntRange( left + 1, right - 1 ),</span>
+<span class="nc" id="L107">						Random.IntRange( top + 1, bottom - 2 )));</span>
+<span class="nc bnc" id="L108" title="All 4 branches missed.">			} while (pos == level.entrance() || level.findMob(level.entrance()) != null);</span>
+<span class="nc" id="L109">			level.drop( new Guidebook(), pos );</span>
+<span class="nc" id="L110">			Document.ADVENTURERS_GUIDE.deletePage(Document.GUIDE_INTRO);</span>
+		}
+
+		//places the third guidebook page on floor 2
+<span class="nc bnc" id="L114" title="All 4 branches missed.">		if (Dungeon.depth == 2 &amp;&amp; !Document.ADVENTURERS_GUIDE.isPageFound(Document.GUIDE_SEARCHING)){</span>
+			int pos;
+			do {
+				//can't be on bottom row of tiles
+<span class="nc" id="L118">				pos = level.pointToCell(new Point( Random.IntRange( left + 1, right - 1 ),</span>
+<span class="nc" id="L119">						Random.IntRange( top + 1, bottom - 2 )));</span>
+<span class="nc bnc" id="L120" title="All 4 branches missed.">			} while (pos == level.entrance() || level.findMob(level.entrance()) != null);</span>
+<span class="nc" id="L121">			GuidePage p = new GuidePage();</span>
+<span class="nc" id="L122">			p.page(Document.GUIDE_SEARCHING);</span>
+<span class="nc" id="L123">			level.drop( p, pos );</span>
+		}
+
+<span class="nc" id="L126">		Random.popGenerator();</span>
+
+<span class="nc" id="L128">	}</span>
+
+<span class="nc" id="L130">	private static ArrayList&lt;Class&lt;?extends StandardRoom&gt;&gt; rooms = new ArrayList&lt;&gt;();</span>
+	static {
+<span class="nc" id="L132">		rooms.add(EntranceRoom.class);</span>
+
+
+<span class="nc" id="L135">		rooms.add(WaterBridgeEntranceRoom.class);</span>
+<span class="nc" id="L136">		rooms.add(CircleBasinEntranceRoom.class);</span>
+
+<span class="nc" id="L138">		rooms.add(ChasmBridgeEntranceRoom.class);</span>
+<span class="nc" id="L139">		rooms.add(PillarsEntranceRoom.class);</span>
+
+<span class="nc" id="L141">		rooms.add(CaveEntranceRoom.class);</span>
+<span class="nc" id="L142">		rooms.add(CavesFissureEntranceRoom.class);</span>
+
+<span class="nc" id="L144">		rooms.add(HallwayEntranceRoom.class);</span>
+<span class="nc" id="L145">		rooms.add(StatuesEntranceRoom.class);</span>
+
+<span class="nc" id="L147">		rooms.add(ChasmEntranceRoom.class);</span>
+<span class="nc" id="L148">		rooms.add(RitualEntranceRoom.class);</span>
+	}
+
+<span class="nc" id="L151">	private static float[][] chances = new float[27][];</span>
+	static {
+<span class="nc" id="L153">		chances[1] =  new float[]{1,  0,0, 0,0, 0,0, 0,0, 0,0};</span>
+<span class="nc" id="L154">		chances[2] =  chances[1];</span>
+<span class="nc" id="L155">		chances[3] =  new float[]{3,  6,1, 0,0, 0,0, 0,0, 0,0};</span>
+<span class="nc" id="L156">		chances[5] =  chances[4] = chances[3];</span>
+
+<span class="nc" id="L158">		chances[6] =  new float[]{2,  0,0, 4,4, 0,0, 0,0, 0,0};</span>
+<span class="nc" id="L159">		chances[10] = chances[9] = chances[8] = chances[7] = chances[6];</span>
+
+<span class="nc" id="L161">		chances[11] = new float[]{2,  0,0, 0,0, 4,4, 0,0, 0,0};</span>
+<span class="nc" id="L162">		chances[15] = chances[14] = chances[13] = chances[12] = chances[11];</span>
+
+<span class="nc" id="L164">		chances[16] = new float[]{2,  0,0, 0,0, 0,0, 4,4, 0,0};</span>
+<span class="nc" id="L165">		chances[20] = chances[19] = chances[18] = chances[17] = chances[16];</span>
+
+<span class="nc" id="L167">		chances[21] = new float[]{3,  0,0, 0,0, 0,0, 0,0, 6,1};</span>
+<span class="nc" id="L168">		chances[26] = chances[25] = chances[24] = chances[23] = chances[22] = chances[21];</span>
+<span class="nc" id="L169">	}</span>
+
+	public static StandardRoom createEntrance(){
+<span class="nc" id="L172">		return Reflection.newInstance(rooms.get(Random.chances(chances[Dungeon.depth])));</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

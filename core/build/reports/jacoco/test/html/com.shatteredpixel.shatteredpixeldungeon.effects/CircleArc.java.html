@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CircleArc.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.effects</a> &gt; <span class="el_source">CircleArc.java</span></div><h1>CircleArc.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.effects;
+
+import com.watabou.gltextures.SmartTexture;
+import com.watabou.gltextures.TextureCache;
+import com.watabou.glwrap.Blending;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Group;
+import com.watabou.noosa.NoosaScript;
+import com.watabou.noosa.Visual;
+import com.watabou.utils.PointF;
+
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
+
+public class CircleArc extends Visual {
+	
+<span class="nc" id="L41">	private float duration = 0;</span>
+	private float lifespan;
+	
+	//1f is an entire 360 degree sweep
+	private float sweep;
+	private boolean dirty;
+	
+<span class="nc" id="L48">	private boolean lightMode = true;</span>
+	
+	private SmartTexture texture;
+
+	protected float[] vertices;
+	private FloatBuffer verticesBuffer;
+	private ShortBuffer indices;
+	
+	private int nTris;
+	private float rad;
+	
+	//more triangles means a more precise visual
+	public CircleArc( int triangles, float radius ) {
+		
+<span class="nc" id="L62">		super( 0, 0, 0, 0 );</span>
+
+<span class="nc" id="L64">		texture = TextureCache.createSolid( 0xFFFFFFFF );</span>
+		
+<span class="nc" id="L66">		this.nTris = triangles;</span>
+<span class="nc" id="L67">		this.rad = radius;</span>
+
+<span class="nc" id="L69">		vertices = new float[4];</span>
+<span class="nc" id="L70">		verticesBuffer = ByteBuffer.</span>
+<span class="nc" id="L71">				allocateDirect( (nTris * 2 + 1) * 4 * (Float.SIZE / 8) ).</span>
+<span class="nc" id="L72">				order( ByteOrder.nativeOrder() ).</span>
+<span class="nc" id="L73">				asFloatBuffer();</span>
+		
+<span class="nc" id="L75">		indices = ByteBuffer.</span>
+<span class="nc" id="L76">				allocateDirect( nTris * 3 * Short.SIZE / 8 ).</span>
+<span class="nc" id="L77">				order( ByteOrder.nativeOrder() ).</span>
+<span class="nc" id="L78">				asShortBuffer();</span>
+		
+<span class="nc" id="L80">		sweep = 1f;</span>
+<span class="nc" id="L81">		updateTriangles();</span>
+<span class="nc" id="L82">	}</span>
+	
+	public CircleArc color( int color, boolean lightMode ) {
+<span class="nc" id="L85">		this.lightMode = lightMode;</span>
+<span class="nc" id="L86">		hardlight( color );</span>
+		
+<span class="nc" id="L88">		return this;</span>
+	}
+	
+	public CircleArc show( Visual visual, float duration ) {
+<span class="nc" id="L92">		point( visual.center() );</span>
+<span class="nc" id="L93">		visual.parent.addToBack( this );</span>
+		
+<span class="nc" id="L95">		lifespan = this.duration = duration;</span>
+		
+<span class="nc" id="L97">		return this;</span>
+	}
+	
+	public CircleArc show(Group parent, PointF pos, float duration ) {
+<span class="nc" id="L101">		point( pos );</span>
+<span class="nc" id="L102">		parent.add( this );</span>
+		
+<span class="nc" id="L104">		lifespan = this.duration = duration;</span>
+		
+<span class="nc" id="L106">		return this;</span>
+	}
+	
+	public void setSweep( float sweep ){
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		if (sweep != this.sweep) {</span>
+<span class="nc" id="L111">			this.sweep = sweep;</span>
+<span class="nc" id="L112">			dirty = true;</span>
+		}
+<span class="nc" id="L114">	}</span>
+
+	public float getSweep(){
+<span class="nc" id="L117">		return sweep;</span>
+	}
+	
+	private void updateTriangles(){
+		
+<span class="nc" id="L122">		dirty = false;</span>
+		
+<span class="nc" id="L124">		((Buffer)indices).position( 0 );</span>
+<span class="nc" id="L125">		((Buffer)verticesBuffer).position( 0 );</span>
+		
+<span class="nc" id="L127">		vertices[0] = 0;</span>
+<span class="nc" id="L128">		vertices[1] = 0;</span>
+<span class="nc" id="L129">		vertices[2] = 0.25f;</span>
+<span class="nc" id="L130">		vertices[3] = 0;</span>
+<span class="nc" id="L131">		verticesBuffer.put( vertices );</span>
+
+<span class="nc" id="L133">		vertices[2] = 0.75f;</span>
+<span class="nc" id="L134">		vertices[3] = 0;</span>
+		
+		//starting position is very top by default, use angle to adjust this.
+<span class="nc" id="L137">		double start = 2 * (Math.PI - Math.PI*sweep) - Math.PI/2.0;</span>
+		
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		for (int i = 0; i &lt; nTris; i++) {</span>
+			
+<span class="nc" id="L141">			double a = start + i * Math.PI * 2 / nTris * sweep;</span>
+<span class="nc" id="L142">			vertices[0] = (float)Math.cos( a ) * rad;</span>
+<span class="nc" id="L143">			vertices[1] = (float)Math.sin( a ) * rad;</span>
+<span class="nc" id="L144">			verticesBuffer.put( vertices );</span>
+			
+<span class="nc" id="L146">			a += 3.1415926f * 2 / nTris * sweep;</span>
+<span class="nc" id="L147">			vertices[0] = (float)Math.cos( a ) * rad;</span>
+<span class="nc" id="L148">			vertices[1] = (float)Math.sin( a ) * rad;</span>
+<span class="nc" id="L149">			verticesBuffer.put( vertices );</span>
+			
+<span class="nc" id="L151">			indices.put( (short)0 );</span>
+<span class="nc" id="L152">			indices.put( (short)(1 + i * 2) );</span>
+<span class="nc" id="L153">			indices.put( (short)(2 + i * 2) );</span>
+		}
+
+<span class="nc" id="L156">		((Buffer)indices).position( 0 );</span>
+<span class="nc" id="L157">	}</span>
+	
+	@Override
+	public void update() {
+<span class="nc" id="L161">		super.update();</span>
+		
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		if (duration &gt; 0) {</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">			if ((lifespan -= Game.elapsed) &gt; 0) {</span>
+<span class="nc" id="L165">				sweep = lifespan/duration;</span>
+<span class="nc" id="L166">				dirty = true;</span>
+			
+			} else {
+<span class="nc" id="L169">				killAndErase();</span>
+			}
+		}
+<span class="nc" id="L172">	}</span>
+	
+	@Override
+	public void draw() {
+		
+<span class="nc" id="L177">		super.draw();</span>
+		
+<span class="nc bnc" id="L179" title="All 2 branches missed.">		if (dirty) {</span>
+<span class="nc" id="L180">			updateTriangles();</span>
+		}
+		
+<span class="nc bnc" id="L183" title="All 2 branches missed.">		if (lightMode) Blending.setLightMode();</span>
+		
+<span class="nc" id="L185">		NoosaScript script = NoosaScript.get();</span>
+		
+<span class="nc" id="L187">		texture.bind();</span>
+		
+<span class="nc" id="L189">		script.uModel.valueM4( matrix );</span>
+<span class="nc" id="L190">		script.lighting(</span>
+				rm, gm, bm, am,
+				ra, ga, ba, aa );
+		
+<span class="nc" id="L194">		script.camera( camera );</span>
+<span class="nc" id="L195">		script.drawElements( verticesBuffer, indices, nTris * 3 );</span>
+		
+<span class="nc bnc" id="L197" title="All 2 branches missed.">		if (lightMode) Blending.setNormalMode();</span>
+<span class="nc" id="L198">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

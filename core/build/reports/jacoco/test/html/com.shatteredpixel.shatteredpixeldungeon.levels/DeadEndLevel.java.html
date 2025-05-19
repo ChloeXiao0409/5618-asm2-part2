@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DeadEndLevel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels</a> &gt; <span class="el_source">DeadEndLevel.java</span></div><h1>DeadEndLevel.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Bones;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L37">public class DeadEndLevel extends Level {</span>
+
+	private static final int SIZE = 5;
+	
+	{
+<span class="nc" id="L42">		color1 = 0x534f3e;</span>
+<span class="nc" id="L43">		color2 = 0xb9d661;</span>
+<span class="nc" id="L44">	}</span>
+	
+	@Override
+	public String tilesTex() {
+<span class="nc" id="L48">		return Assets.Environment.TILES_CAVES;</span>
+	}
+	
+	@Override
+	public String waterTex() {
+<span class="nc" id="L53">		return Assets.Environment.WATER_HALLS;</span>
+	}
+	
+	@Override
+	protected boolean build() {
+		
+<span class="nc" id="L59">		setSize(7, 7);</span>
+		
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		for (int i=2; i &lt; SIZE; i++) {</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">			for (int j=2; j &lt; SIZE; j++) {</span>
+<span class="nc" id="L63">				map[i * width() + j] = Terrain.EMPTY;</span>
+			}
+		}
+		
+<span class="nc bnc" id="L67" title="All 2 branches missed.">		for (int i=1; i &lt;= SIZE; i++) {</span>
+<span class="nc" id="L68">			map[width() + i] =</span>
+<span class="nc" id="L69">			map[width() * SIZE + i] =</span>
+<span class="nc" id="L70">			map[width() * i + 1] =</span>
+<span class="nc" id="L71">			map[width() * i + SIZE] =</span>
+				Terrain.WATER;
+		}
+		
+<span class="nc" id="L75">		int entrance = SIZE * width() + SIZE / 2 + 1;</span>
+
+		//different exit behaviour depending on main branch or side one
+<span class="nc bnc" id="L78" title="All 2 branches missed.">		if (Dungeon.branch == 0) {</span>
+<span class="nc" id="L79">			transitions.add(new LevelTransition(this, entrance, LevelTransition.Type.REGULAR_ENTRANCE));</span>
+		} else {
+<span class="nc" id="L81">			transitions.add(new LevelTransition(this,</span>
+					entrance,
+					LevelTransition.Type.BRANCH_ENTRANCE,
+					Dungeon.depth,
+					0,
+					LevelTransition.Type.BRANCH_EXIT));
+		}
+<span class="nc" id="L88">		map[entrance] = Terrain.ENTRANCE;</span>
+		
+<span class="nc" id="L90">		return true;</span>
+	}
+	
+	@Override
+	public Mob createMob() {
+<span class="nc" id="L95">		return null;</span>
+	}
+	
+	@Override
+	protected void createMobs() {
+<span class="nc" id="L100">	}</span>
+
+	public Actor addRespawner() {
+<span class="nc" id="L103">		return null;</span>
+	}
+
+	@Override
+	protected void createItems() {
+<span class="nc" id="L108">		Random.pushGenerator(Random.Long());</span>
+<span class="nc" id="L109">			ArrayList&lt;Item&gt; bonesItems = Bones.get();</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">			if (bonesItems != null) {</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">				for (Item i : bonesItems) {</span>
+<span class="nc" id="L112">					drop(i, entrance()-width()).setHauntedIfCursed().type = Heap.Type.REMAINS;</span>
+<span class="nc" id="L113">				}</span>
+			}
+<span class="nc" id="L115">		Random.popGenerator();</span>
+<span class="nc" id="L116">	}</span>
+	
+	@Override
+	public int randomRespawnCell( Char ch ) {
+<span class="nc" id="L120">		return entrance()-width();</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

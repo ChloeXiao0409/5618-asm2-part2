@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AssassinsBlade.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee</a> &gt; <span class="el_source">AssassinsBlade.java</span></div><h1>AssassinsBlade.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+
+<span class="nc" id="L31">public class AssassinsBlade extends MeleeWeapon {</span>
+
+	{
+<span class="nc" id="L34">		image = ItemSpriteSheet.ASSASSINS_BLADE;</span>
+<span class="nc" id="L35">		hitSound = Assets.Sounds.HIT_STAB;</span>
+<span class="nc" id="L36">		hitSoundPitch = 0.9f;</span>
+
+<span class="nc" id="L38">		tier = 4;</span>
+<span class="nc" id="L39">	}</span>
+
+	@Override
+	public int max(int lvl) {
+<span class="nc" id="L43">		return  4*(tier+1) +    //20 base, down from 25</span>
+				lvl*(tier+1);   //scaling unchanged
+	}
+
+	@Override
+	public int damageRoll(Char owner) {
+<span class="nc bnc" id="L49" title="All 2 branches missed.">		if (owner instanceof Hero) {</span>
+<span class="nc" id="L50">			Hero hero = (Hero)owner;</span>
+<span class="nc" id="L51">			Char enemy = hero.enemy();</span>
+<span class="nc bnc" id="L52" title="All 4 branches missed.">			if (enemy instanceof Mob &amp;&amp; ((Mob) enemy).surprisedBy(hero)) {</span>
+				//deals 50% toward max to max on surprise, instead of min to max.
+<span class="nc" id="L54">				int diff = max() - min();</span>
+<span class="nc" id="L55">				int damage = augment.damageFactor(Hero.heroDamageIntRange(</span>
+<span class="nc" id="L56">						min() + Math.round(diff*0.50f),</span>
+<span class="nc" id="L57">						max()));</span>
+<span class="nc" id="L58">				int exStr = hero.STR() - STRReq();</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">				if (exStr &gt; 0) {</span>
+<span class="nc" id="L60">					damage += Hero.heroDamageIntRange(0, exStr);</span>
+				}
+<span class="nc" id="L62">				return damage;</span>
+			}
+		}
+<span class="nc" id="L65">		return super.damageRoll(owner);</span>
+	}
+
+	@Override
+	public String targetingPrompt() {
+<span class="nc" id="L70">		return Messages.get(this, &quot;prompt&quot;);</span>
+	}
+
+	public boolean useTargeting(){
+<span class="nc" id="L74">		return false;</span>
+	}
+
+	@Override
+	protected void duelistAbility(Hero hero, Integer target) {
+<span class="nc" id="L79">		Dagger.sneakAbility(hero, target, 3, 2+buffedLvl(), this);</span>
+<span class="nc" id="L80">	}</span>
+
+	@Override
+	public String abilityInfo() {
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		if (levelKnown){</span>
+<span class="nc" id="L85">			return Messages.get(this, &quot;ability_desc&quot;, 2+buffedLvl());</span>
+		} else {
+<span class="nc" id="L87">			return Messages.get(this, &quot;typical_ability_desc&quot;, 2);</span>
+		}
+	}
+
+	@Override
+	public String upgradeAbilityStat(int level) {
+<span class="nc" id="L93">		return Integer.toString(2+level);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

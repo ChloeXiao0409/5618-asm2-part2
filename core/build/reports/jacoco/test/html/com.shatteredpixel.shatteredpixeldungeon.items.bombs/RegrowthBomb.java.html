@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RegrowthBomb.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.bombs</a> &gt; <span class="el_source">RegrowthBomb.java</span></div><h1>RegrowthBomb.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.bombs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Regrowth;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfRegrowth;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Starflower;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.watabou.utils.BArray;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L44">public class RegrowthBomb extends Bomb {</span>
+	
+	{
+<span class="nc" id="L47">		image = ItemSpriteSheet.REGROWTH_BOMB;</span>
+<span class="nc" id="L48">	}</span>
+	
+	@Override
+	public boolean explodesDestructively() {
+<span class="nc" id="L52">		return false;</span>
+	}
+
+	@Override
+	protected int explosionRange() {
+<span class="nc" id="L57">		return 3;</span>
+	}
+
+	@Override
+	public void explode(int cell) {
+<span class="nc" id="L62">		super.explode(cell);</span>
+		
+<span class="nc bnc" id="L64" title="All 2 branches missed.">		if (Dungeon.level.heroFOV[cell]) {</span>
+<span class="nc" id="L65">			Splash.at(cell, 0x00FF00, 30);</span>
+		}
+		
+<span class="nc" id="L68">		ArrayList&lt;Integer&gt; plantCandidates = new ArrayList&lt;&gt;();</span>
+		
+<span class="nc" id="L70">		PathFinder.buildDistanceMap( cell, BArray.not( Dungeon.level.solid, null ), explosionRange() );</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		for (int i = 0; i &lt; PathFinder.distance.length; i++) {</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">			if (PathFinder.distance[i] &lt; Integer.MAX_VALUE) {</span>
+<span class="nc" id="L73">				Char ch = Actor.findChar(i);</span>
+<span class="nc" id="L74">				int t = Dungeon.level.map[i];</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">				if (ch != null){</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">					if (ch.alignment == Dungeon.hero.alignment) {</span>
+						//same as a healing potion
+<span class="nc" id="L78">						PotionOfHealing.cure(ch);</span>
+<span class="nc" id="L79">						PotionOfHealing.heal(ch);</span>
+					}
+<span class="nc bnc" id="L81" title="All 12 branches missed.">				} else if ((t == Terrain.EMPTY || t == Terrain.EMPTY_DECO || t == Terrain.EMBERS</span>
+						|| t == Terrain.GRASS || t == Terrain.FURROWED_GRASS || t == Terrain.HIGH_GRASS)
+<span class="nc bnc" id="L83" title="All 2 branches missed.">						&amp;&amp; Dungeon.level.plants.get(i) == null){</span>
+<span class="nc" id="L84">					plantCandidates.add(i);</span>
+				}
+<span class="nc" id="L86">				GameScene.add( Blob.seed( i, 10, Regrowth.class ) );</span>
+			}
+		}
+
+<span class="nc" id="L90">		int plants = Random.chances(new float[]{0, 0, 2, 1});</span>
+
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		for (int i = 0; i &lt; plants; i++) {</span>
+<span class="nc" id="L93">			Integer plantPos = Random.element(plantCandidates);</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">			if (plantPos != null) {</span>
+<span class="nc" id="L95">				Dungeon.level.plant((Plant.Seed) Generator.randomUsingDefaults(Generator.Category.SEED), plantPos);</span>
+<span class="nc" id="L96">				plantCandidates.remove(plantPos);</span>
+			}
+		}
+		
+<span class="nc" id="L100">		Integer plantPos = Random.element(plantCandidates);</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (plantPos != null){</span>
+			Plant.Seed plant;
+<span class="nc bnc" id="L103" title="All 3 branches missed.">			switch (Random.chances(new float[]{0, 6, 3, 1})){</span>
+				case 1: default:
+<span class="nc" id="L105">					plant = new WandOfRegrowth.Dewcatcher.Seed();</span>
+<span class="nc" id="L106">					break;</span>
+				case 2:
+<span class="nc" id="L108">					plant = new WandOfRegrowth.Seedpod.Seed();</span>
+<span class="nc" id="L109">					break;</span>
+				case 3:
+<span class="nc" id="L111">					plant = new Starflower.Seed();</span>
+					break;
+			}
+<span class="nc" id="L114">			Dungeon.level.plant( plant, plantPos);</span>
+		}
+<span class="nc" id="L116">	}</span>
+	
+	@Override
+	public int value() {
+		//prices of ingredients
+<span class="nc" id="L121">		return quantity * (20 + 30);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

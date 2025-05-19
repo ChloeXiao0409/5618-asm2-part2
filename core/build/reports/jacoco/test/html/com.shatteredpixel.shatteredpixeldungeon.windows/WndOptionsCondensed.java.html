@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WndOptionsCondensed.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.windows</a> &gt; <span class="el_source">WndOptionsCondensed.java</span></div><h1>WndOptionsCondensed.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.windows;
+
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.watabou.noosa.Image;
+
+import java.util.ArrayList;
+
+//similar to WndOptions, but tries to place multiple buttons per row
+public class WndOptionsCondensed extends WndOptions {
+
+	public WndOptionsCondensed(Image icon, String title, String message, String... options) {
+<span class="nc" id="L35">		super(icon, title, message, options);</span>
+<span class="nc" id="L36">	}</span>
+
+	public WndOptionsCondensed( String title, String message, String... options ) {
+<span class="nc" id="L39">		super(title, message, options);</span>
+<span class="nc" id="L40">	}</span>
+
+	@Override
+	protected void layoutBody(float pos, String message, String... options) {
+<span class="nc bnc" id="L44" title="All 2 branches missed.">		int width = PixelScene.landscape() ? WIDTH_L : WIDTH_P;</span>
+
+<span class="nc" id="L46">		RenderedTextBlock tfMesage = PixelScene.renderTextBlock( 6 );</span>
+<span class="nc" id="L47">		tfMesage.text(message, width);</span>
+<span class="nc" id="L48">		tfMesage.setPos( 0, pos );</span>
+<span class="nc" id="L49">		add( tfMesage );</span>
+
+<span class="nc" id="L51">		pos = tfMesage.bottom() + 2*MARGIN;</span>
+
+<span class="nc" id="L53">		ArrayList&lt;RedButton&gt; buttons = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		for (int i=0; i &lt; options.length; i++) {</span>
+<span class="nc" id="L56">			final int index = i;</span>
+<span class="nc" id="L57">			RedButton btn = new RedButton( options[i] ) {</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L60">					hide();</span>
+<span class="nc" id="L61">					onSelect( index );</span>
+<span class="nc" id="L62">				}</span>
+			};
+<span class="nc bnc" id="L64" title="All 2 branches missed.">			if (hasIcon(i)) btn.icon(getIcon(i));</span>
+<span class="nc" id="L65">			btn.enable(enabled(i));</span>
+<span class="nc" id="L66">			btn.setSize(btn.reqWidth(), BUTTON_HEIGHT);</span>
+<span class="nc" id="L67">			add( btn );</span>
+<span class="nc" id="L68">			buttons.add(btn);</span>
+		}
+
+<span class="nc" id="L71">		ArrayList&lt;RedButton&gt; curRow = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L72">		float widthLeftThisRow = width;</span>
+
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		while( !buttons.isEmpty() ){</span>
+<span class="nc" id="L75">			RedButton btn = buttons.get(0);</span>
+
+<span class="nc" id="L77">			widthLeftThisRow -= btn.width();</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">			if (curRow.isEmpty()) {</span>
+<span class="nc" id="L79">				curRow.add(btn);</span>
+<span class="nc" id="L80">				buttons.remove(btn);</span>
+			} else {
+<span class="nc" id="L82">				widthLeftThisRow -= MARGIN;</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">				if (widthLeftThisRow &gt;= 0) {</span>
+<span class="nc" id="L84">					curRow.add(btn);</span>
+<span class="nc" id="L85">					buttons.remove(btn);</span>
+				}
+			}
+
+			//layout current row. Currently forces a max of 5 buttons but can work with more
+<span class="nc bnc" id="L90" title="All 6 branches missed.">			if (buttons.isEmpty() || widthLeftThisRow &lt;= 0 || curRow.size() &gt;= 5){</span>
+
+				//re-use this variable for laying out the buttons
+<span class="nc" id="L93">				widthLeftThisRow = width - (curRow.size()-1);</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">				for (RedButton b : curRow){</span>
+<span class="nc" id="L95">					widthLeftThisRow -= b.width();</span>
+<span class="nc" id="L96">				}</span>
+
+				//while we still have space in this row, find the shortest button(s) and extend them
+<span class="nc bnc" id="L99" title="All 2 branches missed.">				while (widthLeftThisRow &gt; 0){</span>
+
+<span class="nc" id="L101">					ArrayList&lt;RedButton&gt; shortest = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L102">					RedButton secondShortest = null;</span>
+
+<span class="nc bnc" id="L104" title="All 2 branches missed.">					for (RedButton b : curRow) {</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">						if (shortest.isEmpty()) {</span>
+<span class="nc" id="L106">							shortest.add(b);</span>
+						} else {
+<span class="nc bnc" id="L108" title="All 2 branches missed.">							if (b.width() &lt; shortest.get(0).width()) {</span>
+<span class="nc" id="L109">								secondShortest = shortest.get(0);</span>
+<span class="nc" id="L110">								shortest.clear();</span>
+<span class="nc" id="L111">								shortest.add(b);</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">							} else if (b.width() == shortest.get(0).width()) {</span>
+<span class="nc" id="L113">								shortest.add(b);</span>
+<span class="nc bnc" id="L114" title="All 4 branches missed.">							} else if (secondShortest == null || secondShortest.width() &gt; b.width()){</span>
+<span class="nc" id="L115">								secondShortest = b;</span>
+							}
+						}
+<span class="nc" id="L118">					}</span>
+
+					float widthToGrow;
+
+<span class="nc bnc" id="L122" title="All 2 branches missed.">					if (secondShortest == null){</span>
+<span class="nc" id="L123">						widthToGrow = widthLeftThisRow / shortest.size();</span>
+<span class="nc" id="L124">						widthLeftThisRow = 0;</span>
+					} else {
+<span class="nc" id="L126">						widthToGrow = secondShortest.width() - shortest.get(0).width();</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">						if ((widthToGrow * shortest.size()) &gt;= widthLeftThisRow){</span>
+<span class="nc" id="L128">							widthToGrow = widthLeftThisRow / shortest.size();</span>
+<span class="nc" id="L129">							widthLeftThisRow = 0;</span>
+						} else {
+<span class="nc" id="L131">							widthLeftThisRow -= widthToGrow * shortest.size();</span>
+						}
+					}
+
+<span class="nc bnc" id="L135" title="All 2 branches missed.">					for (RedButton toGrow : shortest){</span>
+<span class="nc" id="L136">						toGrow.setRect(0, 0, toGrow.width()+widthToGrow, toGrow.height());</span>
+<span class="nc" id="L137">					}</span>
+<span class="nc" id="L138">				}</span>
+
+				//finally set positions
+<span class="nc" id="L141">				float x = 0;</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">				for (RedButton b : curRow){</span>
+<span class="nc" id="L143">					b.setRect(x, pos, b.width(), b.height());</span>
+<span class="nc" id="L144">					x += b.width() + 1;</span>
+<span class="nc" id="L145">				}</span>
+
+				//move to next line and reset variables
+<span class="nc" id="L148">				pos += BUTTON_HEIGHT+MARGIN;</span>
+<span class="nc" id="L149">				widthLeftThisRow = width;</span>
+<span class="nc" id="L150">				curRow.clear();</span>
+
+			}
+
+<span class="nc" id="L154">		}</span>
+
+<span class="nc" id="L156">		resize( width, (int)(pos - MARGIN) );</span>
+<span class="nc" id="L157">	}</span>
+
+	@Override
+	protected boolean hasInfo(int index) {
+<span class="nc" id="L161">		return false; //does nothing here, no room</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

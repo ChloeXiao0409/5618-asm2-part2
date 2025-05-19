@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Succubus.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">Succubus.java</span></div><h1>Succubus.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Charm;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Light;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfIdentify;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.SuccubusSprite;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L51">public class Succubus extends Mob {</span>
+
+<span class="nc" id="L53">	private int blinkCooldown = 0;</span>
+	
+	{
+<span class="nc" id="L56">		spriteClass = SuccubusSprite.class;</span>
+		
+<span class="nc" id="L58">		HP = HT = 80;</span>
+<span class="nc" id="L59">		defenseSkill = 25;</span>
+<span class="nc" id="L60">		viewDistance = Light.DISTANCE;</span>
+		
+<span class="nc" id="L62">		EXP = 12;</span>
+<span class="nc" id="L63">		maxLvl = 25;</span>
+		
+<span class="nc" id="L65">		loot = Generator.Category.SCROLL;</span>
+<span class="nc" id="L66">		lootChance = 0.33f;</span>
+
+<span class="nc" id="L68">		properties.add(Property.DEMONIC);</span>
+	}
+	
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L73">		return Random.NormalIntRange( 25, 30 );</span>
+	}
+	
+	@Override
+	public int attackProc( Char enemy, int damage ) {
+<span class="nc" id="L78">		damage = super.attackProc( enemy, damage );</span>
+		
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		if (enemy.buff(Charm.class) != null ){</span>
+<span class="nc" id="L81">			int shield = (HP - HT) + (5 + damage);</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">			if (shield &gt; 0){</span>
+<span class="nc" id="L83">				HP = HT;</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">				if (shield &lt; 5){</span>
+<span class="nc" id="L85">					sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(5-shield), FloatingText.HEALING);</span>
+				}
+
+<span class="nc" id="L88">				Buff.affect(this, Barrier.class).setShield(shield);</span>
+<span class="nc" id="L89">				sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shield), FloatingText.SHIELDING);</span>
+			} else {
+<span class="nc" id="L91">				HP += 5 + damage;</span>
+<span class="nc" id="L92">				sprite.showStatusWithIcon(CharSprite.POSITIVE, &quot;5&quot;, FloatingText.HEALING);</span>
+			}
+<span class="nc bnc" id="L94" title="All 2 branches missed.">			if (Dungeon.level.heroFOV[pos]) {</span>
+<span class="nc" id="L95">				Sample.INSTANCE.play( Assets.Sounds.CHARMS );</span>
+			}
+<span class="nc bnc" id="L97" title="All 2 branches missed.">		} else if (Random.Int( 3 ) == 0) {</span>
+<span class="nc" id="L98">			Charm c = Buff.affect( enemy, Charm.class, Charm.DURATION/2f );</span>
+<span class="nc" id="L99">			c.object = id();</span>
+<span class="nc" id="L100">			c.ignoreNextHit = true; //so that the -5 duration from succubus hit is ignored</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">			if (Dungeon.level.heroFOV[enemy.pos]) {</span>
+<span class="nc" id="L102">				enemy.sprite.centerEmitter().start(Speck.factory(Speck.HEART), 0.2f, 5);</span>
+<span class="nc" id="L103">				Sample.INSTANCE.play(Assets.Sounds.CHARMS);</span>
+			}
+		}
+		
+<span class="nc" id="L107">		return damage;</span>
+	}
+	
+	@Override
+	protected boolean getCloser( int target ) {
+<span class="nc bnc" id="L112" title="All 8 branches missed.">		if (fieldOfView[target] &amp;&amp; Dungeon.level.distance( pos, target ) &gt; 2 &amp;&amp; blinkCooldown &lt;= 0 &amp;&amp; !rooted) {</span>
+			
+<span class="nc bnc" id="L114" title="All 2 branches missed.">			if (blink( target )) {</span>
+<span class="nc" id="L115">				spend(-1 / speed());</span>
+<span class="nc" id="L116">				return true;</span>
+			} else {
+<span class="nc" id="L118">				return false;</span>
+			}
+			
+		} else {
+
+<span class="nc" id="L123">			blinkCooldown--;</span>
+<span class="nc" id="L124">			return super.getCloser( target );</span>
+			
+		}
+	}
+	
+	private boolean blink( int target ) {
+		
+<span class="nc" id="L131">		Ballistica route = new Ballistica( pos, target, Ballistica.PROJECTILE);</span>
+<span class="nc" id="L132">		int cell = route.collisionPos;</span>
+
+		//can't occupy the same cell as another char, so move back one.
+<span class="nc bnc" id="L135" title="All 4 branches missed.">		if (Actor.findChar( cell ) != null &amp;&amp; cell != this.pos)</span>
+<span class="nc" id="L136">			cell = route.path.get(route.dist-1);</span>
+
+<span class="nc bnc" id="L138" title="All 6 branches missed.">		if (Dungeon.level.avoid[ cell ] || (properties().contains(Property.LARGE) &amp;&amp; !Dungeon.level.openSpace[cell])){</span>
+<span class="nc" id="L139">			ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">			for (int n : PathFinder.NEIGHBOURS8) {</span>
+<span class="nc" id="L141">				cell = route.collisionPos + n;</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">				if (Dungeon.level.passable[cell]</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">						&amp;&amp; Actor.findChar( cell ) == null</span>
+<span class="nc bnc" id="L144" title="All 4 branches missed.">						&amp;&amp; (!properties().contains(Property.LARGE) || Dungeon.level.openSpace[cell])) {</span>
+<span class="nc" id="L145">					candidates.add( cell );</span>
+				}
+			}
+<span class="nc bnc" id="L148" title="All 2 branches missed.">			if (candidates.size() &gt; 0)</span>
+<span class="nc" id="L149">				cell = Random.element(candidates);</span>
+			else {
+<span class="nc" id="L151">				blinkCooldown = Random.IntRange(4, 6);</span>
+<span class="nc" id="L152">				return false;</span>
+			}
+		}
+		
+<span class="nc" id="L156">		ScrollOfTeleportation.appear( this, cell );</span>
+
+<span class="nc" id="L158">		blinkCooldown = Random.IntRange(4, 6);</span>
+<span class="nc" id="L159">		return true;</span>
+	}
+	
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L164">		return 40;</span>
+	}
+	
+	@Override
+	public int drRoll() {
+<span class="nc" id="L169">		return super.drRoll() + Random.NormalIntRange(0, 10);</span>
+	}
+
+	@Override
+	public Item createLoot() {
+		Class&lt;?extends Scroll&gt; loot;
+		do{
+<span class="nc" id="L176">			loot = (Class&lt;? extends Scroll&gt;) Random.oneOf(Generator.Category.SCROLL.classes);</span>
+<span class="nc bnc" id="L177" title="All 4 branches missed.">		} while (loot == ScrollOfIdentify.class || loot == ScrollOfUpgrade.class);</span>
+
+<span class="nc" id="L179">		return Reflection.newInstance(loot);</span>
+	}
+
+	{
+<span class="nc" id="L183">		immunities.add( Charm.class );</span>
+<span class="nc" id="L184">	}</span>
+
+	private static final String BLINK_CD = &quot;blink_cd&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L190">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L191">		bundle.put(BLINK_CD, blinkCooldown);</span>
+<span class="nc" id="L192">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L196">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L197">		blinkCooldown = bundle.getInt(BLINK_CD);</span>
+<span class="nc" id="L198">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EmoIcon.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.effects</a> &gt; <span class="el_source">EmoIcon.java</span></div><h1>EmoIcon.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.effects;
+
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.utils.Random;
+
+public class EmoIcon extends Image {
+
+<span class="nc" id="L33">	protected float maxSize = 2;</span>
+<span class="nc" id="L34">	protected float timeScale = 1;</span>
+	
+<span class="nc" id="L36">	protected boolean growing	= true;</span>
+	
+	protected CharSprite owner;
+	
+	public EmoIcon( CharSprite owner ) {
+<span class="nc" id="L41">		super();</span>
+		
+<span class="nc" id="L43">		this.owner = owner;</span>
+<span class="nc" id="L44">		GameScene.add( this );</span>
+<span class="nc" id="L45">	}</span>
+	
+	@Override
+	public void update() {
+<span class="nc" id="L49">		super.update();</span>
+		
+<span class="nc bnc" id="L51" title="All 2 branches missed.">		if (visible) {</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">			if (growing) {</span>
+<span class="nc" id="L53">				scale.set( Math.min(scale.x + Game.elapsed * timeScale, maxSize ));</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">				if (scale.x &gt;= maxSize) {</span>
+<span class="nc" id="L55">					growing = false;</span>
+				}
+			} else {
+<span class="nc" id="L58">				scale.set( Math.max(scale.x - Game.elapsed * timeScale, 1f ));</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">				if (scale.x &lt;= 1) {</span>
+<span class="nc" id="L60">					growing = true;</span>
+				}
+			}
+			
+<span class="nc" id="L64">			x = owner.x + owner.width() - width / 2;</span>
+<span class="nc" id="L65">			y = owner.y - height;</span>
+		}
+<span class="nc" id="L67">	}</span>
+	
+	public static class Sleep extends EmoIcon {
+		
+		public Sleep( CharSprite owner ) {
+			
+<span class="nc" id="L73">			super( owner );</span>
+			
+<span class="nc" id="L75">			copy( Icons.get( Icons.SLEEP ) );</span>
+			
+<span class="nc" id="L77">			maxSize = 1.2f;</span>
+<span class="nc" id="L78">			timeScale = 0.5f;</span>
+			
+<span class="nc" id="L80">			origin.set( width / 2, height / 2 );</span>
+<span class="nc" id="L81">			scale.set( Random.Float( 1, maxSize ) );</span>
+
+<span class="nc" id="L83">			x = owner.x + owner.width - width / 2;</span>
+<span class="nc" id="L84">			y = owner.y - height;</span>
+<span class="nc" id="L85">		}</span>
+	}
+	
+	public static class Alert extends EmoIcon {
+		
+		public Alert( CharSprite owner ) {
+			
+<span class="nc" id="L92">			super( owner );</span>
+			
+<span class="nc" id="L94">			copy( Icons.get( Icons.ALERT ) );</span>
+			
+<span class="nc" id="L96">			maxSize = 1.3f;</span>
+<span class="nc" id="L97">			timeScale = 2;</span>
+			
+<span class="nc" id="L99">			origin.set( 2.5f, height - 2.5f );</span>
+<span class="nc" id="L100">			scale.set( Random.Float( 1, maxSize ) );</span>
+
+<span class="nc" id="L102">			x = owner.x + owner.width - width / 2;</span>
+<span class="nc" id="L103">			y = owner.y - height;</span>
+<span class="nc" id="L104">		}</span>
+	}
+	
+	public static class Lost extends EmoIcon {
+		
+		public Lost( CharSprite owner ){
+<span class="nc" id="L110">			super( owner );</span>
+			
+<span class="nc" id="L112">			copy( Icons.get( Icons.LOST ) );</span>
+			
+<span class="nc" id="L114">			maxSize = 1.25f;</span>
+<span class="nc" id="L115">			timeScale = 1;</span>
+			
+<span class="nc" id="L117">			origin.set( 2.5f, height - 2.5f );</span>
+<span class="nc" id="L118">			scale.set( Random.Float( 1, maxSize ) );</span>
+			
+<span class="nc" id="L120">			x = owner.x + owner.width - width / 2;</span>
+<span class="nc" id="L121">			y = owner.y - height;</span>
+<span class="nc" id="L122">		}</span>
+		
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

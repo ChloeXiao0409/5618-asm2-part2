@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WaterOfHealth.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.blobs</a> &gt; <span class="el_source">WaterOfHealth.java</span></div><h1>WaterOfHealth.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.blobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Healing;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Hunger;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.effects.BlobEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShaftParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.Waterskin;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRemoveCurse;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.VialOfBlood;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Notes.Landmark;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+
+<span class="nc" id="L48">public class WaterOfHealth extends WellWater {</span>
+	
+	@Override
+	protected boolean affectHero( Hero hero ) {
+		
+<span class="nc bnc" id="L53" title="All 2 branches missed.">		if (!hero.isAlive()) return false;</span>
+		
+<span class="nc" id="L55">		Sample.INSTANCE.play( Assets.Sounds.DRINK );</span>
+
+<span class="nc" id="L57">		PotionOfHealing.cure( hero );</span>
+<span class="nc" id="L58">		hero.belongings.uncurseEquipped();</span>
+<span class="nc" id="L59">		hero.buff( Hunger.class ).satisfy( Hunger.STARVING );</span>
+
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if (VialOfBlood.delayBurstHealing()){</span>
+<span class="nc" id="L62">			Healing healing = Buff.affect(hero, Healing.class);</span>
+<span class="nc" id="L63">			healing.setHeal(hero.HT, 0, VialOfBlood.maxHealPerTurn());</span>
+<span class="nc" id="L64">			healing.applyVialEffect();</span>
+<span class="nc" id="L65">		} else {</span>
+<span class="nc" id="L66">			hero.HP = hero.HT;</span>
+<span class="nc" id="L67">			hero.sprite.emitter().start(Speck.factory(Speck.HEALING), 0.4f, 4);</span>
+<span class="nc" id="L68">			hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(hero.HT), FloatingText.HEALING);</span>
+		}
+		
+<span class="nc" id="L71">		CellEmitter.get( hero.pos ).start( ShaftParticle.FACTORY, 0.2f, 3 );</span>
+
+<span class="nc" id="L73">		Dungeon.hero.interrupt();</span>
+	
+<span class="nc" id="L75">		GLog.p( Messages.get(this, &quot;procced&quot;) );</span>
+		
+<span class="nc" id="L77">		return true;</span>
+	}
+	
+	@Override
+	protected Item affectItem( Item item, int pos ) {
+<span class="nc bnc" id="L82" title="All 4 branches missed.">		if (item instanceof Waterskin &amp;&amp; !((Waterskin)item).isFull()) {</span>
+<span class="nc" id="L83">			((Waterskin)item).fill();</span>
+<span class="nc" id="L84">			CellEmitter.get( pos ).start( Speck.factory( Speck.HEALING ), 0.4f, 4 );</span>
+<span class="nc" id="L85">			Sample.INSTANCE.play( Assets.Sounds.DRINK );</span>
+<span class="nc" id="L86">			return item;</span>
+<span class="nc bnc" id="L87" title="All 4 branches missed.">		} else if ( item instanceof Ankh &amp;&amp; !(((Ankh) item).isBlessed())){</span>
+<span class="nc" id="L88">			((Ankh) item).bless();</span>
+<span class="nc" id="L89">			CellEmitter.get( pos ).start(Speck.factory(Speck.LIGHT), 0.2f, 3);</span>
+<span class="nc" id="L90">			Sample.INSTANCE.play( Assets.Sounds.DRINK );</span>
+<span class="nc" id="L91">			return item;</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		} else if (ScrollOfRemoveCurse.uncursable(item)) {</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">			if (ScrollOfRemoveCurse.uncurse( null, item )){</span>
+<span class="nc" id="L94">				CellEmitter.get( pos ).start( ShadowParticle.UP, 0.05f, 10 );</span>
+			}
+<span class="nc" id="L96">			Sample.INSTANCE.play( Assets.Sounds.DRINK );</span>
+<span class="nc" id="L97">			return item;</span>
+		}
+<span class="nc" id="L99">		return null;</span>
+	}
+	
+	@Override
+	public Landmark landmark() {
+<span class="nc" id="L104">		return Landmark.WELL_OF_HEALTH;</span>
+	}
+	
+	@Override
+	public void use( BlobEmitter emitter ) {
+<span class="nc" id="L109">		super.use( emitter );</span>
+<span class="nc" id="L110">		emitter.start( Speck.factory( Speck.HEALING ), 0.5f, 0 );</span>
+<span class="nc" id="L111">	}</span>
+	
+	@Override
+	public String tileDesc() {
+<span class="nc" id="L115">		return Messages.get(this, &quot;desc&quot;);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

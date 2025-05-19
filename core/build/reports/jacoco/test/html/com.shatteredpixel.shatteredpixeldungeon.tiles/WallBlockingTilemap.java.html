@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WallBlockingTilemap.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.tiles</a> &gt; <span class="el_source">WallBlockingTilemap.java</span></div><h1>WallBlockingTilemap.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.tiles;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.levels.HallsBossLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.MiningLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.watabou.noosa.TextureFilm;
+import com.watabou.noosa.Tilemap;
+
+
+public class WallBlockingTilemap extends Tilemap {
+
+	public static final int SIZE = 16;
+
+	private static final int CLEARED        = -2;
+	private static final int BLOCK_NONE     = -1;
+	private static final int BLOCK_RIGHT    = 0;
+	private static final int BLOCK_LEFT     = 1;
+	private static final int BLOCK_ALL      = 2;
+	private static final int BLOCK_BELOW    = 3;
+
+	public WallBlockingTilemap() {
+<span class="nc" id="L45">		super(Assets.Environment.WALL_BLOCKING, new TextureFilm( Assets.Environment.WALL_BLOCKING, SIZE, SIZE ) );</span>
+<span class="nc" id="L46">		map( new int[Dungeon.level.length()], Dungeon.level.width());</span>
+<span class="nc" id="L47">	}</span>
+
+	@Override
+	public synchronized void updateMap() {
+<span class="nc bnc" id="L51" title="All 2 branches missed.">		for (int cell = 0; cell &lt; data.length; cell++) {</span>
+			//force all top/bottom row, and none-discoverable cells to cleared
+<span class="nc bnc" id="L53" title="All 6 branches missed.">			if (!Dungeon.level.discoverable[cell]</span>
+					|| (cell - mapWidth) &lt;= 0
+					|| (cell + mapWidth) &gt;= size){
+<span class="nc" id="L56">				data[cell] = CLEARED;</span>
+			} else {
+<span class="nc" id="L58">				updateMapCell(cell);</span>
+			}
+		}
+
+<span class="nc" id="L62">		super.updateMap();</span>
+<span class="nc" id="L63">	}</span>
+
+	private int curr;
+	
+	@Override
+	public synchronized void updateMapCell(int cell) {
+
+		//FIXME this is to address the wall blocking looking odd on the new yog floor.
+		// The true solution is to improve the fog of war so the blockers aren't necessary.
+<span class="nc bnc" id="L72" title="All 2 branches missed.">		if (Dungeon.level instanceof HallsBossLevel){</span>
+<span class="nc" id="L73">			data[cell] = CLEARED;</span>
+<span class="nc" id="L74">			super.updateMapCell(cell);</span>
+<span class="nc" id="L75">			return;</span>
+		}
+
+		//non-wall tiles
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if (!wall(cell)) {</span>
+
+			//clear empty floor tiles and cells which are visible
+<span class="nc bnc" id="L82" title="All 4 branches missed.">			if (!fogHidden(cell) || !wall(cell + mapWidth)) {</span>
+<span class="nc" id="L83">				curr = CLEARED;</span>
+
+			//block wall overhang if:
+			//- There are cells 2x below
+			//- The cell below is a wall and visible
+			//- All of left, below-left, right, below-right is either a wall or hidden
+<span class="nc bnc" id="L89" title="All 2 branches missed.">			} else if ( !fogHidden(cell + mapWidth)</span>
+<span class="nc bnc" id="L90" title="All 4 branches missed.">					&amp;&amp; (fogHidden(cell - 1) || wall(cell - 1))</span>
+<span class="nc bnc" id="L91" title="All 4 branches missed.">					&amp;&amp; (fogHidden(cell + 1) || wall(cell + 1))</span>
+<span class="nc bnc" id="L92" title="All 4 branches missed.">					&amp;&amp; (fogHidden(cell - 1 + mapWidth) || wall(cell - 1 + mapWidth))</span>
+<span class="nc bnc" id="L93" title="All 4 branches missed.">					&amp;&amp; (fogHidden(cell + 1 + mapWidth) || wall(cell + 1 + mapWidth))) {</span>
+<span class="nc" id="L94">				curr = BLOCK_BELOW;</span>
+
+			} else {
+<span class="nc" id="L97">				curr = BLOCK_NONE;</span>
+			}
+
+		//wall tiles
+		} else {
+
+			//camera-facing wall tiles
+<span class="nc bnc" id="L104" title="All 2 branches missed.">			if (!wall(cell + mapWidth)) {</span>
+
+				//Block a camera-facing wall if:
+				//- the cell above, above-left, or above-right is not a wall, visible, and has a wall below
+				//- none of the remaining 5 neighbour cells are both not a wall and visible
+				
+				//if all 3 above are wall we can shortcut and just clear the cell
+				//unless one or more is a shelf, or we can mine, then we have to just block none
+<span class="nc bnc" id="L112" title="All 6 branches missed.">				if (wall(cell - 1 - mapWidth) &amp;&amp; wall(cell - mapWidth) &amp;&amp; wall(cell + 1 - mapWidth)){</span>
+<span class="nc bnc" id="L113" title="All 4 branches missed.">					if (shelf(cell - 1 - mapWidth) || shelf(cell - mapWidth)</span>
+<span class="nc bnc" id="L114" title="All 4 branches missed.">							|| shelf(cell + 1 - mapWidth) || Dungeon.level instanceof MiningLevel){</span>
+<span class="nc" id="L115">						curr = BLOCK_NONE;</span>
+					} else {
+<span class="nc" id="L117">						curr = CLEARED;</span>
+					}
+					
+<span class="nc bnc" id="L120" title="All 6 branches missed.">				} else if ((!wall(cell - 1 - mapWidth) &amp;&amp; !fogHidden(cell - 1 - mapWidth) &amp;&amp; wall(cell - 1)) ||</span>
+<span class="nc bnc" id="L121" title="All 4 branches missed.">						(!wall(cell - mapWidth) &amp;&amp; !fogHidden(cell - mapWidth)) ||</span>
+<span class="nc bnc" id="L122" title="All 6 branches missed.">						(!wall(cell + 1 - mapWidth) &amp;&amp; !fogHidden(cell + 1 - mapWidth) &amp;&amp; wall(cell+1))){</span>
+					
+<span class="nc bnc" id="L124" title="All 2 branches missed.">					if ( !fogHidden( cell + mapWidth) ||</span>
+<span class="nc bnc" id="L125" title="All 4 branches missed.">							(!wall(cell - 1) &amp;&amp; !fogHidden(cell - 1)) ||</span>
+<span class="nc bnc" id="L126" title="All 4 branches missed.">							(!wall(cell - 1 + mapWidth) &amp;&amp; !fogHidden(cell - 1 + mapWidth)) ||</span>
+<span class="nc bnc" id="L127" title="All 4 branches missed.">							(!wall(cell + 1) &amp;&amp; !fogHidden(cell + 1)) ||</span>
+<span class="nc bnc" id="L128" title="All 4 branches missed.">							(!wall(cell + 1 + mapWidth) &amp;&amp; !fogHidden(cell + 1 + mapWidth))){</span>
+<span class="nc" id="L129">						curr = CLEARED;</span>
+					} else {
+<span class="nc" id="L131">						curr = BLOCK_ALL;</span>
+					}
+					
+				} else {
+<span class="nc" id="L135">					curr = BLOCK_NONE;</span>
+				}
+
+			//internal wall tiles
+			} else {
+				
+				//Block the side of an internal wall if:
+				//- the cell above, below, or the cell itself is visible
+				//and all of the following are NOT true:
+				//- the cell has no neighbours on that side
+				//- the top-side neighbour is visible and the side neighbour isn't a wall.
+				//- the side neighbour is both not a wall and visible
+				//- the bottom-side neighbour is both not a wall and visible
+
+<span class="nc" id="L149">				curr = BLOCK_NONE;</span>
+				
+<span class="nc bnc" id="L151" title="All 2 branches missed.">				if (!fogHidden(cell - mapWidth)</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">						|| !fogHidden(cell)</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">						|| !fogHidden(cell + mapWidth)) {</span>
+					
+					//right side
+<span class="nc bnc" id="L156" title="All 2 branches missed.">					if ( ((cell + 1) % mapWidth == 0) ||</span>
+<span class="nc bnc" id="L157" title="All 4 branches missed.">							(!wall(cell + 1) &amp;&amp; !fogHidden(cell + 1 - mapWidth)) ||</span>
+<span class="nc bnc" id="L158" title="All 4 branches missed.">							(!wall(cell + 1) &amp;&amp; !fogHidden(cell + 1)) ||</span>
+<span class="nc bnc" id="L159" title="All 4 branches missed.">							(!wall(cell + 1 + mapWidth) &amp;&amp; !fogHidden(cell + 1 + mapWidth))</span>
+							){
+						//do nothing
+					} else {
+<span class="nc" id="L163">						curr += 1;</span>
+					}
+					
+					//left side
+<span class="nc bnc" id="L167" title="All 2 branches missed.">					if ( (cell  % mapWidth == 0) ||</span>
+<span class="nc bnc" id="L168" title="All 4 branches missed.">							(!wall(cell - 1) &amp;&amp; !fogHidden(cell - 1 - mapWidth)) ||</span>
+<span class="nc bnc" id="L169" title="All 4 branches missed.">							(!wall(cell - 1) &amp;&amp; !fogHidden(cell - 1)) ||</span>
+<span class="nc bnc" id="L170" title="All 4 branches missed.">							(!wall(cell - 1 + mapWidth) &amp;&amp; !fogHidden(cell - 1 + mapWidth))</span>
+							){
+						//do nothing
+					} else {
+<span class="nc" id="L174">						curr += 2;</span>
+					}
+					
+<span class="nc bnc" id="L177" title="All 2 branches missed.">					if (curr == BLOCK_NONE) {</span>
+<span class="nc" id="L178">						curr = CLEARED;</span>
+					}
+				}
+
+			}
+
+		}
+
+<span class="nc bnc" id="L186" title="All 2 branches missed.">		if (data[cell] != curr){</span>
+<span class="nc" id="L187">			data[cell] = curr;</span>
+<span class="nc" id="L188">			super.updateMapCell(cell);</span>
+		}
+<span class="nc" id="L190">	}</span>
+
+	private boolean fogHidden(int cell){
+<span class="nc bnc" id="L193" title="All 4 branches missed.">		if (!Dungeon.level.visited[cell] &amp;&amp; !Dungeon.level.mapped[cell]) {</span>
+<span class="nc" id="L194">			return true;</span>
+<span class="nc bnc" id="L195" title="All 10 branches missed.">		} else if (wall(cell) &amp;&amp; cell + mapWidth &lt; size &amp;&amp; !wall(cell + mapWidth) &amp;&amp;</span>
+				!Dungeon.level.visited[cell + mapWidth] &amp;&amp; !Dungeon.level.mapped[cell + mapWidth]) {
+<span class="nc" id="L197">			return true;</span>
+		}
+<span class="nc" id="L199">		return false;</span>
+	}
+
+	private boolean wall(int cell) {
+<span class="nc" id="L203">		return DungeonTileSheet.wallStitcheable(Dungeon.level.map[cell]);</span>
+	}
+
+	private boolean shelf(int cell) {
+<span class="nc bnc" id="L207" title="All 2 branches missed.">		return Dungeon.level.map[cell] == Terrain.BOOKSHELF;</span>
+	}
+
+	private boolean door(int cell) {
+<span class="nc" id="L211">		return DungeonTileSheet.doorTile(Dungeon.level.map[cell]);</span>
+	}
+	
+	public synchronized void updateArea(int cell, int radius){
+<span class="nc" id="L215">		int l = cell%mapWidth - radius;</span>
+<span class="nc" id="L216">		int t = cell/mapWidth - radius;</span>
+<span class="nc" id="L217">		int r = cell%mapWidth - radius + 1 + 2*radius;</span>
+<span class="nc" id="L218">		int b = cell/mapWidth - radius + 1 + 2*radius;</span>
+<span class="nc" id="L219">		updateArea(</span>
+<span class="nc" id="L220">				Math.max(0, l),</span>
+<span class="nc" id="L221">				Math.max(0, t),</span>
+<span class="nc" id="L222">				Math.min(mapWidth-1, r - l),</span>
+<span class="nc" id="L223">				Math.min(mapHeight-1, b - t)</span>
+		);
+<span class="nc" id="L225">	}</span>
+
+	public synchronized void updateArea(int x, int y, int w, int h) {
+		int cell;
+<span class="nc bnc" id="L229" title="All 2 branches missed.">		for (int i = x; i &lt;= x+w; i++){</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">			for (int j = y; j &lt;= y+h; j++){</span>
+<span class="nc" id="L231">				cell = i + j*mapWidth;</span>
+<span class="nc bnc" id="L232" title="All 4 branches missed.">				if (cell &lt; data.length &amp;&amp; data[cell] != CLEARED)</span>
+<span class="nc" id="L233">					updateMapCell(cell);</span>
+			}
+		}
+<span class="nc" id="L236">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

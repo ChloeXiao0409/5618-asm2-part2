@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScrollOfEnchantment.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic</a> &gt; <span class="el_source">ScrollOfEnchantment.java</span></div><h1>ScrollOfEnchantment.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Enchanting;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.InventoryScroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfEnchantment;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndTitledMessage;
+import com.watabou.noosa.audio.Sample;
+
+<span class="nc" id="L46">public class ScrollOfEnchantment extends ExoticScroll {</span>
+	
+	{
+<span class="nc" id="L49">		icon = ItemSpriteSheet.Icons.SCROLL_ENCHANT;</span>
+
+<span class="nc" id="L51">		unique = true;</span>
+
+<span class="nc" id="L53">		talentFactor = 2f;</span>
+	}
+
+<span class="nc" id="L56">	protected static boolean identifiedByUse = false;</span>
+	
+	@Override
+	public void doRead() {
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		if (!isKnown()) {</span>
+<span class="nc" id="L61">			identify();</span>
+<span class="nc" id="L62">			curItem = detach(curUser.belongings.backpack);</span>
+<span class="nc" id="L63">			identifiedByUse = true;</span>
+		} else {
+<span class="nc" id="L65">			identifiedByUse = false;</span>
+		}
+<span class="nc" id="L67">		GameScene.selectItem( itemSelector );</span>
+<span class="nc" id="L68">	}</span>
+
+	public static boolean enchantable( Item item ){
+<span class="nc bnc" id="L71" title="All 6 branches missed.">		return (item instanceof MeleeWeapon || item instanceof SpiritBow || item instanceof Armor);</span>
+	}
+
+	private void confirmCancelation() {
+<span class="nc" id="L75">		GameScene.show( new WndOptions(new ItemSprite(this),</span>
+<span class="nc" id="L76">				Messages.titleCase(name()),</span>
+<span class="nc" id="L77">				Messages.get(InventoryScroll.class, &quot;warning&quot;),</span>
+<span class="nc" id="L78">				Messages.get(InventoryScroll.class, &quot;yes&quot;),</span>
+<span class="nc" id="L79">				Messages.get(InventoryScroll.class, &quot;no&quot;) ) {</span>
+			@Override
+			protected void onSelect( int index ) {
+<span class="nc bnc" id="L82" title="All 3 branches missed.">				switch (index) {</span>
+					case 0:
+<span class="nc" id="L84">						curUser.spendAndNext( TIME_TO_READ );</span>
+<span class="nc" id="L85">						identifiedByUse = false;</span>
+<span class="nc" id="L86">						break;</span>
+					case 1:
+<span class="nc" id="L88">						GameScene.selectItem(itemSelector);</span>
+						break;
+				}
+<span class="nc" id="L91">			}</span>
+<span class="nc" id="L92">			public void onBackPressed() {}</span>
+		} );
+<span class="nc" id="L94">	}</span>
+	
+<span class="nc" id="L96">	protected WndBag.ItemSelector itemSelector = new WndBag.ItemSelector() {</span>
+
+		@Override
+		public String textPrompt() {
+<span class="nc" id="L100">			return Messages.get(ScrollOfEnchantment.class, &quot;inv_title&quot;);</span>
+		}
+
+		@Override
+		public Class&lt;?extends Bag&gt; preferredBag(){
+<span class="nc" id="L105">			return Belongings.Backpack.class;</span>
+		}
+
+		@Override
+		public boolean itemSelectable(Item item) {
+<span class="nc" id="L110">			return enchantable(item);</span>
+		}
+
+		@Override
+		public void onSelect(final Item item) {
+			
+<span class="nc bnc" id="L116" title="All 2 branches missed.">			if (item instanceof Weapon){</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">				if (!identifiedByUse) {</span>
+<span class="nc" id="L118">					curItem.detach(curUser.belongings.backpack);</span>
+				}
+<span class="nc" id="L120">				identifiedByUse = false;</span>
+				
+<span class="nc" id="L122">				final Weapon.Enchantment enchants[] = new Weapon.Enchantment[3];</span>
+				
+<span class="nc bnc" id="L124" title="All 2 branches missed.">				Class&lt;? extends Weapon.Enchantment&gt; existing = ((Weapon) item).enchantment != null ? ((Weapon) item).enchantment.getClass() : null;</span>
+<span class="nc" id="L125">				enchants[0] = Weapon.Enchantment.randomCommon( existing );</span>
+<span class="nc" id="L126">				enchants[1] = Weapon.Enchantment.randomUncommon( existing );</span>
+<span class="nc" id="L127">				enchants[2] = Weapon.Enchantment.random( existing, enchants[0].getClass(), enchants[1].getClass());</span>
+
+<span class="nc" id="L129">				GameScene.show(new WndEnchantSelect((Weapon) item, enchants[0], enchants[1], enchants[2]));</span>
+			
+<span class="nc bnc" id="L131" title="All 2 branches missed.">			} else if (item instanceof Armor) {</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">				if (!identifiedByUse) {</span>
+<span class="nc" id="L133">					curItem.detach(curUser.belongings.backpack);</span>
+				}
+<span class="nc" id="L135">				identifiedByUse = false;</span>
+				
+<span class="nc" id="L137">				final Armor.Glyph glyphs[] = new Armor.Glyph[3];</span>
+				
+<span class="nc bnc" id="L139" title="All 2 branches missed.">				Class&lt;? extends Armor.Glyph&gt; existing = ((Armor) item).glyph != null ? ((Armor) item).glyph.getClass() : null;</span>
+<span class="nc" id="L140">				glyphs[0] = Armor.Glyph.randomCommon( existing );</span>
+<span class="nc" id="L141">				glyphs[1] = Armor.Glyph.randomUncommon( existing );</span>
+<span class="nc" id="L142">				glyphs[2] = Armor.Glyph.random( existing, glyphs[0].getClass(), glyphs[1].getClass());</span>
+				
+<span class="nc" id="L144">				GameScene.show(new WndGlyphSelect((Armor) item, glyphs[0], glyphs[1], glyphs[2]));</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">			} else if (identifiedByUse){</span>
+<span class="nc" id="L146">				((ScrollOfEnchantment)curItem).confirmCancelation();</span>
+			}
+<span class="nc" id="L148">		}</span>
+	};
+
+	public static class WndEnchantSelect extends WndOptions {
+
+		private static Weapon wep;
+		private static Weapon.Enchantment[] enchantments;
+
+		//used in PixelScene.restoreWindows
+		public WndEnchantSelect(){
+<span class="nc" id="L158">			this(wep, enchantments[0], enchantments[1], enchantments[2]);</span>
+<span class="nc" id="L159">		}</span>
+
+		public WndEnchantSelect(Weapon wep, Weapon.Enchantment ench1,
+		                           Weapon.Enchantment ench2, Weapon.Enchantment ench3){
+<span class="nc" id="L163">			super(new ItemSprite(new ScrollOfEnchantment()),</span>
+<span class="nc" id="L164">					Messages.titleCase(new ScrollOfEnchantment().name()),</span>
+<span class="nc" id="L165">					Messages.get(ScrollOfEnchantment.class, &quot;weapon&quot;),</span>
+<span class="nc" id="L166">					ench1.name(),</span>
+<span class="nc" id="L167">					ench2.name(),</span>
+<span class="nc" id="L168">					ench3.name(),</span>
+<span class="nc" id="L169">					Messages.get(ScrollOfEnchantment.class, &quot;cancel&quot;));</span>
+<span class="nc" id="L170">			this.wep = wep;</span>
+<span class="nc" id="L171">			enchantments = new Weapon.Enchantment[3];</span>
+<span class="nc" id="L172">			enchantments[0] = ench1;</span>
+<span class="nc" id="L173">			enchantments[1] = ench2;</span>
+<span class="nc" id="L174">			enchantments[2] = ench3;</span>
+
+<span class="nc" id="L176">			WndGlyphSelect.arm = null;</span>
+<span class="nc" id="L177">		}</span>
+
+		@Override
+		protected void onSelect(int index) {
+<span class="nc bnc" id="L181" title="All 2 branches missed.">			if (index &lt; 3) {</span>
+<span class="nc" id="L182">				wep.enchant(enchantments[index]);</span>
+<span class="nc" id="L183">				GLog.p(Messages.get(StoneOfEnchantment.class, &quot;weapon&quot;));</span>
+<span class="nc" id="L184">				((ScrollOfEnchantment)curItem).readAnimation();</span>
+
+<span class="nc" id="L186">				Sample.INSTANCE.play( Assets.Sounds.READ );</span>
+<span class="nc" id="L187">				Enchanting.show(curUser, wep);</span>
+			} else {
+<span class="nc" id="L189">				GameScene.show(new WndConfirmCancel());</span>
+			}
+<span class="nc" id="L191">		}</span>
+
+		@Override
+		protected boolean hasInfo(int index) {
+<span class="nc bnc" id="L195" title="All 2 branches missed.">			return index &lt; 3;</span>
+		}
+
+		@Override
+		protected void onInfo( int index ) {
+<span class="nc" id="L200">			GameScene.show(new WndTitledMessage(</span>
+<span class="nc" id="L201">					Icons.get(Icons.INFO),</span>
+<span class="nc" id="L202">					Messages.titleCase(enchantments[index].name()),</span>
+<span class="nc" id="L203">					enchantments[index].desc()));</span>
+<span class="nc" id="L204">		}</span>
+
+		@Override
+		public void onBackPressed() {
+			//do nothing, reader has to cancel
+<span class="nc" id="L209">		}</span>
+
+	}
+
+	public static class WndGlyphSelect extends WndOptions {
+
+		private static Armor arm;
+		private static Armor.Glyph[] glyphs;
+
+		//used in PixelScene.restoreWindows
+		public WndGlyphSelect() {
+<span class="nc" id="L220">			this(arm, glyphs[0], glyphs[1], glyphs[2]);</span>
+<span class="nc" id="L221">		}</span>
+
+		public WndGlyphSelect(Armor arm, Armor.Glyph glyph1,
+		                      Armor.Glyph glyph2, Armor.Glyph glyph3) {
+<span class="nc" id="L225">			super(new ItemSprite(new ScrollOfEnchantment()),</span>
+<span class="nc" id="L226">					Messages.titleCase(new ScrollOfEnchantment().name()),</span>
+<span class="nc" id="L227">					Messages.get(ScrollOfEnchantment.class, &quot;armor&quot;),</span>
+<span class="nc" id="L228">					glyph1.name(),</span>
+<span class="nc" id="L229">					glyph2.name(),</span>
+<span class="nc" id="L230">					glyph3.name(),</span>
+<span class="nc" id="L231">					Messages.get(ScrollOfEnchantment.class, &quot;cancel&quot;));</span>
+<span class="nc" id="L232">			this.arm = arm;</span>
+<span class="nc" id="L233">			glyphs = new Armor.Glyph[3];</span>
+<span class="nc" id="L234">			glyphs[0] = glyph1;</span>
+<span class="nc" id="L235">			glyphs[1] = glyph2;</span>
+<span class="nc" id="L236">			glyphs[2] = glyph3;</span>
+
+<span class="nc" id="L238">			WndEnchantSelect.wep = null;</span>
+<span class="nc" id="L239">		}</span>
+
+		@Override
+		protected void onSelect(int index) {
+<span class="nc bnc" id="L243" title="All 2 branches missed.">			if (index &lt; 3) {</span>
+<span class="nc" id="L244">				arm.inscribe(glyphs[index]);</span>
+<span class="nc" id="L245">				GLog.p(Messages.get(StoneOfEnchantment.class, &quot;armor&quot;));</span>
+<span class="nc" id="L246">				((ScrollOfEnchantment) curItem).readAnimation();</span>
+
+<span class="nc" id="L248">				Sample.INSTANCE.play(Assets.Sounds.READ);</span>
+<span class="nc" id="L249">				Enchanting.show(curUser, arm);</span>
+			} else {
+<span class="nc" id="L251">				GameScene.show(new WndConfirmCancel());</span>
+			}
+<span class="nc" id="L253">		}</span>
+
+		@Override
+		protected boolean hasInfo(int index) {
+<span class="nc bnc" id="L257" title="All 2 branches missed.">			return index &lt; 3;</span>
+		}
+
+		@Override
+		protected void onInfo(int index) {
+<span class="nc" id="L262">			GameScene.show(new WndTitledMessage(</span>
+<span class="nc" id="L263">					Icons.get(Icons.INFO),</span>
+<span class="nc" id="L264">					Messages.titleCase(glyphs[index].name()),</span>
+<span class="nc" id="L265">					glyphs[index].desc()));</span>
+<span class="nc" id="L266">		}</span>
+
+		@Override
+		public void onBackPressed() {
+			//do nothing, reader has to cancel
+<span class="nc" id="L271">		}</span>
+
+	}
+
+	public static class WndConfirmCancel extends WndOptions{
+
+		public WndConfirmCancel(){
+<span class="nc" id="L278">			super(new ItemSprite(new ScrollOfEnchantment()),</span>
+<span class="nc" id="L279">					Messages.titleCase(new ScrollOfEnchantment().name()),</span>
+<span class="nc" id="L280">					Messages.get(ScrollOfEnchantment.class, &quot;cancel_warn&quot;),</span>
+<span class="nc" id="L281">					Messages.get(ScrollOfEnchantment.class, &quot;cancel_warn_yes&quot;),</span>
+<span class="nc" id="L282">					Messages.get(ScrollOfEnchantment.class, &quot;cancel_warn_no&quot;));</span>
+<span class="nc" id="L283">		}</span>
+
+		@Override
+		protected void onSelect(int index) {
+<span class="nc" id="L287">			super.onSelect(index);</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">			if (index == 1){</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">				if (WndEnchantSelect.wep != null) {</span>
+<span class="nc" id="L290">					GameScene.show(new WndEnchantSelect());</span>
+				} else {
+<span class="nc" id="L292">					GameScene.show(new WndGlyphSelect());</span>
+				}
+			} else {
+<span class="nc" id="L295">				WndEnchantSelect.wep = null;</span>
+<span class="nc" id="L296">				WndEnchantSelect.enchantments = null;</span>
+<span class="nc" id="L297">				WndGlyphSelect.arm = null;</span>
+<span class="nc" id="L298">				WndGlyphSelect.glyphs = null;</span>
+			}
+<span class="nc" id="L300">		}</span>
+
+		@Override
+		public void onBackPressed() {
+			//do nothing
+<span class="nc" id="L305">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

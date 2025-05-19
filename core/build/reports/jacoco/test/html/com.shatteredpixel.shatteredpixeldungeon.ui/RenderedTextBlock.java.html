@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RenderedTextBlock.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">RenderedTextBlock.java</span></div><h1>RenderedTextBlock.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.RenderedText;
+import com.watabou.noosa.ui.Component;
+
+import java.util.ArrayList;
+
+public class RenderedTextBlock extends Component {
+
+<span class="nc" id="L35">	private int maxWidth = Integer.MAX_VALUE;</span>
+	public int nLines;
+
+<span class="nc" id="L38">	private static final RenderedText SPACE = new RenderedText();</span>
+<span class="nc" id="L39">	private static final RenderedText NEWLINE = new RenderedText();</span>
+	
+	protected String text;
+<span class="nc" id="L42">	protected String[] tokens = null;</span>
+<span class="nc" id="L43">	protected ArrayList&lt;RenderedText&gt; words = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L44">	protected boolean multiline = false;</span>
+
+	private int size;
+	private float zoom;
+<span class="nc" id="L48">	private int color = -1;</span>
+	
+<span class="nc" id="L50">	private int hightlightColor = Window.TITLE_COLOR;</span>
+<span class="nc" id="L51">	private boolean highlightingEnabled = true;</span>
+
+	public static final int LEFT_ALIGN = 1;
+	public static final int CENTER_ALIGN = 2;
+	public static final int RIGHT_ALIGN = 3;
+<span class="nc" id="L56">	private int alignment = LEFT_ALIGN;</span>
+	
+<span class="nc" id="L58">	public RenderedTextBlock(int size){</span>
+<span class="nc" id="L59">		this.size = size;</span>
+<span class="nc" id="L60">	}</span>
+
+<span class="nc" id="L62">	public RenderedTextBlock(String text, int size){</span>
+<span class="nc" id="L63">		this.size = size;</span>
+<span class="nc" id="L64">		text(text);</span>
+<span class="nc" id="L65">	}</span>
+
+	public void text(String text){
+<span class="nc" id="L68">		this.text = text;</span>
+
+<span class="nc bnc" id="L70" title="All 4 branches missed.">		if (text != null &amp;&amp; !text.equals(&quot;&quot;)) {</span>
+			
+<span class="nc" id="L72">			tokens = Game.platform.splitforTextBlock(text, multiline);</span>
+			
+<span class="nc" id="L74">			build();</span>
+		}
+<span class="nc" id="L76">	}</span>
+
+	//for manual text block splitting, a space between each word is assumed
+	public void tokens(String... words){
+<span class="nc" id="L80">		StringBuilder fullText = new StringBuilder();</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		for (String word : words) {</span>
+<span class="nc" id="L82">			fullText.append(word);</span>
+		}
+<span class="nc" id="L84">		text = fullText.toString();</span>
+
+<span class="nc" id="L86">		tokens = words;</span>
+<span class="nc" id="L87">		build();</span>
+<span class="nc" id="L88">	}</span>
+
+	public void text(String text, int maxWidth){
+<span class="nc" id="L91">		this.maxWidth = maxWidth;</span>
+<span class="nc" id="L92">		multiline = true;</span>
+<span class="nc" id="L93">		text(text);</span>
+<span class="nc" id="L94">	}</span>
+
+	public String text(){
+<span class="nc" id="L97">		return text;</span>
+	}
+
+	public void maxWidth(int maxWidth){
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (this.maxWidth != maxWidth){</span>
+<span class="nc" id="L102">			this.maxWidth = maxWidth;</span>
+<span class="nc" id="L103">			multiline = true;</span>
+<span class="nc" id="L104">			text(text);</span>
+		}
+<span class="nc" id="L106">	}</span>
+
+	public int maxWidth(){
+<span class="nc" id="L109">		return maxWidth;</span>
+	}
+
+	private synchronized void build(){
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		if (tokens == null) return;</span>
+		
+<span class="nc" id="L115">		clear();</span>
+<span class="nc" id="L116">		words = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L117">		boolean highlighting = false;</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		for (String str : tokens){</span>
+
+			//if highlighting is enabled, '_' or '**' is used to toggle highlighting on or off
+			// the actual symbols are not rendered
+<span class="nc bnc" id="L122" title="All 6 branches missed.">			if ((str.equals(&quot;_&quot;) || str.equals(&quot;**&quot;)) &amp;&amp; highlightingEnabled){</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">				highlighting = !highlighting;</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">			} else if (str.equals(&quot;\n&quot;)){</span>
+<span class="nc" id="L125">				words.add(NEWLINE);</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">			} else if (str.equals(&quot; &quot;)){</span>
+<span class="nc" id="L127">				words.add(SPACE);</span>
+			} else {
+<span class="nc" id="L129">				RenderedText word = new RenderedText(str, size);</span>
+				
+<span class="nc bnc" id="L131" title="All 2 branches missed.">				if (highlighting) word.hardlight(hightlightColor);</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">				else if (color != -1) word.hardlight(color);</span>
+<span class="nc" id="L133">				word.scale.set(zoom);</span>
+				
+<span class="nc" id="L135">				words.add(word);</span>
+<span class="nc" id="L136">				add(word);</span>
+				
+<span class="nc bnc" id="L138" title="All 2 branches missed.">				if (height &lt; word.height()) height = word.height();</span>
+			}
+		}
+<span class="nc" id="L141">		layout();</span>
+<span class="nc" id="L142">	}</span>
+
+	public synchronized void zoom(float zoom){
+<span class="nc" id="L145">		this.zoom = zoom;</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">		for (RenderedText word : words) {</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">			if (word != null) word.scale.set(zoom);</span>
+<span class="nc" id="L148">		}</span>
+<span class="nc" id="L149">		layout();</span>
+<span class="nc" id="L150">	}</span>
+
+	public synchronized void hardlight(int color){
+<span class="nc" id="L153">		this.color = color;</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		for (RenderedText word : words) {</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">			if (word != null) word.hardlight( color );</span>
+<span class="nc" id="L156">		}</span>
+<span class="nc" id="L157">	}</span>
+	
+	public synchronized void resetColor(){
+<span class="nc" id="L160">		this.color = -1;</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">		for (RenderedText word : words) {</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">			if (word != null) word.resetColor();</span>
+<span class="nc" id="L163">		}</span>
+<span class="nc" id="L164">	}</span>
+	
+	public synchronized void alpha(float value){
+<span class="nc bnc" id="L167" title="All 2 branches missed.">		for (RenderedText word : words) {</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">			if (word != null) word.alpha( value );</span>
+<span class="nc" id="L169">		}</span>
+<span class="nc" id="L170">	}</span>
+	
+	public synchronized void setHightlighting(boolean enabled){
+<span class="nc" id="L173">		setHightlighting(enabled, Window.TITLE_COLOR);</span>
+<span class="nc" id="L174">	}</span>
+	
+	public synchronized void setHightlighting(boolean enabled, int color){
+<span class="nc bnc" id="L177" title="All 4 branches missed.">		if (enabled != highlightingEnabled || color != hightlightColor) {</span>
+<span class="nc" id="L178">			hightlightColor = color;</span>
+<span class="nc" id="L179">			highlightingEnabled = enabled;</span>
+<span class="nc" id="L180">			build();</span>
+		}
+<span class="nc" id="L182">	}</span>
+
+	public synchronized void invert(){
+<span class="nc bnc" id="L185" title="All 2 branches missed.">		if (words != null) {</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">			for (RenderedText word : words) {</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">				if (word != null) {</span>
+<span class="nc" id="L188">					word.ra = 0.77f;</span>
+<span class="nc" id="L189">					word.ga = 0.73f;</span>
+<span class="nc" id="L190">					word.ba = 0.62f;</span>
+<span class="nc" id="L191">					word.rm = -0.77f;</span>
+<span class="nc" id="L192">					word.gm = -0.73f;</span>
+<span class="nc" id="L193">					word.bm = -0.62f;</span>
+				}
+<span class="nc" id="L195">			}</span>
+		}
+<span class="nc" id="L197">	}</span>
+
+	public synchronized void align(int align){
+<span class="nc" id="L200">		alignment = align;</span>
+<span class="nc" id="L201">		layout();</span>
+<span class="nc" id="L202">	}</span>
+
+	@Override
+	protected synchronized void layout() {
+<span class="nc" id="L206">		super.layout();</span>
+<span class="nc" id="L207">		float x = this.x;</span>
+<span class="nc" id="L208">		float y = this.y;</span>
+<span class="nc" id="L209">		float height = 0;</span>
+<span class="nc" id="L210">		nLines = 1;</span>
+
+<span class="nc" id="L212">		ArrayList&lt;ArrayList&lt;RenderedText&gt;&gt; lines = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L213">		ArrayList&lt;RenderedText&gt; curLine = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L214">		lines.add(curLine);</span>
+
+<span class="nc" id="L216">		width = 0;</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">		for (int i = 0; i &lt; words.size(); i++){</span>
+<span class="nc" id="L218">			RenderedText word = words.get(i);</span>
+<span class="nc bnc" id="L219" title="All 2 branches missed.">			if (word == SPACE){</span>
+<span class="nc" id="L220">				x += 1.667f;</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">			} else if (word == NEWLINE) {</span>
+				//newline
+<span class="nc" id="L223">				y += height+2f;</span>
+<span class="nc" id="L224">				x = this.x;</span>
+<span class="nc" id="L225">				nLines++;</span>
+<span class="nc" id="L226">				curLine = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L227">				lines.add(curLine);</span>
+			} else {
+<span class="nc bnc" id="L229" title="All 2 branches missed.">				if (word.height() &gt; height) height = word.height();</span>
+
+<span class="nc" id="L231">				float fullWidth = word.width();</span>
+<span class="nc" id="L232">				int j = i+1;</span>
+
+				//this is so that words split only by highlighting are still grouped in layout
+				//Chinese/Japanese always render every character separately without spaces however
+<span class="nc bnc" id="L236" title="All 4 branches missed.">				while (Messages.lang() != Languages.CHINESE &amp;&amp; Messages.lang() != Languages.JAPANESE</span>
+<span class="nc bnc" id="L237" title="All 6 branches missed.">						&amp;&amp; j &lt; words.size() &amp;&amp; words.get(j) != SPACE &amp;&amp; words.get(j) != NEWLINE){</span>
+<span class="nc" id="L238">					fullWidth += words.get(j).width() - 0.667f;</span>
+<span class="nc" id="L239">					j++;</span>
+				}
+
+<span class="nc bnc" id="L242" title="All 4 branches missed.">				if ((x - this.x) + fullWidth - 0.001f &gt; maxWidth &amp;&amp; !curLine.isEmpty()){</span>
+<span class="nc" id="L243">					y += height+2f;</span>
+<span class="nc" id="L244">					x = this.x;</span>
+<span class="nc" id="L245">					nLines++;</span>
+<span class="nc" id="L246">					curLine = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L247">					lines.add(curLine);</span>
+				}
+
+<span class="nc" id="L250">				word.x = x;</span>
+<span class="nc" id="L251">				word.y = y;</span>
+<span class="nc" id="L252">				PixelScene.align(word);</span>
+<span class="nc" id="L253">				x += word.width();</span>
+<span class="nc" id="L254">				curLine.add(word);</span>
+
+<span class="nc bnc" id="L256" title="All 2 branches missed.">				if ((x - this.x) &gt; width) width = (x - this.x);</span>
+				
+				//Note that spacing currently doesn't factor in halfwidth and fullwidth characters
+				//(e.g. Ideographic full stop)
+<span class="nc" id="L260">				x -= 0.667f;</span>
+
+			}
+		}
+<span class="nc" id="L264">		this.height = (y - this.y) + height;</span>
+
+<span class="nc bnc" id="L266" title="All 2 branches missed.">		if (alignment != LEFT_ALIGN){</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">			for (ArrayList&lt;RenderedText&gt; line : lines){</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">				if (line.size() == 0) continue;</span>
+<span class="nc" id="L269">				float lineWidth = line.get(line.size()-1).width() + line.get(line.size()-1).x - this.x;</span>
+<span class="nc bnc" id="L270" title="All 2 branches missed.">				if (alignment == CENTER_ALIGN){</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">					for (RenderedText text : line){</span>
+<span class="nc" id="L272">						text.x += (width() - lineWidth)/2f;</span>
+<span class="nc" id="L273">						PixelScene.align(text);</span>
+<span class="nc" id="L274">					}</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">				} else if (alignment == RIGHT_ALIGN) {</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">					for (RenderedText text : line){</span>
+<span class="nc" id="L277">						text.x += width() - lineWidth;</span>
+<span class="nc" id="L278">						PixelScene.align(text);</span>
+<span class="nc" id="L279">					}</span>
+				}
+<span class="nc" id="L281">			}</span>
+		}
+<span class="nc" id="L283">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

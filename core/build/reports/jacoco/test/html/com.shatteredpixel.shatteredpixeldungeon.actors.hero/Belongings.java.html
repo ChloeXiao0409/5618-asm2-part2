@@ -1,0 +1,470 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Belongings.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero</a> &gt; <span class="el_source">Belongings.java</span></div><h1>Belongings.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero;
+
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.LostInventory;
+import com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.KindofMisc;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRemoveCurse;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.ShardOfOblivion;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+
+public class Belongings implements Iterable&lt;Item&gt; {
+
+	private Hero owner;
+
+<span class="nc" id="L54">	public static class Backpack extends Bag {</span>
+		{
+<span class="nc" id="L56">			image = ItemSpriteSheet.BACKPACK;</span>
+<span class="nc" id="L57">		}</span>
+		public int capacity(){
+<span class="nc" id="L59">			int cap = super.capacity();</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">			for (Item item : items){</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">				if (item instanceof Bag){</span>
+<span class="nc" id="L62">					cap++;</span>
+				}
+<span class="nc" id="L64">			}</span>
+<span class="nc bnc" id="L65" title="All 4 branches missed.">			if (Dungeon.hero != null &amp;&amp; Dungeon.hero.belongings.secondWep != null){</span>
+				//secondary weapons still occupy an inv. slot
+<span class="nc" id="L67">				cap--;</span>
+			}
+<span class="nc" id="L69">			return cap;</span>
+		}
+	}
+
+	public Backpack backpack;
+	
+<span class="nc" id="L75">	public Belongings( Hero owner ) {</span>
+<span class="nc" id="L76">		this.owner = owner;</span>
+		
+<span class="nc" id="L78">		backpack = new Backpack();</span>
+<span class="nc" id="L79">		backpack.owner = owner;</span>
+<span class="nc" id="L80">	}</span>
+
+<span class="nc" id="L82">	public KindOfWeapon weapon = null;</span>
+<span class="nc" id="L83">	public Armor armor = null;</span>
+<span class="nc" id="L84">	public Artifact artifact = null;</span>
+<span class="nc" id="L85">	public KindofMisc misc = null;</span>
+<span class="nc" id="L86">	public Ring ring = null;</span>
+
+	//used when thrown weapons temporary become the current weapon
+<span class="nc" id="L89">	public KindOfWeapon thrownWeapon = null;</span>
+
+	//used to ensure that the duelist always uses the weapon she's using the ability of
+<span class="nc" id="L92">	public KindOfWeapon abilityWeapon = null;</span>
+
+	//used by the champion subclass
+<span class="nc" id="L95">	public KindOfWeapon secondWep = null;</span>
+
+	//*** these accessor methods are so that worn items can be affected by various effects/debuffs
+	// we still want to access the raw equipped items in cases where effects should be ignored though,
+	// such as when equipping something, showing an interface, or dealing with items from a dead hero
+
+	//normally the primary equipped weapon, but can also be a thrown weapon or an ability's weapon
+	public KindOfWeapon attackingWeapon(){
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		if (thrownWeapon != null) return thrownWeapon;</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">		if (abilityWeapon != null) return abilityWeapon;</span>
+<span class="nc" id="L105">		return weapon();</span>
+	}
+
+	//we cache whether belongings are lost to avoid lots of calls to hero.buff(LostInventory.class)
+	private boolean lostInvent;
+	public void lostInventory( boolean val ){
+<span class="nc" id="L111">		lostInvent = val;</span>
+<span class="nc" id="L112">	}</span>
+
+	public boolean lostInventory(){
+<span class="nc" id="L115">		return lostInvent;</span>
+	}
+
+	public KindOfWeapon weapon(){
+<span class="nc bnc" id="L119" title="All 6 branches missed.">		if (!lostInventory() || (weapon != null &amp;&amp; weapon.keptThroughLostInventory())){</span>
+<span class="nc" id="L120">			return weapon;</span>
+		} else {
+<span class="nc" id="L122">			return null;</span>
+		}
+	}
+
+	public Armor armor(){
+<span class="nc bnc" id="L127" title="All 6 branches missed.">		if (!lostInventory() || (armor != null &amp;&amp; armor.keptThroughLostInventory())){</span>
+<span class="nc" id="L128">			return armor;</span>
+		} else {
+<span class="nc" id="L130">			return null;</span>
+		}
+	}
+
+	public Artifact artifact(){
+<span class="nc bnc" id="L135" title="All 6 branches missed.">		if (!lostInventory() || (artifact != null &amp;&amp; artifact.keptThroughLostInventory())){</span>
+<span class="nc" id="L136">			return artifact;</span>
+		} else {
+<span class="nc" id="L138">			return null;</span>
+		}
+	}
+
+	public KindofMisc misc(){
+<span class="nc bnc" id="L143" title="All 6 branches missed.">		if (!lostInventory() || (misc != null &amp;&amp; misc.keptThroughLostInventory())){</span>
+<span class="nc" id="L144">			return misc;</span>
+		} else {
+<span class="nc" id="L146">			return null;</span>
+		}
+	}
+
+	public Ring ring(){
+<span class="nc bnc" id="L151" title="All 6 branches missed.">		if (!lostInventory() || (ring != null &amp;&amp; ring.keptThroughLostInventory())){</span>
+<span class="nc" id="L152">			return ring;</span>
+		} else {
+<span class="nc" id="L154">			return null;</span>
+		}
+	}
+
+	public KindOfWeapon secondWep(){
+<span class="nc bnc" id="L159" title="All 6 branches missed.">		if (!lostInventory() || (secondWep != null &amp;&amp; secondWep.keptThroughLostInventory())){</span>
+<span class="nc" id="L160">			return secondWep;</span>
+		} else {
+<span class="nc" id="L162">			return null;</span>
+		}
+	}
+
+	// ***
+	
+	private static final String WEAPON		= &quot;weapon&quot;;
+	private static final String ARMOR		= &quot;armor&quot;;
+	private static final String ARTIFACT   = &quot;artifact&quot;;
+	private static final String MISC       = &quot;misc&quot;;
+	private static final String RING       = &quot;ring&quot;;
+
+	private static final String SECOND_WEP = &quot;second_wep&quot;;
+
+	public void storeInBundle( Bundle bundle ) {
+		
+<span class="nc" id="L178">		backpack.storeInBundle( bundle );</span>
+		
+<span class="nc" id="L180">		bundle.put( WEAPON, weapon );</span>
+<span class="nc" id="L181">		bundle.put( ARMOR, armor );</span>
+<span class="nc" id="L182">		bundle.put( ARTIFACT, artifact );</span>
+<span class="nc" id="L183">		bundle.put( MISC, misc );</span>
+<span class="nc" id="L184">		bundle.put( RING, ring );</span>
+<span class="nc" id="L185">		bundle.put( SECOND_WEP, secondWep );</span>
+<span class="nc" id="L186">	}</span>
+	
+	public void restoreFromBundle( Bundle bundle ) {
+		
+<span class="nc" id="L190">		backpack.clear();</span>
+<span class="nc" id="L191">		backpack.restoreFromBundle( bundle );</span>
+		
+<span class="nc" id="L193">		weapon = (KindOfWeapon) bundle.get(WEAPON);</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">		if (weapon() != null)       weapon().activate(owner);</span>
+		
+<span class="nc" id="L196">		armor = (Armor)bundle.get( ARMOR );</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">		if (armor() != null)        armor().activate( owner );</span>
+
+<span class="nc" id="L199">		artifact = (Artifact) bundle.get(ARTIFACT);</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">		if (artifact() != null)     artifact().activate(owner);</span>
+
+<span class="nc" id="L202">		misc = (KindofMisc) bundle.get(MISC);</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">		if (misc() != null)         misc().activate( owner );</span>
+
+<span class="nc" id="L205">		ring = (Ring) bundle.get(RING);</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">		if (ring() != null)         ring().activate( owner );</span>
+
+<span class="nc" id="L208">		secondWep = (KindOfWeapon) bundle.get(SECOND_WEP);</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">		if (secondWep() != null)    secondWep().activate(owner);</span>
+<span class="nc" id="L210">	}</span>
+	
+	public static void preview( GamesInProgress.Info info, Bundle bundle ) {
+<span class="nc bnc" id="L213" title="All 2 branches missed.">		if (bundle.contains( ARMOR )){</span>
+<span class="nc" id="L214">			Armor armor = ((Armor)bundle.get( ARMOR ));</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">			if (armor instanceof ClassArmor){</span>
+<span class="nc" id="L216">				info.armorTier = 6;</span>
+			} else {
+<span class="nc" id="L218">				info.armorTier = armor.tier;</span>
+			}
+<span class="nc" id="L220">		} else {</span>
+<span class="nc" id="L221">			info.armorTier = 0;</span>
+		}
+<span class="nc" id="L223">	}</span>
+
+	//ignores lost inventory debuff
+	public ArrayList&lt;Bag&gt; getBags(){
+<span class="nc" id="L227">		ArrayList&lt;Bag&gt; result = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L229">		result.add(backpack);</span>
+
+<span class="nc bnc" id="L231" title="All 2 branches missed.">		for (Item i : this){</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">			if (i instanceof Bag){</span>
+<span class="nc" id="L233">				result.add((Bag)i);</span>
+			}
+<span class="nc" id="L235">		}</span>
+
+<span class="nc" id="L237">		return result;</span>
+	}
+	
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public&lt;T extends Item&gt; T getItem( Class&lt;T&gt; itemClass ) {
+
+<span class="nc" id="L243">		boolean lostInvent = lostInventory();</span>
+
+<span class="nc bnc" id="L245" title="All 2 branches missed.">		for (Item item : this) {</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">			if (itemClass.isInstance( item )) {</span>
+<span class="nc bnc" id="L247" title="All 4 branches missed.">				if (!lostInvent || item.keptThroughLostInventory()) {</span>
+<span class="nc" id="L248">					return (T) item;</span>
+				}
+			}
+<span class="nc" id="L251">		}</span>
+		
+<span class="nc" id="L253">		return null;</span>
+	}
+
+	public&lt;T extends Item&gt; ArrayList&lt;T&gt; getAllItems( Class&lt;T&gt; itemClass ) {
+<span class="nc" id="L257">		ArrayList&lt;T&gt; result = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L259">		boolean lostInvent = lostInventory();</span>
+
+<span class="nc bnc" id="L261" title="All 2 branches missed.">		for (Item item : this) {</span>
+<span class="nc bnc" id="L262" title="All 2 branches missed.">			if (itemClass.isInstance( item )) {</span>
+<span class="nc bnc" id="L263" title="All 4 branches missed.">				if (!lostInvent || item.keptThroughLostInventory()) {</span>
+<span class="nc" id="L264">					result.add((T) item);</span>
+				}
+			}
+<span class="nc" id="L267">		}</span>
+
+<span class="nc" id="L269">		return result;</span>
+	}
+	
+	public boolean contains( Item contains ){
+
+<span class="nc" id="L274">		boolean lostInvent = lostInventory();</span>
+		
+<span class="nc bnc" id="L276" title="All 2 branches missed.">		for (Item item : this) {</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">			if (contains == item) {</span>
+<span class="nc bnc" id="L278" title="All 4 branches missed.">				if (!lostInvent || item.keptThroughLostInventory()) {</span>
+<span class="nc" id="L279">					return true;</span>
+				}
+			}
+<span class="nc" id="L282">		}</span>
+		
+<span class="nc" id="L284">		return false;</span>
+	}
+	
+	public Item getSimilar( Item similar ){
+
+<span class="nc" id="L289">		boolean lostInvent = lostInventory();</span>
+		
+<span class="nc bnc" id="L291" title="All 2 branches missed.">		for (Item item : this) {</span>
+<span class="nc bnc" id="L292" title="All 4 branches missed.">			if (similar != item &amp;&amp; similar.isSimilar(item)) {</span>
+<span class="nc bnc" id="L293" title="All 4 branches missed.">				if (!lostInvent || item.keptThroughLostInventory()) {</span>
+<span class="nc" id="L294">					return item;</span>
+				}
+			}
+<span class="nc" id="L297">		}</span>
+		
+<span class="nc" id="L299">		return null;</span>
+	}
+	
+	public ArrayList&lt;Item&gt; getAllSimilar( Item similar ){
+<span class="nc" id="L303">		ArrayList&lt;Item&gt; result = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L305">		boolean lostInvent = lostInventory();</span>
+		
+<span class="nc bnc" id="L307" title="All 2 branches missed.">		for (Item item : this) {</span>
+<span class="nc bnc" id="L308" title="All 4 branches missed.">			if (item != similar &amp;&amp; similar.isSimilar(item)) {</span>
+<span class="nc bnc" id="L309" title="All 4 branches missed.">				if (!lostInvent || item.keptThroughLostInventory()) {</span>
+<span class="nc" id="L310">					result.add(item);</span>
+				}
+			}
+<span class="nc" id="L313">		}</span>
+		
+<span class="nc" id="L315">		return result;</span>
+	}
+
+	//triggers when a run ends, so ignores lost inventory effects
+	public void identify() {
+<span class="nc bnc" id="L320" title="All 2 branches missed.">		for (Item item : this) {</span>
+<span class="nc" id="L321">			item.identify(false);</span>
+<span class="nc" id="L322">		}</span>
+<span class="nc" id="L323">	}</span>
+	
+	public void observe() {
+<span class="nc bnc" id="L326" title="All 2 branches missed.">		if (weapon() != null) {</span>
+<span class="nc bnc" id="L327" title="All 4 branches missed.">			if (ShardOfOblivion.passiveIDDisabled() &amp;&amp; weapon() instanceof Weapon){</span>
+<span class="nc" id="L328">				((Weapon) weapon()).setIDReady();</span>
+			} else {
+<span class="nc" id="L330">				weapon().identify();</span>
+<span class="nc" id="L331">				Badges.validateItemLevelAquired(weapon());</span>
+			}
+		}
+<span class="nc bnc" id="L334" title="All 2 branches missed.">		if (secondWep() != null){</span>
+<span class="nc bnc" id="L335" title="All 4 branches missed.">			if (ShardOfOblivion.passiveIDDisabled() &amp;&amp; secondWep() instanceof Weapon){</span>
+<span class="nc" id="L336">				((Weapon) secondWep()).setIDReady();</span>
+			} else {
+<span class="nc" id="L338">				secondWep().identify();</span>
+<span class="nc" id="L339">				Badges.validateItemLevelAquired(secondWep());</span>
+			}
+		}
+<span class="nc bnc" id="L342" title="All 2 branches missed.">		if (armor() != null) {</span>
+<span class="nc bnc" id="L343" title="All 2 branches missed.">			if (ShardOfOblivion.passiveIDDisabled()){</span>
+<span class="nc" id="L344">				armor().setIDReady();</span>
+			} else {
+<span class="nc" id="L346">				armor().identify();</span>
+<span class="nc" id="L347">				Badges.validateItemLevelAquired(armor());</span>
+			}
+		}
+<span class="nc bnc" id="L350" title="All 2 branches missed.">		if (artifact() != null) {</span>
+			//oblivion shard does not prevent artifact IDing
+<span class="nc" id="L352">			artifact().identify();</span>
+<span class="nc" id="L353">			Badges.validateItemLevelAquired(artifact());</span>
+		}
+<span class="nc bnc" id="L355" title="All 2 branches missed.">		if (misc() != null) {</span>
+<span class="nc bnc" id="L356" title="All 4 branches missed.">			if (ShardOfOblivion.passiveIDDisabled() &amp;&amp; misc() instanceof Ring){</span>
+<span class="nc" id="L357">				((Ring) misc()).setIDReady();</span>
+			} else {
+<span class="nc" id="L359">				misc().identify();</span>
+<span class="nc" id="L360">				Badges.validateItemLevelAquired(misc());</span>
+			}
+		}
+<span class="nc bnc" id="L363" title="All 2 branches missed.">		if (ring() != null) {</span>
+<span class="nc bnc" id="L364" title="All 2 branches missed.">			if (ShardOfOblivion.passiveIDDisabled()){</span>
+<span class="nc" id="L365">				ring().setIDReady();</span>
+			} else {
+<span class="nc" id="L367">				ring().identify();</span>
+<span class="nc" id="L368">				Badges.validateItemLevelAquired(ring());</span>
+			}
+		}
+<span class="nc bnc" id="L371" title="All 2 branches missed.">		if (ShardOfOblivion.passiveIDDisabled()){</span>
+<span class="nc" id="L372">			GLog.p(Messages.get(ShardOfOblivion.class, &quot;identify_ready_worn&quot;));</span>
+		}
+<span class="nc bnc" id="L374" title="All 2 branches missed.">		for (Item item : backpack) {</span>
+<span class="nc bnc" id="L375" title="All 4 branches missed.">			if (item instanceof EquipableItem || item instanceof Wand) {</span>
+<span class="nc" id="L376">				item.cursedKnown = true;</span>
+			}
+<span class="nc" id="L378">		}</span>
+<span class="nc" id="L379">		Item.updateQuickslot();</span>
+<span class="nc" id="L380">	}</span>
+	
+	public void uncurseEquipped() {
+<span class="nc" id="L383">		ScrollOfRemoveCurse.uncurse( owner, armor(), weapon(), artifact(), misc(), ring(), secondWep());</span>
+<span class="nc" id="L384">	}</span>
+	
+	public Item randomUnequipped() {
+<span class="nc bnc" id="L387" title="All 2 branches missed.">		if (owner.buff(LostInventory.class) != null) return null;</span>
+
+<span class="nc" id="L389">		return Random.element( backpack.items );</span>
+	}
+	
+	public int charge( float charge ) {
+		
+<span class="nc" id="L394">		int count = 0;</span>
+		
+<span class="nc bnc" id="L396" title="All 2 branches missed.">		for (Wand.Charger charger : owner.buffs(Wand.Charger.class)){</span>
+<span class="nc" id="L397">			charger.gainCharge(charge);</span>
+<span class="nc" id="L398">			count++;</span>
+<span class="nc" id="L399">		}</span>
+		
+<span class="nc" id="L401">		return count;</span>
+	}
+
+	@Override
+	public Iterator&lt;Item&gt; iterator() {
+<span class="nc" id="L406">		return new ItemIterator();</span>
+	}
+	
+<span class="nc" id="L409">	private class ItemIterator implements Iterator&lt;Item&gt; {</span>
+
+<span class="nc" id="L411">		private int index = 0;</span>
+		
+<span class="nc" id="L413">		private Iterator&lt;Item&gt; backpackIterator = backpack.iterator();</span>
+		
+<span class="nc" id="L415">		private Item[] equipped = {weapon, armor, artifact, misc, ring, secondWep};</span>
+<span class="nc" id="L416">		private int backpackIndex = equipped.length;</span>
+		
+		@Override
+		public boolean hasNext() {
+			
+<span class="nc bnc" id="L421" title="All 2 branches missed.">			for (int i=index; i &lt; backpackIndex; i++) {</span>
+<span class="nc bnc" id="L422" title="All 2 branches missed.">				if (equipped[i] != null) {</span>
+<span class="nc" id="L423">					return true;</span>
+				}
+			}
+			
+<span class="nc" id="L427">			return backpackIterator.hasNext();</span>
+		}
+
+		@Override
+		public Item next() {
+			
+<span class="nc bnc" id="L433" title="All 2 branches missed.">			while (index &lt; backpackIndex) {</span>
+<span class="nc" id="L434">				Item item = equipped[index++];</span>
+<span class="nc bnc" id="L435" title="All 2 branches missed.">				if (item != null) {</span>
+<span class="nc" id="L436">					return item;</span>
+				}
+<span class="nc" id="L438">			}</span>
+			
+<span class="nc" id="L440">			return backpackIterator.next();</span>
+		}
+
+		@Override
+		public void remove() {
+<span class="nc bnc" id="L445" title="All 7 branches missed.">			switch (index) {</span>
+			case 0:
+<span class="nc" id="L447">				equipped[0] = weapon = null;</span>
+<span class="nc" id="L448">				break;</span>
+			case 1:
+<span class="nc" id="L450">				equipped[1] = armor = null;</span>
+<span class="nc" id="L451">				break;</span>
+			case 2:
+<span class="nc" id="L453">				equipped[2] = artifact = null;</span>
+<span class="nc" id="L454">				break;</span>
+			case 3:
+<span class="nc" id="L456">				equipped[3] = misc = null;</span>
+<span class="nc" id="L457">				break;</span>
+			case 4:
+<span class="nc" id="L459">				equipped[4] = ring = null;</span>
+<span class="nc" id="L460">				break;</span>
+			case 5:
+<span class="nc" id="L462">				equipped[5] = secondWep = null;</span>
+<span class="nc" id="L463">				break;</span>
+			default:
+<span class="nc" id="L465">				backpackIterator.remove();</span>
+			}
+<span class="nc" id="L467">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

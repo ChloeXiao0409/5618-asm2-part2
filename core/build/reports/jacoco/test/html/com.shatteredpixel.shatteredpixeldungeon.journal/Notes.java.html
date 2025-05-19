@@ -1,0 +1,654 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Notes.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.journal</a> &gt; <span class="el_source">Notes.java</span></div><h1>Notes.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.journal;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Foliage;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SacrificialFire;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.WaterOfAwareness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.WaterOfHealth;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DemonSpawner;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Statue;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Blacksmith;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Ghost;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Imp;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.ImpShopkeeper;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.RatKing;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Shopkeeper;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Wandmaker;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.keys.Key;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.WeakFloorRoom;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.BlacksmithSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.GhostSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ImpSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.RatKingSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ShopkeeperSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.SpawnerSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.StatueSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.WandmakerSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.Visual;
+import com.watabou.utils.Bundlable;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+
+<span class="nc" id="L68">public class Notes {</span>
+	
+<span class="nc" id="L70">	public static abstract class Record implements Comparable&lt;Record&gt;, Bundlable {</span>
+
+		//TODO currently notes can only relate to branch = 0, add branch support here if that changes
+		protected int depth;
+
+		public int depth(){
+<span class="nc" id="L76">			return depth;</span>
+		}
+
+<span class="nc" id="L79">		public Image icon() { return Icons.STAIRS.get(); }</span>
+
+<span class="nc" id="L81">		public Visual secondIcon() { return null; }</span>
+
+<span class="nc" id="L83">		public int quantity() { return 1; }</span>
+
+		protected abstract int order();
+		
+		public abstract String title();
+
+		public abstract String desc();
+		
+		@Override
+		public abstract boolean equals(Object obj);
+		
+		@Override
+		public int compareTo( Record another ) {
+<span class="nc" id="L96">			return another.depth() - depth();</span>
+		}
+		
+		private static final String DEPTH	= &quot;depth&quot;;
+		
+		@Override
+		public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L103">			depth = bundle.getInt( DEPTH );</span>
+<span class="nc" id="L104">		}</span>
+
+		@Override
+		public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L108">			bundle.put( DEPTH, depth );</span>
+<span class="nc" id="L109">		}</span>
+	}
+	
+<span class="nc" id="L112">	public enum Landmark {</span>
+<span class="nc" id="L113">		CHASM_FLOOR,</span>
+<span class="nc" id="L114">		WATER_FLOOR,</span>
+<span class="nc" id="L115">		GRASS_FLOOR,</span>
+<span class="nc" id="L116">		DARK_FLOOR,</span>
+<span class="nc" id="L117">		LARGE_FLOOR,</span>
+<span class="nc" id="L118">		TRAPS_FLOOR,</span>
+<span class="nc" id="L119">		SECRETS_FLOOR,</span>
+
+<span class="nc" id="L121">		SHOP,</span>
+<span class="nc" id="L122">		ALCHEMY,</span>
+<span class="nc" id="L123">		GARDEN,</span>
+<span class="nc" id="L124">		DISTANT_WELL,</span>
+<span class="nc" id="L125">		WELL_OF_HEALTH,</span>
+<span class="nc" id="L126">		WELL_OF_AWARENESS,</span>
+<span class="nc" id="L127">		SACRIFICIAL_FIRE,</span>
+<span class="nc" id="L128">		STATUE,</span>
+		
+<span class="nc" id="L130">		GHOST,</span>
+<span class="nc" id="L131">		RAT_KING,</span>
+<span class="nc" id="L132">		WANDMAKER,</span>
+<span class="nc" id="L133">		TROLL,</span>
+<span class="nc" id="L134">		IMP,</span>
+
+<span class="nc" id="L136">		DEMON_SPAWNER;</span>
+	}
+	
+	public static class LandmarkRecord extends Record {
+		
+		protected Landmark landmark;
+		
+<span class="nc" id="L143">		public LandmarkRecord() {}</span>
+		
+<span class="nc" id="L145">		public LandmarkRecord(Landmark landmark, int depth ) {</span>
+<span class="nc" id="L146">			this.landmark = landmark;</span>
+<span class="nc" id="L147">			this.depth = depth;</span>
+<span class="nc" id="L148">		}</span>
+
+		public Image icon(){
+<span class="nc bnc" id="L151" title="All 22 branches missed.">			switch (landmark){</span>
+				default:
+<span class="nc" id="L153">					return Icons.STAIRS.get();</span>
+
+				case CHASM_FLOOR:
+<span class="nc" id="L156">					return Icons.STAIRS_CHASM.get();</span>
+				case WATER_FLOOR:
+<span class="nc" id="L158">					return Icons.STAIRS_WATER.get();</span>
+				case GRASS_FLOOR:
+<span class="nc" id="L160">					return Icons.STAIRS_GRASS.get();</span>
+				case DARK_FLOOR:
+<span class="nc" id="L162">					return Icons.STAIRS_DARK.get();</span>
+				case LARGE_FLOOR:
+<span class="nc" id="L164">					return Icons.STAIRS_LARGE.get();</span>
+				case TRAPS_FLOOR:
+<span class="nc" id="L166">					return Icons.STAIRS_TRAPS.get();</span>
+				case SECRETS_FLOOR:
+<span class="nc" id="L168">					return Icons.STAIRS_SECRETS.get();</span>
+
+				case SHOP:
+<span class="nc bnc" id="L171" title="All 2 branches missed.">					if (depth == 20)    return new Image(new ImpSprite());</span>
+<span class="nc" id="L172">					else                return new Image(new ShopkeeperSprite());</span>
+				case ALCHEMY:
+<span class="nc" id="L174">					return Icons.get(Icons.ALCHEMY);</span>
+				case GARDEN:
+<span class="nc" id="L176">					return Icons.get(Icons.GRASS);</span>
+				case DISTANT_WELL:
+<span class="nc" id="L178">					return Icons.get(Icons.DISTANT_WELL);</span>
+				case WELL_OF_HEALTH:
+<span class="nc" id="L180">					return Icons.get(Icons.WELL_HEALTH);</span>
+				case WELL_OF_AWARENESS:
+<span class="nc" id="L182">					return Icons.get(Icons.WELL_AWARENESS);</span>
+				case SACRIFICIAL_FIRE:
+<span class="nc" id="L184">					return Icons.get(Icons.SACRIFICE_ALTAR);</span>
+				case STATUE:
+<span class="nc" id="L186">					return new Image(new StatueSprite());</span>
+
+				case GHOST:
+<span class="nc" id="L189">					return new Image(new GhostSprite());</span>
+				case RAT_KING:
+<span class="nc" id="L191">					return new Image(new RatKingSprite());</span>
+				case WANDMAKER:
+<span class="nc" id="L193">					return new Image(new WandmakerSprite());</span>
+				case TROLL:
+<span class="nc" id="L195">					return new Image(new BlacksmithSprite());</span>
+				case IMP:
+<span class="nc" id="L197">					return new Image(new ImpSprite());</span>
+
+				case DEMON_SPAWNER:
+<span class="nc" id="L200">					return new Image(new SpawnerSprite());</span>
+			}
+		}
+
+		@Override
+		public String title() {
+<span class="nc bnc" id="L206" title="All 8 branches missed.">			switch (landmark) {</span>
+<span class="nc" id="L207">				default:            return Messages.get(Landmark.class, landmark.name());</span>
+<span class="nc" id="L208">				case CHASM_FLOOR:   return Messages.get(Level.Feeling.class, &quot;chasm_title&quot;);</span>
+<span class="nc" id="L209">				case WATER_FLOOR:   return Messages.get(Level.Feeling.class, &quot;water_title&quot;);</span>
+<span class="nc" id="L210">				case GRASS_FLOOR:   return Messages.get(Level.Feeling.class, &quot;grass_title&quot;);</span>
+<span class="nc" id="L211">				case DARK_FLOOR:    return Messages.get(Level.Feeling.class, &quot;dark_title&quot;);</span>
+<span class="nc" id="L212">				case LARGE_FLOOR:   return Messages.get(Level.Feeling.class, &quot;large_title&quot;);</span>
+<span class="nc" id="L213">				case TRAPS_FLOOR:   return Messages.get(Level.Feeling.class, &quot;traps_title&quot;);</span>
+<span class="nc" id="L214">				case SECRETS_FLOOR: return Messages.get(Level.Feeling.class, &quot;secrets_title&quot;);</span>
+			}
+		}
+
+		@Override
+		public String desc() {
+<span class="nc bnc" id="L220" title="All 22 branches missed.">			switch (landmark) {</span>
+<span class="nc" id="L221">				default:            return &quot;&quot;;</span>
+
+<span class="nc" id="L223">				case CHASM_FLOOR:   return Messages.get(Level.Feeling.class, &quot;chasm_desc&quot;);</span>
+<span class="nc" id="L224">				case WATER_FLOOR:   return Messages.get(Level.Feeling.class, &quot;water_desc&quot;);</span>
+<span class="nc" id="L225">				case GRASS_FLOOR:   return Messages.get(Level.Feeling.class, &quot;grass_desc&quot;);</span>
+<span class="nc" id="L226">				case DARK_FLOOR:    return Messages.get(Level.Feeling.class, &quot;dark_desc&quot;);</span>
+<span class="nc" id="L227">				case LARGE_FLOOR:   return Messages.get(Level.Feeling.class, &quot;large_desc&quot;);</span>
+<span class="nc" id="L228">				case TRAPS_FLOOR:   return Messages.get(Level.Feeling.class, &quot;traps_desc&quot;);</span>
+<span class="nc" id="L229">				case SECRETS_FLOOR: return Messages.get(Level.Feeling.class, &quot;secrets_desc&quot;);</span>
+
+				case SHOP:
+<span class="nc bnc" id="L232" title="All 2 branches missed.">					if (depth == 20)    return Messages.get(ImpShopkeeper.class, &quot;desc&quot;);</span>
+<span class="nc" id="L233">					else                return Messages.get(Shopkeeper.class, &quot;desc&quot;);</span>
+<span class="nc" id="L234">				case ALCHEMY:           return Messages.get(Level.class, &quot;alchemy_desc&quot;);</span>
+<span class="nc" id="L235">				case GARDEN:            return Messages.get(Foliage.class, &quot;desc&quot;);</span>
+<span class="nc" id="L236">				case DISTANT_WELL:      return Messages.get(WeakFloorRoom.HiddenWell.class, &quot;desc&quot;);</span>
+<span class="nc" id="L237">				case WELL_OF_HEALTH:    return Messages.get(WaterOfHealth.class, &quot;desc&quot;);</span>
+<span class="nc" id="L238">				case WELL_OF_AWARENESS: return Messages.get(WaterOfAwareness.class, &quot;desc&quot;);</span>
+<span class="nc" id="L239">				case SACRIFICIAL_FIRE:  return Messages.get(SacrificialFire.class, &quot;desc&quot;);</span>
+<span class="nc" id="L240">				case STATUE:            return Messages.get(Statue.class, &quot;desc&quot;);</span>
+
+<span class="nc" id="L242">				case GHOST:         return Messages.get(Ghost.class, &quot;desc&quot;);</span>
+<span class="nc" id="L243">				case RAT_KING:      return new RatKing().description(); //variable description based on holiday/run state</span>
+<span class="nc" id="L244">				case WANDMAKER:     return Messages.get(Wandmaker.class, &quot;desc&quot;);</span>
+<span class="nc" id="L245">				case TROLL:         return Messages.get(Blacksmith.class, &quot;desc&quot;);</span>
+<span class="nc" id="L246">				case IMP:           return Messages.get(Imp.class, &quot;desc&quot;);</span>
+
+<span class="nc" id="L248">				case DEMON_SPAWNER: return Messages.get(DemonSpawner.class, &quot;desc&quot;);</span>
+			}
+		}
+
+		@Override
+		protected int order(){
+<span class="nc" id="L254">			return landmark.ordinal();</span>
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+<span class="nc bnc" id="L259" title="All 4 branches missed.">			return (obj instanceof LandmarkRecord)</span>
+					&amp;&amp; landmark == ((LandmarkRecord) obj).landmark
+<span class="nc bnc" id="L261" title="All 2 branches missed.">					&amp;&amp; depth() == ((LandmarkRecord) obj).depth();</span>
+		}
+		
+		private static final String LANDMARK	= &quot;landmark&quot;;
+		
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L268">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L269">			landmark = Landmark.valueOf(bundle.getString(LANDMARK));</span>
+<span class="nc" id="L270">		}</span>
+		
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L274">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L275">			bundle.put( LANDMARK, landmark.name() );</span>
+<span class="nc" id="L276">		}</span>
+	}
+	
+	public static class KeyRecord extends Record {
+		
+		protected Key key;
+		
+<span class="nc" id="L283">		public KeyRecord() {}</span>
+		
+<span class="nc" id="L285">		public KeyRecord( Key key ){</span>
+<span class="nc" id="L286">			this.key = key;</span>
+<span class="nc" id="L287">		}</span>
+		
+		@Override
+		public int depth() {
+<span class="nc" id="L291">			return key.depth;</span>
+		}
+
+		@Override
+		public Image icon() {
+<span class="nc" id="L296">			return new ItemSprite(key);</span>
+		}
+
+		@Override
+		public Visual secondIcon() {
+<span class="nc bnc" id="L301" title="All 2 branches missed.">			if (quantity() &gt; 1){</span>
+<span class="nc" id="L302">				BitmapText text = new BitmapText(Integer.toString(quantity()), PixelScene.pixelFont);</span>
+<span class="nc" id="L303">				text.measure();</span>
+<span class="nc" id="L304">				return text;</span>
+			} else {
+<span class="nc" id="L306">				return null;</span>
+			}
+		}
+
+		@Override
+		public String title() {
+<span class="nc" id="L312">			return key.title();</span>
+		}
+
+		@Override
+		public String desc() {
+<span class="nc" id="L317">			return key.desc();</span>
+		}
+		
+		public Class&lt;? extends Key&gt; type(){
+<span class="nc" id="L321">			return key.getClass();</span>
+		}
+
+		@Override
+		protected int order() {
+<span class="nc" id="L326">			return 1000 + Generator.Category.order(key);</span>
+		}
+
+		public int quantity(){
+<span class="nc" id="L330">			return key.quantity();</span>
+		}
+		
+		public void quantity(int num){
+<span class="nc" id="L334">			key.quantity(num);</span>
+<span class="nc" id="L335">		}</span>
+		
+		@Override
+		public boolean equals(Object obj) {
+<span class="nc bnc" id="L339" title="All 2 branches missed.">			return (obj instanceof KeyRecord)</span>
+<span class="nc bnc" id="L340" title="All 2 branches missed.">					&amp;&amp; key.isSimilar(((KeyRecord) obj).key);</span>
+		}
+		
+		private static final String KEY	= &quot;key&quot;;
+		
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L347">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L348">			key = (Key) bundle.get(KEY);</span>
+<span class="nc" id="L349">		}</span>
+		
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L353">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L354">			bundle.put( KEY, key );</span>
+<span class="nc" id="L355">		}</span>
+	}
+
+<span class="nc" id="L358">	public enum CustomType {</span>
+<span class="nc" id="L359">		TEXT,</span>
+<span class="nc" id="L360">		DEPTH,</span>
+<span class="nc" id="L361">		ITEM,</span>
+	}
+
+	public static class CustomRecord extends Record {
+
+		protected CustomType type;
+
+<span class="nc" id="L368">		protected int ID = -1;</span>
+		protected Class itemClass;
+
+		protected String title;
+		protected String body;
+
+<span class="nc" id="L374">		public CustomRecord() {}</span>
+
+<span class="nc" id="L376">		public CustomRecord(String title, String desc) {</span>
+<span class="nc" id="L377">			type = CustomType.TEXT;</span>
+<span class="nc" id="L378">			this.title = title;</span>
+<span class="nc" id="L379">			body = desc;</span>
+<span class="nc" id="L380">		}</span>
+
+<span class="nc" id="L382">		public CustomRecord(int depth, String title, String desc) {</span>
+<span class="nc" id="L383">			type = CustomType.DEPTH;</span>
+<span class="nc" id="L384">			this.depth = depth;</span>
+<span class="nc" id="L385">			this.title = title;</span>
+<span class="nc" id="L386">			body = desc;</span>
+<span class="nc" id="L387">		}</span>
+
+<span class="nc" id="L389">		public CustomRecord(Item item, String title, String desc) {</span>
+<span class="nc" id="L390">			type = CustomType.ITEM;</span>
+<span class="nc" id="L391">			itemClass = item.getClass();</span>
+<span class="nc" id="L392">			this.title = title;</span>
+<span class="nc" id="L393">			body = desc;</span>
+<span class="nc" id="L394">		}</span>
+
+		public void assignID(){
+<span class="nc bnc" id="L397" title="All 2 branches missed.">			if (ID == -1) {</span>
+<span class="nc" id="L398">				ID = nextCustomID++;</span>
+			}
+<span class="nc" id="L400">		}</span>
+
+		public int ID(){
+<span class="nc" id="L403">			return ID;</span>
+		}
+
+		@Override
+		public int depth() {
+<span class="nc bnc" id="L408" title="All 2 branches missed.">			if (type == CustomType.DEPTH){</span>
+<span class="nc" id="L409">				return depth;</span>
+			} else {
+<span class="nc" id="L411">				return 0;</span>
+			}
+		}
+
+		@Override
+		public Image icon() {
+<span class="nc bnc" id="L417" title="All 3 branches missed.">			switch (type){</span>
+				case TEXT: default:
+<span class="nc" id="L419">					return Icons.SCROLL_COLOR.get();</span>
+				case DEPTH:
+<span class="nc" id="L421">					return Icons.STAIRS.get();</span>
+				case ITEM:
+<span class="nc" id="L423">					Item i = (Item) Reflection.newInstance(itemClass);</span>
+<span class="nc" id="L424">					return new ItemSprite(i);</span>
+			}
+		}
+
+		@Override
+		public Visual secondIcon() {
+<span class="nc bnc" id="L430" title="All 3 branches missed.">			switch (type){</span>
+				case TEXT: default:
+<span class="nc" id="L432">					return null;</span>
+				case DEPTH:
+<span class="nc" id="L434">					BitmapText text = new BitmapText(Integer.toString(depth()), PixelScene.pixelFont);</span>
+<span class="nc" id="L435">					text.measure();</span>
+<span class="nc" id="L436">					return text;</span>
+				case ITEM:
+<span class="nc" id="L438">					Item item = (Item) Reflection.newInstance(itemClass);</span>
+<span class="nc bnc" id="L439" title="All 4 branches missed.">					if (item.isIdentified() &amp;&amp; item.icon != -1) {</span>
+<span class="nc" id="L440">						Image secondIcon = new Image(Assets.Sprites.ITEM_ICONS);</span>
+<span class="nc" id="L441">						secondIcon.frame(ItemSpriteSheet.Icons.film.get(item.icon));</span>
+<span class="nc" id="L442">						return secondIcon;</span>
+					}
+<span class="nc" id="L444">					return null;</span>
+			}
+		}
+
+		@Override
+		protected int order() {
+<span class="nc" id="L450">			return 2000 + ID;</span>
+		}
+
+		public void editText(String title, String desc){
+<span class="nc" id="L454">			this.title = title;</span>
+<span class="nc" id="L455">			this.body = desc;</span>
+<span class="nc" id="L456">		}</span>
+
+		@Override
+		public String title() {
+<span class="nc" id="L460">			return title;</span>
+		}
+
+		@Override
+		public String desc() {
+<span class="nc" id="L465">			return body;</span>
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+<span class="nc bnc" id="L470" title="All 4 branches missed.">			return obj instanceof CustomRecord &amp;&amp; ((CustomRecord) obj).ID == ID;</span>
+		}
+
+		private static final String TYPE        = &quot;type&quot;;
+		private static final String ID_NUMBER   = &quot;id_number&quot;;
+
+		private static final String ITEM_CLASS   = &quot;item_class&quot;;
+
+		private static final String TITLE       = &quot;title&quot;;
+		private static final String BODY        = &quot;body&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L483">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L484">			bundle.put(TYPE, type);</span>
+<span class="nc" id="L485">			bundle.put(ID_NUMBER, ID);</span>
+<span class="nc bnc" id="L486" title="All 2 branches missed.">			if (itemClass != null) bundle.put(ITEM_CLASS, itemClass);</span>
+<span class="nc" id="L487">			bundle.put(TITLE, title);</span>
+<span class="nc" id="L488">			bundle.put(BODY, body);</span>
+<span class="nc" id="L489">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L493">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L494">			type = bundle.getEnum(TYPE, CustomType.class);</span>
+<span class="nc" id="L495">			ID = bundle.getInt(ID_NUMBER);</span>
+
+<span class="nc bnc" id="L497" title="All 2 branches missed.">			if (bundle.contains(ITEM_CLASS)) itemClass = bundle.getClass(ITEM_CLASS);</span>
+
+<span class="nc" id="L499">			title = bundle.getString(TITLE);</span>
+<span class="nc" id="L500">			body = bundle.getString(BODY);</span>
+<span class="nc" id="L501">		}</span>
+	}
+	
+	private static ArrayList&lt;Record&gt; records;
+	
+	public static void reset() {
+<span class="nc" id="L507">		records = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L508">	}</span>
+	
+	private static final String RECORDS	        = &quot;records&quot;;
+	private static final String NEXT_CUSTOM_ID	= &quot;next_custom_id&quot;;
+
+<span class="nc" id="L513">	protected static int nextCustomID = 0;</span>
+
+	public static void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L516">		bundle.put( RECORDS, records );</span>
+<span class="nc" id="L517">		bundle.put( NEXT_CUSTOM_ID, nextCustomID );</span>
+<span class="nc" id="L518">	}</span>
+	
+	public static void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L521">		records = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L522">		nextCustomID = bundle.getInt( NEXT_CUSTOM_ID );</span>
+<span class="nc bnc" id="L523" title="All 2 branches missed.">		for (Bundlable rec : bundle.getCollection( RECORDS ) ) {</span>
+<span class="nc" id="L524">			records.add( (Record) rec );</span>
+<span class="nc" id="L525">		}</span>
+<span class="nc" id="L526">	}</span>
+	
+	public static boolean add( Landmark landmark ) {
+<span class="nc" id="L529">		LandmarkRecord l = new LandmarkRecord( landmark, Dungeon.depth );</span>
+<span class="nc bnc" id="L530" title="All 2 branches missed.">		if (!records.contains(l)) {</span>
+<span class="nc" id="L531">			boolean result = records.add(new LandmarkRecord(landmark, Dungeon.depth));</span>
+<span class="nc" id="L532">			Collections.sort(records, comparator);</span>
+<span class="nc" id="L533">			return result;</span>
+		}
+<span class="nc" id="L535">		return false;</span>
+	}
+
+	public static boolean contains( Landmark landmark ){
+<span class="nc" id="L539">		return records.contains(new LandmarkRecord( landmark, Dungeon.depth));</span>
+	}
+	
+	public static boolean remove( Landmark landmark ) {
+<span class="nc" id="L543">		return records.remove( new LandmarkRecord(landmark, Dungeon.depth) );</span>
+	}
+	
+	public static boolean add( Key key ){
+<span class="nc" id="L547">		KeyRecord k = new KeyRecord(key);</span>
+<span class="nc bnc" id="L548" title="All 2 branches missed.">		if (!records.contains(k)){</span>
+<span class="nc" id="L549">			boolean result = records.add(k);</span>
+<span class="nc" id="L550">			Collections.sort(records, comparator);</span>
+<span class="nc" id="L551">			return result;</span>
+		} else {
+<span class="nc" id="L553">			k = (KeyRecord) records.get(records.indexOf(k));</span>
+<span class="nc" id="L554">			k.quantity(k.quantity() + key.quantity());</span>
+<span class="nc" id="L555">			return true;</span>
+		}
+	}
+	
+	public static boolean remove( Key key ){
+<span class="nc" id="L560">		KeyRecord k = new KeyRecord( key );</span>
+<span class="nc bnc" id="L561" title="All 2 branches missed.">		if (records.contains(k)){</span>
+<span class="nc" id="L562">			Catalog.countUses(key.getClass(), key.quantity());</span>
+<span class="nc" id="L563">			k = (KeyRecord) records.get(records.indexOf(k));</span>
+<span class="nc" id="L564">			k.quantity(k.quantity() - key.quantity());</span>
+<span class="nc bnc" id="L565" title="All 2 branches missed.">			if (k.quantity() &lt;= 0){</span>
+<span class="nc" id="L566">				records.remove(k);</span>
+			}
+<span class="nc" id="L568">			return true;</span>
+		}
+<span class="nc" id="L570">		return false;</span>
+	}
+	
+	public static int keyCount( Key key ){
+<span class="nc" id="L574">		KeyRecord k = new KeyRecord( key );</span>
+<span class="nc bnc" id="L575" title="All 2 branches missed.">		if (records.contains(k)){</span>
+<span class="nc" id="L576">			k = (KeyRecord) records.get(records.indexOf(k));</span>
+<span class="nc" id="L577">			return k.quantity();</span>
+		} else {
+<span class="nc" id="L579">			return 0;</span>
+		}
+	}
+
+	public static boolean add( CustomRecord rec ){
+<span class="nc" id="L584">		rec.assignID();</span>
+<span class="nc bnc" id="L585" title="All 2 branches missed.">		if (!records.contains(rec)){</span>
+<span class="nc" id="L586">			boolean result = records.add(rec);</span>
+<span class="nc" id="L587">			Collections.sort(records, comparator);</span>
+<span class="nc" id="L588">			return result;</span>
+		}
+<span class="nc" id="L590">		return false;</span>
+	}
+
+	public static boolean remove( CustomRecord rec ){
+<span class="nc bnc" id="L594" title="All 2 branches missed.">		if (records.contains(rec)){</span>
+<span class="nc" id="L595">			records.remove(rec);</span>
+<span class="nc" id="L596">			return true;</span>
+		}
+<span class="nc" id="L598">		return false;</span>
+	}
+	
+	public static &lt;T extends Record&gt; ArrayList&lt;T&gt; getRecords( Class&lt;T&gt; recordType ){
+<span class="nc" id="L602">		ArrayList&lt;T&gt; filtered = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L603" title="All 2 branches missed.">		for (Record rec : records){</span>
+<span class="nc bnc" id="L604" title="All 2 branches missed.">			if (recordType.isInstance(rec)){</span>
+<span class="nc" id="L605">				filtered.add((T)rec);</span>
+			}
+<span class="nc" id="L607">		}</span>
+<span class="nc" id="L608">		return filtered;</span>
+	}
+
+	public static ArrayList&lt;Record&gt; getRecords(int depth){
+<span class="nc" id="L612">		ArrayList&lt;Record&gt; filtered = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L613" title="All 2 branches missed.">		for (Record rec : records){</span>
+<span class="nc bnc" id="L614" title="All 4 branches missed.">			if (rec.depth() == depth &amp;&amp; !(rec instanceof CustomRecord)){</span>
+<span class="nc" id="L615">				filtered.add(rec);</span>
+			}
+<span class="nc" id="L617">		}</span>
+
+<span class="nc" id="L619">		Collections.sort(filtered, comparator);</span>
+
+<span class="nc" id="L621">		return filtered;</span>
+	}
+
+	public static CustomRecord findCustomRecord( int ID ){
+<span class="nc bnc" id="L625" title="All 2 branches missed.">		for (Record rec : records){</span>
+<span class="nc bnc" id="L626" title="All 4 branches missed.">			if (rec instanceof CustomRecord &amp;&amp; ((CustomRecord) rec).ID == ID) {</span>
+<span class="nc" id="L627">				return (CustomRecord) rec;</span>
+			}
+<span class="nc" id="L629">		}</span>
+<span class="nc" id="L630">		return null;</span>
+	}
+
+	public static CustomRecord findCustomRecord( Class itemClass ){
+<span class="nc bnc" id="L634" title="All 2 branches missed.">		for (Record rec : records){</span>
+<span class="nc bnc" id="L635" title="All 4 branches missed.">			if (rec instanceof CustomRecord &amp;&amp; ((CustomRecord) rec).itemClass == itemClass) {</span>
+<span class="nc" id="L636">				return (CustomRecord) rec;</span>
+			}
+<span class="nc" id="L638">		}</span>
+<span class="nc" id="L639">		return null;</span>
+	}
+
+	public static int customRecordLimit(){
+<span class="nc" id="L643">		return 5;</span>
+	}
+
+<span class="nc" id="L646">	private static final Comparator&lt;Record&gt; comparator = new Comparator&lt;Record&gt;() {</span>
+		@Override
+		public int compare(Record r1, Record r2) {
+<span class="nc" id="L649">			return r1.order() - r2.order();</span>
+		}
+	};
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

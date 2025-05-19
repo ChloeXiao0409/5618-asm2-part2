@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CavesFissureRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard</a> &gt; <span class="el_source">CavesFissureRoom.java</span></div><h1>CavesFissureRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard;
+
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Point;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L35">public class CavesFissureRoom extends StandardRoom {</span>
+
+	@Override
+	public int minWidth() {
+<span class="nc" id="L39">		return Math.max(7, super.minWidth());</span>
+	}
+
+	@Override
+	public int minHeight() {
+<span class="nc" id="L44">		return Math.max(7, super.minHeight());</span>
+	}
+
+	@Override
+	public float[] sizeCatProbs() {
+<span class="nc" id="L49">		return new float[]{9, 3, 1};</span>
+	}
+
+	@Override
+	public boolean canMerge(Level l, Room other, Point p, int mergeTerrain) {
+<span class="nc bnc" id="L54" title="All 2 branches missed.">		if (mergeTerrain == Terrain.CHASM) {</span>
+<span class="nc" id="L55">			return true;</span>
+		} else {
+<span class="nc" id="L57">			int cell = l.pointToCell(pointInside(p, 1));</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">			return l.map[cell] != Terrain.CHASM;</span>
+		}
+	}
+
+	@Override
+	public boolean canPlaceItem(Point p, Level l) {
+<span class="nc bnc" id="L64" title="All 4 branches missed.">		return super.canPlaceItem(p, l) &amp;&amp; l.map[l.pointToCell(p)] != Terrain.EMPTY_SP;</span>
+	}
+
+	@Override
+	public boolean canPlaceCharacter(Point p, Level l) {
+<span class="nc bnc" id="L69" title="All 4 branches missed.">		return super.canPlaceItem(p, l) &amp;&amp; l.map[l.pointToCell(p)] != Terrain.EMPTY_SP;</span>
+	}
+
+	@Override
+	public void paint(Level level) {
+
+<span class="nc" id="L75">		boolean pathable = true;</span>
+<span class="nc" id="L76">		PathFinder.setMapSize(width()-2, height()-2);</span>
+
+		do {
+<span class="nc" id="L79">			Painter.fill(level, this, Terrain.WALL);</span>
+<span class="nc" id="L80">			Painter.fill(level, this, 1, Terrain.EMPTY);</span>
+
+<span class="nc bnc" id="L82" title="All 2 branches missed.">			for (Door door : connected.values()) {</span>
+<span class="nc" id="L83">				door.set(Door.Type.REGULAR);</span>
+<span class="nc" id="L84">			}</span>
+
+<span class="nc" id="L86">			PointF center = new PointF(center());</span>
+<span class="nc" id="L87">			center.x += 0.5f;</span>
+<span class="nc" id="L88">			center.y += 0.5f;</span>
+
+			//find the angle of each door from our center point
+<span class="nc" id="L91">			ArrayList&lt;Float&gt; doorAngles = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">			for (Door d : connected.values()) {</span>
+<span class="nc" id="L93">				PointF doorCenter = new PointF(d.x + 0.5f, d.y + 0.5f);</span>
+<span class="nc" id="L94">				float doorAngle = angleBetweenPoints(center, doorCenter);</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">				if (doorAngle &lt; 0) doorAngle += 360f;</span>
+<span class="nc" id="L96">				doorAngles.add(doorAngle);</span>
+<span class="nc" id="L97">			}</span>
+
+			//generate angles for 2-4 fissure lines, they can't be too close to doors or eachother
+<span class="nc" id="L100">			ArrayList&lt;Float&gt; lineAngles = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L101">			int numLines = 1 + sizeFactor();</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">			for (int i = 0; i &lt; numLines; i++) {</span>
+<span class="nc" id="L103">				int tries = 100;</span>
+				boolean valid;
+				do {
+<span class="nc" id="L106">					valid = true;</span>
+<span class="nc" id="L107">					float lineAngle = Random.Float(0, 360);</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">					for (float doorAngle : doorAngles) {</span>
+<span class="nc" id="L109">						float angleDiff = Math.abs(lineAngle - doorAngle);</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">						if (angleDiff &gt; 180f) angleDiff = 360f - angleDiff;</span>
+<span class="nc bnc" id="L111" title="All 4 branches missed.">						if (angleDiff &lt;= (sizeCat == SizeCategory.NORMAL ? 30f : 15f)) {</span>
+<span class="nc" id="L112">							valid = false;</span>
+<span class="nc" id="L113">							break;</span>
+						}
+<span class="nc" id="L115">					}</span>
+
+<span class="nc bnc" id="L117" title="All 2 branches missed.">					for (float existingLineAngle : lineAngles) {</span>
+<span class="nc" id="L118">						float angleDiff = Math.abs(lineAngle - existingLineAngle);</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">						if (angleDiff &gt; 180f) angleDiff = 360f - angleDiff;</span>
+<span class="nc bnc" id="L120" title="All 4 branches missed.">						if (angleDiff &lt;= (numLines == 2 ? 120f : 60f)) {</span>
+<span class="nc" id="L121">							valid = false;</span>
+<span class="nc" id="L122">							break;</span>
+						}
+<span class="nc" id="L124">					}</span>
+
+<span class="nc bnc" id="L126" title="All 2 branches missed.">					if (valid) {</span>
+<span class="nc" id="L127">						lineAngles.add(lineAngle);</span>
+					}
+
+<span class="nc bnc" id="L130" title="All 4 branches missed.">				} while (!valid &amp;&amp; --tries &gt; 0);</span>
+			}
+
+			//just become an empty room if we can't make at least 2 lines
+<span class="nc bnc" id="L134" title="All 2 branches missed.">			if (lineAngles.size() &lt; 2) {</span>
+<span class="nc" id="L135">				PathFinder.setMapSize(level.width(), level.height());</span>
+<span class="nc" id="L136">				return;</span>
+			}
+
+			//fill in each fissure
+<span class="nc bnc" id="L140" title="All 2 branches missed.">			for (float lineAngle : lineAngles) {</span>
+<span class="nc" id="L141">				float dX = (float) Math.cos(lineAngle / A - Math.PI / 2.0);</span>
+<span class="nc" id="L142">				float dY = (float) Math.sin(lineAngle / A - Math.PI / 2.0);</span>
+
+				boolean horizontal;
+<span class="nc bnc" id="L145" title="All 2 branches missed.">				if (Math.abs(dX) &gt;= Math.abs(dY)) {</span>
+<span class="nc" id="L146">					horizontal = true;</span>
+<span class="nc" id="L147">					dY /= Math.abs(dX);</span>
+<span class="nc" id="L148">					dX /= Math.abs(dX);</span>
+				} else {
+<span class="nc" id="L150">					horizontal = false;</span>
+<span class="nc" id="L151">					dX /= Math.abs(dY);</span>
+<span class="nc" id="L152">					dY /= Math.abs(dY);</span>
+				}
+
+<span class="nc" id="L155">				PointF curr = new PointF(center);</span>
+<span class="nc" id="L156">				int cell = (int) curr.x + ((int) curr.y) * level.width();</span>
+<span class="nc" id="L157">				Painter.set(level, cell, Terrain.CHASM);</span>
+				do {
+<span class="nc bnc" id="L159" title="All 2 branches missed.">					if (!horizontal) {</span>
+<span class="nc bnc" id="L160" title="All 6 branches missed.">						if (level.map[cell - 1] == Terrain.EMPTY</span>
+								&amp;&amp; ((curr.x % 1 &lt;= 0.5f) || sizeCat == SizeCategory.GIANT)) {
+<span class="nc" id="L162">							Painter.set(level, cell - 1, Terrain.CHASM);</span>
+						}
+<span class="nc bnc" id="L164" title="All 2 branches missed.">						if (level.map[cell] == Terrain.EMPTY)</span>
+<span class="nc" id="L165">							Painter.set(level, cell, Terrain.CHASM);</span>
+<span class="nc bnc" id="L166" title="All 6 branches missed.">						if (level.map[cell + 1] == Terrain.EMPTY</span>
+								&amp;&amp; ((curr.x % 1 &gt; 0.5f) || sizeCat == SizeCategory.GIANT)) {
+<span class="nc" id="L168">							Painter.set(level, cell + 1, Terrain.CHASM);</span>
+						}
+					} else {
+<span class="nc bnc" id="L171" title="All 6 branches missed.">						if (level.map[cell - level.width()] == Terrain.EMPTY</span>
+								&amp;&amp; ((curr.y % 1 &lt;= 0.5f) || sizeCat == SizeCategory.GIANT)) {
+<span class="nc" id="L173">							Painter.set(level, cell - level.width(), Terrain.CHASM);</span>
+						}
+<span class="nc bnc" id="L175" title="All 2 branches missed.">						if (level.map[cell] == Terrain.EMPTY)</span>
+<span class="nc" id="L176">							Painter.set(level, cell, Terrain.CHASM);</span>
+<span class="nc bnc" id="L177" title="All 6 branches missed.">						if (level.map[cell + level.width()] == Terrain.EMPTY</span>
+								&amp;&amp; ((curr.y % 1 &gt; 0.5f) || sizeCat == SizeCategory.GIANT)) {
+<span class="nc" id="L179">							Painter.set(level, cell + level.width(), Terrain.CHASM);</span>
+						}
+					}
+
+<span class="nc" id="L183">					curr.x += dX;</span>
+<span class="nc" id="L184">					curr.y += dY;</span>
+<span class="nc" id="L185">					cell = (int) curr.x + ((int) curr.y) * level.width();</span>
+<span class="nc bnc" id="L186" title="All 4 branches missed.">				} while (level.map[cell] == Terrain.EMPTY || level.map[cell] == Terrain.CHASM);</span>
+
+<span class="nc" id="L188">			}</span>
+
+			//add chasm to the center in larger rooms
+<span class="nc bnc" id="L191" title="All 2 branches missed.">			if (lineAngles.size() &gt;= 3) {</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">				if (sizeCat == SizeCategory.GIANT) {</span>
+<span class="nc" id="L193">					Painter.fill(level, (int) center.x - 2, (int) center.y - 2, 5, 5, Terrain.CHASM);</span>
+				} else {
+<span class="nc" id="L195">					Painter.fill(level, (int) center.x - 1, (int) center.y - 1, 3, 3, Terrain.CHASM);</span>
+				}
+			}
+
+			//draw bridges for the chasms
+<span class="nc bnc" id="L200" title="All 2 branches missed.">			if (lineAngles.size() == 2) {</span>
+<span class="nc" id="L201">				buildBridge(level, Random.element(lineAngles), center, 1);</span>
+			} else {
+<span class="nc bnc" id="L203" title="All 2 branches missed.">				for (float angle : lineAngles) {</span>
+<span class="nc" id="L204">					buildBridge(level, angle, center, sizeFactor());</span>
+<span class="nc" id="L205">				}</span>
+			}
+
+<span class="nc" id="L208">			int doorPoint = 0;</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">			for (Door door : connected.values()) {</span>
+<span class="nc" id="L210">				Painter.drawInside(level, this, door, 1, Terrain.EMPTY);</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">				if (door.x == left)         doorPoint = xyToRoomCoords(door.x+1, door.y);</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">				else if (door.x == right)   doorPoint = xyToRoomCoords(door.x-1, door.y);</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">				else if (door.y == top)     doorPoint = xyToRoomCoords(door.x, door.y+1);</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">				else if (door.y == bottom)  doorPoint = xyToRoomCoords(door.x, door.y-1);</span>
+<span class="nc" id="L215">			}</span>
+
+			//ensures that there is always a path to any non-chasm tile
+			//TODO some copypasta from PatchRoom here, maybe standardize this as a static function in Room?
+<span class="nc" id="L219">			pathable = true;</span>
+<span class="nc" id="L220">			boolean[] passable = new boolean[PathFinder.distance.length];</span>
+
+<span class="nc bnc" id="L222" title="All 2 branches missed.">			for (Point p : shrink().getPoints()){</span>
+<span class="nc" id="L223">				int i = xyToRoomCoords(p.x, p.y);</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">				passable[i] = level.map[level.pointToCell(p)] != Terrain.CHASM;</span>
+<span class="nc" id="L225">			}</span>
+
+<span class="nc" id="L227">			PathFinder.buildDistanceMap(doorPoint, passable);</span>
+
+<span class="nc bnc" id="L229" title="All 2 branches missed.">			for (Point p : shrink().getPoints()){</span>
+<span class="nc" id="L230">				int i = xyToRoomCoords(p.x, p.y);</span>
+<span class="nc bnc" id="L231" title="All 4 branches missed.">				if (passable[i] &amp;&amp; PathFinder.distance[i] == Integer.MAX_VALUE){</span>
+<span class="nc" id="L232">					pathable = false;</span>
+<span class="nc" id="L233">					break;</span>
+				}
+<span class="nc" id="L235">			}</span>
+
+<span class="nc bnc" id="L237" title="All 2 branches missed.">		} while (!pathable);</span>
+
+<span class="nc" id="L239">		PathFinder.setMapSize(level.width(), level.height());</span>
+
+<span class="nc" id="L241">	}</span>
+
+	private void buildBridge( Level level, float fisssureAngle, PointF center, int centerMargin){
+<span class="nc" id="L244">		float dX = (float)Math.cos(fisssureAngle/A - Math.PI/2.0);</span>
+<span class="nc" id="L245">		float dY = (float)Math.sin(fisssureAngle/A - Math.PI/2.0);</span>
+
+<span class="nc" id="L247">		int edgemargin = 2;</span>
+
+		//horizontal bridge
+<span class="nc bnc" id="L250" title="All 2 branches missed.">		if (Math.abs(dY) &gt;= Math.abs(dX)){</span>
+			int Y;
+<span class="nc bnc" id="L252" title="All 2 branches missed.">			if (dY &gt; 0) Y = Random.IntRange((int)center.y+centerMargin, bottom-edgemargin);</span>
+<span class="nc" id="L253">			else        Y = Random.IntRange(top+edgemargin, (int)center.y-centerMargin);</span>
+
+<span class="nc" id="L255">			boolean foundChasm = false;</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">			if (dX &lt;= 0) {</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">				for (int X = left + 1; X &lt;= right - 1; X++) {</span>
+<span class="nc" id="L258">					int cell = X + Y * level.width();</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">					if (level.map[cell] == Terrain.CHASM) {</span>
+<span class="nc" id="L260">						foundChasm = true;</span>
+<span class="nc" id="L261">						Painter.set(level, cell, Terrain.EMPTY_SP);</span>
+<span class="nc bnc" id="L262" title="All 2 branches missed.">					} else if (foundChasm) {</span>
+<span class="nc" id="L263">						break;</span>
+					}
+				}
+			} else {
+<span class="nc bnc" id="L267" title="All 2 branches missed.">				for (int X = right-1; X &gt;= left+1; X--) {</span>
+<span class="nc" id="L268">					int cell = X + Y * level.width();</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">					if (level.map[cell] == Terrain.CHASM) {</span>
+<span class="nc" id="L270">						foundChasm = true;</span>
+<span class="nc" id="L271">						Painter.set(level, cell, Terrain.EMPTY_SP);</span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">					} else if (foundChasm) {</span>
+<span class="nc" id="L273">						break;</span>
+					}
+				}
+			}
+
+		//vertical bridge
+<span class="nc" id="L279">		} else {</span>
+			int X;
+<span class="nc bnc" id="L281" title="All 2 branches missed.">			if (dX &gt; 0) X = Random.IntRange((int)center.x+centerMargin, right-edgemargin);</span>
+<span class="nc" id="L282">			else        X = Random.IntRange(left+edgemargin, (int)center.x-centerMargin);</span>
+
+<span class="nc" id="L284">			boolean foundChasm = false;</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">			if (dY &lt;= 0) {</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">				for (int Y = top + 1; Y &lt;= bottom - 1; Y++) {</span>
+<span class="nc" id="L287">					int cell = X + Y * level.width();</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">					if (level.map[cell] == Terrain.CHASM) {</span>
+<span class="nc" id="L289">						foundChasm = true;</span>
+<span class="nc" id="L290">						Painter.set(level, cell, Terrain.EMPTY_SP);</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">					} else if (foundChasm){</span>
+<span class="nc" id="L292">						break;</span>
+					}
+				}
+			} else {
+<span class="nc bnc" id="L296" title="All 2 branches missed.">				for (int Y = bottom-1; Y &gt;= top + 1; Y--) {</span>
+<span class="nc" id="L297">					int cell = X + Y * level.width();</span>
+<span class="nc bnc" id="L298" title="All 2 branches missed.">					if (level.map[cell] == Terrain.CHASM) {</span>
+<span class="nc" id="L299">						foundChasm = true;</span>
+<span class="nc" id="L300">						Painter.set(level, cell, Terrain.EMPTY_SP);</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">					} else if (foundChasm){</span>
+<span class="nc" id="L302">						break;</span>
+					}
+				}
+			}
+
+		}
+<span class="nc" id="L308">	}</span>
+
+	private static final double A = 180 / Math.PI;
+
+	protected static float angleBetweenPoints( PointF from, PointF to ){
+<span class="nc" id="L313">		double m = (to.y - from.y)/(to.x - from.x);</span>
+
+<span class="nc" id="L315">		float angle = (float)(A*(Math.atan(m) + Math.PI/2.0));</span>
+<span class="nc bnc" id="L316" title="All 2 branches missed.">		if (from.x &gt; to.x) angle -= 180f;</span>
+<span class="nc" id="L317">		return angle;</span>
+	}
+
+	protected int xyToRoomCoords(int x, int y){
+<span class="nc" id="L321">		return (x-left-1) + ((y-top-1) * (width()-2));</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

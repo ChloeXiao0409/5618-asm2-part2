@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RatKingRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret</a> &gt; <span class="el_source">RatKingRoom.java</span></div><h1>RatKingRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret;
+
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.RatKing;
+import com.shatteredpixel.shatteredpixeldungeon.items.Gold;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.sewerboss.SewerBossEntranceRoom;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L35">public class RatKingRoom extends SecretRoom {</span>
+	
+	@Override
+	public boolean canConnect(Room r) {
+		//never connects at the entrance
+<span class="nc bnc" id="L40" title="All 4 branches missed.">		return !(r instanceof SewerBossEntranceRoom) &amp;&amp; super.canConnect(r);</span>
+	}
+	
+	//reduced max size to limit chest numbers.
+	// normally would gen with 8-28, this limits it to 8-16
+	@Override
+<span class="nc" id="L46">	public int maxHeight() { return 7; }</span>
+<span class="nc" id="L47">	public int maxWidth() { return 7; }</span>
+	
+	public void paint(Level level ) {
+
+<span class="nc" id="L51">		Painter.fill( level, this, Terrain.WALL );</span>
+<span class="nc" id="L52">		Painter.fill( level, this, 1, Terrain.EMPTY_SP );</span>
+		
+<span class="nc" id="L54">		Door entrance = entrance();</span>
+<span class="nc" id="L55">		entrance.set( Door.Type.HIDDEN );</span>
+<span class="nc" id="L56">		int door = entrance.x + entrance.y * level.width();</span>
+		
+<span class="nc bnc" id="L58" title="All 2 branches missed.">		for (int i=left + 1; i &lt; right; i++) {</span>
+<span class="nc" id="L59">			addChest( level, (top + 1) * level.width() + i, door );</span>
+<span class="nc" id="L60">			addChest( level, (bottom - 1) * level.width() + i, door );</span>
+		}
+		
+<span class="nc bnc" id="L63" title="All 2 branches missed.">		for (int i=top + 2; i &lt; bottom - 1; i++) {</span>
+<span class="nc" id="L64">			addChest( level, i * level.width() + left + 1, door );</span>
+<span class="nc" id="L65">			addChest( level, i * level.width() + right - 1, door );</span>
+		}
+
+<span class="nc" id="L68">		RatKing king = new RatKing();</span>
+<span class="nc" id="L69">		king.pos = level.pointToCell(random( 2 ));</span>
+<span class="nc" id="L70">		level.mobs.add( king );</span>
+<span class="nc" id="L71">	}</span>
+	
+	private static void addChest( Level level, int pos, int door ) {
+		
+<span class="nc bnc" id="L75" title="All 4 branches missed.">		if (pos == door - 1 ||</span>
+			pos == door + 1 ||
+<span class="nc bnc" id="L77" title="All 2 branches missed.">			pos == door - level.width() ||</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">			pos == door + level.width()) {</span>
+<span class="nc" id="L79">			return;</span>
+		}
+		
+<span class="nc" id="L82">		Item prize = new Gold( Random.IntRange( 10, 25 ) );</span>
+		
+<span class="nc" id="L84">		level.drop( prize, pos ).type = Heap.Type.CHEST;</span>
+<span class="nc" id="L85">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

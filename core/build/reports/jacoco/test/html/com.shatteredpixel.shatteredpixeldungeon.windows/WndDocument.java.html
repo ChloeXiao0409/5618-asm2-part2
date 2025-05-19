@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WndDocument.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.windows</a> &gt; <span class="el_source">WndDocument.java</span></div><h1>WndDocument.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.windows;
+
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Document;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ScrollingListPane;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+
+public class WndDocument extends Window {
+
+	private ScrollingListPane list;
+
+<span class="nc" id="L34">	public WndDocument(Document doc){</span>
+<span class="nc" id="L35">		list = new ScrollingListPane();</span>
+<span class="nc" id="L36">		add( list );</span>
+
+<span class="nc" id="L38">		list.addTitle(Messages.titleCase(doc.title()));</span>
+
+<span class="nc bnc" id="L40" title="All 2 branches missed.">		for (String page : doc.pageNames()){</span>
+<span class="nc" id="L41">			boolean found = doc.isPageFound(page);</span>
+<span class="nc" id="L42">			ScrollingListPane.ListItem item = new ScrollingListPane.ListItem(</span>
+<span class="nc" id="L43">					doc.pageSprite(),</span>
+					null,
+<span class="nc bnc" id="L45" title="All 2 branches missed.">					found ? Messages.titleCase(doc.pageTitle(page)) : Messages.titleCase(Messages.get( this, &quot;missing&quot; ))</span>
+<span class="nc" id="L46">			){</span>
+				@Override
+				public boolean onClick(float x, float y) {
+<span class="nc bnc" id="L49" title="All 4 branches missed.">					if (inside( x, y ) &amp;&amp; found) {</span>
+<span class="nc" id="L50">						ShatteredPixelDungeon.scene().addToFront( new WndStory(</span>
+<span class="nc" id="L51">								doc.pageSprite(page),</span>
+<span class="nc" id="L52">								doc.pageTitle(page),</span>
+<span class="nc" id="L53">								doc.pageBody(page) ));</span>
+<span class="nc" id="L54">						doc.readPage(page);</span>
+<span class="nc" id="L55">						hardlight(Window.WHITE);</span>
+<span class="nc" id="L56">						return true;</span>
+					} else {
+<span class="nc" id="L58">						return false;</span>
+					}
+				}
+			};
+<span class="nc bnc" id="L62" title="All 2 branches missed.">			if (!found){</span>
+<span class="nc" id="L63">				item.hardlight(0x999999);</span>
+<span class="nc" id="L64">				item.hardlightIcon(0x999999);</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">			} else if (!doc.isPageRead(page)){</span>
+<span class="nc" id="L66">				item.hardlight(Window.TITLE_COLOR);</span>
+			}
+<span class="nc" id="L68">			list.addItem(item);</span>
+<span class="nc" id="L69">		}</span>
+
+<span class="nc" id="L71">		resize(120, Math.min(144, (int)list.content().height()));</span>
+<span class="nc" id="L72">		list.setRect(0, 0, width, height);</span>
+<span class="nc" id="L73">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

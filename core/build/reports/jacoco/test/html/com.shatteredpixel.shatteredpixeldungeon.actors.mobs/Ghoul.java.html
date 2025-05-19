@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Ghoul.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">Ghoul.java</span></div><h1>Ghoul.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SacrificialFire;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.duelist.Challenge;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
+import com.shatteredpixel.shatteredpixeldungeon.items.Gold;
+import com.shatteredpixel.shatteredpixeldungeon.levels.features.Chasm;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.GhoulSprite;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L43">public class Ghoul extends Mob {</span>
+	
+	{
+<span class="nc" id="L46">		spriteClass = GhoulSprite.class;</span>
+		
+<span class="nc" id="L48">		HP = HT = 45;</span>
+<span class="nc" id="L49">		defenseSkill = 20;</span>
+		
+<span class="nc" id="L51">		EXP = 5;</span>
+<span class="nc" id="L52">		maxLvl = 20;</span>
+		
+<span class="nc" id="L54">		SLEEPING = new Sleeping();</span>
+<span class="nc" id="L55">		WANDERING = new Wandering();</span>
+<span class="nc" id="L56">		state = SLEEPING;</span>
+
+<span class="nc" id="L58">		loot = Gold.class;</span>
+<span class="nc" id="L59">		lootChance = 0.2f;</span>
+		
+<span class="nc" id="L61">		properties.add(Property.UNDEAD);</span>
+	}
+
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L66">		return Random.NormalIntRange( 16, 22 );</span>
+	}
+
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L71">		return 24;</span>
+	}
+
+	@Override
+	public int drRoll() {
+<span class="nc" id="L76">		return super.drRoll() + Random.NormalIntRange(0, 4);</span>
+	}
+
+	@Override
+	public float spawningWeight() {
+<span class="nc" id="L81">		return 0.5f;</span>
+	}
+
+<span class="nc" id="L84">	private int timesDowned = 0;</span>
+<span class="nc" id="L85">	protected int partnerID = -1;</span>
+
+	private static final String PARTNER_ID = &quot;partner_id&quot;;
+	private static final String TIMES_DOWNED = &quot;times_downed&quot;;
+	
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L92">		super.storeInBundle( bundle );</span>
+<span class="nc" id="L93">		bundle.put( PARTNER_ID, partnerID );</span>
+<span class="nc" id="L94">		bundle.put( TIMES_DOWNED, timesDowned );</span>
+<span class="nc" id="L95">	}</span>
+	
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L99">		super.restoreFromBundle( bundle );</span>
+<span class="nc" id="L100">		partnerID = bundle.getInt( PARTNER_ID );</span>
+<span class="nc" id="L101">		timesDowned = bundle.getInt( TIMES_DOWNED );</span>
+<span class="nc" id="L102">	}</span>
+	
+	@Override
+	protected boolean act() {
+		//create a child
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		if (partnerID == -1){</span>
+			
+<span class="nc" id="L109">			ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+			
+<span class="nc" id="L111">			int[] neighbours = {pos + 1, pos - 1, pos + Dungeon.level.width(), pos - Dungeon.level.width()};</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">			for (int n : neighbours) {</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">				if (Dungeon.level.passable[n]</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">						&amp;&amp; Actor.findChar( n ) == null</span>
+<span class="nc bnc" id="L115" title="All 4 branches missed.">						&amp;&amp; (!Char.hasProp(this, Property.LARGE) || Dungeon.level.openSpace[n])) {</span>
+<span class="nc" id="L116">					candidates.add( n );</span>
+				}
+			}
+			
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			if (!candidates.isEmpty()){</span>
+<span class="nc" id="L121">				Ghoul child = new Ghoul();</span>
+<span class="nc" id="L122">				child.partnerID = this.id();</span>
+<span class="nc" id="L123">				this.partnerID = child.id();</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">				if (state != SLEEPING) {</span>
+<span class="nc" id="L125">					child.state = child.WANDERING;</span>
+				}
+				
+<span class="nc" id="L128">				child.pos = Random.element( candidates );</span>
+
+<span class="nc" id="L130">				GameScene.add( child );</span>
+<span class="nc" id="L131">				Dungeon.level.occupyCell(child);</span>
+				
+<span class="nc bnc" id="L133" title="All 2 branches missed.">				if (sprite.visible) {</span>
+<span class="nc" id="L134">					Actor.add( new Pushing( child, pos, child.pos ) );</span>
+				}
+
+				//champion buff, mainly
+<span class="nc bnc" id="L138" title="All 2 branches missed.">				for (Buff b : buffs()){</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">					if (b.revivePersists) {</span>
+<span class="nc" id="L140">						Buff.affect(child, b.getClass());</span>
+					}
+<span class="nc" id="L142">				}</span>
+
+			}
+			
+		}
+<span class="nc" id="L147">		return super.act();</span>
+	}
+
+<span class="nc" id="L150">	private boolean beingLifeLinked = false;</span>
+
+	@Override
+	public void die(Object cause) {
+<span class="nc bnc" id="L154" title="All 6 branches missed.">		if (cause != Chasm.class &amp;&amp; cause != GhoulLifeLink.class &amp;&amp; !Dungeon.level.pit[pos]){</span>
+<span class="nc" id="L155">			Ghoul nearby = GhoulLifeLink.searchForHost(this);</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">			if (nearby != null){</span>
+<span class="nc" id="L157">				beingLifeLinked = true;</span>
+<span class="nc" id="L158">				timesDowned++;</span>
+<span class="nc" id="L159">				Actor.remove(this);</span>
+<span class="nc" id="L160">				Dungeon.level.mobs.remove( this );</span>
+<span class="nc" id="L161">				Buff.append(nearby, GhoulLifeLink.class).set(timesDowned*5, this);</span>
+<span class="nc" id="L162">				((GhoulSprite)sprite).crumple();</span>
+<span class="nc" id="L163">				return;</span>
+			}
+		}
+
+<span class="nc" id="L167">		super.die(cause);</span>
+<span class="nc" id="L168">	}</span>
+
+	@Override
+	public boolean isAlive() {
+<span class="nc bnc" id="L172" title="All 4 branches missed.">		return super.isAlive() || beingLifeLinked;</span>
+	}
+
+	@Override
+	public boolean isActive() {
+<span class="nc bnc" id="L177" title="All 4 branches missed.">		return !beingLifeLinked &amp;&amp; isAlive();</span>
+	}
+
+	@Override
+	protected synchronized void onRemove() {
+<span class="nc bnc" id="L182" title="All 2 branches missed.">		if (beingLifeLinked) {</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">			for (Buff buff : buffs()) {</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">				if (buff instanceof SacrificialFire.Marked){</span>
+					//don't remove and postpone so marked stays on
+<span class="nc" id="L186">					Buff.prolong(this, SacrificialFire.Marked.class, timesDowned*5);</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">				} else if (buff.revivePersists) {</span>
+					//don't remove
+				} else {
+<span class="nc" id="L190">					buff.detach();</span>
+				}
+<span class="nc" id="L192">			}</span>
+		} else {
+<span class="nc" id="L194">			super.onRemove();</span>
+		}
+<span class="nc" id="L196">	}</span>
+
+<span class="nc" id="L198">	private class Sleeping extends Mob.Sleeping {</span>
+		@Override
+		public boolean act( boolean enemyInFOV, boolean justAlerted ) {
+<span class="nc" id="L201">			Ghoul partner = (Ghoul) Actor.findById( partnerID );</span>
+<span class="nc bnc" id="L202" title="All 4 branches missed.">			if (partner != null &amp;&amp; partner.state != partner.SLEEPING){</span>
+<span class="nc" id="L203">				state = WANDERING;</span>
+<span class="nc" id="L204">				target = partner.pos;</span>
+<span class="nc" id="L205">				return true;</span>
+			} else {
+<span class="nc" id="L207">				return super.act( enemyInFOV, justAlerted );</span>
+			}
+		}
+	}
+	
+<span class="nc" id="L212">	private class Wandering extends Mob.Wandering {</span>
+		
+		@Override
+		protected boolean continueWandering() {
+<span class="nc" id="L216">			enemySeen = false;</span>
+			
+<span class="nc" id="L218">			Ghoul partner = (Ghoul) Actor.findById( partnerID );</span>
+<span class="nc bnc" id="L219" title="All 6 branches missed.">			if (partner != null &amp;&amp; (partner.state != partner.WANDERING || Dungeon.level.distance( pos,  partner.target) &gt; 1)){</span>
+<span class="nc" id="L220">				target = partner.pos;</span>
+<span class="nc" id="L221">				int oldPos = pos;</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">				if (getCloser( target )){</span>
+<span class="nc" id="L223">					spend( 1 / speed() );</span>
+<span class="nc" id="L224">					return moveSprite( oldPos, pos );</span>
+				} else {
+<span class="nc" id="L226">					spend( TICK );</span>
+<span class="nc" id="L227">					return true;</span>
+				}
+			} else {
+<span class="nc" id="L230">				return super.continueWandering();</span>
+			}
+		}
+	}
+
+<span class="nc" id="L235">	public static class GhoulLifeLink extends Buff{</span>
+
+		private Ghoul ghoul;
+		private int turnsToRevive;
+
+		@Override
+		public boolean act() {
+<span class="nc bnc" id="L242" title="All 2 branches missed.">			if (target.alignment != ghoul.alignment){</span>
+<span class="nc" id="L243">				detach();</span>
+<span class="nc" id="L244">				return true;</span>
+			}
+
+<span class="nc bnc" id="L247" title="All 2 branches missed.">			if (target.fieldOfView == null){</span>
+<span class="nc" id="L248">				target.fieldOfView = new boolean[Dungeon.level.length()];</span>
+<span class="nc" id="L249">				Dungeon.level.updateFieldOfView( target, target.fieldOfView );</span>
+			}
+
+<span class="nc bnc" id="L252" title="All 4 branches missed.">			if (!target.fieldOfView[ghoul.pos] &amp;&amp; Dungeon.level.distance(ghoul.pos, target.pos) &gt;= 4){</span>
+<span class="nc" id="L253">				detach();</span>
+<span class="nc" id="L254">				return true;</span>
+			}
+
+<span class="nc bnc" id="L257" title="All 2 branches missed.">			if (Dungeon.level.pit[ghoul.pos]){</span>
+<span class="nc" id="L258">				super.detach();</span>
+<span class="nc" id="L259">				ghoul.beingLifeLinked = false;</span>
+<span class="nc" id="L260">				ghoul.die(this);</span>
+<span class="nc" id="L261">				return true;</span>
+			}
+
+			//have to delay this manually here are a downed ghouls can't be directly frozen otherwise
+<span class="nc bnc" id="L265" title="All 2 branches missed.">			if (target.buff(Challenge.DuelParticipant.class) == null) {</span>
+<span class="nc" id="L266">				turnsToRevive--;</span>
+			}
+<span class="nc bnc" id="L268" title="All 2 branches missed.">			if (turnsToRevive &lt;= 0){</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">				if (Actor.findChar( ghoul.pos ) != null) {</span>
+<span class="nc" id="L270">					ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">					for (int n : PathFinder.NEIGHBOURS8) {</span>
+<span class="nc" id="L272">						int cell = ghoul.pos + n;</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">						if (Dungeon.level.passable[cell]</span>
+<span class="nc bnc" id="L274" title="All 2 branches missed.">								&amp;&amp; Actor.findChar( cell ) == null</span>
+<span class="nc bnc" id="L275" title="All 4 branches missed.">								&amp;&amp; (!Char.hasProp(ghoul, Property.LARGE) || Dungeon.level.openSpace[cell])) {</span>
+<span class="nc" id="L276">							candidates.add( cell );</span>
+						}
+					}
+<span class="nc bnc" id="L279" title="All 2 branches missed.">					if (candidates.size() &gt; 0) {</span>
+<span class="nc" id="L280">						int newPos = Random.element( candidates );</span>
+<span class="nc" id="L281">						Actor.add( new Pushing( ghoul, ghoul.pos, newPos ) );</span>
+<span class="nc" id="L282">						ghoul.pos = newPos;</span>
+
+<span class="nc" id="L284">					} else {</span>
+<span class="nc" id="L285">						spend(TICK);</span>
+<span class="nc" id="L286">						return true;</span>
+					}
+				}
+<span class="nc" id="L289">				ghoul.HP = Math.round(ghoul.HT/10f);</span>
+<span class="nc" id="L290">				ghoul.beingLifeLinked = false;</span>
+<span class="nc" id="L291">				Actor.add(ghoul);</span>
+<span class="nc" id="L292">				ghoul.timeToNow();</span>
+<span class="nc" id="L293">				Dungeon.level.mobs.add(ghoul);</span>
+<span class="nc" id="L294">				Dungeon.level.occupyCell( ghoul );</span>
+<span class="nc" id="L295">				ghoul.sprite.idle();</span>
+<span class="nc" id="L296">				ghoul.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(Math.round(ghoul.HT/10f)), FloatingText.HEALING);</span>
+<span class="nc" id="L297">				super.detach();</span>
+<span class="nc" id="L298">				return true;</span>
+			}
+
+<span class="nc" id="L301">			spend(TICK);</span>
+<span class="nc" id="L302">			return true;</span>
+		}
+
+		public void updateVisibility(){
+<span class="nc bnc" id="L306" title="All 4 branches missed.">			if (ghoul != null &amp;&amp; ghoul.sprite != null){</span>
+<span class="nc" id="L307">				ghoul.sprite.visible = Dungeon.level.heroFOV[ghoul.pos];</span>
+			}
+<span class="nc" id="L309">		}</span>
+
+		public void set(int turns, Ghoul ghoul){
+<span class="nc" id="L312">			this.ghoul = ghoul;</span>
+<span class="nc" id="L313">			turnsToRevive = turns;</span>
+<span class="nc" id="L314">		}</span>
+
+		@Override
+		public void fx(boolean on) {
+<span class="nc bnc" id="L318" title="All 6 branches missed.">			if (on &amp;&amp; ghoul != null &amp;&amp; ghoul.sprite == null){</span>
+<span class="nc" id="L319">				GameScene.addSprite(ghoul);</span>
+<span class="nc" id="L320">				((GhoulSprite)ghoul.sprite).crumple();</span>
+			}
+<span class="nc" id="L322">		}</span>
+
+		@Override
+		public void detach() {
+<span class="nc" id="L326">			super.detach();</span>
+<span class="nc" id="L327">			Ghoul newHost = searchForHost(ghoul);</span>
+<span class="nc bnc" id="L328" title="All 2 branches missed.">			if (newHost != null){</span>
+<span class="nc" id="L329">				attachTo(newHost);</span>
+<span class="nc" id="L330">				timeToNow();</span>
+			} else {
+<span class="nc" id="L332">				ghoul.beingLifeLinked = false;</span>
+<span class="nc" id="L333">				ghoul.die(this);</span>
+			}
+<span class="nc" id="L335">		}</span>
+
+		private static final String GHOUL = &quot;ghoul&quot;;
+		private static final String LEFT  = &quot;left&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L342">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L343">			bundle.put(GHOUL, ghoul);</span>
+<span class="nc" id="L344">			bundle.put(LEFT, turnsToRevive);</span>
+<span class="nc" id="L345">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L349">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L350">			ghoul = (Ghoul) bundle.get(GHOUL);</span>
+<span class="nc" id="L351">			ghoul.beingLifeLinked = true;</span>
+<span class="nc" id="L352">			turnsToRevive = bundle.getInt(LEFT);</span>
+<span class="nc" id="L353">		}</span>
+
+		public static Ghoul searchForHost(Ghoul dieing){
+
+<span class="nc bnc" id="L357" title="All 2 branches missed.">			for (Char ch : Actor.chars()){</span>
+				//don't count hero ally ghouls or duel frozen ghouls
+<span class="nc bnc" id="L359" title="All 6 branches missed.">				if (ch != dieing &amp;&amp; ch instanceof Ghoul</span>
+						&amp;&amp; ch.alignment == dieing.alignment
+<span class="nc bnc" id="L361" title="All 2 branches missed.">						&amp;&amp; ch.buff(Challenge.SpectatorFreeze.class) == null){</span>
+<span class="nc bnc" id="L362" title="All 2 branches missed.">					if (ch.fieldOfView == null){</span>
+<span class="nc" id="L363">						ch.fieldOfView = new boolean[Dungeon.level.length()];</span>
+<span class="nc" id="L364">						Dungeon.level.updateFieldOfView( ch, ch.fieldOfView );</span>
+					}
+<span class="nc bnc" id="L366" title="All 4 branches missed.">					if (ch.fieldOfView[dieing.pos] || Dungeon.level.distance(ch.pos, dieing.pos) &lt; 4){</span>
+<span class="nc" id="L367">						return (Ghoul) ch;</span>
+					}
+				}
+<span class="nc" id="L370">			}</span>
+<span class="nc" id="L371">			return null;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

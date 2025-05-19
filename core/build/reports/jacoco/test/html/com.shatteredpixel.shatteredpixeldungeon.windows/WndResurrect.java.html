@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WndResurrect.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.windows</a> &gt; <span class="el_source">WndResurrect.java</span></div><h1>WndResurrect.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.windows;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ItemButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.watabou.noosa.Game;
+
+public class WndResurrect extends Window {
+	
+	private static final int WIDTH		= 120;
+	private static final int BTN_HEIGHT	= 20;
+	private static final float GAP		= 2;
+	private static final float BTN_GAP  = 10;
+
+	private static final int BTN_SIZE	= 36;
+
+	public static Object instance;
+
+	private ItemButton btnItem1;
+	private ItemButton btnItem2;
+	private ItemButton btnPressed;
+
+	RedButton btnContinue;
+	
+	public WndResurrect( final Ankh ankh ) {
+		
+<span class="nc" id="L61">		super();</span>
+		
+<span class="nc" id="L63">		instance = this;</span>
+		
+<span class="nc" id="L65">		IconTitle titlebar = new IconTitle();</span>
+<span class="nc" id="L66">		titlebar.icon( new ItemSprite( ankh.image(), null ) );</span>
+<span class="nc" id="L67">		titlebar.label( Messages.titleCase(Messages.get(this, &quot;title&quot;)) );</span>
+<span class="nc" id="L68">		titlebar.setRect( 0, 0, WIDTH, 0 );</span>
+<span class="nc" id="L69">		add( titlebar );</span>
+		
+<span class="nc" id="L71">		RenderedTextBlock message = PixelScene.renderTextBlock(Messages.get(this, &quot;message&quot;), 6 );</span>
+<span class="nc" id="L72">		message.maxWidth(WIDTH);</span>
+<span class="nc" id="L73">		message.setPos(0, titlebar.bottom() + GAP);</span>
+<span class="nc" id="L74">		add( message );</span>
+
+<span class="nc" id="L76">		btnItem1 = new ItemButton() {</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L79">				btnPressed = btnItem1;</span>
+<span class="nc" id="L80">				GameScene.selectItem( itemSelector );</span>
+<span class="nc" id="L81">			}</span>
+		};
+<span class="nc" id="L83">		btnItem1.item(Dungeon.hero.belongings.weapon());</span>
+<span class="nc" id="L84">		btnItem1.setRect( (WIDTH - BTN_GAP) / 2 - BTN_SIZE, message.bottom() + BTN_GAP, BTN_SIZE, BTN_SIZE );</span>
+<span class="nc" id="L85">		add( btnItem1 );</span>
+
+<span class="nc" id="L87">		btnItem2 = new ItemButton() {</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L90">				btnPressed = btnItem2;</span>
+<span class="nc" id="L91">				GameScene.selectItem( itemSelector );</span>
+<span class="nc" id="L92">			}</span>
+		};
+<span class="nc" id="L94">		btnItem2.item(Dungeon.hero.belongings.armor());</span>
+<span class="nc" id="L95">		btnItem2.setRect( btnItem1.right() + BTN_GAP, btnItem1.top(), BTN_SIZE, BTN_SIZE );</span>
+<span class="nc" id="L96">		add( btnItem2 );</span>
+		
+<span class="nc" id="L98">		btnContinue = new RedButton( Messages.get(this, &quot;confirm&quot;) ) {</span>
+			@Override
+			protected void onClick() {
+<span class="nc bnc" id="L101" title="All 4 branches missed.">				if (btnItem1.item() == null || btnItem2.item() == null){</span>
+<span class="nc" id="L102">					GameScene.show(new WndOptions(Icons.WARNING.get(),</span>
+<span class="nc" id="L103">							Messages.get(WndResurrect.class, &quot;warn_title&quot;),</span>
+<span class="nc" id="L104">							Messages.get(WndResurrect.class, &quot;warn_body&quot;),</span>
+<span class="nc" id="L105">							Messages.get(WndResurrect.class, &quot;warn_yes&quot;),</span>
+<span class="nc" id="L106">							Messages.get(WndResurrect.class, &quot;warn_no&quot;)){</span>
+						@Override
+						protected void onSelect(int index) {
+<span class="nc bnc" id="L109" title="All 2 branches missed.">							if (index == 0){</span>
+<span class="nc" id="L110">								resurrect(ankh);</span>
+							}
+<span class="nc" id="L112">						}</span>
+					});
+				} else {
+<span class="nc" id="L115">					resurrect( ankh );</span>
+				}
+<span class="nc" id="L117">			}</span>
+		};
+<span class="nc" id="L119">		btnContinue.setRect( 0, btnItem1.bottom() + BTN_GAP, WIDTH, BTN_HEIGHT );</span>
+<span class="nc" id="L120">		add( btnContinue );</span>
+
+<span class="nc" id="L122">		resize( WIDTH, (int)btnContinue.bottom() );</span>
+<span class="nc" id="L123">	}</span>
+
+	private void resurrect( final Ankh ankh ){
+<span class="nc" id="L126">		hide();</span>
+
+<span class="nc" id="L128">		Statistics.ankhsUsed++;</span>
+<span class="nc" id="L129">		Catalog.countUse(Ankh.class);</span>
+
+<span class="nc" id="L131">		ankh.detach(Dungeon.hero.belongings.backpack);</span>
+
+<span class="nc bnc" id="L133" title="All 2 branches missed.">		if (btnItem1.item() != null){</span>
+<span class="nc" id="L134">			btnItem1.item().keptThoughLostInvent = true;</span>
+		}
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		if (btnItem2.item() != null){</span>
+<span class="nc" id="L137">			btnItem2.item().keptThoughLostInvent = true;</span>
+		}
+
+<span class="nc" id="L140">		InterlevelScene.mode = InterlevelScene.Mode.RESURRECT;</span>
+<span class="nc" id="L141">		Game.switchScene( InterlevelScene.class );</span>
+<span class="nc" id="L142">	}</span>
+
+<span class="nc" id="L144">	protected WndBag.ItemSelector itemSelector = new WndBag.ItemSelector() {</span>
+
+		@Override
+		public String textPrompt() {
+<span class="nc" id="L148">			return Messages.get(WndResurrect.class, &quot;prompt&quot;);</span>
+		}
+
+		@Override
+		public boolean itemSelectable(Item item) {
+			//cannot select ankhs or bags or equippable items that aren't equipped
+<span class="nc bnc" id="L154" title="All 4 branches missed.">			return !(item instanceof Ankh || item instanceof Bag);</span>
+		}
+
+		@Override
+		public void onSelect( Item item ) {
+<span class="nc bnc" id="L159" title="All 4 branches missed.">			if (item != null &amp;&amp; btnPressed.parent != null) {</span>
+<span class="nc" id="L160">				btnPressed.item( item );</span>
+
+<span class="nc bnc" id="L162" title="All 2 branches missed.">				if (btnItem1.item() == btnItem2.item()){</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">					if (btnPressed == btnItem1){</span>
+<span class="nc" id="L164">						btnItem2.clear();</span>
+					} else {
+<span class="nc" id="L166">						btnItem1.clear();</span>
+					}
+				}
+
+			}
+<span class="nc" id="L171">		}</span>
+	};
+	
+	@Override
+	public void destroy() {
+<span class="nc" id="L176">		super.destroy();</span>
+<span class="nc" id="L177">		instance = null;</span>
+<span class="nc" id="L178">	}</span>
+	
+	@Override
+	public void onBackPressed() {
+<span class="nc" id="L182">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

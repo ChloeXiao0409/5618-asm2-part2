@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WallOfLight.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells</a> &gt; <span class="el_source">WallOfLight.java</span></div><h1>WallOfLight.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2025 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.effects.BlobEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfBlastWave;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.PathFinder;
+
+<span class="nc" id="L47">public class WallOfLight extends TargetedClericSpell {</span>
+
+<span class="nc" id="L49">	public static WallOfLight INSTANCE = new WallOfLight();</span>
+
+	@Override
+	public int icon() {
+<span class="nc" id="L53">		return HeroIcon.WALL_OF_LIGHT;</span>
+	}
+
+	@Override
+	public String desc() {
+<span class="nc" id="L58">		return Messages.get(this, &quot;desc&quot;, 1 + 2*Dungeon.hero.pointsInTalent(Talent.WALL_OF_LIGHT)) + &quot;\n\n&quot; + Messages.get(this, &quot;charge_cost&quot;, (int)chargeUse(Dungeon.hero));</span>
+	}
+
+	@Override
+	public int targetingFlags(){
+<span class="nc" id="L63">		return -1; //auto-targeting behaviour is often wrong, so we don't use it</span>
+	}
+
+	@Override
+	public float chargeUse(Hero hero) {
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		if (Dungeon.level.blobs.get(LightWall.class) != null</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">			&amp;&amp; Dungeon.level.blobs.get(LightWall.class).volume &gt; 0){</span>
+<span class="nc" id="L70">			return 0f;</span>
+		}
+<span class="nc" id="L72">		return 3f;</span>
+	}
+
+	@Override
+	public boolean canCast(Hero hero) {
+<span class="nc bnc" id="L77" title="All 4 branches missed.">		return super.canCast(hero) &amp;&amp; hero.hasTalent(Talent.WALL_OF_LIGHT);</span>
+	}
+
+	@Override
+	public void onCast(HolyTome tome, Hero hero) {
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		if (Dungeon.level.blobs.get(LightWall.class) != null</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">				&amp;&amp; Dungeon.level.blobs.get(LightWall.class).volume &gt; 0){</span>
+<span class="nc" id="L84">			Dungeon.level.blobs.get(LightWall.class).fullyClear();</span>
+<span class="nc" id="L85">			GLog.i(Messages.get(this, &quot;early_end&quot;));</span>
+<span class="nc" id="L86">			return;</span>
+		}
+<span class="nc" id="L88">		super.onCast(tome, hero);</span>
+<span class="nc" id="L89">	}</span>
+
+	@Override
+	protected void onTargetSelected(HolyTome tome, Hero hero, Integer target) {
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		if (target == null){</span>
+<span class="nc" id="L94">			return;</span>
+		}
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">		if (target == hero.pos){</span>
+<span class="nc" id="L98">			GLog.w(Messages.get(this, &quot;invalid_target&quot;));</span>
+<span class="nc" id="L99">			return;</span>
+		}
+
+<span class="nc" id="L102">		int closest = hero.pos;</span>
+<span class="nc" id="L103">		int closestIdx = -1;</span>
+
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		for (int i = 0; i &lt; PathFinder.CIRCLE8.length; i++){</span>
+<span class="nc" id="L106">			int ofs = PathFinder.CIRCLE8[i];</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">			if (Dungeon.level.trueDistance(target, hero.pos+ofs) &lt; Dungeon.level.trueDistance(target, closest)){</span>
+<span class="nc" id="L108">				closest = hero.pos+ofs;</span>
+<span class="nc" id="L109">				closestIdx = i;</span>
+			}
+		}
+
+<span class="nc" id="L113">		int leftDirX = 0;</span>
+<span class="nc" id="L114">		int leftDirY = 0;</span>
+
+<span class="nc" id="L116">		int rightDirX = 0;</span>
+<span class="nc" id="L117">		int rightDirY = 0;</span>
+
+<span class="nc" id="L119">		int steps = Dungeon.hero.pointsInTalent(Talent.WALL_OF_LIGHT);</span>
+
+<span class="nc bnc" id="L121" title="All 9 branches missed.">		switch (closestIdx){</span>
+			case 0: //top left
+<span class="nc" id="L123">				leftDirX = -1;</span>
+<span class="nc" id="L124">				leftDirY = 1;</span>
+<span class="nc" id="L125">				rightDirX = 1;</span>
+<span class="nc" id="L126">				rightDirY = -1;</span>
+<span class="nc" id="L127">				break;</span>
+			case 1: //top
+<span class="nc" id="L129">				leftDirX = -1;</span>
+<span class="nc" id="L130">				rightDirX = 1;</span>
+<span class="nc" id="L131">				leftDirY = rightDirY = 0;</span>
+<span class="nc" id="L132">				break;</span>
+			case 2: //top right (left and right DIR are purposefully inverted)
+<span class="nc" id="L134">				leftDirX = 1;</span>
+<span class="nc" id="L135">				leftDirY = 1;</span>
+<span class="nc" id="L136">				rightDirX = -1;</span>
+<span class="nc" id="L137">				rightDirY = -1;</span>
+<span class="nc" id="L138">				break;</span>
+			case 3: //right
+<span class="nc" id="L140">				leftDirY = -1;</span>
+<span class="nc" id="L141">				rightDirY = 1;</span>
+<span class="nc" id="L142">				leftDirX = rightDirX = 0;</span>
+<span class="nc" id="L143">				break;</span>
+			case 4: //bottom right (left and right DIR are purposefully inverted)
+<span class="nc" id="L145">				leftDirX = 1;</span>
+<span class="nc" id="L146">				leftDirY = -1;</span>
+<span class="nc" id="L147">				rightDirX = -1;</span>
+<span class="nc" id="L148">				rightDirY = 1;</span>
+<span class="nc" id="L149">				break;</span>
+			case 5: //bottom
+<span class="nc" id="L151">				leftDirX = 1;</span>
+<span class="nc" id="L152">				rightDirX = -1;</span>
+<span class="nc" id="L153">				leftDirY = rightDirY = 0;</span>
+<span class="nc" id="L154">				break;</span>
+			case 6: //bottom left
+<span class="nc" id="L156">				leftDirX = -1;</span>
+<span class="nc" id="L157">				leftDirY = -1;</span>
+<span class="nc" id="L158">				rightDirX = 1;</span>
+<span class="nc" id="L159">				rightDirY = 1;</span>
+<span class="nc" id="L160">				break;</span>
+			case 7: //left
+<span class="nc" id="L162">				leftDirY = -1;</span>
+<span class="nc" id="L163">				rightDirY = 1;</span>
+<span class="nc" id="L164">				leftDirX = rightDirX = 0;</span>
+				break;
+		}
+
+<span class="nc bnc" id="L168" title="All 2 branches missed.">		if (Dungeon.level.blobs.get(LightWall.class) != null){</span>
+<span class="nc" id="L169">			Dungeon.level.blobs.get(LightWall.class).fullyClear();</span>
+		}
+
+<span class="nc" id="L172">		boolean placedWall = false;</span>
+
+<span class="nc" id="L174">		int knockBackDir = PathFinder.CIRCLE8[closestIdx];</span>
+
+		//if all 3 tiles infront of Paladin are blocked, assume cast was in error and cancel
+<span class="nc bnc" id="L177" title="All 6 branches missed.">		if (Dungeon.level.solid[closest]</span>
+				&amp;&amp; Dungeon.level.solid[hero.pos + PathFinder.CIRCLE8[(closestIdx+1)%8]]
+				&amp;&amp; Dungeon.level.solid[hero.pos + PathFinder.CIRCLE8[(closestIdx+7)%8]]){
+<span class="nc" id="L180">			GLog.w(Messages.get(this, &quot;invalid_target&quot;));</span>
+<span class="nc" id="L181">			return;</span>
+		}
+
+		//process early so that cost is calculated before walls are added
+<span class="nc" id="L185">		onSpellCast(tome, hero);</span>
+
+<span class="nc" id="L187">		placeWall(closest, knockBackDir);</span>
+
+<span class="nc" id="L189">		int leftPos = closest;</span>
+<span class="nc" id="L190">		int rightPos = closest;</span>
+
+		//iterate to the left and right, placing walls as we go
+<span class="nc bnc" id="L193" title="All 2 branches missed.">		for (int i = 0; i &lt; steps; i++) {</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">			if (leftDirY != 0) {</span>
+<span class="nc" id="L195">				leftPos += leftDirY * Dungeon.level.width();</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">				if (!Dungeon.level.insideMap(leftPos)){</span>
+<span class="nc" id="L197">					break;</span>
+				}
+<span class="nc" id="L199">				placeWall(leftPos, knockBackDir);</span>
+			}
+<span class="nc bnc" id="L201" title="All 2 branches missed.">			if (leftDirX != 0) {</span>
+<span class="nc" id="L202">				leftPos += leftDirX;</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">				if (!Dungeon.level.insideMap(leftPos)){</span>
+<span class="nc" id="L204">					break;</span>
+				}
+<span class="nc" id="L206">				placeWall(leftPos, knockBackDir);</span>
+			}
+		}
+<span class="nc bnc" id="L209" title="All 2 branches missed.">		for (int i = 0; i &lt; steps; i++) {</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">			if (rightDirX != 0) {</span>
+<span class="nc" id="L211">				rightPos += rightDirX;</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">				if (!Dungeon.level.insideMap(rightPos)){</span>
+<span class="nc" id="L213">					break;</span>
+				}
+<span class="nc" id="L215">				placeWall(rightPos, knockBackDir);</span>
+			}
+<span class="nc bnc" id="L217" title="All 2 branches missed.">			if (rightDirY != 0) {</span>
+<span class="nc" id="L218">				rightPos += rightDirY * Dungeon.level.width();</span>
+<span class="nc bnc" id="L219" title="All 2 branches missed.">				if (!Dungeon.level.insideMap(rightPos)){</span>
+<span class="nc" id="L220">					break;</span>
+				}
+<span class="nc" id="L222">				placeWall(rightPos, knockBackDir);</span>
+			}
+		}
+
+<span class="nc" id="L226">		Sample.INSTANCE.play(Assets.Sounds.CHARGEUP);</span>
+
+<span class="nc" id="L228">		hero.sprite.zap(closest);</span>
+<span class="nc" id="L229">		Dungeon.hero.spendAndNext(1f);</span>
+<span class="nc" id="L230">	}</span>
+
+	private void placeWall( int pos, int knockbackDIR){
+<span class="nc bnc" id="L233" title="All 2 branches missed.">		if (!Dungeon.level.solid[pos]) {</span>
+<span class="nc" id="L234">			GameScene.add(Blob.seed(pos, 20, LightWall.class));</span>
+
+<span class="nc" id="L236">			Char ch = Actor.findChar(pos);</span>
+<span class="nc bnc" id="L237" title="All 4 branches missed.">			if (ch != null &amp;&amp; ch.alignment == Char.Alignment.ENEMY){</span>
+<span class="nc" id="L238">				WandOfBlastWave.throwChar(ch, new Ballistica(pos, pos+knockbackDIR, Ballistica.PROJECTILE), 1, false, false, WallOfLight.INSTANCE);</span>
+<span class="nc" id="L239">				Buff.affect(ch, Paralysis.class, ch.cooldown());</span>
+			}
+		}
+<span class="nc" id="L242">	}</span>
+
+<span class="nc" id="L244">	public static class LightWall extends Blob {</span>
+
+		@Override
+		protected void evolve() {
+
+			int cell;
+
+<span class="nc" id="L251">			Level l = Dungeon.level;</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">			for (int i = area.left; i &lt; area.right; i++){</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">				for (int j = area.top; j &lt; area.bottom; j++){</span>
+<span class="nc" id="L254">					cell = i + j*l.width();</span>
+<span class="nc bnc" id="L255" title="All 2 branches missed.">					off[cell] = cur[cell] &gt; 0 ? cur[cell] - 1 : 0;</span>
+
+<span class="nc" id="L257">					volume += off[cell];</span>
+
+<span class="nc bnc" id="L259" title="All 4 branches missed.">					l.solid[cell] = off[cell] &gt; 0 || (Terrain.flags[l.map[cell]] &amp; Terrain.SOLID) != 0;</span>
+<span class="nc bnc" id="L260" title="All 4 branches missed.">					l.passable[cell] = off[cell] == 0 &amp;&amp; (Terrain.flags[l.map[cell]] &amp; Terrain.PASSABLE) != 0;</span>
+<span class="nc bnc" id="L261" title="All 4 branches missed.">					l.avoid[cell] = off[cell] == 0 &amp;&amp; (Terrain.flags[l.map[cell]] &amp; Terrain.AVOID) != 0;</span>
+				}
+			}
+<span class="nc" id="L264">		}</span>
+
+		@Override
+		public void seed(Level level, int cell, int amount) {
+<span class="nc" id="L268">			super.seed(level, cell, amount);</span>
+<span class="nc bnc" id="L269" title="All 4 branches missed.">			level.solid[cell] = cur[cell] &gt; 0 || (Terrain.flags[level.map[cell]] &amp; Terrain.SOLID) != 0;</span>
+<span class="nc bnc" id="L270" title="All 4 branches missed.">			level.passable[cell] = cur[cell] == 0 &amp;&amp; (Terrain.flags[level.map[cell]] &amp; Terrain.PASSABLE) != 0;</span>
+<span class="nc bnc" id="L271" title="All 4 branches missed.">			level.avoid[cell] = cur[cell] == 0 &amp;&amp; (Terrain.flags[level.map[cell]] &amp; Terrain.AVOID) != 0;</span>
+<span class="nc" id="L272">		}</span>
+
+		@Override
+		public void clear(int cell) {
+<span class="nc" id="L276">			super.clear(cell);</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">			if (cur == null) return;</span>
+<span class="nc" id="L278">			Level l = Dungeon.level;</span>
+<span class="nc bnc" id="L279" title="All 4 branches missed.">			l.solid[cell] = cur[cell] &gt; 0 || (Terrain.flags[l.map[cell]] &amp; Terrain.SOLID) != 0;</span>
+<span class="nc bnc" id="L280" title="All 4 branches missed.">			l.passable[cell] = cur[cell] == 0 &amp;&amp; (Terrain.flags[l.map[cell]] &amp; Terrain.PASSABLE) != 0;</span>
+<span class="nc bnc" id="L281" title="All 4 branches missed.">			l.avoid[cell] = cur[cell] == 0 &amp;&amp; (Terrain.flags[l.map[cell]] &amp; Terrain.AVOID) != 0;</span>
+<span class="nc" id="L282">		}</span>
+
+		@Override
+		public void fullyClear() {
+<span class="nc" id="L286">			super.fullyClear();</span>
+<span class="nc" id="L287">			Dungeon.level.buildFlagMaps();</span>
+<span class="nc" id="L288">		}</span>
+
+		@Override
+		public void onBuildFlagMaps(Level l) {
+<span class="nc bnc" id="L292" title="All 2 branches missed.">			if (volume &gt; 0){</span>
+<span class="nc bnc" id="L293" title="All 2 branches missed.">				for (int i=0; i &lt; l.length(); i++) {</span>
+<span class="nc bnc" id="L294" title="All 4 branches missed.">					l.solid[i] = l.solid[i] || cur[i] &gt; 0;</span>
+<span class="nc bnc" id="L295" title="All 4 branches missed.">					l.passable[i] = l.passable[i] &amp;&amp; cur[i] == 0;</span>
+<span class="nc bnc" id="L296" title="All 4 branches missed.">					l.avoid[i] = l.avoid[i] &amp;&amp; cur[i] == 0;</span>
+				}
+			}
+<span class="nc" id="L299">		}</span>
+
+		@Override
+		public void use(BlobEmitter emitter) {
+<span class="nc" id="L303">			super.use( emitter );</span>
+<span class="nc" id="L304">			emitter.pour( MagicMissile.WhiteParticle.WALL, 0.02f );</span>
+<span class="nc" id="L305">		}</span>
+
+		@Override
+		public String tileDesc() {
+<span class="nc" id="L309">			return Messages.get(this, &quot;desc&quot;);</span>
+		}
+
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

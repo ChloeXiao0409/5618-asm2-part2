@@ -1,0 +1,547 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TimekeepersHourglass.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.artifacts</a> &gt; <span class="el_source">TimekeepersHourglass.java</span></div><h1>TimekeepersHourglass.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Hunger;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Rotberry;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L59">public class TimekeepersHourglass extends Artifact {</span>
+
+	{
+<span class="nc" id="L62">		image = ItemSpriteSheet.ARTIFACT_HOURGLASS;</span>
+
+<span class="nc" id="L64">		levelCap = 5;</span>
+
+<span class="nc" id="L66">		charge = 5+level();</span>
+<span class="nc" id="L67">		partialCharge = 0;</span>
+<span class="nc" id="L68">		chargeCap = 5+level();</span>
+
+<span class="nc" id="L70">		defaultAction = AC_ACTIVATE;</span>
+	}
+
+	@Override
+	public void resetForTrinity(int visibleLevel) {
+<span class="nc" id="L75">		super.resetForTrinity(visibleLevel);</span>
+<span class="nc" id="L76">		charge = visibleLevel/2 - 1; //grants 4-10 turns of time freeze</span>
+<span class="nc" id="L77">	}</span>
+
+	public static final String AC_ACTIVATE = &quot;ACTIVATE&quot;;
+
+	//keeps track of generated sandbags.
+<span class="nc" id="L82">	public int sandBags = 0;</span>
+
+	@Override
+	public ArrayList&lt;String&gt; actions( Hero hero ) {
+<span class="nc" id="L86">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc bnc" id="L87" title="All 4 branches missed.">		if (isEquipped( hero )</span>
+				&amp;&amp; !cursed
+<span class="nc bnc" id="L89" title="All 6 branches missed.">				&amp;&amp; hero.buff(MagicImmune.class) == null</span>
+				&amp;&amp; (charge &gt; 0 || activeBuff != null)) {
+<span class="nc" id="L91">			actions.add(AC_ACTIVATE);</span>
+		}
+<span class="nc" id="L93">		return actions;</span>
+	}
+
+	@Override
+	public void execute( Hero hero, String action ) {
+
+<span class="nc" id="L99">		super.execute(hero, action);</span>
+
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (hero.buff(MagicImmune.class) != null) return;</span>
+
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		if (action.equals(AC_ACTIVATE)){</span>
+
+<span class="nc bnc" id="L105" title="All 2 branches missed.">			if (!isEquipped( hero ))        GLog.i( Messages.get(Artifact.class, &quot;need_to_equip&quot;) );</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			else if (activeBuff != null) {</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">				if (activeBuff instanceof timeStasis) { //do nothing</span>
+				} else {
+<span class="nc" id="L109">					activeBuff.detach();</span>
+<span class="nc" id="L110">					GLog.i( Messages.get(this, &quot;deactivate&quot;) );</span>
+				}
+<span class="nc bnc" id="L112" title="All 2 branches missed.">			} else if (charge &lt;= 0)         GLog.i( Messages.get(this, &quot;no_charge&quot;) );</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">			else if (cursed)                GLog.i( Messages.get(this, &quot;cursed&quot;) );</span>
+<span class="nc" id="L114">			else GameScene.show(</span>
+						new WndOptions(new ItemSprite(this),
+<span class="nc" id="L116">								Messages.titleCase(name()),</span>
+<span class="nc" id="L117">								Messages.get(this, &quot;prompt&quot;),</span>
+<span class="nc" id="L118">								Messages.get(this, &quot;stasis&quot;),</span>
+<span class="nc" id="L119">								Messages.get(this, &quot;freeze&quot;)) {</span>
+							@Override
+							protected void onSelect(int index) {
+<span class="nc bnc" id="L122" title="All 2 branches missed.">								if (index == 0) {</span>
+<span class="nc" id="L123">									GLog.i( Messages.get(TimekeepersHourglass.class, &quot;onstasis&quot;) );</span>
+<span class="nc" id="L124">									GameScene.flash(0x80FFFFFF);</span>
+<span class="nc" id="L125">									Sample.INSTANCE.play(Assets.Sounds.TELEPORT);</span>
+
+<span class="nc" id="L127">									activeBuff = new timeStasis();</span>
+<span class="nc" id="L128">									Talent.onArtifactUsed(Dungeon.hero);</span>
+<span class="nc" id="L129">									activeBuff.attachTo(Dungeon.hero);</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">								} else if (index == 1) {</span>
+
+									//This might be really good...
+<span class="nc bnc" id="L133" title="All 2 branches missed.">									for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">										if (Dungeon.level.heroFOV[mob.pos]) {</span>
+<span class="nc" id="L135">											artifactProc(mob, visiblyUpgraded(), 1);</span>
+										}
+									}
+
+<span class="nc" id="L139">									GLog.i( Messages.get(TimekeepersHourglass.class, &quot;onfreeze&quot;) );</span>
+<span class="nc" id="L140">									GameScene.flash(0x80FFFFFF);</span>
+<span class="nc" id="L141">									Sample.INSTANCE.play(Assets.Sounds.TELEPORT);</span>
+
+<span class="nc" id="L143">									Invisibility.dispel(Dungeon.hero);</span>
+<span class="nc" id="L144">									activeBuff = new timeFreeze();</span>
+<span class="nc" id="L145">									Talent.onArtifactUsed(Dungeon.hero);</span>
+<span class="nc" id="L146">									activeBuff.attachTo(Dungeon.hero);</span>
+<span class="nc" id="L147">									charge--;</span>
+<span class="nc" id="L148">									((timeFreeze)activeBuff).processTime(0f);</span>
+								}
+<span class="nc" id="L150">							}</span>
+						}
+				);
+		}
+<span class="nc" id="L154">	}</span>
+
+	@Override
+	public void activate(Char ch) {
+<span class="nc" id="L158">		super.activate(ch);</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">		if (activeBuff != null)</span>
+<span class="nc" id="L160">			activeBuff.attachTo(ch);</span>
+<span class="nc" id="L161">	}</span>
+
+	@Override
+	public boolean doUnequip(Hero hero, boolean collect, boolean single) {
+<span class="nc bnc" id="L165" title="All 2 branches missed.">		if (super.doUnequip(hero, collect, single)){</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">			if (activeBuff != null){</span>
+<span class="nc" id="L167">				activeBuff.detach();</span>
+<span class="nc" id="L168">				activeBuff = null;</span>
+			}
+<span class="nc" id="L170">			return true;</span>
+		} else
+<span class="nc" id="L172">			return false;</span>
+	}
+
+	@Override
+	protected ArtifactBuff passiveBuff() {
+<span class="nc" id="L177">		return new hourglassRecharge();</span>
+	}
+	
+	@Override
+	public void charge(Hero target, float amount) {
+<span class="nc bnc" id="L182" title="All 6 branches missed.">		if (charge &lt; chargeCap &amp;&amp; !cursed &amp;&amp; target.buff(MagicImmune.class) == null){</span>
+<span class="nc" id="L183">			partialCharge += 0.25f*amount;</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">			while (partialCharge &gt;= 1){</span>
+<span class="nc" id="L185">				partialCharge--;</span>
+<span class="nc" id="L186">				charge++;</span>
+			}
+<span class="nc bnc" id="L188" title="All 2 branches missed.">			if (charge &gt;= chargeCap){</span>
+<span class="nc" id="L189">				partialCharge = 0;</span>
+			}
+<span class="nc" id="L191">			updateQuickslot();</span>
+		}
+<span class="nc" id="L193">	}</span>
+
+	@Override
+	public Item upgrade() {
+<span class="nc" id="L197">		chargeCap+= 1;</span>
+
+		//for artifact transmutation.
+<span class="nc bnc" id="L200" title="All 2 branches missed.">		while (level()+1 &gt; sandBags)</span>
+<span class="nc" id="L201">			sandBags ++;</span>
+
+<span class="nc" id="L203">		return super.upgrade();</span>
+	}
+
+	@Override
+	public String desc() {
+<span class="nc" id="L208">		String desc = super.desc();</span>
+
+<span class="nc bnc" id="L210" title="All 2 branches missed.">		if (isEquipped( Dungeon.hero )){</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">			if (!cursed) {</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">				if (level() &lt; levelCap )</span>
+<span class="nc" id="L213">					desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_hint&quot;);</span>
+
+			} else
+<span class="nc" id="L216">				desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_cursed&quot;);</span>
+		}
+<span class="nc" id="L218">		return desc;</span>
+	}
+
+
+	private static final String SANDBAGS =  &quot;sandbags&quot;;
+	private static final String BUFF =      &quot;buff&quot;;
+
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L227">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L228">		bundle.put( SANDBAGS, sandBags );</span>
+
+<span class="nc bnc" id="L230" title="All 2 branches missed.">		if (activeBuff != null)</span>
+<span class="nc" id="L231">			bundle.put( BUFF , activeBuff );</span>
+<span class="nc" id="L232">	}</span>
+
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L236">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L237">		sandBags = bundle.getInt( SANDBAGS );</span>
+
+		//these buffs belong to hourglass, need to handle unbundling within the hourglass class.
+<span class="nc bnc" id="L240" title="All 2 branches missed.">		if (bundle.contains( BUFF )){</span>
+<span class="nc" id="L241">			Bundle buffBundle = bundle.getBundle( BUFF );</span>
+
+<span class="nc bnc" id="L243" title="All 2 branches missed.">			if (buffBundle.contains( timeFreeze.PRESSES ))</span>
+<span class="nc" id="L244">				activeBuff = new timeFreeze();</span>
+			else
+<span class="nc" id="L246">				activeBuff = new timeStasis();</span>
+
+<span class="nc" id="L248">			activeBuff.restoreFromBundle(buffBundle);</span>
+		}
+<span class="nc" id="L250">	}</span>
+
+<span class="nc" id="L252">	public class hourglassRecharge extends ArtifactBuff {</span>
+		@Override
+		public boolean act() {
+
+<span class="nc bnc" id="L256" title="All 4 branches missed.">			if (charge &lt; chargeCap</span>
+					&amp;&amp; !cursed
+<span class="nc bnc" id="L258" title="All 2 branches missed.">					&amp;&amp; target.buff(MagicImmune.class) == null</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">					&amp;&amp; Regeneration.regenOn()) {</span>
+				//90 turns to charge at full, 60 turns to charge at 0/10
+<span class="nc" id="L261">				float chargeGain = 1 / (90f - (chargeCap - charge)*3f);</span>
+<span class="nc" id="L262">				chargeGain *= RingOfEnergy.artifactChargeMultiplier(target);</span>
+<span class="nc" id="L263">				partialCharge += chargeGain;</span>
+
+<span class="nc bnc" id="L265" title="All 2 branches missed.">				while (partialCharge &gt;= 1) {</span>
+<span class="nc" id="L266">					partialCharge --;</span>
+<span class="nc" id="L267">					charge ++;</span>
+
+<span class="nc bnc" id="L269" title="All 2 branches missed.">					if (charge == chargeCap){</span>
+<span class="nc" id="L270">						partialCharge = 0;</span>
+					}
+				}
+<span class="nc bnc" id="L273" title="All 4 branches missed.">			} else if (cursed &amp;&amp; Random.Int(10) == 0)</span>
+<span class="nc" id="L274">				((Hero) target).spend( TICK );</span>
+
+<span class="nc" id="L276">			updateQuickslot();</span>
+
+<span class="nc" id="L278">			spend( TICK );</span>
+
+<span class="nc" id="L280">			return true;</span>
+		}
+	}
+
+<span class="nc" id="L284">	public class timeStasis extends ArtifactBuff {</span>
+		
+		{
+<span class="nc" id="L287">			type = buffType.POSITIVE;</span>
+<span class="nc" id="L288">			actPriority = BUFF_PRIO-3; //acts after all other buffs, so they are prevented</span>
+<span class="nc" id="L289">		}</span>
+
+		@Override
+		public boolean attachTo(Char target) {
+
+<span class="nc bnc" id="L294" title="All 2 branches missed.">			if (super.attachTo(target)) {</span>
+
+<span class="nc" id="L296">				Invisibility.dispel();</span>
+
+<span class="nc" id="L298">				int usedCharge = Math.min(charge, 2);</span>
+				//buffs always act last, so the stasis buff should end a turn early.
+<span class="nc" id="L300">				spend(5*usedCharge);</span>
+
+				//shouldn't punish the player for going into stasis frequently
+<span class="nc" id="L303">				Hunger hunger = Buff.affect(target, Hunger.class);</span>
+<span class="nc bnc" id="L304" title="All 4 branches missed.">				if (hunger != null &amp;&amp; !hunger.isStarving()) {</span>
+<span class="nc" id="L305">					hunger.satisfy(5 * usedCharge);</span>
+				}
+
+<span class="nc" id="L308">				charge -= usedCharge;</span>
+
+<span class="nc" id="L310">				target.invisible++;</span>
+<span class="nc" id="L311">				target.paralysed++;</span>
+<span class="nc" id="L312">				target.next();</span>
+
+<span class="nc" id="L314">				updateQuickslot();</span>
+
+<span class="nc bnc" id="L316" title="All 2 branches missed.">				if (Dungeon.hero != null) {</span>
+<span class="nc" id="L317">					Dungeon.observe();</span>
+				}
+
+<span class="nc" id="L320">				return true;</span>
+			} else {
+<span class="nc" id="L322">				return false;</span>
+			}
+		}
+
+		@Override
+		public boolean act() {
+<span class="nc" id="L328">			detach();</span>
+<span class="nc" id="L329">			return true;</span>
+		}
+
+		@Override
+		public void detach() {
+<span class="nc bnc" id="L334" title="All 2 branches missed.">			if (target.invisible &gt; 0) target.invisible--;</span>
+<span class="nc bnc" id="L335" title="All 2 branches missed.">			if (target.paralysed &gt; 0) target.paralysed--;</span>
+<span class="nc" id="L336">			super.detach();</span>
+<span class="nc" id="L337">			activeBuff = null;</span>
+<span class="nc" id="L338">			Dungeon.observe();</span>
+<span class="nc" id="L339">		}</span>
+
+		@Override
+		public void fx(boolean on) {
+<span class="nc bnc" id="L343" title="All 2 branches missed.">			if (on) target.sprite.add( CharSprite.State.PARALYSED );</span>
+			else {
+<span class="nc bnc" id="L345" title="All 2 branches missed.">				if (target.paralysed == 0) target.sprite.remove( CharSprite.State.PARALYSED );</span>
+<span class="nc bnc" id="L346" title="All 2 branches missed.">				if (target.invisible == 0) target.sprite.remove( CharSprite.State.INVISIBLE );</span>
+			}
+<span class="nc" id="L348">		}</span>
+	}
+
+<span class="nc" id="L351">	public class timeFreeze extends ArtifactBuff {</span>
+		
+		{
+<span class="nc" id="L354">			type = buffType.POSITIVE;</span>
+		}
+
+<span class="nc" id="L357">		float turnsToCost = 2f;</span>
+
+<span class="nc" id="L359">		ArrayList&lt;Integer&gt; presses = new ArrayList&lt;&gt;();</span>
+
+		public void processTime(float time){
+<span class="nc" id="L362">			turnsToCost -= time;</span>
+
+			//use 1/1,000 to account for rounding errors
+<span class="nc bnc" id="L365" title="All 2 branches missed.">			while (turnsToCost &lt; -0.001f){</span>
+<span class="nc" id="L366">				turnsToCost += 2f;</span>
+<span class="nc" id="L367">				charge --;</span>
+			}
+
+<span class="nc" id="L370">			updateQuickslot();</span>
+
+<span class="nc bnc" id="L372" title="All 6 branches missed.">			if (charge &lt; 0 || charge == 0 &amp;&amp; turnsToCost &lt;= 0){</span>
+<span class="nc" id="L373">				charge = 0;</span>
+<span class="nc" id="L374">				detach();</span>
+			}
+
+<span class="nc" id="L377">		}</span>
+
+		public void setDelayedPress(int cell){
+<span class="nc bnc" id="L380" title="All 2 branches missed.">			if (!presses.contains(cell))</span>
+<span class="nc" id="L381">				presses.add(cell);</span>
+<span class="nc" id="L382">		}</span>
+
+		public void triggerPresses(){
+<span class="nc" id="L385">			ArrayList&lt;Integer&gt; toTrigger = presses;</span>
+<span class="nc" id="L386">			presses = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L387">			Actor.add(new Actor() {</span>
+				{
+<span class="nc" id="L389">					actPriority = VFX_PRIO;</span>
+<span class="nc" id="L390">				}</span>
+
+				@Override
+				protected boolean act() {
+<span class="nc bnc" id="L394" title="All 2 branches missed.">					for (int cell : toTrigger){</span>
+<span class="nc" id="L395">						Plant p = Dungeon.level.plants.get(cell);</span>
+<span class="nc bnc" id="L396" title="All 2 branches missed.">						if (p != null){</span>
+<span class="nc" id="L397">							p.trigger();</span>
+						}
+<span class="nc" id="L399">						Trap t = Dungeon.level.traps.get(cell);</span>
+<span class="nc bnc" id="L400" title="All 2 branches missed.">						if (t != null){</span>
+<span class="nc" id="L401">							t.trigger();</span>
+						}
+<span class="nc" id="L403">					}</span>
+<span class="nc" id="L404">					Actor.remove(this);</span>
+<span class="nc" id="L405">					return true;</span>
+				}
+			});
+<span class="nc" id="L408">		}</span>
+
+		public void disarmPresses(){
+<span class="nc bnc" id="L411" title="All 2 branches missed.">			for (int cell : presses){</span>
+<span class="nc" id="L412">				Plant p = Dungeon.level.plants.get(cell);</span>
+<span class="nc bnc" id="L413" title="All 4 branches missed.">				if (p != null &amp;&amp; !(p instanceof Rotberry)) {</span>
+<span class="nc" id="L414">					Dungeon.level.uproot(cell);</span>
+				}
+<span class="nc" id="L416">				Trap t = Dungeon.level.traps.get(cell);</span>
+<span class="nc bnc" id="L417" title="All 4 branches missed.">				if (t != null &amp;&amp; t.disarmedByActivation) {</span>
+<span class="nc" id="L418">					t.disarm();</span>
+				}
+<span class="nc" id="L420">			}</span>
+
+<span class="nc" id="L422">			presses = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L423">		}</span>
+
+		@Override
+		public void detach(){
+<span class="nc" id="L427">			updateQuickslot();</span>
+<span class="nc" id="L428">			super.detach();</span>
+<span class="nc" id="L429">			activeBuff = null;</span>
+<span class="nc" id="L430">			triggerPresses();</span>
+<span class="nc" id="L431">			target.next();</span>
+<span class="nc" id="L432">		}</span>
+
+		@Override
+		public void fx(boolean on) {
+<span class="nc bnc" id="L436" title="All 2 branches missed.">			if (!(target instanceof Hero)) return;</span>
+<span class="nc" id="L437">			Emitter.freezeEmitters = on;</span>
+<span class="nc bnc" id="L438" title="All 2 branches missed.">			if (on){</span>
+<span class="nc bnc" id="L439" title="All 2 branches missed.">				for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {</span>
+<span class="nc bnc" id="L440" title="All 2 branches missed.">					if (mob.sprite != null) mob.sprite.add(CharSprite.State.PARALYSED);</span>
+				}
+			} else {
+<span class="nc bnc" id="L443" title="All 2 branches missed.">				for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {</span>
+<span class="nc bnc" id="L444" title="All 2 branches missed.">					if (mob.paralysed &lt;= 0) mob.sprite.remove(CharSprite.State.PARALYSED);</span>
+				}
+			}
+<span class="nc" id="L447">		}</span>
+
+		@Override
+		public int icon() {
+<span class="nc" id="L451">			return BuffIndicator.TIME;</span>
+		}
+
+		@Override
+		public void tintIcon(Image icon) {
+<span class="nc" id="L456">			icon.hardlight(1f, 0.5f, 0);</span>
+<span class="nc" id="L457">		}</span>
+
+		@Override
+		public float iconFadePercent() {
+<span class="nc" id="L461">			return Math.max(0, (2f - turnsToCost) / 2f);</span>
+		}
+
+		@Override
+		public String iconTextDisplay() {
+<span class="nc" id="L466">			return Integer.toString((int)(turnsToCost + 0.001f));</span>
+		}
+
+		@Override
+		public String desc() {
+<span class="nc" id="L471">			return Messages.get(this, &quot;desc&quot;, Messages.decimalFormat(&quot;#.##&quot;, Math.max(0, turnsToCost)));</span>
+		}
+
+		private static final String PRESSES = &quot;presses&quot;;
+		private static final String TURNSTOCOST = &quot;turnsToCost&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L479">			super.storeInBundle(bundle);</span>
+
+<span class="nc" id="L481">			int[] values = new int[presses.size()];</span>
+<span class="nc bnc" id="L482" title="All 2 branches missed.">			for (int i = 0; i &lt; values.length; i ++)</span>
+<span class="nc" id="L483">				values[i] = presses.get(i);</span>
+<span class="nc" id="L484">			bundle.put( PRESSES , values );</span>
+
+<span class="nc" id="L486">			bundle.put( TURNSTOCOST , turnsToCost);</span>
+<span class="nc" id="L487">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L491">			super.restoreFromBundle(bundle);</span>
+
+<span class="nc" id="L493">			int[] values = bundle.getIntArray( PRESSES );</span>
+<span class="nc bnc" id="L494" title="All 2 branches missed.">			for (int value : values)</span>
+<span class="nc" id="L495">				presses.add(value);</span>
+
+<span class="nc" id="L497">			turnsToCost = bundle.getFloat( TURNSTOCOST );</span>
+<span class="nc" id="L498">		}</span>
+	}
+
+<span class="nc" id="L501">	public static class sandBag extends Item {</span>
+
+		{
+<span class="nc" id="L504">			image = ItemSpriteSheet.SANDBAG;</span>
+<span class="nc" id="L505">		}</span>
+
+		@Override
+		public boolean doPickUp(Hero hero, int pos) {
+<span class="nc" id="L509">			Catalog.setSeen(getClass());</span>
+<span class="nc" id="L510">			Statistics.itemTypesDiscovered.add(getClass());</span>
+<span class="nc" id="L511">			TimekeepersHourglass hourglass = hero.belongings.getItem( TimekeepersHourglass.class );</span>
+<span class="nc bnc" id="L512" title="All 4 branches missed.">			if (hourglass != null &amp;&amp; !hourglass.cursed) {</span>
+<span class="nc" id="L513">				hourglass.upgrade();</span>
+<span class="nc" id="L514">				Catalog.countUses(hourglass.getClass(), 2);</span>
+<span class="nc" id="L515">				Sample.INSTANCE.play( Assets.Sounds.DEWDROP );</span>
+<span class="nc bnc" id="L516" title="All 2 branches missed.">				if (hourglass.level() == hourglass.levelCap)</span>
+<span class="nc" id="L517">					GLog.p( Messages.get(this, &quot;maxlevel&quot;) );</span>
+				else
+<span class="nc" id="L519">					GLog.i( Messages.get(this, &quot;levelup&quot;) );</span>
+<span class="nc" id="L520">				GameScene.pickUp(this, pos);</span>
+<span class="nc" id="L521">				hero.spendAndNext(TIME_TO_PICK_UP);</span>
+<span class="nc" id="L522">				return true;</span>
+			} else {
+<span class="nc" id="L524">				GLog.w( Messages.get(this, &quot;no_hourglass&quot;) );</span>
+<span class="nc" id="L525">				return false;</span>
+			}
+		}
+
+		@Override
+		public int value() {
+<span class="nc" id="L531">			return 30;</span>
+		}
+
+		@Override
+		public boolean isUpgradable() {
+<span class="nc" id="L536">			return false;</span>
+		}
+
+		@Override
+		public boolean isIdentified() {
+<span class="nc" id="L541">			return true;</span>
+		}
+	}
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

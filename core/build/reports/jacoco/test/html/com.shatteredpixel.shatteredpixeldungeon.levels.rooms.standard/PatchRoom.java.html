@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PatchRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard</a> &gt; <span class="el_source">PatchRoom.java</span></div><h1>PatchRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard;
+
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Patch;
+import com.watabou.utils.BArray;
+import com.watabou.utils.PathFinder;
+
+//This room type uses the patch system to fill itself in in some manner
+//it's still up to the specific room to implement paint, but utility methods are provided
+<span class="nc" id="L31">public abstract class PatchRoom extends StandardRoom {</span>
+	
+	protected boolean[] patch;
+
+	protected abstract float fill();
+	protected abstract int clustering();
+	protected abstract boolean ensurePath();
+	protected abstract boolean cleanEdges();
+	
+	protected void setupPatch(Level level){
+
+<span class="nc" id="L42">		int attempts = 0;</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">		if (ensurePath()){</span>
+<span class="nc" id="L44">			float fill = fill();</span>
+<span class="nc" id="L45">			PathFinder.setMapSize(width()-2, height()-2);</span>
+			boolean valid;
+			do {
+<span class="nc" id="L48">				patch = Patch.generate(width()-2, height()-2, fill, clustering(), true);</span>
+<span class="nc" id="L49">				int startPoint = level.pointToCell(center());</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">				for (Door door : connected.values()) {</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">					if (door.x == left) {</span>
+<span class="nc" id="L52">						startPoint = xyToPatchCoords(door.x + 1, door.y);</span>
+<span class="nc" id="L53">						patch[xyToPatchCoords(door.x + 1, door.y)] = false;</span>
+<span class="nc" id="L54">						patch[xyToPatchCoords(door.x + 2, door.y)] = false;</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">					} else if (door.x == right) {</span>
+<span class="nc" id="L56">						startPoint = xyToPatchCoords(door.x - 1, door.y);</span>
+<span class="nc" id="L57">						patch[xyToPatchCoords(door.x - 1, door.y)] = false;</span>
+<span class="nc" id="L58">						patch[xyToPatchCoords(door.x - 2, door.y)] = false;</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">					} else if (door.y == top) {</span>
+<span class="nc" id="L60">						startPoint = xyToPatchCoords(door.x, door.y + 1);</span>
+<span class="nc" id="L61">						patch[xyToPatchCoords(door.x, door.y + 1)] = false;</span>
+<span class="nc" id="L62">						patch[xyToPatchCoords(door.x, door.y + 2)] = false;</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">					} else if (door.y == bottom) {</span>
+<span class="nc" id="L64">						startPoint = xyToPatchCoords(door.x, door.y - 1);</span>
+<span class="nc" id="L65">						patch[xyToPatchCoords(door.x, door.y - 1)] = false;</span>
+<span class="nc" id="L66">						patch[xyToPatchCoords(door.x, door.y - 2)] = false;</span>
+					}
+<span class="nc" id="L68">				}</span>
+				
+<span class="nc" id="L70">				PathFinder.buildDistanceMap(startPoint, BArray.not(patch, null));</span>
+				
+<span class="nc" id="L72">				valid = true;</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">				for (int i = 0; i &lt; patch.length; i++){</span>
+<span class="nc bnc" id="L74" title="All 4 branches missed.">					if (!patch[i] &amp;&amp; PathFinder.distance[i] == Integer.MAX_VALUE){</span>
+<span class="nc" id="L75">						valid = false;</span>
+<span class="nc" id="L76">						break;</span>
+					}
+				}
+<span class="nc" id="L79">				attempts++;</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">				if (attempts &gt; 100){</span>
+<span class="nc" id="L81">					fill -= 0.01f;</span>
+<span class="nc" id="L82">					attempts = 0;</span>
+				}
+<span class="nc bnc" id="L84" title="All 2 branches missed.">			} while (!valid);</span>
+<span class="nc" id="L85">			PathFinder.setMapSize(level.width(), level.height());</span>
+<span class="nc" id="L86">		} else {</span>
+<span class="nc" id="L87">			patch = Patch.generate(width()-2, height()-2, fill(), clustering(), true);</span>
+		}
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		if (cleanEdges()){</span>
+<span class="nc" id="L90">			cleanDiagonalEdges();</span>
+		}
+<span class="nc" id="L92">	}</span>
+
+	//convenience method for the common case of just setting all terrain in the patch to a value
+	protected void fillPatch(Level level, int terrain){
+<span class="nc bnc" id="L96" title="All 2 branches missed.">		for (int i = top + 1; i &lt; bottom; i++) {</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">			for (int j = left + 1; j &lt; right; j++) {</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">				if (patch[xyToPatchCoords(j, i)]) {</span>
+<span class="nc" id="L99">					int cell = i * level.width() + j;</span>
+<span class="nc" id="L100">					level.map[cell] = terrain;</span>
+				}
+			}
+		}
+<span class="nc" id="L104">	}</span>
+	
+	//removes all diagonal-only adjacent filled patch areas, handy for making things look cleaner
+	//note that this will reduce the fill rate very slightly
+	protected void cleanDiagonalEdges(){
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		if (patch == null) return;</span>
+		
+<span class="nc" id="L111">		int pWidth = width()-2;</span>
+		
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		for (int i = 0; i &lt; patch.length - pWidth; i++){</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">			if (!patch[i]) continue;</span>
+			
+			//we don't need to check above because we are either at the top
+			// or have already dealt with those tiles
+			
+			//down-left
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			if (i % pWidth != 0){</span>
+<span class="nc bnc" id="L121" title="All 6 branches missed.">				if (patch[i - 1 + pWidth] &amp;&amp; !(patch[i - 1] || patch[i + pWidth])){</span>
+<span class="nc" id="L122">					patch[i - 1 + pWidth] = false;</span>
+				}
+			}
+			
+			//down-right
+<span class="nc bnc" id="L127" title="All 2 branches missed.">			if ((i + 1) % pWidth != 0){</span>
+<span class="nc bnc" id="L128" title="All 6 branches missed.">				if (patch[i + 1 + pWidth] &amp;&amp; !(patch[i + 1] || patch[i + pWidth])){</span>
+<span class="nc" id="L129">					patch[i + 1 + pWidth] = false;</span>
+				}
+			}
+			
+		}
+<span class="nc" id="L134">	}</span>
+	
+	protected int xyToPatchCoords(int x, int y){
+<span class="nc" id="L137">		return (x-left-1) + ((y-top-1) * (width()-2));</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

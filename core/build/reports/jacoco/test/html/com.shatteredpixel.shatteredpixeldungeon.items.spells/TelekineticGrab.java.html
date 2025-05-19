@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TelekineticGrab.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.spells</a> &gt; <span class="el_source">TelekineticGrab.java</span></div><h1>TelekineticGrab.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.spells;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.PinCushion;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DwarfKing;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.LiquidMetal;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Callback;
+
+<span class="nc" id="L42">public class TelekineticGrab extends TargetedSpell {</span>
+
+	{
+<span class="nc" id="L45">		image = ItemSpriteSheet.TELE_GRAB;</span>
+
+<span class="nc" id="L47">		talentChance = 1/(float)Recipe.OUT_QUANTITY;</span>
+<span class="nc" id="L48">	}</span>
+
+	@Override
+	protected void fx(Ballistica bolt, Callback callback) {
+<span class="nc" id="L52">		MagicMissile.boltFromChar( curUser.sprite.parent,</span>
+				MagicMissile.BEACON,
+				curUser.sprite,
+<span class="nc" id="L55">				bolt.collisionPos,</span>
+				callback);
+<span class="nc" id="L57">		Sample.INSTANCE.play( Assets.Sounds.ZAP );</span>
+<span class="nc" id="L58">	}</span>
+
+	@Override
+	protected void affectTarget(Ballistica bolt, Hero hero) {
+<span class="nc" id="L62">		Char ch = Actor.findChar(bolt.collisionPos);</span>
+
+		//special logic for DK when he is on his throne
+<span class="nc bnc" id="L65" title="All 4 branches missed.">		if (ch == null &amp;&amp; bolt.path.size() &gt; bolt.dist+1){</span>
+<span class="nc" id="L66">			ch = Actor.findChar(bolt.path.get(bolt.dist+1));</span>
+<span class="nc bnc" id="L67" title="All 4 branches missed.">			if (!(ch instanceof DwarfKing &amp;&amp; Dungeon.level.solid[ch.pos])){</span>
+<span class="nc" id="L68">				ch = null;</span>
+			}
+		}
+
+<span class="nc bnc" id="L72" title="All 4 branches missed.">		if (ch != null &amp;&amp; ch.buff(PinCushion.class) != null){</span>
+
+<span class="nc bnc" id="L74" title="All 2 branches missed.">			while (ch.buff(PinCushion.class) != null) {</span>
+<span class="nc" id="L75">				Item item = ch.buff(PinCushion.class).grabOne();</span>
+
+<span class="nc bnc" id="L77" title="All 2 branches missed.">				if (item.doPickUp(hero, ch.pos)) {</span>
+<span class="nc" id="L78">					hero.spend(-Item.TIME_TO_PICK_UP); //casting the spell already takes a turn</span>
+<span class="nc" id="L79">					GLog.i( Messages.capitalize(Messages.get(hero, &quot;you_now_have&quot;, item.name())) );</span>
+
+				} else {
+<span class="nc" id="L82">					GLog.w(Messages.get(this, &quot;cant_grab&quot;));</span>
+<span class="nc" id="L83">					Dungeon.level.drop(item, ch.pos).sprite.drop();</span>
+<span class="nc" id="L84">					return;</span>
+				}
+
+<span class="nc" id="L87">			}</span>
+
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		} else if (Dungeon.level.heaps.get(bolt.collisionPos) != null){</span>
+
+<span class="nc" id="L91">			Heap h = Dungeon.level.heaps.get(bolt.collisionPos);</span>
+
+<span class="nc bnc" id="L93" title="All 2 branches missed.">			if (h.type != Heap.Type.HEAP){</span>
+<span class="nc" id="L94">				GLog.w(Messages.get(this, &quot;cant_grab&quot;));</span>
+<span class="nc" id="L95">				h.sprite.drop();</span>
+<span class="nc" id="L96">				return;</span>
+			}
+
+<span class="nc bnc" id="L99" title="All 2 branches missed.">			while (!h.isEmpty()) {</span>
+<span class="nc" id="L100">				Item item = h.peek();</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">				if (item.doPickUp(hero, h.pos)) {</span>
+<span class="nc" id="L102">					h.pickUp();</span>
+<span class="nc" id="L103">					hero.spend(-Item.TIME_TO_PICK_UP); //casting the spell already takes a turn</span>
+<span class="nc" id="L104">					GLog.i( Messages.capitalize(Messages.get(hero, &quot;you_now_have&quot;, item.name())) );</span>
+
+				} else {
+<span class="nc" id="L107">					GLog.w(Messages.get(this, &quot;cant_grab&quot;));</span>
+<span class="nc" id="L108">					h.sprite.drop();</span>
+<span class="nc" id="L109">					return;</span>
+				}
+<span class="nc" id="L111">			}</span>
+
+<span class="nc" id="L113">		} else {</span>
+<span class="nc" id="L114">			GLog.w(Messages.get(this, &quot;no_target&quot;));</span>
+		}
+
+<span class="nc" id="L117">	}</span>
+
+	@Override
+	public int value() {
+<span class="nc" id="L121">		return (int)(60 * (quantity/(float)Recipe.OUT_QUANTITY));</span>
+	}
+
+	@Override
+	public int energyVal() {
+<span class="nc" id="L126">		return (int)(12 * (quantity/(float)Recipe.OUT_QUANTITY));</span>
+	}
+
+<span class="nc" id="L129">	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe.SimpleRecipe {</span>
+
+		private static final int OUT_QUANTITY = 8;
+
+		{
+<span class="nc" id="L134">			inputs =  new Class[]{LiquidMetal.class};</span>
+<span class="nc" id="L135">			inQuantity = new int[]{10};</span>
+
+<span class="nc" id="L137">			cost = 10;</span>
+
+<span class="nc" id="L139">			output = TelekineticGrab.class;</span>
+<span class="nc" id="L140">			outQuantity = OUT_QUANTITY;</span>
+<span class="nc" id="L141">		}</span>
+
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

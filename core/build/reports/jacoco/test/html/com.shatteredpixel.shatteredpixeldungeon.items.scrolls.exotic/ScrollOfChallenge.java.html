@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScrollOfChallenge.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic</a> &gt; <span class="el_source">ScrollOfChallenge.java</span></div><h1>ScrollOfChallenge.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ChallengeParticle;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.ShadowCaster;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.watabou.utils.BArray;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Point;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L45">public class ScrollOfChallenge extends ExoticScroll {</span>
+	
+	{
+<span class="nc" id="L48">		icon = ItemSpriteSheet.Icons.SCROLL_CHALLENGE;</span>
+<span class="nc" id="L49">	}</span>
+	
+	@Override
+	public void doRead() {
+
+<span class="nc" id="L54">		detach(curUser.belongings.backpack);</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {</span>
+<span class="nc" id="L56">			mob.beckon( curUser.pos );</span>
+		}
+
+<span class="nc" id="L59">		Buff.affect(curUser, ChallengeArena.class).setup(curUser.pos);</span>
+
+<span class="nc" id="L61">		identify();</span>
+		
+<span class="nc" id="L63">		curUser.sprite.centerEmitter().start( Speck.factory( Speck.SCREAM ), 0.3f, 3 );</span>
+<span class="nc" id="L64">		Sample.INSTANCE.play( Assets.Sounds.CHALLENGE );</span>
+		
+<span class="nc" id="L66">		readAnimation();</span>
+<span class="nc" id="L67">	}</span>
+
+
+<span class="nc" id="L70">	public static class ChallengeArena extends Buff {</span>
+
+<span class="nc" id="L72">		private ArrayList&lt;Integer&gt; arenaPositions = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L73">		private ArrayList&lt;Emitter&gt; arenaEmitters = new ArrayList&lt;&gt;();</span>
+
+		private static final float DURATION = 100;
+<span class="nc" id="L76">		int left = 0;</span>
+
+		{
+<span class="nc" id="L79">			type = buffType.POSITIVE;</span>
+<span class="nc" id="L80">		}</span>
+
+		@Override
+		public int icon() {
+<span class="nc" id="L84">			return BuffIndicator.ARMOR;</span>
+		}
+
+		@Override
+		public void tintIcon(Image icon) {
+<span class="nc" id="L89">			icon.hardlight(1f, 0f, 0f);</span>
+<span class="nc" id="L90">		}</span>
+
+		@Override
+		public float iconFadePercent() {
+<span class="nc" id="L94">			return Math.max(0, (DURATION - left) / DURATION);</span>
+		}
+
+		@Override
+		public String iconTextDisplay() {
+<span class="nc" id="L99">			return Integer.toString(left);</span>
+		}
+
+		@Override
+		public String desc() {
+<span class="nc" id="L104">			return Messages.get(this, &quot;desc&quot;, left);</span>
+		}
+
+		public void setup(int pos){
+
+			int dist;
+<span class="nc bnc" id="L110" title="All 6 branches missed.">			if (Dungeon.depth == 5 || Dungeon.depth == 10 || Dungeon.depth == 20){</span>
+<span class="nc" id="L111">				dist = 1; //smaller boss arenas</span>
+			} else {
+
+<span class="nc" id="L114">				boolean[] visibleCells = new boolean[Dungeon.level.length()];</span>
+<span class="nc" id="L115">				Point c = Dungeon.level.cellToPoint(pos);</span>
+<span class="nc" id="L116">				ShadowCaster.castShadow(c.x, c.y, Dungeon.level.width(), visibleCells, Dungeon.level.losBlocking, 8);</span>
+<span class="nc" id="L117">				int count=0;</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">				for (boolean b : visibleCells){</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">					if (b) count++;</span>
+				}
+
+<span class="nc bnc" id="L122" title="All 2 branches missed.">				if (count &lt; 30){</span>
+<span class="nc" id="L123">					dist = 1;</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">				} else if (count &gt;= 100) {</span>
+<span class="nc" id="L125">					dist = 3;</span>
+				} else {
+<span class="nc" id="L127">					dist = 2;</span>
+				}
+			}
+
+<span class="nc" id="L131">			PathFinder.buildDistanceMap( pos, BArray.or( Dungeon.level.passable, Dungeon.level.avoid, null ), dist );</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">			for (int i = 0; i &lt; PathFinder.distance.length; i++) {</span>
+<span class="nc bnc" id="L133" title="All 4 branches missed.">				if (PathFinder.distance[i] &lt; Integer.MAX_VALUE &amp;&amp; !arenaPositions.contains(i)) {</span>
+<span class="nc" id="L134">					arenaPositions.add(i);</span>
+				}
+			}
+<span class="nc bnc" id="L137" title="All 2 branches missed.">			if (target != null) {</span>
+<span class="nc" id="L138">				fx(false);</span>
+<span class="nc" id="L139">				fx(true);</span>
+			}
+
+<span class="nc" id="L142">			left = (int) DURATION;</span>
+
+<span class="nc" id="L144">		}</span>
+
+		public void extend( float duration ) {
+<span class="nc" id="L147">			left += duration;</span>
+<span class="nc" id="L148">		}</span>
+
+		@Override
+		public boolean act() {
+
+<span class="nc bnc" id="L153" title="All 2 branches missed.">			if (!arenaPositions.contains(target.pos)){</span>
+<span class="nc" id="L154">				detach();</span>
+			}
+
+<span class="nc" id="L157">			left--;</span>
+<span class="nc" id="L158">			BuffIndicator.refreshHero();</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">			if (left &lt;= 0){</span>
+<span class="nc" id="L160">				detach();</span>
+			}
+
+<span class="nc" id="L163">			spend(TICK);</span>
+<span class="nc" id="L164">			return true;</span>
+		}
+
+		@Override
+		public void fx(boolean on) {
+<span class="nc bnc" id="L169" title="All 2 branches missed.">			if (on){</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">				for (int i : arenaPositions){</span>
+<span class="nc" id="L171">					Emitter e = CellEmitter.get(i);</span>
+<span class="nc" id="L172">					e.pour(ChallengeParticle.FACTORY, 0.05f);</span>
+<span class="nc" id="L173">					arenaEmitters.add(e);</span>
+<span class="nc" id="L174">				}</span>
+			} else {
+<span class="nc bnc" id="L176" title="All 2 branches missed.">				for (Emitter e : arenaEmitters){</span>
+<span class="nc" id="L177">					e.on = false;</span>
+<span class="nc" id="L178">				}</span>
+<span class="nc" id="L179">				arenaEmitters.clear();</span>
+			}
+<span class="nc" id="L181">		}</span>
+
+		private static final String ARENA_POSITIONS = &quot;arena_positions&quot;;
+		private static final String LEFT = &quot;left&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L188">			super.storeInBundle(bundle);</span>
+
+<span class="nc" id="L190">			int[] values = new int[arenaPositions.size()];</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">			for (int i = 0; i &lt; values.length; i ++)</span>
+<span class="nc" id="L192">				values[i] = arenaPositions.get(i);</span>
+<span class="nc" id="L193">			bundle.put(ARENA_POSITIONS, values);</span>
+
+<span class="nc" id="L195">			bundle.put(LEFT, left);</span>
+<span class="nc" id="L196">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L200">			super.restoreFromBundle(bundle);</span>
+
+<span class="nc" id="L202">			int[] values = bundle.getIntArray( ARENA_POSITIONS );</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">			for (int value : values) {</span>
+<span class="nc" id="L204">				arenaPositions.add(value);</span>
+			}
+
+<span class="nc" id="L207">			left = bundle.getInt(LEFT);</span>
+<span class="nc" id="L208">		}</span>
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

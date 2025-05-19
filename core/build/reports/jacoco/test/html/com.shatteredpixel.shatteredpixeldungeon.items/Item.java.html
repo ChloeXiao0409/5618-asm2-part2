@@ -1,0 +1,715 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Item.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items</a> &gt; <span class="el_source">Item.java</span></div><h1>Item.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Blindness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Degrade;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.Dart;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.TippedDart;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.utils.Bundlable;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+
+<span class="fc" id="L60">public class Item implements Bundlable {</span>
+
+	protected static final String TXT_TO_STRING_LVL		= &quot;%s %+d&quot;;
+	protected static final String TXT_TO_STRING_X		= &quot;%s x%d&quot;;
+	
+	protected static final float TIME_TO_THROW		= 1.0f;
+	protected static final float TIME_TO_PICK_UP	= 1.0f;
+	protected static final float TIME_TO_DROP		= 1.0f;
+	
+	public static final String AC_DROP		= &quot;DROP&quot;;
+	public static final String AC_THROW		= &quot;THROW&quot;;
+	
+	protected String defaultAction;
+	public boolean usesTargeting;
+
+	//TODO should these be private and accessed through methods?
+<span class="fc" id="L76">	public int image = 0;</span>
+<span class="fc" id="L77">	public int icon = -1; //used as an identifier for items with randomized images</span>
+	
+<span class="fc" id="L79">	public boolean stackable = false;</span>
+<span class="fc" id="L80">	protected int quantity = 1;</span>
+<span class="fc" id="L81">	public boolean dropsDownHeap = false;</span>
+	
+<span class="fc" id="L83">	private int level = 0;</span>
+
+<span class="fc" id="L85">	public boolean levelKnown = false;</span>
+	
+	public boolean cursed;
+	public boolean cursedKnown;
+	
+	// Unique items persist through revival
+<span class="fc" id="L91">	public boolean unique = false;</span>
+
+	// These items are preserved even if the hero's inventory is lost via unblessed ankh
+	// this is largely set by the resurrection window, items can override this to always be kept
+<span class="fc" id="L95">	public boolean keptThoughLostInvent = false;</span>
+
+	// whether an item can be included in heroes remains
+<span class="fc" id="L98">	public boolean bones = false;</span>
+	
+<span class="fc" id="L100">	public static final Comparator&lt;Item&gt; itemComparator = new Comparator&lt;Item&gt;() {</span>
+		@Override
+		public int compare( Item lhs, Item rhs ) {
+<span class="nc" id="L103">			return Generator.Category.order( lhs ) - Generator.Category.order( rhs );</span>
+		}
+	};
+	
+	public ArrayList&lt;String&gt; actions( Hero hero ) {
+<span class="nc" id="L108">		ArrayList&lt;String&gt; actions = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L109">		actions.add( AC_DROP );</span>
+<span class="nc" id="L110">		actions.add( AC_THROW );</span>
+<span class="nc" id="L111">		return actions;</span>
+	}
+
+	public String actionName(String action, Hero hero){
+<span class="nc" id="L115">		return Messages.get(this, &quot;ac_&quot; + action);</span>
+	}
+
+	public final boolean doPickUp( Hero hero ) {
+<span class="nc" id="L119">		return doPickUp( hero, hero.pos );</span>
+	}
+
+	public boolean doPickUp(Hero hero, int pos) {
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		if (collect( hero.belongings.backpack )) {</span>
+			
+<span class="nc" id="L125">			GameScene.pickUp( this, pos );</span>
+<span class="nc" id="L126">			Sample.INSTANCE.play( Assets.Sounds.ITEM );</span>
+<span class="nc" id="L127">			hero.spendAndNext( TIME_TO_PICK_UP );</span>
+<span class="nc" id="L128">			return true;</span>
+			
+		} else {
+<span class="nc" id="L131">			return false;</span>
+		}
+	}
+	
+	public void doDrop( Hero hero ) {
+<span class="nc" id="L136">		hero.spendAndNext(TIME_TO_DROP);</span>
+<span class="nc" id="L137">		int pos = hero.pos;</span>
+<span class="nc" id="L138">		Dungeon.level.drop(detachAll(hero.belongings.backpack), pos).sprite.drop(pos);</span>
+<span class="nc" id="L139">	}</span>
+
+	//resets an item's properties, to ensure consistency between runs
+	public void reset(){
+<span class="nc" id="L143">		keptThoughLostInvent = false;</span>
+<span class="nc" id="L144">	}</span>
+
+	public boolean keptThroughLostInventory(){
+<span class="nc" id="L147">		return keptThoughLostInvent;</span>
+	}
+
+	public void doThrow( Hero hero ) {
+<span class="nc" id="L151">		GameScene.selectCell(thrower);</span>
+<span class="nc" id="L152">	}</span>
+	
+	public void execute( Hero hero, String action ) {
+
+<span class="nc" id="L156">		GameScene.cancel();</span>
+<span class="nc" id="L157">		curUser = hero;</span>
+<span class="nc" id="L158">		curItem = this;</span>
+		
+<span class="nc bnc" id="L160" title="All 2 branches missed.">		if (action.equals( AC_DROP )) {</span>
+			
+<span class="nc bnc" id="L162" title="All 4 branches missed.">			if (hero.belongings.backpack.contains(this) || isEquipped(hero)) {</span>
+<span class="nc" id="L163">				doDrop(hero);</span>
+			}
+			
+<span class="nc bnc" id="L166" title="All 2 branches missed.">		} else if (action.equals( AC_THROW )) {</span>
+			
+<span class="nc bnc" id="L168" title="All 4 branches missed.">			if (hero.belongings.backpack.contains(this) || isEquipped(hero)) {</span>
+<span class="nc" id="L169">				doThrow(hero);</span>
+			}
+			
+		}
+<span class="nc" id="L173">	}</span>
+
+	//can be overridden if default action is variable
+	public String defaultAction(){
+<span class="nc" id="L177">		return defaultAction;</span>
+	}
+	
+	public void execute( Hero hero ) {
+<span class="nc" id="L181">		String action = defaultAction();</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">		if (action != null) {</span>
+<span class="nc" id="L183">			execute(hero, defaultAction());</span>
+		}
+<span class="nc" id="L185">	}</span>
+	
+	protected void onThrow( int cell ) {
+<span class="nc" id="L188">		Heap heap = Dungeon.level.drop( this, cell );</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">		if (!heap.isEmpty()) {</span>
+<span class="nc" id="L190">			heap.sprite.drop( cell );</span>
+		}
+<span class="nc" id="L192">	}</span>
+	
+	//takes two items and merges them (if possible)
+	public Item merge( Item other ){
+<span class="nc bnc" id="L196" title="All 2 branches missed.">		if (isSimilar( other )){</span>
+<span class="nc" id="L197">			quantity += other.quantity;</span>
+<span class="nc" id="L198">			other.quantity = 0;</span>
+		}
+<span class="nc" id="L200">		return this;</span>
+	}
+	
+	public boolean collect( Bag container ) {
+
+<span class="nc bnc" id="L205" title="All 2 branches missed.">		if (quantity &lt;= 0){</span>
+<span class="nc" id="L206">			return true;</span>
+		}
+
+<span class="nc" id="L209">		ArrayList&lt;Item&gt; items = container.items;</span>
+
+<span class="nc bnc" id="L211" title="All 2 branches missed.">		if (items.contains( this )) {</span>
+<span class="nc" id="L212">			return true;</span>
+		}
+
+<span class="nc bnc" id="L215" title="All 2 branches missed.">		for (Item item:items) {</span>
+<span class="nc bnc" id="L216" title="All 4 branches missed.">			if (item instanceof Bag &amp;&amp; ((Bag)item).canHold( this )) {</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">				if (collect( (Bag)item )){</span>
+<span class="nc" id="L218">					return true;</span>
+				}
+			}
+<span class="nc" id="L221">		}</span>
+
+<span class="nc bnc" id="L223" title="All 2 branches missed.">		if (!container.canHold(this)){</span>
+<span class="nc" id="L224">			return false;</span>
+		}
+		
+<span class="nc bnc" id="L227" title="All 2 branches missed.">		if (stackable) {</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">			for (Item item:items) {</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">				if (isSimilar( item )) {</span>
+<span class="nc" id="L230">					item.merge( this );</span>
+<span class="nc" id="L231">					item.updateQuickslot();</span>
+<span class="nc bnc" id="L232" title="All 4 branches missed.">					if (Dungeon.hero != null &amp;&amp; Dungeon.hero.isAlive()) {</span>
+<span class="nc" id="L233">						Badges.validateItemLevelAquired( this );</span>
+<span class="nc" id="L234">						Talent.onItemCollected(Dungeon.hero, item);</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">						if (isIdentified()) {</span>
+<span class="nc" id="L236">							Catalog.setSeen(getClass());</span>
+<span class="nc" id="L237">							Statistics.itemTypesDiscovered.add(getClass());</span>
+						}
+					}
+<span class="nc bnc" id="L240" title="All 2 branches missed.">					if (TippedDart.lostDarts &gt; 0){</span>
+<span class="nc" id="L241">						Dart d = new Dart();</span>
+<span class="nc" id="L242">						d.quantity(TippedDart.lostDarts);</span>
+<span class="nc" id="L243">						TippedDart.lostDarts = 0;</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">						if (!d.collect()){</span>
+							//have to handle this in an actor as we can't manipulate the heap during pickup
+<span class="nc" id="L246">							Actor.add(new Actor() {</span>
+<span class="nc" id="L247">								{ actPriority = VFX_PRIO; }</span>
+								@Override
+								protected boolean act() {
+<span class="nc" id="L250">									Dungeon.level.drop(d, Dungeon.hero.pos).sprite.drop();</span>
+<span class="nc" id="L251">									Actor.remove(this);</span>
+<span class="nc" id="L252">									return true;</span>
+								}
+							});
+						}
+					}
+<span class="nc" id="L257">					return true;</span>
+				}
+<span class="nc" id="L259">			}</span>
+		}
+
+<span class="nc bnc" id="L262" title="All 4 branches missed.">		if (Dungeon.hero != null &amp;&amp; Dungeon.hero.isAlive()) {</span>
+<span class="nc" id="L263">			Badges.validateItemLevelAquired( this );</span>
+<span class="nc" id="L264">			Talent.onItemCollected( Dungeon.hero, this );</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">			if (isIdentified()){</span>
+<span class="nc" id="L266">				Catalog.setSeen(getClass());</span>
+<span class="nc" id="L267">				Statistics.itemTypesDiscovered.add(getClass());</span>
+			}
+		}
+
+<span class="nc" id="L271">		items.add( this );</span>
+<span class="nc" id="L272">		Dungeon.quickslot.replacePlaceholder(this);</span>
+<span class="nc" id="L273">		Collections.sort( items, itemComparator );</span>
+<span class="nc" id="L274">		updateQuickslot();</span>
+<span class="nc" id="L275">		return true;</span>
+
+	}
+	
+	public final boolean collect() {
+<span class="nc" id="L280">		return collect( Dungeon.hero.belongings.backpack );</span>
+	}
+	
+	//returns a new item if the split was sucessful and there are now 2 items, otherwise null
+	public Item split( int amount ){
+<span class="nc bnc" id="L285" title="All 4 branches missed.">		if (amount &lt;= 0 || amount &gt;= quantity()) {</span>
+<span class="nc" id="L286">			return null;</span>
+		} else {
+			//pssh, who needs copy constructors?
+<span class="nc" id="L289">			Item split = Reflection.newInstance(getClass());</span>
+			
+<span class="nc bnc" id="L291" title="All 2 branches missed.">			if (split == null){</span>
+<span class="nc" id="L292">				return null;</span>
+			}
+			
+<span class="nc" id="L295">			Bundle copy = new Bundle();</span>
+<span class="nc" id="L296">			this.storeInBundle(copy);</span>
+<span class="nc" id="L297">			split.restoreFromBundle(copy);</span>
+<span class="nc" id="L298">			split.quantity(amount);</span>
+<span class="nc" id="L299">			quantity -= amount;</span>
+			
+<span class="nc" id="L301">			return split;</span>
+		}
+	}
+
+	public Item duplicate(){
+<span class="nc" id="L306">		Item dupe = Reflection.newInstance(getClass());</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">		if (dupe == null){</span>
+<span class="nc" id="L308">			return null;</span>
+		}
+<span class="nc" id="L310">		Bundle copy = new Bundle();</span>
+<span class="nc" id="L311">		this.storeInBundle(copy);</span>
+<span class="nc" id="L312">		dupe.restoreFromBundle(copy);</span>
+<span class="nc" id="L313">		return dupe;</span>
+	}
+	
+	public final Item detach( Bag container ) {
+		
+<span class="nc bnc" id="L318" title="All 2 branches missed.">		if (quantity &lt;= 0) {</span>
+			
+<span class="nc" id="L320">			return null;</span>
+			
+		} else
+<span class="nc bnc" id="L323" title="All 2 branches missed.">		if (quantity == 1) {</span>
+
+<span class="nc bnc" id="L325" title="All 2 branches missed.">			if (stackable){</span>
+<span class="nc" id="L326">				Dungeon.quickslot.convertToPlaceholder(this);</span>
+			}
+
+<span class="nc" id="L329">			return detachAll( container );</span>
+			
+		} else {
+			
+			
+<span class="nc" id="L334">			Item detached = split(1);</span>
+<span class="nc" id="L335">			updateQuickslot();</span>
+<span class="nc bnc" id="L336" title="All 2 branches missed.">			if (detached != null) detached.onDetach( );</span>
+<span class="nc" id="L337">			return detached;</span>
+			
+		}
+	}
+	
+	public final Item detachAll( Bag container ) {
+<span class="nc" id="L343">		Dungeon.quickslot.clearItem( this );</span>
+
+<span class="nc bnc" id="L345" title="All 2 branches missed.">		for (Item item : container.items) {</span>
+<span class="nc bnc" id="L346" title="All 2 branches missed.">			if (item == this) {</span>
+<span class="nc" id="L347">				container.items.remove(this);</span>
+<span class="nc" id="L348">				item.onDetach();</span>
+<span class="nc" id="L349">				container.grabItems(); //try to put more items into the bag as it now has free space</span>
+<span class="nc" id="L350">				updateQuickslot();</span>
+<span class="nc" id="L351">				return this;</span>
+<span class="nc bnc" id="L352" title="All 2 branches missed.">			} else if (item instanceof Bag) {</span>
+<span class="nc" id="L353">				Bag bag = (Bag)item;</span>
+<span class="nc bnc" id="L354" title="All 2 branches missed.">				if (bag.contains( this )) {</span>
+<span class="nc" id="L355">					return detachAll( bag );</span>
+				}
+			}
+<span class="nc" id="L358">		}</span>
+
+<span class="nc" id="L360">		updateQuickslot();</span>
+<span class="nc" id="L361">		return this;</span>
+	}
+	
+	public boolean isSimilar( Item item ) {
+<span class="nc bnc" id="L365" title="All 2 branches missed.">		return getClass() == item.getClass();</span>
+	}
+
+<span class="nc" id="L368">	protected void onDetach(){}</span>
+
+	//returns the true level of the item, ignoring all modifiers aside from upgrades
+	public final int trueLevel(){
+<span class="nc" id="L372">		return level;</span>
+	}
+
+	//returns the persistant level of the item, only affected by modifiers which are persistent (e.g. curse infusion)
+	public int level(){
+<span class="nc" id="L377">		return level;</span>
+	}
+	
+	//returns the level of the item, after it may have been modified by temporary boosts/reductions
+	//note that not all item properties should care about buffs/debuffs! (e.g. str requirement)
+	public int buffedLvl(){
+		//only the hero can be affected by Degradation
+<span class="nc bnc" id="L384" title="All 4 branches missed.">		if (Dungeon.hero != null &amp;&amp; Dungeon.hero.buff( Degrade.class ) != null</span>
+<span class="nc bnc" id="L385" title="All 4 branches missed.">			&amp;&amp; (isEquipped( Dungeon.hero ) || Dungeon.hero.belongings.contains( this ))) {</span>
+<span class="nc" id="L386">			return Degrade.reduceLevel(level());</span>
+		} else {
+<span class="nc" id="L388">			return level();</span>
+		}
+	}
+
+	public void level( int value ){
+<span class="nc" id="L393">		level = value;</span>
+
+<span class="nc" id="L395">		updateQuickslot();</span>
+<span class="nc" id="L396">	}</span>
+	
+	public Item upgrade() {
+		
+<span class="nc" id="L400">		this.level++;</span>
+
+<span class="nc" id="L402">		updateQuickslot();</span>
+		
+<span class="nc" id="L404">		return this;</span>
+	}
+	
+	final public Item upgrade( int n ) {
+<span class="nc bnc" id="L408" title="All 2 branches missed.">		for (int i=0; i &lt; n; i++) {</span>
+<span class="nc" id="L409">			upgrade();</span>
+		}
+		
+<span class="nc" id="L412">		return this;</span>
+	}
+	
+	public Item degrade() {
+		
+<span class="nc" id="L417">		this.level--;</span>
+		
+<span class="nc" id="L419">		return this;</span>
+	}
+	
+	final public Item degrade( int n ) {
+<span class="nc bnc" id="L423" title="All 2 branches missed.">		for (int i=0; i &lt; n; i++) {</span>
+<span class="nc" id="L424">			degrade();</span>
+		}
+		
+<span class="nc" id="L427">		return this;</span>
+	}
+	
+	public int visiblyUpgraded() {
+<span class="nc bnc" id="L431" title="All 2 branches missed.">		return levelKnown ? level() : 0;</span>
+	}
+
+	public int buffedVisiblyUpgraded() {
+<span class="nc bnc" id="L435" title="All 2 branches missed.">		return levelKnown ? buffedLvl() : 0;</span>
+	}
+	
+	public boolean visiblyCursed() {
+<span class="nc bnc" id="L439" title="All 4 branches missed.">		return cursed &amp;&amp; cursedKnown;</span>
+	}
+	
+	public boolean isUpgradable() {
+<span class="nc" id="L443">		return true;</span>
+	}
+	
+	public boolean isIdentified() {
+<span class="nc bnc" id="L447" title="All 4 branches missed.">		return levelKnown &amp;&amp; cursedKnown;</span>
+	}
+	
+	public boolean isEquipped( Hero hero ) {
+<span class="nc" id="L451">		return false;</span>
+	}
+
+	public final Item identify(){
+<span class="nc" id="L455">		return identify(true);</span>
+	}
+
+	public Item identify( boolean byHero ) {
+
+<span class="nc bnc" id="L460" title="All 6 branches missed.">		if (byHero &amp;&amp; Dungeon.hero != null &amp;&amp; Dungeon.hero.isAlive()){</span>
+<span class="nc" id="L461">			Catalog.setSeen(getClass());</span>
+<span class="nc" id="L462">			Statistics.itemTypesDiscovered.add(getClass());</span>
+		}
+
+<span class="nc" id="L465">		levelKnown = true;</span>
+<span class="nc" id="L466">		cursedKnown = true;</span>
+<span class="nc" id="L467">		Item.updateQuickslot();</span>
+		
+<span class="nc" id="L469">		return this;</span>
+	}
+	
+	public void onHeroGainExp( float levelPercent, Hero hero ){
+		//do nothing by default
+<span class="nc" id="L474">	}</span>
+	
+	public static void evoke( Hero hero ) {
+<span class="nc" id="L477">		hero.sprite.emitter().burst( Speck.factory( Speck.EVOKE ), 5 );</span>
+<span class="nc" id="L478">	}</span>
+
+	public String title() {
+
+<span class="nc" id="L482">		String name = name();</span>
+
+<span class="nc bnc" id="L484" title="All 2 branches missed.">		if (visiblyUpgraded() != 0)</span>
+<span class="nc" id="L485">			name = Messages.format( TXT_TO_STRING_LVL, name, visiblyUpgraded()  );</span>
+
+<span class="nc bnc" id="L487" title="All 2 branches missed.">		if (quantity &gt; 1)</span>
+<span class="nc" id="L488">			name = Messages.format( TXT_TO_STRING_X, name, quantity );</span>
+
+<span class="nc" id="L490">		return name;</span>
+
+	}
+	
+	public String name() {
+<span class="nc" id="L495">		return trueName();</span>
+	}
+	
+	public final String trueName() {
+<span class="nc" id="L499">		return Messages.get(this, &quot;name&quot;);</span>
+	}
+	
+	public int image() {
+<span class="nc" id="L503">		return image;</span>
+	}
+	
+	public ItemSprite.Glowing glowing() {
+<span class="nc" id="L507">		return null;</span>
+	}
+
+<span class="nc" id="L510">	public Emitter emitter() { return null; }</span>
+	
+	public String info() {
+
+<span class="nc bnc" id="L514" title="All 2 branches missed.">		if (Dungeon.hero != null) {</span>
+			Notes.CustomRecord note;
+<span class="nc bnc" id="L516" title="All 2 branches missed.">			if (this instanceof EquipableItem) {</span>
+<span class="nc" id="L517">				note = Notes.findCustomRecord(((EquipableItem) this).customNoteID);</span>
+			} else {
+<span class="nc" id="L519">				note = Notes.findCustomRecord(getClass());</span>
+			}
+<span class="nc bnc" id="L521" title="All 2 branches missed.">			if (note != null){</span>
+				//we swap underscore(0x5F) with low macron(0x2CD) here to avoid highlighting in the item window
+<span class="nc" id="L523">				return Messages.get(this, &quot;custom_note&quot;, note.title().replace('_', 'ˍ')) + &quot;\n\n&quot; + desc();</span>
+			}
+		}
+
+<span class="nc" id="L527">		return desc();</span>
+	}
+	
+	public String desc() {
+<span class="nc" id="L531">		return Messages.get(this, &quot;desc&quot;);</span>
+	}
+	
+	public int quantity() {
+<span class="nc" id="L535">		return quantity;</span>
+	}
+	
+	public Item quantity( int value ) {
+<span class="nc" id="L539">		quantity = value;</span>
+<span class="nc" id="L540">		return this;</span>
+	}
+
+	//item's value in gold coins
+	public int value() {
+<span class="nc" id="L545">		return 0;</span>
+	}
+
+	//item's value in energy crystals
+	public int energyVal() {
+<span class="nc" id="L550">		return 0;</span>
+	}
+	
+	public Item virtual(){
+<span class="nc" id="L554">		Item item = Reflection.newInstance(getClass());</span>
+<span class="nc bnc" id="L555" title="All 2 branches missed.">		if (item == null) return null;</span>
+		
+<span class="nc" id="L557">		item.quantity = 0;</span>
+<span class="nc" id="L558">		item.level = level;</span>
+<span class="nc" id="L559">		return item;</span>
+	}
+	
+	public Item random() {
+<span class="nc" id="L563">		return this;</span>
+	}
+	
+	public String status() {
+<span class="nc bnc" id="L567" title="All 2 branches missed.">		return quantity != 1 ? Integer.toString( quantity ) : null;</span>
+	}
+
+	public static void updateQuickslot() {
+<span class="nc" id="L571">		GameScene.updateItemDisplays = true;</span>
+<span class="nc" id="L572">	}</span>
+	
+	private static final String QUANTITY		= &quot;quantity&quot;;
+	private static final String LEVEL			= &quot;level&quot;;
+	private static final String LEVEL_KNOWN		= &quot;levelKnown&quot;;
+	private static final String CURSED			= &quot;cursed&quot;;
+	private static final String CURSED_KNOWN	= &quot;cursedKnown&quot;;
+	private static final String QUICKSLOT		= &quot;quickslotpos&quot;;
+	private static final String KEPT_LOST       = &quot;kept_lost&quot;;
+	
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L584">		bundle.put( QUANTITY, quantity );</span>
+<span class="nc" id="L585">		bundle.put( LEVEL, level );</span>
+<span class="nc" id="L586">		bundle.put( LEVEL_KNOWN, levelKnown );</span>
+<span class="nc" id="L587">		bundle.put( CURSED, cursed );</span>
+<span class="nc" id="L588">		bundle.put( CURSED_KNOWN, cursedKnown );</span>
+<span class="nc bnc" id="L589" title="All 2 branches missed.">		if (Dungeon.quickslot.contains(this)) {</span>
+<span class="nc" id="L590">			bundle.put( QUICKSLOT, Dungeon.quickslot.getSlot(this) );</span>
+		}
+<span class="nc" id="L592">		bundle.put( KEPT_LOST, keptThoughLostInvent );</span>
+<span class="nc" id="L593">	}</span>
+	
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L597">		quantity	= bundle.getInt( QUANTITY );</span>
+<span class="nc" id="L598">		levelKnown	= bundle.getBoolean( LEVEL_KNOWN );</span>
+<span class="nc" id="L599">		cursedKnown	= bundle.getBoolean( CURSED_KNOWN );</span>
+		
+<span class="nc" id="L601">		int level = bundle.getInt( LEVEL );</span>
+<span class="nc bnc" id="L602" title="All 2 branches missed.">		if (level &gt; 0) {</span>
+<span class="nc" id="L603">			upgrade( level );</span>
+<span class="nc bnc" id="L604" title="All 2 branches missed.">		} else if (level &lt; 0) {</span>
+<span class="nc" id="L605">			degrade( -level );</span>
+		}
+		
+<span class="nc" id="L608">		cursed	= bundle.getBoolean( CURSED );</span>
+
+		//only want to populate slot on first load.
+<span class="nc bnc" id="L611" title="All 2 branches missed.">		if (Dungeon.hero == null) {</span>
+<span class="nc bnc" id="L612" title="All 2 branches missed.">			if (bundle.contains(QUICKSLOT)) {</span>
+<span class="nc" id="L613">				Dungeon.quickslot.setSlot(bundle.getInt(QUICKSLOT), this);</span>
+			}
+		}
+
+<span class="nc" id="L617">		keptThoughLostInvent = bundle.getBoolean( KEPT_LOST );</span>
+<span class="nc" id="L618">	}</span>
+
+	public int targetingPos( Hero user, int dst ){
+<span class="nc" id="L621">		return throwPos( user, dst );</span>
+	}
+
+	public int throwPos( Hero user, int dst){
+<span class="nc" id="L625">		return new Ballistica( user.pos, dst, Ballistica.PROJECTILE ).collisionPos;</span>
+	}
+
+	public void throwSound(){
+<span class="nc" id="L629">		Sample.INSTANCE.play(Assets.Sounds.MISS, 0.6f, 0.6f, 1.5f);</span>
+<span class="nc" id="L630">	}</span>
+	
+	public void cast( final Hero user, final int dst ) {
+		
+<span class="nc" id="L634">		final int cell = throwPos( user, dst );</span>
+<span class="nc" id="L635">		user.sprite.zap( cell );</span>
+<span class="nc" id="L636">		user.busy();</span>
+
+<span class="nc" id="L638">		throwSound();</span>
+
+<span class="nc" id="L640">		Char enemy = Actor.findChar( cell );</span>
+<span class="nc" id="L641">		QuickSlotButton.target(enemy);</span>
+		
+<span class="nc" id="L643">		final float delay = castDelay(user, dst);</span>
+
+<span class="nc bnc" id="L645" title="All 2 branches missed.">		if (enemy != null) {</span>
+<span class="nc" id="L646">			((MissileSprite) user.sprite.parent.recycle(MissileSprite.class)).</span>
+<span class="nc" id="L647">					reset(user.sprite,</span>
+							enemy.sprite,
+							this,
+<span class="nc" id="L650">							new Callback() {</span>
+						@Override
+						public void call() {
+<span class="nc" id="L653">							curUser = user;</span>
+<span class="nc" id="L654">							Item i = Item.this.detach(user.belongings.backpack);</span>
+<span class="nc bnc" id="L655" title="All 2 branches missed.">							if (i != null) i.onThrow(cell);</span>
+<span class="nc bnc" id="L656" title="All 4 branches missed.">							if (curUser.hasTalent(Talent.IMPROVISED_PROJECTILES)</span>
+									&amp;&amp; !(Item.this instanceof MissileWeapon)
+<span class="nc bnc" id="L658" title="All 2 branches missed.">									&amp;&amp; curUser.buff(Talent.ImprovisedProjectileCooldown.class) == null){</span>
+<span class="nc bnc" id="L659" title="All 4 branches missed.">								if (enemy != null &amp;&amp; enemy.alignment != curUser.alignment){</span>
+<span class="nc" id="L660">									Sample.INSTANCE.play(Assets.Sounds.HIT);</span>
+<span class="nc" id="L661">									Buff.affect(enemy, Blindness.class, 1f + curUser.pointsInTalent(Talent.IMPROVISED_PROJECTILES));</span>
+<span class="nc" id="L662">									Buff.affect(curUser, Talent.ImprovisedProjectileCooldown.class, 50f);</span>
+								}
+							}
+<span class="nc bnc" id="L665" title="All 2 branches missed.">							if (user.buff(Talent.LethalMomentumTracker.class) != null){</span>
+<span class="nc" id="L666">								user.buff(Talent.LethalMomentumTracker.class).detach();</span>
+<span class="nc" id="L667">								user.next();</span>
+							} else {
+<span class="nc" id="L669">								user.spendAndNext(delay);</span>
+							}
+<span class="nc" id="L671">						}</span>
+					});
+		} else {
+<span class="nc" id="L674">			((MissileSprite) user.sprite.parent.recycle(MissileSprite.class)).</span>
+<span class="nc" id="L675">					reset(user.sprite,</span>
+							cell,
+							this,
+<span class="nc" id="L678">							new Callback() {</span>
+						@Override
+						public void call() {
+<span class="nc" id="L681">							curUser = user;</span>
+<span class="nc" id="L682">							Item i = Item.this.detach(user.belongings.backpack);</span>
+<span class="nc" id="L683">							user.spend(delay);</span>
+<span class="nc bnc" id="L684" title="All 2 branches missed.">							if (i != null) i.onThrow(cell);</span>
+<span class="nc" id="L685">							user.next();</span>
+<span class="nc" id="L686">						}</span>
+					});
+		}
+<span class="nc" id="L689">	}</span>
+	
+	public float castDelay( Char user, int dst ){
+<span class="nc" id="L692">		return TIME_TO_THROW;</span>
+	}
+	
+<span class="fc" id="L695">	protected static Hero curUser = null;</span>
+<span class="fc" id="L696">	protected static Item curItem = null;</span>
+	public void setCurrent( Hero hero ){
+<span class="nc" id="L698">		curUser = hero;</span>
+<span class="nc" id="L699">		curItem = this;</span>
+<span class="nc" id="L700">	}</span>
+
+<span class="fc" id="L702">	protected static CellSelector.Listener thrower = new CellSelector.Listener() {</span>
+		@Override
+		public void onSelect( Integer target ) {
+<span class="nc bnc" id="L705" title="All 2 branches missed.">			if (target != null) {</span>
+<span class="nc" id="L706">				curItem.cast( curUser, target );</span>
+			}
+<span class="nc" id="L708">		}</span>
+		@Override
+		public String prompt() {
+<span class="nc" id="L711">			return Messages.get(Item.class, &quot;prompt&quot;);</span>
+		}
+	};
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

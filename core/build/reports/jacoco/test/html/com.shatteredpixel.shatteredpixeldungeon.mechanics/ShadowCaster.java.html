@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ShadowCaster.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.mechanics</a> &gt; <span class="el_source">ShadowCaster.java</span></div><h1>ShadowCaster.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.mechanics;
+
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.watabou.utils.BArray;
+
+//based on: http://www.roguebasin.com/index.php?title=FOV_using_recursive_shadowcasting
+<span class="nc" id="L28">public final class ShadowCaster {</span>
+
+	public static final int MAX_DISTANCE = 20;
+	
+	//max length of rows as FOV moves out, for each FOV distance
+	//This is used to make the overall FOV circular, instead of square
+	public static int[][] rounding;
+	static {
+<span class="nc" id="L36">		rounding = new int[MAX_DISTANCE+1][];</span>
+<span class="nc bnc" id="L37" title="All 2 branches missed.">		for (int i=1; i &lt;= MAX_DISTANCE; i++) {</span>
+<span class="nc" id="L38">			rounding[i] = new int[i+1];</span>
+<span class="nc bnc" id="L39" title="All 2 branches missed.">			for (int j=1; j &lt;= i; j++) {</span>
+				//testing the middle of a cell, so we use i + 0.5
+<span class="nc" id="L41">				rounding[i][j] = (int)Math.min(</span>
+						j,
+<span class="nc" id="L43">						Math.round( i * Math.cos( Math.asin( j / (i + 0.5) ))));</span>
+			}
+		}
+<span class="nc" id="L46">	}</span>
+	
+	public static void castShadow( int x, int y, int w, boolean[] fieldOfView, boolean[] blocking, int distance ) {
+		
+<span class="nc bnc" id="L50" title="All 2 branches missed.">		if (distance &gt;= MAX_DISTANCE){</span>
+<span class="nc" id="L51">			distance = MAX_DISTANCE;</span>
+		}
+
+<span class="nc" id="L54">		BArray.setFalse(fieldOfView);</span>
+
+		//set source cell to true
+<span class="nc" id="L57">		fieldOfView[y * w + x] = true;</span>
+		
+		//scans octants, clockwise
+		try {
+<span class="nc" id="L61">			scanOctant(distance, fieldOfView, blocking, 1, x, y, w, 0.0, 1.0, +1, -1, false);</span>
+<span class="nc" id="L62">			scanOctant(distance, fieldOfView, blocking, 1, x, y, w, 0.0, 1.0, -1, +1, true);</span>
+<span class="nc" id="L63">			scanOctant(distance, fieldOfView, blocking, 1, x, y, w, 0.0, 1.0, +1, +1, true);</span>
+<span class="nc" id="L64">			scanOctant(distance, fieldOfView, blocking, 1, x, y, w, 0.0, 1.0, +1, +1, false);</span>
+<span class="nc" id="L65">			scanOctant(distance, fieldOfView, blocking, 1, x, y, w, 0.0, 1.0, -1, +1, false);</span>
+<span class="nc" id="L66">			scanOctant(distance, fieldOfView, blocking, 1, x, y, w, 0.0, 1.0, +1, -1, true);</span>
+<span class="nc" id="L67">			scanOctant(distance, fieldOfView, blocking, 1, x, y, w, 0.0, 1.0, -1, -1, true);</span>
+<span class="nc" id="L68">			scanOctant(distance, fieldOfView, blocking, 1, x, y, w, 0.0, 1.0, -1, -1, false);</span>
+<span class="nc" id="L69">		} catch (Exception e){</span>
+<span class="nc" id="L70">			ShatteredPixelDungeon.reportException(e);</span>
+<span class="nc" id="L71">			BArray.setFalse(fieldOfView);</span>
+<span class="nc" id="L72">		}</span>
+
+<span class="nc" id="L74">	}</span>
+	
+	//scans a single 45 degree octant of the FOV.
+	//This can add up to a whole FOV by mirroring in X(mX), Y(mY), and X=Y(mXY)
+	private static void scanOctant(int distance, boolean[] fov, boolean[] blocking, int row,
+	                               int x, int y, int w, double lSlope, double rSlope,
+	                               int mX, int mY, boolean mXY){
+		
+<span class="nc" id="L82">		boolean inBlocking = false;</span>
+		int start, end;
+		int col;
+
+		int[] roundingAtDist;
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		if (distance == 2){</span>
+			//at a visibility distance of 2 we fill in the corners of vision
+			// as otherwise this vision range disproportionately punishes diagonal movement,
+			// even though removing corners is technically correct
+<span class="nc" id="L91">			roundingAtDist = rounding[distance].clone();</span>
+<span class="nc" id="L92">			roundingAtDist[2] = 2;</span>
+		} else {
+<span class="nc" id="L94">			roundingAtDist = rounding[distance];</span>
+		}
+		
+		//calculations are offset by 0.5 because FOV is coming from the center of the source cell
+		
+		//for each row, starting with the current one
+<span class="nc bnc" id="L100" title="All 2 branches missed.">		for (; row &lt;= distance; row++){</span>
+
+			//if we have negative space to traverse, just quit.
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			if (rSlope &lt; lSlope) return;</span>
+			
+			//we offset by slightly less than 0.5 to account for slopes just touching a cell
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			if (lSlope == 0)    start = 0;</span>
+<span class="nc" id="L107">			else                start = (int)Math.floor((row - 0.5) * lSlope + 0.499);</span>
+			
+<span class="nc bnc" id="L109" title="All 2 branches missed.">			if (rSlope == 1)    end = roundingAtDist[row];</span>
+<span class="nc" id="L110">			else                end = Math.min( roundingAtDist[row],</span>
+<span class="nc" id="L111">			                                    (int)Math.ceil((row + 0.5) * rSlope - 0.499));</span>
+			
+			//coordinates of source
+<span class="nc" id="L114">			int cell = x + y*w;</span>
+			
+			//plus coordinates of current cell (including mirroring in x, y, and x=y)
+<span class="nc bnc" id="L117" title="All 2 branches missed.">			if (mXY)    cell += mX*start*w + mY*row;</span>
+<span class="nc" id="L118">			else        cell += mX*start + mY*row*w;</span>
+			
+			//for each column in this row, which
+<span class="nc bnc" id="L121" title="All 2 branches missed.">			for (col = start; col &lt;= end; col++){</span>
+
+
+				//handles the error case of the slope value at the end of a cell being 1 farther
+				// along then at the beginning of the cell, and that earlier cell is vision blocking
+<span class="nc bnc" id="L126" title="All 6 branches missed.">				if (col == end &amp;&amp; inBlocking &amp;&amp; (int)Math.ceil((row - 0.5) * rSlope - 0.499) != end){</span>
+<span class="nc" id="L127">					break;</span>
+				}
+				
+<span class="nc" id="L130">				fov[cell] = true;</span>
+				
+<span class="nc bnc" id="L132" title="All 2 branches missed.">				if (blocking[cell]){</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">					if (!inBlocking){</span>
+<span class="nc" id="L134">						inBlocking = true;</span>
+						
+						//start a new scan, 1 row deeper, ending at the left side of current cell
+<span class="nc bnc" id="L137" title="All 2 branches missed.">						if (col != start){</span>
+<span class="nc" id="L138">							scanOctant(distance, fov, blocking, row+1, x, y, w, lSlope,</span>
+									//change in x over change in y
+									(col - 0.5) / (row + 0.5),
+									mX, mY, mXY);
+						}
+					}
+				
+				} else {
+<span class="nc bnc" id="L146" title="All 2 branches missed.">					if (inBlocking){</span>
+<span class="nc" id="L147">						inBlocking = false;</span>
+						
+						//restrict current scan to the left side of current cell for future rows
+						
+						//change in x over change in y
+<span class="nc" id="L152">						lSlope = (col - 0.5) / (row - 0.5);</span>
+					}
+				}
+				
+<span class="nc bnc" id="L156" title="All 2 branches missed.">				if (!mXY)   cell += mX;</span>
+<span class="nc" id="L157">				else        cell += mX*w;</span>
+				
+			}
+			
+			//if the row ends in a blocking cell, this scan is finished.
+<span class="nc bnc" id="L162" title="All 2 branches missed.">			if (inBlocking) return;</span>
+		}
+<span class="nc" id="L164">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

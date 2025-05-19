@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Wraith.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">Wraith.java</span></div><h1>Wraith.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ChallengeParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.RatSkull;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.WraithSprite;
+import com.watabou.noosa.tweeners.AlphaTweener;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L40">public class Wraith extends Mob {</span>
+
+	private static final float SPAWN_DELAY	= 2f;
+	
+	protected int level;
+	
+	{
+<span class="nc" id="L47">		spriteClass = WraithSprite.class;</span>
+		
+<span class="nc" id="L49">		HP = HT = 1;</span>
+<span class="nc" id="L50">		EXP = 0;</span>
+
+<span class="nc" id="L52">		maxLvl = -2;</span>
+		
+<span class="nc" id="L54">		flying = true;</span>
+
+<span class="nc" id="L56">		properties.add(Property.UNDEAD);</span>
+<span class="nc" id="L57">		properties.add(Property.INORGANIC);</span>
+<span class="nc" id="L58">	}</span>
+	
+	private static final String LEVEL = &quot;level&quot;;
+	
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L64">		super.storeInBundle( bundle );</span>
+<span class="nc" id="L65">		bundle.put( LEVEL, level );</span>
+<span class="nc" id="L66">	}</span>
+	
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L70">		super.restoreFromBundle( bundle );</span>
+<span class="nc" id="L71">		level = bundle.getInt( LEVEL );</span>
+<span class="nc" id="L72">		adjustStats( level );</span>
+<span class="nc" id="L73">	}</span>
+	
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L77">		return Random.NormalIntRange( 1 + level/2, 2 + level );</span>
+	}
+	
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L82">		return 10 + level;</span>
+	}
+	
+	public void adjustStats( int level ) {
+<span class="nc" id="L86">		this.level = level;</span>
+<span class="nc" id="L87">		defenseSkill = attackSkill( null ) * 5;</span>
+<span class="nc" id="L88">		enemySeen = true;</span>
+<span class="nc" id="L89">	}</span>
+
+	@Override
+	public float spawningWeight() {
+<span class="nc" id="L93">		return 0f;</span>
+	}
+
+	@Override
+	public boolean reset() {
+<span class="nc" id="L98">		state = WANDERING;</span>
+<span class="nc" id="L99">		return true;</span>
+	}
+
+	public static void spawnAround( int pos ) {
+<span class="nc" id="L103">		spawnAround( pos, null );</span>
+<span class="nc" id="L104">	}</span>
+	
+	public static void spawnAround( int pos, Class&lt;? extends Wraith&gt; wraithClass ) {
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		for (int n : PathFinder.NEIGHBOURS4) {</span>
+<span class="nc" id="L108">			spawnAt( pos + n, wraithClass, false );</span>
+		}
+<span class="nc" id="L110">	}</span>
+
+	public static Wraith spawnAt( int pos ) {
+<span class="nc" id="L113">		return spawnAt( pos, null );</span>
+	}
+
+	public static Wraith spawnAt( int pos, Class&lt;? extends Wraith&gt; wraithClass ) {
+<span class="nc" id="L117">		return spawnAt( pos, wraithClass, true );</span>
+	}
+
+	private static Wraith spawnAt( int pos, Class&lt;? extends Wraith&gt; wraithClass, boolean allowAdjacent ) {
+
+		//if the position itself is blocked, try to place in an adjacent cell if allowed
+<span class="nc bnc" id="L123" title="All 4 branches missed.">		if (Dungeon.level.solid[pos] || Actor.findChar( pos ) != null){</span>
+<span class="nc" id="L124">			ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L126" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L127" title="All 4 branches missed.">				if (!Dungeon.level.solid[pos+i] &amp;&amp; Actor.findChar( pos+i ) == null){</span>
+<span class="nc" id="L128">					candidates.add(pos+i);</span>
+				}
+			}
+
+<span class="nc bnc" id="L132" title="All 4 branches missed.">			if (allowAdjacent &amp;&amp; !candidates.isEmpty()){</span>
+<span class="nc" id="L133">				pos = Random.element(candidates);</span>
+			} else {
+<span class="nc" id="L135">				pos = -1;</span>
+			}
+
+		}
+
+<span class="nc bnc" id="L140" title="All 2 branches missed.">		if (pos != -1) {</span>
+
+			Wraith w;
+			//if no wraith type is specified, 1/100 chance for exotic, otherwise normal
+<span class="nc bnc" id="L144" title="All 2 branches missed.">			if (wraithClass == null){</span>
+<span class="nc" id="L145">				float altChance = 1/100f * RatSkull.exoticChanceMultiplier();</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">				if (Random.Float() &lt; altChance){</span>
+<span class="nc" id="L147">					w = new TormentedSpirit();</span>
+				} else {
+<span class="nc" id="L149">					w = new Wraith();</span>
+				}
+<span class="nc" id="L151">			} else {</span>
+<span class="nc" id="L152">				w = Reflection.newInstance(wraithClass);</span>
+			}
+<span class="nc" id="L154">			w.adjustStats( Dungeon.scalingDepth() );</span>
+<span class="nc" id="L155">			w.pos = pos;</span>
+<span class="nc" id="L156">			w.state = w.HUNTING;</span>
+<span class="nc" id="L157">			GameScene.add( w, SPAWN_DELAY );</span>
+<span class="nc" id="L158">			Dungeon.level.occupyCell(w);</span>
+
+<span class="nc" id="L160">			w.sprite.alpha( 0 );</span>
+<span class="nc" id="L161">			w.sprite.parent.add( new AlphaTweener( w.sprite, 1, 0.5f ) );</span>
+
+<span class="nc bnc" id="L163" title="All 2 branches missed.">			if (w instanceof TormentedSpirit){</span>
+<span class="nc" id="L164">				w.sprite.emitter().burst(ChallengeParticle.FACTORY, 10);</span>
+			} else {
+<span class="nc" id="L166">				w.sprite.emitter().burst(ShadowParticle.CURSE, 5);</span>
+			}
+
+<span class="nc" id="L169">			return w;</span>
+		} else {
+<span class="nc" id="L171">			return null;</span>
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

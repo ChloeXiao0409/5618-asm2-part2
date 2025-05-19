@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MenuPane.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">MenuPane.java</span></div><h1>MenuPane.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Document;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndChallenges;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndGame;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndJournal;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndKeyBindings;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndStory;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndTitledMessage;
+import com.watabou.input.GameAction;
+import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.ui.Component;
+
+<span class="nc" id="L48">public class MenuPane extends Component {</span>
+
+	private Image bg;
+
+	private Image depthIcon;
+	private BitmapText depthText;
+	private Button depthButton;
+
+	private Image challengeIcon;
+	private BitmapText challengeText;
+	private Button challengeButton;
+
+	private JournalButton btnJournal;
+	private MenuButton btnMenu;
+
+	private Toolbar.PickedUpItem pickedUp;
+
+	private BitmapText version;
+
+	private DangerIndicator danger;
+
+	public static final int WIDTH = 32;
+
+	@Override
+	protected void createChildren() {
+<span class="nc" id="L73">		super.createChildren();</span>
+
+<span class="nc" id="L75">		bg = new Image(Assets.Interfaces.MENU);</span>
+<span class="nc" id="L76">		add(bg);</span>
+
+<span class="nc" id="L78">		depthIcon = Icons.get(Dungeon.level.feeling);</span>
+<span class="nc" id="L79">		add(depthIcon);</span>
+
+<span class="nc" id="L81">		depthText = new BitmapText( Integer.toString( Dungeon.depth ), PixelScene.pixelFont);</span>
+<span class="nc" id="L82">		depthText.hardlight( 0xCACFC2 );</span>
+<span class="nc" id="L83">		depthText.measure();</span>
+<span class="nc" id="L84">		add( depthText );</span>
+
+<span class="nc" id="L86">		depthButton = new Button(){</span>
+			@Override
+			protected String hoverText() {
+<span class="nc bnc" id="L89" title="All 2 branches missed.">				if (Dungeon.level.feeling != Level.Feeling.NONE){</span>
+<span class="nc" id="L90">					return Dungeon.level.feeling.desc();</span>
+				} else {
+<span class="nc" id="L92">					return null;</span>
+				}
+			}
+
+			@Override
+			protected void onClick() {
+<span class="nc" id="L98">				super.onClick();</span>
+
+<span class="nc bnc" id="L100" title="All 2 branches missed.">				if (Dungeon.level.feeling == Level.Feeling.NONE){</span>
+<span class="nc" id="L101">					GameScene.show(new WndJournal());</span>
+				} else {
+<span class="nc" id="L103">					GameScene.show(new WndTitledMessage(Icons.getLarge(Dungeon.level.feeling),</span>
+<span class="nc" id="L104">							Messages.titleCase(Dungeon.level.feeling.title()),</span>
+<span class="nc" id="L105">							Dungeon.level.feeling.desc()));</span>
+				}
+<span class="nc" id="L107">			}</span>
+		};
+<span class="nc" id="L109">		add(depthButton);</span>
+
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		if (Challenges.activeChallenges() &gt; 0){</span>
+<span class="nc" id="L112">			challengeIcon = Icons.get(Icons.CHAL_COUNT);</span>
+<span class="nc" id="L113">			add(challengeIcon);</span>
+
+<span class="nc" id="L115">			challengeText = new BitmapText( Integer.toString( Challenges.activeChallenges() ), PixelScene.pixelFont);</span>
+<span class="nc" id="L116">			challengeText.hardlight( 0xCACFC2 );</span>
+<span class="nc" id="L117">			challengeText.measure();</span>
+<span class="nc" id="L118">			add( challengeText );</span>
+
+<span class="nc" id="L120">			challengeButton = new Button(){</span>
+				@Override
+				protected void onClick() {
+<span class="nc" id="L123">					GameScene.show(new WndChallenges(Dungeon.challenges, false));</span>
+<span class="nc" id="L124">				}</span>
+
+				@Override
+				protected String hoverText() {
+<span class="nc" id="L128">					return Messages.get(WndChallenges.class, &quot;title&quot;);</span>
+				}
+			};
+<span class="nc" id="L131">			add(challengeButton);</span>
+		}
+
+<span class="nc" id="L134">		btnJournal = new JournalButton();</span>
+<span class="nc" id="L135">		add( btnJournal );</span>
+
+<span class="nc" id="L137">		btnMenu = new MenuButton();</span>
+<span class="nc" id="L138">		add( btnMenu );</span>
+
+<span class="nc" id="L140">		version = new BitmapText( &quot;v&quot; + Game.version, PixelScene.pixelFont);</span>
+<span class="nc" id="L141">		version.alpha( 0.5f );</span>
+<span class="nc" id="L142">		add(version);</span>
+
+<span class="nc" id="L144">		danger = new DangerIndicator();</span>
+<span class="nc" id="L145">		add( danger );</span>
+
+<span class="nc" id="L147">		add( pickedUp = new Toolbar.PickedUpItem());</span>
+<span class="nc" id="L148">	}</span>
+
+	@Override
+	protected void layout() {
+<span class="nc" id="L152">		super.layout();</span>
+
+<span class="nc" id="L154">		bg.x = x;</span>
+<span class="nc" id="L155">		bg.y = y;</span>
+
+<span class="nc" id="L157">		btnMenu.setPos( x + WIDTH - btnMenu.width(), y );</span>
+
+<span class="nc" id="L159">		btnJournal.setPos( btnMenu.left() - btnJournal.width() + 2, y );</span>
+
+<span class="nc" id="L161">		depthIcon.x = btnJournal.left() - 7 + (7 - depthIcon.width())/2f - 0.1f;</span>
+<span class="nc" id="L162">		depthIcon.y = y + 1;</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		if (SPDSettings.interfaceSize() == 0) depthIcon.y++;</span>
+<span class="nc" id="L164">		PixelScene.align(depthIcon);</span>
+
+<span class="nc" id="L166">		depthText.scale.set(PixelScene.align(0.67f));</span>
+<span class="nc" id="L167">		depthText.x = depthIcon.x + (depthIcon.width() - depthText.width())/2f;</span>
+<span class="nc" id="L168">		depthText.y = depthIcon.y + depthIcon.height();</span>
+<span class="nc" id="L169">		PixelScene.align(depthText);</span>
+
+<span class="nc" id="L171">		depthButton.setRect(depthIcon.x, depthIcon.y, depthIcon.width(), depthIcon.height() + depthText.height());</span>
+
+<span class="nc bnc" id="L173" title="All 2 branches missed.">		if (challengeIcon != null){</span>
+<span class="nc" id="L174">			challengeIcon.x = btnJournal.left() - 14 + (7 - challengeIcon.width())/2f - 0.1f;</span>
+<span class="nc" id="L175">			challengeIcon.y = y + 1;</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">			if (SPDSettings.interfaceSize() == 0) challengeIcon.y++;</span>
+<span class="nc" id="L177">			PixelScene.align(challengeIcon);</span>
+
+<span class="nc" id="L179">			challengeText.scale.set(PixelScene.align(0.67f));</span>
+<span class="nc" id="L180">			challengeText.x = challengeIcon.x + (challengeIcon.width() - challengeText.width())/2f;</span>
+<span class="nc" id="L181">			challengeText.y = challengeIcon.y + challengeIcon.height();</span>
+<span class="nc" id="L182">			PixelScene.align(challengeText);</span>
+
+<span class="nc" id="L184">			challengeButton.setRect(challengeIcon.x, challengeIcon.y, challengeIcon.width(), challengeIcon.height() + challengeText.height());</span>
+		}
+
+<span class="nc" id="L187">		version.scale.set(PixelScene.align(0.5f));</span>
+<span class="nc" id="L188">		version.measure();</span>
+<span class="nc" id="L189">		version.x = x + WIDTH - version.width();</span>
+<span class="nc" id="L190">		version.y = y + bg.height() + (3 - version.baseLine());</span>
+<span class="nc" id="L191">		PixelScene.align(version);</span>
+
+<span class="nc" id="L193">		danger.setPos( x + WIDTH - danger.width(), y + bg.height + 3 );</span>
+<span class="nc" id="L194">	}</span>
+
+	public void pickup(Item item, int cell) {
+<span class="nc" id="L197">		pickedUp.reset( item,</span>
+				cell,
+<span class="nc" id="L199">				btnJournal.centerX(),</span>
+<span class="nc" id="L200">				btnJournal.centerY());</span>
+<span class="nc" id="L201">	}</span>
+
+	public void flashForPage( Document doc, String page ){
+<span class="nc" id="L204">		btnJournal.flashingDoc = doc;</span>
+<span class="nc" id="L205">		btnJournal.flashingPage = page;</span>
+<span class="nc" id="L206">	}</span>
+
+	public void updateKeys(){
+<span class="nc" id="L209">		btnJournal.updateKeyDisplay();</span>
+<span class="nc" id="L210">	}</span>
+
+	private static class JournalButton extends Button {
+
+		private Image bg;
+		private Image journalIcon;
+		private KeyDisplay keyIcon;
+
+<span class="nc" id="L218">		private Document flashingDoc = null;</span>
+<span class="nc" id="L219">		private String flashingPage = null;</span>
+
+		public JournalButton() {
+<span class="nc" id="L222">			super();</span>
+
+<span class="nc" id="L224">			width = bg.width + 4;</span>
+<span class="nc" id="L225">			height = bg.height + 4;</span>
+<span class="nc" id="L226">		}</span>
+
+		@Override
+		public GameAction keyAction() {
+<span class="nc" id="L230">			return SPDAction.JOURNAL;</span>
+		}
+
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L235">			super.createChildren();</span>
+
+<span class="nc" id="L237">			bg = new Image( Assets.Interfaces.MENU_BTN, 2, 2, 13, 11 );</span>
+<span class="nc" id="L238">			add( bg );</span>
+
+<span class="nc" id="L240">			journalIcon = new Image( Assets.Interfaces.MENU_BTN, 31, 0, 11, 6);</span>
+<span class="nc" id="L241">			add( journalIcon );</span>
+
+<span class="nc" id="L243">			keyIcon = new KeyDisplay();</span>
+<span class="nc" id="L244">			add(keyIcon);</span>
+<span class="nc" id="L245">			updateKeyDisplay();</span>
+<span class="nc" id="L246">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L250">			super.layout();</span>
+
+<span class="nc" id="L252">			bg.x = x + 2;</span>
+<span class="nc" id="L253">			bg.y = y + 2;</span>
+
+<span class="nc" id="L255">			journalIcon.x = bg.x + (bg.width() - journalIcon.width())/2f;</span>
+<span class="nc" id="L256">			journalIcon.y = bg.y + (bg.height() - journalIcon.height())/2f;</span>
+<span class="nc" id="L257">			PixelScene.align(journalIcon);</span>
+
+<span class="nc" id="L259">			keyIcon.x = bg.x + 1;</span>
+<span class="nc" id="L260">			keyIcon.y = bg.y + 1;</span>
+<span class="nc" id="L261">			keyIcon.width = bg.width - 2;</span>
+<span class="nc" id="L262">			keyIcon.height = bg.height - 2;</span>
+<span class="nc" id="L263">			PixelScene.align(keyIcon);</span>
+<span class="nc" id="L264">		}</span>
+
+		private float time;
+
+		@Override
+		public void update() {
+<span class="nc" id="L270">			super.update();</span>
+
+<span class="nc bnc" id="L272" title="All 2 branches missed.">			if (flashingPage != null){</span>
+<span class="nc" id="L273">				journalIcon.am = (float)Math.abs(Math.cos( StatusPane.FLASH_RATE * (time += Game.elapsed) ));</span>
+<span class="nc" id="L274">				keyIcon.am = journalIcon.am;</span>
+<span class="nc" id="L275">				bg.brightness(0.5f + journalIcon.am);</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">				if (time &gt;= Math.PI/StatusPane.FLASH_RATE) {</span>
+<span class="nc" id="L277">					time = 0;</span>
+				}
+			}
+<span class="nc" id="L280">		}</span>
+
+		public void updateKeyDisplay() {
+<span class="nc" id="L283">			keyIcon.updateKeys();</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">			keyIcon.visible = keyIcon.keyCount() &gt; 0;</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">			journalIcon.visible = !keyIcon.visible;</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">			if (keyIcon.keyCount() &gt; 0) {</span>
+<span class="nc" id="L287">				bg.brightness(.8f - (Math.min(6, keyIcon.keyCount()) / 20f));</span>
+			} else {
+<span class="nc" id="L289">				bg.resetColor();</span>
+			}
+<span class="nc" id="L291">		}</span>
+
+		@Override
+		protected void onPointerDown() {
+<span class="nc" id="L295">			bg.brightness( 1.5f );</span>
+<span class="nc" id="L296">			Sample.INSTANCE.play( Assets.Sounds.CLICK );</span>
+<span class="nc" id="L297">		}</span>
+
+		@Override
+		protected void onPointerUp() {
+<span class="nc bnc" id="L301" title="All 2 branches missed.">			if (keyIcon.keyCount() &gt; 0) {</span>
+<span class="nc" id="L302">				bg.brightness(.8f - (Math.min(6, keyIcon.keyCount()) / 20f));</span>
+			} else {
+<span class="nc" id="L304">				bg.resetColor();</span>
+			}
+<span class="nc" id="L306">		}</span>
+
+		@Override
+		protected void onClick() {
+<span class="nc" id="L310">			time = 0;</span>
+<span class="nc" id="L311">			keyIcon.am = journalIcon.am = 1;</span>
+<span class="nc bnc" id="L312" title="All 2 branches missed.">			if (flashingPage != null){</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">				if (flashingDoc == Document.ALCHEMY_GUIDE){</span>
+<span class="nc" id="L314">					WndJournal.last_index = 2;</span>
+<span class="nc" id="L315">					GameScene.show( new WndJournal() );</span>
+<span class="nc bnc" id="L316" title="All 2 branches missed.">				} else if (flashingDoc.pageNames().contains(flashingPage)){</span>
+<span class="nc bnc" id="L317" title="All 2 branches missed.">					if (flashingDoc == Document.ADVENTURERS_GUIDE){</span>
+<span class="nc" id="L318">						WndJournal.last_index = 1;</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">					} else if (flashingDoc.isLoreDoc()){</span>
+<span class="nc" id="L320">						WndJournal.last_index = 3;</span>
+<span class="nc" id="L321">						WndJournal.CatalogTab.currentItemIdx = 3;</span>
+					}
+<span class="nc" id="L323">					GameScene.show( new WndStory( flashingDoc.pageSprite(flashingPage),</span>
+<span class="nc" id="L324">							flashingDoc.pageTitle(flashingPage),</span>
+<span class="nc" id="L325">							flashingDoc.pageBody(flashingPage) ){</span>
+						@Override
+						public void hide() {
+<span class="nc" id="L328">							super.hide();</span>
+<span class="nc bnc" id="L329" title="All 2 branches missed.">							if (SPDSettings.intro()){</span>
+<span class="nc" id="L330">								GameScene.endIntro();</span>
+							}
+<span class="nc" id="L332">						}</span>
+					});
+<span class="nc" id="L334">					flashingDoc.readPage(flashingPage);</span>
+				} else {
+<span class="nc" id="L336">					GameScene.show( new WndJournal() );</span>
+				}
+<span class="nc" id="L338">				flashingPage = null;</span>
+			} else {
+<span class="nc" id="L340">				GameScene.show( new WndJournal() );</span>
+			}
+<span class="nc" id="L342">		}</span>
+
+		@Override
+		protected String hoverText() {
+<span class="nc" id="L346">			return Messages.titleCase(Messages.get(WndKeyBindings.class, &quot;journal&quot;));</span>
+		}
+	}
+
+	private static class MenuButton extends Button {
+
+		private Image image;
+
+		public MenuButton() {
+<span class="nc" id="L355">			super();</span>
+
+<span class="nc" id="L357">			width = image.width + 4;</span>
+<span class="nc" id="L358">			height = image.height + 4;</span>
+<span class="nc" id="L359">		}</span>
+
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L363">			super.createChildren();</span>
+
+<span class="nc" id="L365">			image = new Image( Assets.Interfaces.MENU_BTN, 17, 2, 12, 11 );</span>
+<span class="nc" id="L366">			add( image );</span>
+<span class="nc" id="L367">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L371">			super.layout();</span>
+
+<span class="nc" id="L373">			image.x = x + 2;</span>
+<span class="nc" id="L374">			image.y = y + 2;</span>
+<span class="nc" id="L375">		}</span>
+
+		@Override
+		protected void onPointerDown() {
+<span class="nc" id="L379">			image.brightness( 1.5f );</span>
+<span class="nc" id="L380">			Sample.INSTANCE.play( Assets.Sounds.CLICK );</span>
+<span class="nc" id="L381">		}</span>
+
+		@Override
+		protected void onPointerUp() {
+<span class="nc" id="L385">			image.resetColor();</span>
+<span class="nc" id="L386">		}</span>
+
+		@Override
+		protected void onClick() {
+<span class="nc" id="L390">			GameScene.show( new WndGame() );</span>
+<span class="nc" id="L391">		}</span>
+
+		@Override
+		public GameAction keyAction() {
+<span class="nc" id="L395">			return GameAction.BACK;</span>
+		}
+
+		@Override
+		protected String hoverText() {
+<span class="nc" id="L400">			return Messages.titleCase(Messages.get(WndKeyBindings.class, &quot;menu&quot;));</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

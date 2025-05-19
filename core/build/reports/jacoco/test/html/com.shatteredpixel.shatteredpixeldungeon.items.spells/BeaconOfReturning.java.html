@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BeaconOfReturning.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.spells</a> &gt; <span class="el_source">BeaconOfReturning.java</span></div><h1>BeaconOfReturning.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.spells;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfPassage;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L51">public class BeaconOfReturning extends Spell {</span>
+	
+	{
+<span class="nc" id="L54">		image = ItemSpriteSheet.RETURN_BEACON;</span>
+
+<span class="nc" id="L56">		talentChance = 1/(float)Recipe.OUT_QUANTITY;</span>
+	}
+	
+<span class="nc" id="L59">	public int returnDepth	= -1;</span>
+<span class="nc" id="L60">	public int returnBranch	= 0;</span>
+	public int returnPos;
+	
+	@Override
+	protected void onCast(final Hero hero) {
+		
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (returnDepth == -1){</span>
+<span class="nc" id="L67">			setBeacon(hero);</span>
+		} else {
+<span class="nc" id="L69">			GameScene.show(new WndOptions(new ItemSprite(this),</span>
+<span class="nc" id="L70">					Messages.titleCase(name()),</span>
+<span class="nc" id="L71">					Messages.get(BeaconOfReturning.class, &quot;wnd_body&quot;),</span>
+<span class="nc" id="L72">					Messages.get(BeaconOfReturning.class, &quot;wnd_set&quot;),</span>
+<span class="nc" id="L73">					Messages.get(BeaconOfReturning.class, &quot;wnd_return&quot;)){</span>
+				@Override
+				protected void onSelect(int index) {
+<span class="nc bnc" id="L76" title="All 2 branches missed.">					if (index == 0){</span>
+<span class="nc" id="L77">						setBeacon(hero);</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">					} else if (index == 1){</span>
+<span class="nc" id="L79">						returnBeacon(hero);</span>
+					}
+<span class="nc" id="L81">				}</span>
+			});
+			
+		}
+<span class="nc" id="L85">	}</span>
+	
+	//we reset return depth when beacons are dropped to prevent
+	//having two stacks of beacons with different return locations
+	
+	@Override
+	protected void onThrow(int cell) {
+<span class="nc" id="L92">		returnDepth = -1;</span>
+<span class="nc" id="L93">		super.onThrow(cell);</span>
+<span class="nc" id="L94">	}</span>
+	
+	@Override
+	public void doDrop(Hero hero) {
+<span class="nc" id="L98">		returnDepth = -1;</span>
+<span class="nc" id="L99">		super.doDrop(hero);</span>
+<span class="nc" id="L100">	}</span>
+	
+	private void setBeacon(Hero hero ){
+<span class="nc" id="L103">		returnDepth = Dungeon.depth;</span>
+<span class="nc" id="L104">		returnBranch = Dungeon.branch;</span>
+<span class="nc" id="L105">		returnPos = hero.pos;</span>
+		
+<span class="nc" id="L107">		hero.spend( 1f );</span>
+<span class="nc" id="L108">		hero.busy();</span>
+		
+<span class="nc" id="L110">		GLog.i( Messages.get(this, &quot;set&quot;) );</span>
+		
+<span class="nc" id="L112">		hero.sprite.operate( hero.pos );</span>
+<span class="nc" id="L113">		Sample.INSTANCE.play( Assets.Sounds.BEACON );</span>
+<span class="nc" id="L114">		updateQuickslot();</span>
+<span class="nc" id="L115">	}</span>
+	
+	private void returnBeacon( Hero hero ){
+		
+<span class="nc bnc" id="L119" title="All 4 branches missed.">		if (returnDepth == Dungeon.depth &amp;&amp; returnBranch == Dungeon.branch) {</span>
+
+<span class="nc" id="L121">			Char existing = Actor.findChar(returnPos);</span>
+<span class="nc bnc" id="L122" title="All 4 branches missed.">			if (existing != null &amp;&amp; existing != hero){</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">				Char toPush = !Char.hasProp(existing, Char.Property.IMMOVABLE) ? hero : existing;</span>
+
+<span class="nc" id="L125">				ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">				for (int n : PathFinder.NEIGHBOURS8) {</span>
+<span class="nc" id="L127">					int cell = returnPos + n;</span>
+<span class="nc bnc" id="L128" title="All 4 branches missed.">					if (!Dungeon.level.solid[cell] &amp;&amp; Actor.findChar( cell ) == null</span>
+<span class="nc bnc" id="L129" title="All 4 branches missed.">							&amp;&amp; (!Char.hasProp(toPush, Char.Property.LARGE) || Dungeon.level.openSpace[cell])) {</span>
+<span class="nc" id="L130">						candidates.add( cell );</span>
+					}
+				}
+<span class="nc" id="L133">				Random.shuffle(candidates);</span>
+
+<span class="nc bnc" id="L135" title="All 2 branches missed.">				if (!candidates.isEmpty()){</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">					if (toPush == hero){</span>
+<span class="nc" id="L137">						returnPos = candidates.get(0);</span>
+					} else {
+<span class="nc" id="L139">						Actor.add( new Pushing( toPush, toPush.pos, candidates.get(0) ) );</span>
+<span class="nc" id="L140">						toPush.pos = candidates.get(0);</span>
+<span class="nc" id="L141">						Dungeon.level.occupyCell(toPush);</span>
+					}
+				} else {
+<span class="nc" id="L144">					GLog.w( Messages.get(ScrollOfTeleportation.class, &quot;no_tele&quot;) );</span>
+<span class="nc" id="L145">					return;</span>
+				}
+			}
+
+<span class="nc bnc" id="L149" title="All 2 branches missed.">			if (ScrollOfTeleportation.teleportToLocation(hero, returnPos)){</span>
+<span class="nc" id="L150">				hero.spendAndNext( 1f );</span>
+			} else {
+<span class="nc" id="L152">				return;</span>
+			}
+
+<span class="nc" id="L155">		} else {</span>
+
+<span class="nc bnc" id="L157" title="All 2 branches missed.">			if (!Dungeon.interfloorTeleportAllowed()) {</span>
+<span class="nc" id="L158">				GLog.w( Messages.get(this, &quot;preventing&quot;) );</span>
+<span class="nc" id="L159">				return;</span>
+			}
+
+			//cannot return to mining level
+<span class="nc bnc" id="L163" title="All 6 branches missed.">			if (returnDepth &gt;= 11 &amp;&amp; returnDepth &lt;= 14 &amp;&amp; returnBranch == 1){</span>
+<span class="nc" id="L164">				GLog.w( Messages.get(ScrollOfTeleportation.class, &quot;no_tele&quot;) );</span>
+<span class="nc" id="L165">				return;</span>
+			}
+
+<span class="nc" id="L168">			Level.beforeTransition();</span>
+<span class="nc" id="L169">			Invisibility.dispel();</span>
+<span class="nc" id="L170">			InterlevelScene.mode = InterlevelScene.Mode.RETURN;</span>
+<span class="nc" id="L171">			InterlevelScene.returnDepth = returnDepth;</span>
+<span class="nc" id="L172">			InterlevelScene.returnBranch = returnBranch;</span>
+<span class="nc" id="L173">			InterlevelScene.returnPos = returnPos;</span>
+<span class="nc" id="L174">			Game.switchScene( InterlevelScene.class );</span>
+		}
+<span class="nc" id="L176">		detach(hero.belongings.backpack);</span>
+<span class="nc" id="L177">		Catalog.countUse(getClass());</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">		if (Random.Float() &lt; talentChance){</span>
+<span class="nc" id="L179">			Talent.onScrollUsed(curUser, curUser.pos, talentFactor, getClass());</span>
+		}
+<span class="nc" id="L181">	}</span>
+	
+	@Override
+	public String desc() {
+<span class="nc" id="L185">		String desc = super.desc();</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">		if (returnDepth != -1){</span>
+<span class="nc" id="L187">			desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_set&quot;, returnDepth);</span>
+		}
+<span class="nc" id="L189">		return desc;</span>
+	}
+	
+<span class="nc" id="L192">	private static final ItemSprite.Glowing WHITE = new ItemSprite.Glowing( 0xFFFFFF );</span>
+	
+	@Override
+	public ItemSprite.Glowing glowing() {
+<span class="nc bnc" id="L196" title="All 2 branches missed.">		return returnDepth != -1 ? WHITE : null;</span>
+	}
+	
+	private static final String DEPTH	= &quot;depth&quot;;
+	private static final String BRANCH	= &quot;branch&quot;;
+	private static final String POS		= &quot;pos&quot;;
+	
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L205">		super.storeInBundle( bundle );</span>
+<span class="nc" id="L206">		bundle.put( DEPTH, returnDepth );</span>
+<span class="nc" id="L207">		bundle.put( BRANCH, returnBranch );</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">		if (returnDepth != -1) {</span>
+<span class="nc" id="L209">			bundle.put( POS, returnPos );</span>
+		}
+<span class="nc" id="L211">	}</span>
+	
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L215">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L216">		returnDepth	= bundle.getInt( DEPTH );</span>
+<span class="nc" id="L217">		returnBranch = bundle.getInt( BRANCH );</span>
+<span class="nc" id="L218">		returnPos	= bundle.getInt( POS );</span>
+<span class="nc" id="L219">	}</span>
+	
+	@Override
+	public int value() {
+<span class="nc" id="L223">		return (int)(60 * (quantity/(float)Recipe.OUT_QUANTITY));</span>
+	}
+
+	@Override
+	public int energyVal() {
+<span class="nc" id="L228">		return (int)(12 * (quantity/(float)Recipe.OUT_QUANTITY));</span>
+	}
+	
+<span class="nc" id="L231">	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe.SimpleRecipe {</span>
+
+		private static final int OUT_QUANTITY = 5;
+		
+		{
+<span class="nc" id="L236">			inputs =  new Class[]{ScrollOfPassage.class};</span>
+<span class="nc" id="L237">			inQuantity = new int[]{1};</span>
+			
+<span class="nc" id="L239">			cost = 12;</span>
+			
+<span class="nc" id="L241">			output = BeaconOfReturning.class;</span>
+<span class="nc" id="L242">			outQuantity = OUT_QUANTITY;</span>
+<span class="nc" id="L243">		}</span>
+		
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

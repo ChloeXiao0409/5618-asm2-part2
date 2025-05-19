@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PrisonLevel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels</a> &gt; <span class="el_source">PrisonLevel.java</span></div><h1>PrisonLevel.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Wandmaker;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.FlameParticle;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.PrisonPainter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.AlarmTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.BurningTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.ChillingTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.ConfusionTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.FlockTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.GatewayTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.GeyserTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.GrippingTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.OozeTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.PoisonDartTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.ShockingTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.SummoningTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.TeleportationTrap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.ToxicTrap;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Group;
+import com.watabou.noosa.Halo;
+import com.watabou.noosa.audio.Music;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.utils.Callback;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L60">public class PrisonLevel extends RegularLevel {</span>
+
+	{
+<span class="nc" id="L63">		color1 = 0x6a723d;</span>
+<span class="nc" id="L64">		color2 = 0x88924c;</span>
+	}
+
+<span class="nc" id="L67">	public static final String[] PRISON_TRACK_LIST</span>
+			= new String[]{Assets.Music.PRISON_1, Assets.Music.PRISON_2, Assets.Music.PRISON_2,
+			Assets.Music.PRISON_1, Assets.Music.PRISON_3, Assets.Music.PRISON_3};
+<span class="nc" id="L70">	public static final float[] PRISON_TRACK_CHANCES = new float[]{1f, 1f, 0.5f, 0.25f, 1f, 0.5f};</span>
+
+	@Override
+	public void playLevelMusic() {
+<span class="nc bnc" id="L74" title="All 4 branches missed.">		if (Wandmaker.Quest.active() || Statistics.amuletObtained){</span>
+<span class="nc" id="L75">			Music.INSTANCE.play(Assets.Music.PRISON_TENSE, true);</span>
+		} else {
+<span class="nc" id="L77">			Music.INSTANCE.playTracks(PRISON_TRACK_LIST, PRISON_TRACK_CHANCES, false);</span>
+		}
+<span class="nc" id="L79">		wandmakerQuestWasActive = Wandmaker.Quest.active();</span>
+<span class="nc" id="L80">	}</span>
+
+	@Override
+	protected ArrayList&lt;Room&gt; initRooms() {
+<span class="nc" id="L84">		return Wandmaker.Quest.spawnRoom(super.initRooms());</span>
+	}
+
+	@Override
+	protected void createMobs() {
+<span class="nc" id="L89">		Wandmaker.Quest.spawnWandmaker(this, roomEntrance);</span>
+<span class="nc" id="L90">		super.createMobs();</span>
+<span class="nc" id="L91">	}</span>
+
+	@Override
+	protected int standardRooms(boolean forceMax) {
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		if (forceMax) return 6;</span>
+		//5 to 6, average 5.5
+<span class="nc" id="L97">		return 5+Random.chances(new float[]{1, 1});</span>
+	}
+	
+	@Override
+	protected int specialRooms(boolean forceMax) {
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if (forceMax) return 3;</span>
+		//1 to 3, average 2.0
+<span class="nc" id="L104">		return 1+Random.chances(new float[]{1, 3, 1});</span>
+	}
+	
+	@Override
+	protected Painter painter() {
+<span class="nc" id="L109">		return new PrisonPainter()</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">				.setWater(feeling == Feeling.WATER ? 0.90f : 0.30f, 4)</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">				.setGrass(feeling == Feeling.GRASS ? 0.80f : 0.20f, 3)</span>
+<span class="nc" id="L112">				.setTraps(nTraps(), trapClasses(), trapChances());</span>
+	}
+	
+	@Override
+	public String tilesTex() {
+<span class="nc" id="L117">		return Assets.Environment.TILES_PRISON;</span>
+	}
+	
+	@Override
+	public String waterTex() {
+<span class="nc" id="L122">		return Assets.Environment.WATER_PRISON;</span>
+	}
+	
+	@Override
+	protected Class&lt;?&gt;[] trapClasses() {
+<span class="nc" id="L127">		return new Class[]{</span>
+				ChillingTrap.class, ShockingTrap.class, ToxicTrap.class, BurningTrap.class, PoisonDartTrap.class,
+				AlarmTrap.class, OozeTrap.class, GrippingTrap.class,
+				ConfusionTrap.class, FlockTrap.class, SummoningTrap.class, TeleportationTrap.class, GatewayTrap.class, GeyserTrap.class };
+	}
+
+	@Override
+	protected float[] trapChances() {
+<span class="nc" id="L135">		return new float[]{</span>
+				4, 4, 4, 4, 4,
+				2, 2, 2,
+				1, 1, 1, 1, 1, 1 };
+	}
+
+	@Override
+	public void occupyCell(Char ch) {
+<span class="nc" id="L143">		super.occupyCell(ch);</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">		if (ch == Dungeon.hero) {</span>
+<span class="nc" id="L145">			updateWandmakerQuestMusic();</span>
+		}
+<span class="nc" id="L147">	}</span>
+
+<span class="nc" id="L149">	private Boolean wandmakerQuestWasActive = null;</span>
+
+	public void updateWandmakerQuestMusic(){
+<span class="nc bnc" id="L152" title="All 2 branches missed.">		if (wandmakerQuestWasActive == null) {</span>
+<span class="nc" id="L153">			wandmakerQuestWasActive = Wandmaker.Quest.active();</span>
+<span class="nc" id="L154">			return;</span>
+		}
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		if (Wandmaker.Quest.active() != wandmakerQuestWasActive) {</span>
+<span class="nc" id="L157">			wandmakerQuestWasActive = Wandmaker.Quest.active();</span>
+
+<span class="nc" id="L159">			Game.runOnRenderThread(new Callback() {</span>
+				@Override
+				public void call() {
+<span class="nc" id="L162">					Music.INSTANCE.fadeOut(1f, new Callback() {</span>
+						@Override
+						public void call() {
+<span class="nc bnc" id="L165" title="All 2 branches missed.">							if (Dungeon.level != null) {</span>
+<span class="nc" id="L166">								Dungeon.level.playLevelMusic();</span>
+							}
+<span class="nc" id="L168">						}</span>
+					});
+<span class="nc" id="L170">				}</span>
+			});
+		}
+<span class="nc" id="L173">	}</span>
+
+	@Override
+	public String tileName( int tile ) {
+<span class="nc bnc" id="L177" title="All 2 branches missed.">		switch (tile) {</span>
+			case Terrain.WATER:
+<span class="nc" id="L179">				return Messages.get(PrisonLevel.class, &quot;water_name&quot;);</span>
+			default:
+<span class="nc" id="L181">				return super.tileName( tile );</span>
+		}
+	}
+
+	@Override
+	public String tileDesc(int tile) {
+<span class="nc bnc" id="L187" title="All 3 branches missed.">		switch (tile) {</span>
+			case Terrain.EMPTY_DECO:
+<span class="nc" id="L189">				return Messages.get(PrisonLevel.class, &quot;empty_deco_desc&quot;);</span>
+			case Terrain.BOOKSHELF:
+<span class="nc" id="L191">				return Messages.get(PrisonLevel.class, &quot;bookshelf_desc&quot;);</span>
+			default:
+<span class="nc" id="L193">				return super.tileDesc( tile );</span>
+		}
+	}
+	
+	@Override
+	public Group addVisuals() {
+<span class="nc" id="L199">		super.addVisuals();</span>
+<span class="nc" id="L200">		addPrisonVisuals(this, visuals);</span>
+<span class="nc" id="L201">		return visuals;</span>
+	}
+
+	public static void addPrisonVisuals(Level level, Group group){
+<span class="nc bnc" id="L205" title="All 2 branches missed.">		for (int i=0; i &lt; level.length(); i++) {</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">			if (level.map[i] == Terrain.WALL_DECO) {</span>
+<span class="nc" id="L207">				group.add( new Torch( i ) );</span>
+			}
+		}
+<span class="nc" id="L210">	}</span>
+	
+	public static class Torch extends Emitter {
+		
+		private int pos;
+		
+		public Torch( int pos ) {
+<span class="nc" id="L217">			super();</span>
+			
+<span class="nc" id="L219">			this.pos = pos;</span>
+			
+<span class="nc" id="L221">			PointF p = DungeonTilemap.tileCenterToWorld( pos );</span>
+<span class="nc" id="L222">			pos( p.x - 1, p.y + 2, 2, 0 );</span>
+			
+<span class="nc" id="L224">			pour( FlameParticle.FACTORY, 0.15f );</span>
+			
+<span class="nc" id="L226">			add( new Halo( 12, 0xFFFFCC, 0.4f ).point( p.x, p.y + 1 ) );</span>
+<span class="nc" id="L227">		}</span>
+		
+		@Override
+		public void update() {
+<span class="nc bnc" id="L231" title="All 6 branches missed.">			if (visible = (pos &lt; Dungeon.level.heroFOV.length &amp;&amp; Dungeon.level.heroFOV[pos])) {</span>
+<span class="nc" id="L232">				super.update();</span>
+			}
+<span class="nc" id="L234">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

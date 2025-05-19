@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Lightning.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.effects</a> &gt; <span class="el_source">Lightning.java</span></div><h1>Lightning.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.effects;
+
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.watabou.glwrap.Blending;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Group;
+import com.watabou.noosa.Image;
+import com.watabou.utils.Callback;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+
+import java.util.Arrays;
+import java.util.List;
+
+public class Lightning extends Group {
+
+	private static final float DURATION = 0.3f;
+	
+	private float life;
+
+	private List&lt;Arc&gt; arcs;
+	
+	private Callback callback;
+
+	public Lightning(int from, int to, Callback callback){
+<span class="nc" id="L47">		this(Arrays.asList(new Arc(from, to)), callback);</span>
+<span class="nc" id="L48">	}</span>
+
+	public Lightning(PointF from, int to, Callback callback){
+<span class="nc" id="L51">		this(Arrays.asList(new Arc(from, to)), callback);</span>
+<span class="nc" id="L52">	}</span>
+
+	public Lightning(int from, PointF to, Callback callback){
+<span class="nc" id="L55">		this(Arrays.asList(new Arc(from, to)), callback);</span>
+<span class="nc" id="L56">	}</span>
+
+	public Lightning(PointF from, PointF to, Callback callback){
+<span class="nc" id="L59">		this(Arrays.asList(new Arc(from, to)), callback);</span>
+<span class="nc" id="L60">	}</span>
+	
+	public Lightning( List&lt;Arc&gt; arcs, Callback callback ) {
+		
+<span class="nc" id="L64">		super();</span>
+
+<span class="nc" id="L66">		this.arcs = arcs;</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">		for (Arc arc : this.arcs)</span>
+<span class="nc" id="L68">			add(arc);</span>
+
+<span class="nc" id="L70">		this.callback = callback;</span>
+		
+<span class="nc" id="L72">		life = DURATION;</span>
+<span class="nc" id="L73">	}</span>
+	
+	private static final double A = 180 / Math.PI;
+	
+	@Override
+	public void update() {
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if ((life -= Game.elapsed) &lt; 0) {</span>
+			
+<span class="nc" id="L81">			killAndErase();</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">			if (callback != null) {</span>
+<span class="nc" id="L83">				callback.call();</span>
+			}
+			
+		} else {
+			
+<span class="nc" id="L88">			float alpha = life / DURATION;</span>
+			
+<span class="nc bnc" id="L90" title="All 2 branches missed.">			for (Arc arc : arcs) {</span>
+<span class="nc" id="L91">				arc.alpha(alpha);</span>
+<span class="nc" id="L92">			}</span>
+
+<span class="nc" id="L94">			super.update();</span>
+		}
+<span class="nc" id="L96">	}</span>
+	
+	@Override
+	public void draw() {
+<span class="nc" id="L100">		Blending.setLightMode();</span>
+<span class="nc" id="L101">		super.draw();</span>
+<span class="nc" id="L102">		Blending.setNormalMode();</span>
+<span class="nc" id="L103">	}</span>
+
+	//A lightning object is meant to be loaded up with arcs.
+	//these act as a means of easily expressing lighting between two points.
+	public static class Arc extends Group {
+
+		private Image arc1, arc2;
+
+		//starting and ending x/y values
+		private PointF start, end;
+
+		public Arc(int from, int to){
+<span class="nc" id="L115">			this( DungeonTilemap.tileCenterToWorld(from),</span>
+<span class="nc" id="L116">					DungeonTilemap.tileCenterToWorld(to));</span>
+<span class="nc" id="L117">		}</span>
+
+		public Arc(PointF from, int to){
+<span class="nc" id="L120">			this( from, DungeonTilemap.tileCenterToWorld(to));</span>
+<span class="nc" id="L121">		}</span>
+
+		public Arc(int from, PointF to){
+<span class="nc" id="L124">			this( DungeonTilemap.tileCenterToWorld(from), to);</span>
+<span class="nc" id="L125">		}</span>
+
+<span class="nc" id="L127">		public Arc(PointF from, PointF to){</span>
+<span class="nc" id="L128">			start = from;</span>
+<span class="nc" id="L129">			end = to;</span>
+
+<span class="nc" id="L131">			arc1 = new Image(Effects.get(Effects.Type.LIGHTNING));</span>
+<span class="nc" id="L132">			arc1.x = start.x - arc1.origin.x;</span>
+<span class="nc" id="L133">			arc1.y = start.y - arc1.origin.y;</span>
+<span class="nc" id="L134">			arc1.origin.set( 0, arc1.height()/2 );</span>
+<span class="nc" id="L135">			add( arc1 );</span>
+
+<span class="nc" id="L137">			arc2 = new Image(Effects.get(Effects.Type.LIGHTNING));</span>
+<span class="nc" id="L138">			arc2.origin.set( 0, arc2.height()/2 );</span>
+<span class="nc" id="L139">			add( arc2 );</span>
+
+<span class="nc" id="L141">			update();</span>
+<span class="nc" id="L142">		}</span>
+
+		public void alpha(float alpha) {
+<span class="nc" id="L145">			arc1.am = arc2.am = alpha;</span>
+<span class="nc" id="L146">		}</span>
+
+		@Override
+		public void update() {
+<span class="nc" id="L150">			float x2 = (start.x + end.x) / 2 + Random.Float( -4, +4 );</span>
+<span class="nc" id="L151">			float y2 = (start.y + end.y) / 2 + Random.Float( -4, +4 );</span>
+
+<span class="nc" id="L153">			float dx = x2 - start.x;</span>
+<span class="nc" id="L154">			float dy = y2 - start.y;</span>
+<span class="nc" id="L155">			arc1.angle = (float)(Math.atan2( dy, dx ) * A);</span>
+<span class="nc" id="L156">			arc1.scale.x = (float)Math.sqrt( dx * dx + dy * dy ) / arc1.width;</span>
+
+<span class="nc" id="L158">			dx = end.x - x2;</span>
+<span class="nc" id="L159">			dy = end.y - y2;</span>
+<span class="nc" id="L160">			arc2.angle = (float)(Math.atan2( dy, dx ) * A);</span>
+<span class="nc" id="L161">			arc2.scale.x = (float)Math.sqrt( dx * dx + dy * dy ) / arc2.width;</span>
+<span class="nc" id="L162">			arc2.x = x2 - arc2.origin.x;</span>
+<span class="nc" id="L163">			arc2.y = y2 - arc2.origin.x;</span>
+<span class="nc" id="L164">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

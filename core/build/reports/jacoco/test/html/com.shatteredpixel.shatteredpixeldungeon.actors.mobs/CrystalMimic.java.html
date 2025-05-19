@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CrystalMimic.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">CrystalMimic.java</span></div><h1>CrystalMimic.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Haste;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Honeypot;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.MimicTooth;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.MimicSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L50">public class CrystalMimic extends Mimic {</span>
+
+	{
+<span class="nc" id="L53">		spriteClass = MimicSprite.Crystal.class;</span>
+
+<span class="nc" id="L55">		FLEEING = new Fleeing();</span>
+<span class="nc" id="L56">	}</span>
+
+	@Override
+	public String name() {
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		if (alignment == Alignment.NEUTRAL){</span>
+<span class="nc" id="L61">			return Messages.get(Heap.class, &quot;crystal_chest&quot;);</span>
+		} else {
+<span class="nc" id="L63">			return super.name();</span>
+		}
+	}
+
+	@Override
+	public String description() {
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		if (alignment == Alignment.NEUTRAL){</span>
+<span class="nc" id="L70">			String desc = null;</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">			for (Item i : items){</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">				if (i instanceof Artifact){</span>
+<span class="nc" id="L73">					desc = Messages.get(Heap.class, &quot;crystal_chest_desc&quot;, Messages.get(Heap.class, &quot;artifact&quot;));</span>
+<span class="nc" id="L74">					break;</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">				} else if (i instanceof Ring){</span>
+<span class="nc" id="L76">					desc = Messages.get(Heap.class, &quot;crystal_chest_desc&quot;, Messages.get(Heap.class, &quot;ring&quot;));</span>
+<span class="nc" id="L77">					break;</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">				} else if (i instanceof Wand){</span>
+<span class="nc" id="L79">					desc = Messages.get(Heap.class, &quot;crystal_chest_desc&quot;, Messages.get(Heap.class, &quot;wand&quot;));</span>
+<span class="nc" id="L80">					break;</span>
+				}
+<span class="nc" id="L82">			}</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">			if (desc == null) {</span>
+<span class="nc" id="L84">				desc = Messages.get(Heap.class, &quot;locked_chest_desc&quot;);</span>
+			}
+<span class="nc bnc" id="L86" title="All 2 branches missed.">			if (!MimicTooth.stealthyMimics()){</span>
+<span class="nc" id="L87">				desc += &quot;\n\n&quot; + Messages.get(this, &quot;hidden_hint&quot;);</span>
+			}
+<span class="nc" id="L89">			return desc;</span>
+		} else {
+<span class="nc" id="L91">			return super.description();</span>
+		}
+	}
+
+	//does not deal bonus damage, steals instead. See attackProc
+	@Override
+	public int damageRoll() {
+<span class="nc bnc" id="L98" title="All 2 branches missed.">		if (alignment == Alignment.NEUTRAL) {</span>
+<span class="nc" id="L99">			alignment = Alignment.ENEMY;</span>
+<span class="nc" id="L100">			int dmg = super.damageRoll();</span>
+<span class="nc" id="L101">			alignment = Alignment.NEUTRAL;</span>
+<span class="nc" id="L102">			return dmg;</span>
+		} else {
+<span class="nc" id="L104">			return super.damageRoll();</span>
+		}
+	}
+
+	public void stopHiding(){
+<span class="nc" id="L109">		state = FLEEING;</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		if (sprite != null) sprite.idle();</span>
+		//haste for 2 turns if attacking
+<span class="nc bnc" id="L112" title="All 2 branches missed.">		if (alignment == Alignment.NEUTRAL){</span>
+<span class="nc" id="L113">			Buff.affect(this, Haste.class, 2f);</span>
+		} else {
+<span class="nc" id="L115">			Buff.affect(this, Haste.class, 1f);</span>
+		}
+<span class="nc bnc" id="L117" title="All 4 branches missed.">		if (Actor.chars().contains(this) &amp;&amp; Dungeon.level.heroFOV[pos]) {</span>
+<span class="nc" id="L118">			enemy = Dungeon.hero;</span>
+<span class="nc" id="L119">			target = Dungeon.hero.pos;</span>
+<span class="nc" id="L120">			GLog.w(Messages.get(this, &quot;reveal&quot;) );</span>
+<span class="nc" id="L121">			CellEmitter.get(pos).burst(Speck.factory(Speck.STAR), 10);</span>
+<span class="nc" id="L122">			Sample.INSTANCE.play(Assets.Sounds.MIMIC, 1, 1.25f);</span>
+		}
+<span class="nc" id="L124">	}</span>
+
+	@Override
+	public int attackProc(Char enemy, int damage) {
+<span class="nc bnc" id="L128" title="All 4 branches missed.">		if (alignment == Alignment.NEUTRAL &amp;&amp; enemy == Dungeon.hero){</span>
+<span class="nc" id="L129">			steal( Dungeon.hero );</span>
+
+		} else {
+<span class="nc" id="L132">			ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">			for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc bnc" id="L134" title="All 4 branches missed.">				if (Dungeon.level.passable[pos+i] &amp;&amp; Actor.findChar(pos+i) == null){</span>
+<span class="nc" id="L135">					candidates.add(pos + i);</span>
+				}
+			}
+
+<span class="nc bnc" id="L139" title="All 2 branches missed.">			if (!candidates.isEmpty()){</span>
+<span class="nc" id="L140">				ScrollOfTeleportation.appear(enemy, Random.element(candidates));</span>
+			}
+
+<span class="nc bnc" id="L143" title="All 2 branches missed.">			if (alignment == Alignment.ENEMY) state = FLEEING;</span>
+		}
+<span class="nc" id="L145">		return super.attackProc(enemy, damage);</span>
+	}
+
+	protected void steal( Hero hero ) {
+
+<span class="nc" id="L150">		int tries = 10;</span>
+		Item item;
+		do {
+<span class="nc" id="L153">			item = hero.belongings.randomUnequipped();</span>
+<span class="nc bnc" id="L154" title="All 8 branches missed.">		} while (tries-- &gt; 0 &amp;&amp; (item == null || item.unique || item.level() &gt; 0));</span>
+
+<span class="nc bnc" id="L156" title="All 6 branches missed.">		if (item != null &amp;&amp; !item.unique &amp;&amp; item.level() &lt; 1 ) {</span>
+
+<span class="nc" id="L158">			GLog.w( Messages.get(this, &quot;ate&quot;, item.name()) );</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">			if (!item.stackable) {</span>
+<span class="nc" id="L160">				Dungeon.quickslot.convertToPlaceholder(item);</span>
+			}
+<span class="nc" id="L162">			item.updateQuickslot();</span>
+
+<span class="nc bnc" id="L164" title="All 2 branches missed.">			if (item instanceof Honeypot){</span>
+<span class="nc" id="L165">				items.add(((Honeypot)item).shatter(this, this.pos));</span>
+<span class="nc" id="L166">				item.detach( hero.belongings.backpack );</span>
+			} else {
+<span class="nc" id="L168">				items.add(item.detach( hero.belongings.backpack ));</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">				if ( item instanceof Honeypot.ShatteredPot)</span>
+<span class="nc" id="L170">					((Honeypot.ShatteredPot)item).pickupPot(this);</span>
+			}
+
+		}
+<span class="nc" id="L174">	}</span>
+
+	@Override
+	protected void generatePrize( boolean useDecks ) {
+		//Crystal mimic already contains a prize item. Just guarantee it isn't cursed.
+<span class="nc bnc" id="L179" title="All 2 branches missed.">		for (Item i : items){</span>
+<span class="nc" id="L180">			i.cursed = false;</span>
+<span class="nc" id="L181">			i.cursedKnown = true;</span>
+<span class="nc" id="L182">		}</span>
+<span class="nc" id="L183">	}</span>
+
+<span class="nc" id="L185">	private class Fleeing extends Mob.Fleeing {</span>
+		@Override
+		protected void escaped() {
+<span class="nc bnc" id="L188" title="All 4 branches missed.">			if (!Dungeon.level.heroFOV[pos] &amp;&amp; Dungeon.level.distance(Dungeon.hero.pos, pos) &gt;= 6) {</span>
+<span class="nc" id="L189">				GLog.n(Messages.get(CrystalMimic.class, &quot;escaped&quot;));</span>
+<span class="nc" id="L190">				destroy();</span>
+<span class="nc" id="L191">				sprite.killAndErase();</span>
+			} else {
+<span class="nc" id="L193">				state = WANDERING;</span>
+			}
+<span class="nc" id="L195">		}</span>
+
+		@Override
+		protected void nowhereToRun() {
+<span class="nc" id="L199">			super.nowhereToRun();</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">			if (state == HUNTING){</span>
+<span class="nc" id="L201">				spend(-TICK); //crystal mimics are fast!</span>
+			}
+<span class="nc" id="L203">		}</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

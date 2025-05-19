@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReclaimTrap.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.spells</a> &gt; <span class="el_source">ReclaimTrap.java</span></div><h1>ReclaimTrap.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.spells;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.MetalShard;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfMagicMapping;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRecharging;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Bestiary;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L46">public class ReclaimTrap extends TargetedSpell {</span>
+	
+	{
+<span class="nc" id="L49">		image = ItemSpriteSheet.RECLAIM_TRAP;</span>
+
+<span class="nc" id="L51">		talentChance = 1/(float)Recipe.OUT_QUANTITY;</span>
+	}
+
+	//This class has a variety of code for compat with pre-v3.0.0 saves
+	//Stored traps used to be a property of the item itself, but in 3.0.0 this was changed to be
+	//a buff attached to the hero, which is much more resistant to exploits
+
+<span class="nc" id="L58">	private Class&lt;?extends Trap&gt; storedTrap = null;</span>
+	
+	@Override
+	public ArrayList&lt;String&gt; actions(Hero hero) {
+<span class="nc" id="L62">		ArrayList&lt;String&gt; actions = super.actions(hero);</span>
+		//prevents exploits, pre-v3.0.0
+<span class="nc bnc" id="L64" title="All 2 branches missed.">		if (storedTrap != null){</span>
+<span class="nc" id="L65">			actions.remove(AC_DROP);</span>
+<span class="nc" id="L66">			actions.remove(AC_THROW);</span>
+		}
+<span class="nc" id="L68">		return actions;</span>
+	}
+
+	@Override
+	protected void affectTarget(Ballistica bolt, Hero hero) {
+<span class="nc" id="L73">		Class&lt;?extends Trap&gt; storedTrap = null;</span>
+		//pre-v3.0.0
+<span class="nc bnc" id="L75" title="All 2 branches missed.">		if (this.storedTrap != null){</span>
+<span class="nc" id="L76">			storedTrap = this.storedTrap;</span>
+<span class="nc" id="L77">			this.storedTrap = null;</span>
+		} else {
+<span class="nc bnc" id="L79" title="All 2 branches missed.">			if (hero.buff(ReclaimedTrap.class) != null){</span>
+<span class="nc" id="L80">				storedTrap = hero.buff(ReclaimedTrap.class).trap;</span>
+<span class="nc" id="L81">				hero.buff(ReclaimedTrap.class).detach();</span>
+			}
+		}
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		if (storedTrap == null) {</span>
+<span class="nc" id="L85">			quantity++; //storing a trap doesn't consume the spell</span>
+<span class="nc" id="L86">			Trap t = Dungeon.level.traps.get(bolt.collisionPos);</span>
+<span class="nc bnc" id="L87" title="All 6 branches missed.">			if (t != null &amp;&amp; t.active &amp;&amp; t.visible) {</span>
+<span class="nc" id="L88">				t.disarm(); //even disarms traps that normally wouldn't be</span>
+				
+<span class="nc" id="L90">				Sample.INSTANCE.play(Assets.Sounds.LIGHTNING);</span>
+<span class="nc" id="L91">				ScrollOfRecharging.charge(hero);</span>
+<span class="nc" id="L92">				Buff.affect(hero, ReclaimedTrap.class).trap = t.getClass();</span>
+<span class="nc" id="L93">				Bestiary.setSeen(t.getClass());</span>
+				
+			} else {
+<span class="nc" id="L96">				GLog.w(Messages.get(this, &quot;no_trap&quot;));</span>
+			}
+<span class="nc" id="L98">		} else {</span>
+			
+<span class="nc" id="L100">			Trap t = Reflection.newInstance(storedTrap);</span>
+			
+<span class="nc" id="L102">			t.pos = bolt.collisionPos;</span>
+<span class="nc" id="L103">			t.reclaimed = true;</span>
+<span class="nc" id="L104">			Bestiary.countEncounter(t.getClass());</span>
+<span class="nc" id="L105">			t.activate();</span>
+			
+		}
+<span class="nc" id="L108">	}</span>
+	
+	@Override
+	public String desc() {
+<span class="nc" id="L112">		String desc = super.desc();</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		if (storedTrap != null){</span>
+<span class="nc" id="L114">			desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_trap&quot;, Messages.get(storedTrap, &quot;name&quot;));</span>
+<span class="nc bnc" id="L115" title="All 6 branches missed.">		} else if (Dungeon.hero != null &amp;&amp; Dungeon.hero.belongings.contains(this) &amp;&amp; Dungeon.hero.buff(ReclaimedTrap.class) != null){</span>
+<span class="nc" id="L116">			desc += &quot;\n\n&quot; + Messages.get(this, &quot;desc_trap&quot;, Messages.get(Dungeon.hero.buff(ReclaimedTrap.class).trap, &quot;name&quot;));</span>
+		}
+<span class="nc" id="L118">		return desc;</span>
+	}
+	
+<span class="nc" id="L121">	private static final ItemSprite.Glowing[] COLORS = new ItemSprite.Glowing[]{</span>
+			new ItemSprite.Glowing( 0xFF0000 ),
+			new ItemSprite.Glowing( 0xFF8000 ),
+			new ItemSprite.Glowing( 0xFFFF00 ),
+			new ItemSprite.Glowing( 0x00FF00 ),
+			new ItemSprite.Glowing( 0x00FFFF ),
+			new ItemSprite.Glowing( 0x8000FF ),
+			new ItemSprite.Glowing( 0xFFFFFF ),
+			new ItemSprite.Glowing( 0x808080 ),
+			new ItemSprite.Glowing( 0x000000 )
+	};
+	
+	@Override
+	public ItemSprite.Glowing glowing() {
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		if (storedTrap != null){</span>
+<span class="nc" id="L136">			return COLORS[Reflection.newInstance(storedTrap).color];</span>
+<span class="nc bnc" id="L137" title="All 6 branches missed.">		} else if (Dungeon.hero != null &amp;&amp; Dungeon.hero.belongings.contains(this) &amp;&amp; Dungeon.hero.buff(ReclaimedTrap.class) != null){</span>
+<span class="nc" id="L138">			return COLORS[Reflection.newInstance(Dungeon.hero.buff(ReclaimedTrap.class).trap).color];</span>
+		}
+<span class="nc" id="L140">		return null;</span>
+	}
+	
+	@Override
+	public int value() {
+<span class="nc" id="L145">		return (int)(60 * (quantity/(float)Recipe.OUT_QUANTITY));</span>
+	}
+
+	@Override
+	public int energyVal() {
+<span class="nc" id="L150">		return (int)(12 * (quantity/(float)Recipe.OUT_QUANTITY));</span>
+	}
+	
+	private static final String STORED_TRAP = &quot;stored_trap&quot;;
+	
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L157">		super.storeInBundle(bundle);</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">		if (storedTrap != null) bundle.put(STORED_TRAP, storedTrap);</span>
+<span class="nc" id="L159">	}</span>
+	
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L163">		super.restoreFromBundle(bundle);</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">		if (bundle.contains(STORED_TRAP)) storedTrap = bundle.getClass(STORED_TRAP);</span>
+<span class="nc" id="L165">	}</span>
+	
+<span class="nc" id="L167">	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe.SimpleRecipe {</span>
+
+		private static final int OUT_QUANTITY = 5;
+		
+		{
+<span class="nc" id="L172">			inputs =  new Class[]{ScrollOfMagicMapping.class, MetalShard.class};</span>
+<span class="nc" id="L173">			inQuantity = new int[]{1, 1};</span>
+			
+<span class="nc" id="L175">			cost = 8;</span>
+			
+<span class="nc" id="L177">			output = ReclaimTrap.class;</span>
+<span class="nc" id="L178">			outQuantity = OUT_QUANTITY;</span>
+<span class="nc" id="L179">		}</span>
+
+		@Override
+		public Item brew(ArrayList&lt;Item&gt; ingredients) {
+<span class="nc" id="L183">			Catalog.countUse(MetalShard.class);</span>
+<span class="nc" id="L184">			return super.brew(ingredients);</span>
+		}
+	}
+
+<span class="nc" id="L188">	public static class ReclaimedTrap extends Buff {</span>
+
+		{
+<span class="nc" id="L191">			revivePersists = true;</span>
+<span class="nc" id="L192">		}</span>
+
+		private Class&lt;?extends Trap&gt; trap;
+
+		private static final String TRAP = &quot;trap&quot;;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L200">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L201">			bundle.put(TRAP, trap);</span>
+<span class="nc" id="L202">		}</span>
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L206">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L207">			trap = bundle.getClass(TRAP);</span>
+<span class="nc" id="L208">		}</span>
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CloakOfShadows.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.artifacts</a> &gt; <span class="el_source">CloakOfShadows.java</span></div><h1>CloakOfShadows.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
+
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Preparation;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L50">public class CloakOfShadows extends Artifact {</span>
+
+	{
+<span class="nc" id="L53">		image = ItemSpriteSheet.ARTIFACT_CLOAK;</span>
+
+<span class="nc" id="L55">		exp = 0;</span>
+<span class="nc" id="L56">		levelCap = 10;</span>
+
+<span class="nc" id="L58">		charge = Math.min(level()+3, 10);</span>
+<span class="nc" id="L59">		partialCharge = 0;</span>
+<span class="nc" id="L60">		chargeCap = Math.min(level()+3, 10);</span>
+
+<span class="nc" id="L62">		defaultAction = AC_STEALTH;</span>
+
+<span class="nc" id="L64">		unique = true;</span>
+<span class="nc" id="L65">		bones = false;</span>
+<span class="nc" id="L66">	}</span>
+
+	public static final String AC_STEALTH = &quot;STEALTH&quot;;
+
+	@Override
+	public ArrayList&lt;String&gt; actions( Hero hero ) {
+<span class="nc" id="L72">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc bnc" id="L73" title="All 6 branches missed.">		if ((isEquipped( hero ) || hero.hasTalent(Talent.LIGHT_CLOAK))</span>
+				&amp;&amp; !cursed
+<span class="nc bnc" id="L75" title="All 6 branches missed.">				&amp;&amp; hero.buff(MagicImmune.class) == null</span>
+				&amp;&amp; (charge &gt; 0 || activeBuff != null)) {
+<span class="nc" id="L77">			actions.add(AC_STEALTH);</span>
+		}
+<span class="nc" id="L79">		return actions;</span>
+	}
+
+	@Override
+	public void execute( Hero hero, String action ) {
+
+<span class="nc" id="L85">		super.execute(hero, action);</span>
+
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		if (hero.buff(MagicImmune.class) != null) return;</span>
+
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		if (action.equals( AC_STEALTH )) {</span>
+
+<span class="nc bnc" id="L91" title="All 2 branches missed.">			if (activeBuff == null){</span>
+<span class="nc bnc" id="L92" title="All 4 branches missed.">				if (!isEquipped(hero) &amp;&amp; !hero.hasTalent(Talent.LIGHT_CLOAK)) GLog.i( Messages.get(Artifact.class, &quot;need_to_equip&quot;) );</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">				else if (cursed)       GLog.i( Messages.get(this, &quot;cursed&quot;) );</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">				else if (charge &lt;= 0)  GLog.i( Messages.get(this, &quot;no_charge&quot;) );</span>
+				else {
+<span class="nc" id="L96">					hero.spend( 1f );</span>
+<span class="nc" id="L97">					hero.busy();</span>
+<span class="nc" id="L98">					Sample.INSTANCE.play(Assets.Sounds.MELD);</span>
+<span class="nc" id="L99">					activeBuff = activeBuff();</span>
+<span class="nc" id="L100">					activeBuff.attachTo(hero);</span>
+<span class="nc" id="L101">					Talent.onArtifactUsed(Dungeon.hero);</span>
+<span class="nc" id="L102">					hero.sprite.operate(hero.pos);</span>
+				}
+			} else {
+<span class="nc" id="L105">				activeBuff.detach();</span>
+<span class="nc" id="L106">				activeBuff = null;</span>
+<span class="nc bnc" id="L107" title="All 4 branches missed.">				if (hero.invisible &lt;= 0 &amp;&amp; hero.buff(Preparation.class) != null){</span>
+<span class="nc" id="L108">					hero.buff(Preparation.class).detach();</span>
+				}
+<span class="nc" id="L110">				hero.sprite.operate( hero.pos );</span>
+			}
+
+		}
+<span class="nc" id="L114">	}</span>
+
+	@Override
+	public void activate(Char ch){
+<span class="nc" id="L118">		super.activate(ch);</span>
+<span class="nc bnc" id="L119" title="All 4 branches missed.">		if (activeBuff != null &amp;&amp; activeBuff.target == null){</span>
+<span class="nc" id="L120">			activeBuff.attachTo(ch);</span>
+		}
+<span class="nc" id="L122">	}</span>
+
+	@Override
+	public boolean doUnequip(Hero hero, boolean collect, boolean single) {
+<span class="nc bnc" id="L126" title="All 2 branches missed.">		if (super.doUnequip(hero, collect, single)){</span>
+<span class="nc bnc" id="L127" title="All 4 branches missed.">			if (!collect || !hero.hasTalent(Talent.LIGHT_CLOAK)){</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">				if (activeBuff != null){</span>
+<span class="nc" id="L129">					activeBuff.detach();</span>
+<span class="nc" id="L130">					activeBuff = null;</span>
+				}
+			} else {
+<span class="nc" id="L133">				activate(hero);</span>
+			}
+
+<span class="nc" id="L136">			return true;</span>
+		} else
+<span class="nc" id="L138">			return false;</span>
+	}
+
+	@Override
+	public boolean collect( Bag container ) {
+<span class="nc bnc" id="L143" title="All 2 branches missed.">		if (super.collect(container)){</span>
+<span class="nc bnc" id="L144" title="All 4 branches missed.">			if (container.owner instanceof Hero</span>
+					&amp;&amp; passiveBuff == null
+<span class="nc bnc" id="L146" title="All 2 branches missed.">					&amp;&amp; ((Hero) container.owner).hasTalent(Talent.LIGHT_CLOAK)){</span>
+<span class="nc" id="L147">				activate((Hero) container.owner);</span>
+			}
+<span class="nc" id="L149">			return true;</span>
+		} else{
+<span class="nc" id="L151">			return false;</span>
+		}
+	}
+
+	@Override
+	protected void onDetach() {
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		if (passiveBuff != null){</span>
+<span class="nc" id="L158">			passiveBuff.detach();</span>
+<span class="nc" id="L159">			passiveBuff = null;</span>
+		}
+<span class="nc bnc" id="L161" title="All 4 branches missed.">		if (activeBuff != null &amp;&amp; !isEquipped((Hero) activeBuff.target)){</span>
+<span class="nc" id="L162">			activeBuff.detach();</span>
+<span class="nc" id="L163">			activeBuff = null;</span>
+		}
+<span class="nc" id="L165">	}</span>
+
+	@Override
+	protected ArtifactBuff passiveBuff() {
+<span class="nc" id="L169">		return new cloakRecharge();</span>
+	}
+
+	@Override
+	protected ArtifactBuff activeBuff( ) {
+<span class="nc" id="L174">		return new cloakStealth();</span>
+	}
+	
+	@Override
+	public void charge(Hero target, float amount) {
+<span class="nc bnc" id="L179" title="All 4 branches missed.">		if (cursed || target.buff(MagicImmune.class) != null) return;</span>
+
+<span class="nc bnc" id="L181" title="All 2 branches missed.">		if (charge &lt; chargeCap) {</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">			if (!isEquipped(target)) amount *= 0.75f*target.pointsInTalent(Talent.LIGHT_CLOAK)/3f;</span>
+<span class="nc" id="L183">			partialCharge += 0.25f*amount;</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">			while (partialCharge &gt;= 1f) {</span>
+<span class="nc" id="L185">				charge++;</span>
+<span class="nc" id="L186">				partialCharge--;</span>
+			}
+<span class="nc bnc" id="L188" title="All 2 branches missed.">			if (charge &gt;= chargeCap){</span>
+<span class="nc" id="L189">				partialCharge = 0;</span>
+<span class="nc" id="L190">				charge = chargeCap;</span>
+			}
+<span class="nc" id="L192">			updateQuickslot();</span>
+		}
+<span class="nc" id="L194">	}</span>
+
+	public void directCharge(int amount){
+<span class="nc" id="L197">		charge = Math.min(charge+amount, chargeCap);</span>
+<span class="nc" id="L198">		updateQuickslot();</span>
+<span class="nc" id="L199">	}</span>
+	
+	@Override
+	public Item upgrade() {
+<span class="nc" id="L203">		chargeCap = Math.min(chargeCap + 1, 10);</span>
+<span class="nc" id="L204">		return super.upgrade();</span>
+	}
+
+	private static final String STEALTHED = &quot;stealthed&quot;;
+	private static final String BUFF = &quot;buff&quot;;
+
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L212">		super.storeInBundle(bundle);</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">		if (activeBuff != null) bundle.put(BUFF, activeBuff);</span>
+<span class="nc" id="L214">	}</span>
+
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L218">		super.restoreFromBundle(bundle);</span>
+<span class="nc bnc" id="L219" title="All 2 branches missed.">		if (bundle.contains(BUFF)){</span>
+<span class="nc" id="L220">			activeBuff = new cloakStealth();</span>
+<span class="nc" id="L221">			activeBuff.restoreFromBundle(bundle.getBundle(BUFF));</span>
+		}
+<span class="nc" id="L223">	}</span>
+
+	@Override
+	public int value() {
+<span class="nc" id="L227">		return 0;</span>
+	}
+
+<span class="nc" id="L230">	public class cloakRecharge extends ArtifactBuff{</span>
+		@Override
+		public boolean act() {
+<span class="nc bnc" id="L233" title="All 6 branches missed.">			if (charge &lt; chargeCap &amp;&amp; !cursed &amp;&amp; target.buff(MagicImmune.class) == null) {</span>
+<span class="nc bnc" id="L234" title="All 4 branches missed.">				if (activeBuff == null &amp;&amp; Regeneration.regenOn()) {</span>
+<span class="nc" id="L235">					float missing = (chargeCap - charge);</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">					if (level() &gt; 7) missing += 5*(level() - 7)/3f;</span>
+<span class="nc" id="L237">					float turnsToCharge = (45 - missing);</span>
+<span class="nc" id="L238">					turnsToCharge /= RingOfEnergy.artifactChargeMultiplier(target);</span>
+<span class="nc" id="L239">					float chargeToGain = (1f / turnsToCharge);</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">					if (!isEquipped(Dungeon.hero)){</span>
+<span class="nc" id="L241">						chargeToGain *= 0.75f*Dungeon.hero.pointsInTalent(Talent.LIGHT_CLOAK)/3f;</span>
+					}
+<span class="nc" id="L243">					partialCharge += chargeToGain;</span>
+				}
+
+<span class="nc bnc" id="L246" title="All 2 branches missed.">				while (partialCharge &gt;= 1) {</span>
+<span class="nc" id="L247">					charge++;</span>
+<span class="nc" id="L248">					partialCharge -= 1;</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">					if (charge == chargeCap){</span>
+<span class="nc" id="L250">						partialCharge = 0;</span>
+					}
+
+				}
+			} else {
+<span class="nc" id="L255">				partialCharge = 0;</span>
+			}
+
+<span class="nc bnc" id="L258" title="All 2 branches missed.">			if (cooldown &gt; 0)</span>
+<span class="nc" id="L259">				cooldown --;</span>
+
+<span class="nc" id="L261">			updateQuickslot();</span>
+
+<span class="nc" id="L263">			spend( TICK );</span>
+
+<span class="nc" id="L265">			return true;</span>
+		}
+
+	}
+
+<span class="nc" id="L270">	public class cloakStealth extends ArtifactBuff{</span>
+		
+		{
+<span class="nc" id="L273">			type = buffType.POSITIVE;</span>
+		}
+		
+<span class="nc" id="L276">		int turnsToCost = 0;</span>
+
+		@Override
+		public int icon() {
+<span class="nc" id="L280">			return BuffIndicator.INVISIBLE;</span>
+		}
+
+		@Override
+		public void tintIcon(Image icon) {
+<span class="nc" id="L285">			icon.brightness(0.6f);</span>
+<span class="nc" id="L286">		}</span>
+
+		@Override
+		public float iconFadePercent() {
+<span class="nc" id="L290">			return (4f - turnsToCost) / 4f;</span>
+		}
+
+		@Override
+		public String iconTextDisplay() {
+<span class="nc" id="L295">			return Integer.toString(turnsToCost);</span>
+		}
+
+		@Override
+		public String desc() {
+<span class="nc" id="L300">			return Messages.get(this, &quot;desc&quot;, turnsToCost);</span>
+		}
+
+		@Override
+		public boolean attachTo( Char target ) {
+<span class="nc bnc" id="L305" title="All 2 branches missed.">			if (super.attachTo( target )) {</span>
+<span class="nc" id="L306">				target.invisible++;</span>
+<span class="nc bnc" id="L307" title="All 4 branches missed.">				if (target instanceof Hero &amp;&amp; ((Hero) target).subClass == HeroSubClass.ASSASSIN){</span>
+<span class="nc" id="L308">					Buff.affect(target, Preparation.class);</span>
+				}
+<span class="nc bnc" id="L310" title="All 4 branches missed.">				if (target instanceof Hero &amp;&amp; ((Hero) target).hasTalent(Talent.PROTECTIVE_SHADOWS)){</span>
+<span class="nc" id="L311">					Buff.affect(target, Talent.ProtectiveShadowsTracker.class);</span>
+				}
+<span class="nc" id="L313">				return true;</span>
+			} else {
+<span class="nc" id="L315">				return false;</span>
+			}
+		}
+
+		@Override
+		public boolean act(){
+<span class="nc" id="L321">			turnsToCost--;</span>
+			
+<span class="nc bnc" id="L323" title="All 2 branches missed.">			if (turnsToCost &lt;= 0){</span>
+<span class="nc" id="L324">				charge--;</span>
+<span class="nc bnc" id="L325" title="All 2 branches missed.">				if (charge &lt; 0) {</span>
+<span class="nc" id="L326">					charge = 0;</span>
+<span class="nc" id="L327">					detach();</span>
+<span class="nc" id="L328">					GLog.w(Messages.get(this, &quot;no_charge&quot;));</span>
+<span class="nc" id="L329">					((Hero) target).interrupt();</span>
+				} else {
+					//target hero level is 1 + 2*cloak level
+<span class="nc" id="L332">					int lvlDiffFromTarget = ((Hero) target).lvl - (1+level()*2);</span>
+					//plus an extra one for each level after 6
+<span class="nc bnc" id="L334" title="All 2 branches missed.">					if (level() &gt;= 7){</span>
+<span class="nc" id="L335">						lvlDiffFromTarget -= level()-6;</span>
+					}
+<span class="nc bnc" id="L337" title="All 2 branches missed.">					if (lvlDiffFromTarget &gt;= 0){</span>
+<span class="nc" id="L338">						exp += Math.round(10f * Math.pow(1.1f, lvlDiffFromTarget));</span>
+					} else {
+<span class="nc" id="L340">						exp += Math.round(10f * Math.pow(0.75f, -lvlDiffFromTarget));</span>
+					}
+					
+<span class="nc bnc" id="L343" title="All 4 branches missed.">					if (exp &gt;= (level() + 1) * 50 &amp;&amp; level() &lt; levelCap) {</span>
+<span class="nc" id="L344">						upgrade();</span>
+<span class="nc" id="L345">						Catalog.countUse(CloakOfShadows.class);</span>
+<span class="nc" id="L346">						exp -= level() * 50;</span>
+<span class="nc" id="L347">						GLog.p(Messages.get(this, &quot;levelup&quot;));</span>
+						
+					}
+<span class="nc" id="L350">					turnsToCost = 4;</span>
+				}
+<span class="nc" id="L352">				updateQuickslot();</span>
+			}
+
+<span class="nc" id="L355">			spend( TICK );</span>
+
+<span class="nc" id="L357">			return true;</span>
+		}
+
+		public void dispel(){
+<span class="nc bnc" id="L361" title="All 4 branches missed.">			if (turnsToCost &lt;= 0 &amp;&amp; charge &gt; 0){</span>
+<span class="nc" id="L362">				charge--;</span>
+			}
+<span class="nc" id="L364">			updateQuickslot();</span>
+<span class="nc" id="L365">			detach();</span>
+<span class="nc" id="L366">		}</span>
+
+		@Override
+		public void fx(boolean on) {
+<span class="nc bnc" id="L370" title="All 2 branches missed.">			if (on) target.sprite.add( CharSprite.State.INVISIBLE );</span>
+<span class="nc bnc" id="L371" title="All 2 branches missed.">			else if (target.invisible == 0) target.sprite.remove( CharSprite.State.INVISIBLE );</span>
+<span class="nc" id="L372">		}</span>
+
+		@Override
+		public void detach() {
+<span class="nc" id="L376">			activeBuff = null;</span>
+
+<span class="nc bnc" id="L378" title="All 2 branches missed.">			if (target.invisible &gt; 0)   target.invisible--;</span>
+
+<span class="nc" id="L380">			updateQuickslot();</span>
+<span class="nc" id="L381">			super.detach();</span>
+<span class="nc" id="L382">		}</span>
+		
+		private static final String TURNSTOCOST = &quot;turnsToCost&quot;;
+		private static final String BARRIER_INC = &quot;barrier_inc&quot;;
+		
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L389">			super.storeInBundle(bundle);</span>
+			
+<span class="nc" id="L391">			bundle.put( TURNSTOCOST , turnsToCost);</span>
+<span class="nc" id="L392">		}</span>
+		
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L396">			super.restoreFromBundle(bundle);</span>
+			
+<span class="nc" id="L398">			turnsToCost = bundle.getInt( TURNSTOCOST );</span>
+<span class="nc" id="L399">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

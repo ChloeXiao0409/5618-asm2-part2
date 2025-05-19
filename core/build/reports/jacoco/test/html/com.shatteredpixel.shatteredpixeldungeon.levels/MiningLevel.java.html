@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MiningLevel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels</a> &gt; <span class="el_source">MiningLevel.java</span></div><h1>MiningLevel.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Bones;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Bat;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.CrystalWisp;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.FungalSpinner;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GnollGuard;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Blacksmith;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.Torch;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.DarkGold;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.Pickaxe;
+import com.shatteredpixel.shatteredpixeldungeon.levels.builders.Builder;
+import com.shatteredpixel.shatteredpixeldungeon.levels.builders.FigureEightBuilder;
+import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.MiningLevelPainter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest.MineEntrance;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest.MineGiantRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest.MineLargeRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest.MineSecretRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest.MineSmallRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.StandardRoom;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.BlacksmithSprite;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndTitledMessage;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Group;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.Tilemap;
+import com.watabou.noosa.audio.Music;
+import com.watabou.utils.Callback;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+
+<span class="nc" id="L70">public class MiningLevel extends CavesLevel {</span>
+
+	@Override
+	public String tilesTex() {
+<span class="nc bnc" id="L74" title="All 3 branches missed.">		switch (Blacksmith.Quest.Type()){</span>
+			default:
+<span class="nc" id="L76">				return Assets.Environment.TILES_CAVES;</span>
+			case Blacksmith.Quest.CRYSTAL:
+<span class="nc" id="L78">				return Assets.Environment.TILES_CAVES_CRYSTAL;</span>
+			case Blacksmith.Quest.GNOLL:
+<span class="nc" id="L80">				return Assets.Environment.TILES_CAVES_GNOLL;</span>
+		}
+
+	}
+
+	@Override
+	public void playLevelMusic() {
+<span class="nc" id="L87">		Music.INSTANCE.play(Assets.Music.CAVES_TENSE, true);</span>
+<span class="nc" id="L88">	}</span>
+
+	@Override
+	protected ArrayList&lt;Room&gt; initRooms() {
+<span class="nc" id="L92">		ArrayList&lt;Room&gt; initRooms = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L93">		initRooms.add ( roomEntrance = new MineEntrance());</span>
+
+		//spawns 1 giant, 3 large, 6-8 small, and 1-2 secret cave rooms
+		StandardRoom s;
+<span class="nc" id="L97">		s = new MineGiantRoom();</span>
+<span class="nc" id="L98">		s.setSizeCat();</span>
+<span class="nc" id="L99">		initRooms.add(s);</span>
+
+<span class="nc" id="L101">		int rooms = 3;</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		for (int i = 0; i &lt; rooms; i++){</span>
+<span class="nc" id="L103">			s = new MineLargeRoom();</span>
+<span class="nc" id="L104">			s.setSizeCat();</span>
+<span class="nc" id="L105">			initRooms.add(s);</span>
+		}
+
+<span class="nc" id="L108">		rooms = Random.NormalIntRange(6, 8);</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		for (int i = 0; i &lt; rooms; i++){</span>
+<span class="nc" id="L110">			s = new MineSmallRoom();</span>
+<span class="nc" id="L111">			s.setSizeCat();</span>
+<span class="nc" id="L112">			initRooms.add(s);</span>
+		}
+
+<span class="nc" id="L115">		rooms = Random.NormalIntRange(1, 2);</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		for (int i = 0; i &lt; rooms; i++){</span>
+<span class="nc" id="L117">			initRooms.add(new MineSecretRoom());</span>
+		}
+
+<span class="nc" id="L120">		return initRooms;</span>
+	}
+
+	@Override
+	protected Builder builder() {
+<span class="nc" id="L125">		return new FigureEightBuilder().setPathLength(0.8f, new float[]{1}).setTunnelLength(new float[]{1}, new float[]{1});</span>
+	}
+
+	@Override
+	protected boolean build() {
+<span class="nc bnc" id="L130" title="All 2 branches missed.">		if (super.build()){</span>
+<span class="nc" id="L131">			CustomTilemap vis = new BorderTopDarken();</span>
+<span class="nc" id="L132">			vis.setRect(0, 0, width, 1);</span>
+<span class="nc" id="L133">			customTiles.add(vis);</span>
+
+<span class="nc" id="L135">			vis = new BorderWallsDarken();</span>
+<span class="nc" id="L136">			vis.setRect(0, 0, width, height);</span>
+<span class="nc" id="L137">			customWalls.add(vis);</span>
+
+<span class="nc" id="L139">			return true;</span>
+		}
+<span class="nc" id="L141">		return false;</span>
+	}
+
+	@Override
+	protected Painter painter() {
+<span class="nc" id="L146">		return new MiningLevelPainter()</span>
+<span class="nc" id="L147">				.setGold(Random.NormalIntRange(42, 46))</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">				.setWater(Blacksmith.Quest.Type() == Blacksmith.Quest.FUNGI ? 0.1f : 0.35f, 6)</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">				.setGrass(Blacksmith.Quest.Type() == Blacksmith.Quest.FUNGI ? 0.65f : 0.10f, 3);</span>
+	}
+
+	@Override
+	public int mobLimit() {
+		//1 fewer than usual
+<span class="nc" id="L155">		return super.mobLimit()-1;</span>
+	}
+
+	@Override
+	public Mob createMob() {
+<span class="nc bnc" id="L160" title="All 4 branches missed.">		switch (Blacksmith.Quest.Type()){</span>
+			default:
+<span class="nc" id="L162">				return new Bat();</span>
+			case Blacksmith.Quest.CRYSTAL:
+<span class="nc" id="L164">				return new CrystalWisp();</span>
+			case Blacksmith.Quest.GNOLL:
+<span class="nc" id="L166">				return new GnollGuard();</span>
+			case Blacksmith.Quest.FUNGI:
+<span class="nc" id="L168">				return new FungalSpinner();</span>
+		}
+	}
+
+	@Override
+	public float respawnCooldown() {
+		//normal enemies respawn much more slowly here
+<span class="nc" id="L175">		return 3*TIME_TO_RESPAWN;</span>
+	}
+
+	@Override
+	protected void createItems() {
+<span class="nc" id="L180">		Random.pushGenerator(Random.Long());</span>
+<span class="nc" id="L181">			ArrayList&lt;Item&gt; bonesItems = Bones.get();</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">			if (bonesItems != null) {</span>
+<span class="nc" id="L183">				int cell = randomDropCell();</span>
+<span class="nc bnc" id="L184" title="All 4 branches missed.">				if (map[cell] == Terrain.HIGH_GRASS || map[cell] == Terrain.FURROWED_GRASS) {</span>
+<span class="nc" id="L185">					map[cell] = Terrain.GRASS;</span>
+<span class="nc" id="L186">					losBlocking[cell] = false;</span>
+				}
+<span class="nc bnc" id="L188" title="All 2 branches missed.">				for (Item i : bonesItems) {</span>
+<span class="nc" id="L189">					drop(i, cell).setHauntedIfCursed().type = Heap.Type.REMAINS;</span>
+<span class="nc" id="L190">				}</span>
+			}
+<span class="nc" id="L192">		Random.popGenerator();</span>
+
+<span class="nc" id="L194">		int cell = randomDropCell();</span>
+<span class="nc bnc" id="L195" title="All 4 branches missed.">		if (map[cell] == Terrain.HIGH_GRASS || map[cell] == Terrain.FURROWED_GRASS) {</span>
+<span class="nc" id="L196">			map[cell] = Terrain.GRASS;</span>
+<span class="nc" id="L197">			losBlocking[cell] = false;</span>
+		}
+<span class="nc" id="L199">		drop( Generator.randomUsingDefaults(Generator.Category.FOOD), cell );</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">		if (Blacksmith.Quest.Type() == Blacksmith.Quest.GNOLL){</span>
+			//drop a second ration for the gnoll quest type, more mining required!
+<span class="nc" id="L202">			cell = randomDropCell();</span>
+<span class="nc bnc" id="L203" title="All 4 branches missed.">			if (map[cell] == Terrain.HIGH_GRASS || map[cell] == Terrain.FURROWED_GRASS) {</span>
+<span class="nc" id="L204">				map[cell] = Terrain.GRASS;</span>
+<span class="nc" id="L205">				losBlocking[cell] = false;</span>
+			}
+<span class="nc" id="L207">			drop( Generator.randomUsingDefaults(Generator.Category.FOOD), cell );</span>
+		}
+
+<span class="nc bnc" id="L210" title="All 2 branches missed.">		if (Dungeon.isChallenged(Challenges.DARKNESS)){</span>
+<span class="nc" id="L211">			cell = randomDropCell();</span>
+<span class="nc bnc" id="L212" title="All 4 branches missed.">			if (map[cell] == Terrain.HIGH_GRASS || map[cell] == Terrain.FURROWED_GRASS) {</span>
+<span class="nc" id="L213">				map[cell] = Terrain.GRASS;</span>
+<span class="nc" id="L214">				losBlocking[cell] = false;</span>
+			}
+<span class="nc" id="L216">			drop( new Torch(), cell );</span>
+		}
+<span class="nc" id="L218">	}</span>
+
+	@Override
+	protected int randomDropCell() {
+		//avoid placing random items next to hazards
+<span class="nc" id="L223">		return randomDropCell(MineSmallRoom.class);</span>
+	}
+
+	@Override
+	public String tileName( int tile ) {
+<span class="nc bnc" id="L228" title="All 3 branches missed.">		switch (tile) {</span>
+			case Terrain.MINE_CRYSTAL:
+<span class="nc" id="L230">				return Messages.get(MiningLevel.class, &quot;crystal_name&quot;);</span>
+			case Terrain.MINE_BOULDER:
+<span class="nc" id="L232">				return Messages.get(MiningLevel.class, &quot;boulder_name&quot;);</span>
+			default:
+<span class="nc" id="L234">				return super.tileName( tile );</span>
+		}
+	}
+
+	@Override
+	public boolean activateTransition(Hero hero, LevelTransition transition) {
+<span class="nc bnc" id="L240" title="All 2 branches missed.">		if (transition.type == LevelTransition.Type.BRANCH_ENTRANCE</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">				&amp;&amp; !Blacksmith.Quest.completed()) {</span>
+
+<span class="nc bnc" id="L243" title="All 2 branches missed.">			if (hero.belongings.getItem(Pickaxe.class) == null){</span>
+<span class="nc" id="L244">				Game.runOnRenderThread(new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L247">						GameScene.show(new WndTitledMessage( new BlacksmithSprite(),</span>
+<span class="nc" id="L248">								Messages.titleCase(Messages.get(Blacksmith.class, &quot;name&quot;)),</span>
+<span class="nc" id="L249">								Messages.get(Blacksmith.class, &quot;lost_pick&quot;)));</span>
+<span class="nc" id="L250">					}</span>
+				});
+<span class="nc" id="L252">				return false;</span>
+			}
+
+			String warnText;
+<span class="nc" id="L256">			DarkGold gold = hero.belongings.getItem(DarkGold.class);</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">			int goldAmount = gold == null ? 0 : gold.quantity();</span>
+<span class="nc bnc" id="L258" title="All 2 branches missed.">			if (goldAmount &lt; 10){</span>
+<span class="nc" id="L259">				warnText = Messages.get(Blacksmith.class, &quot;exit_warn_none&quot;);</span>
+<span class="nc bnc" id="L260" title="All 2 branches missed.">			} else if (goldAmount &lt; 20){</span>
+<span class="nc" id="L261">				warnText = Messages.get(Blacksmith.class, &quot;exit_warn_low&quot;);</span>
+<span class="nc bnc" id="L262" title="All 2 branches missed.">			} else if (goldAmount &lt; 30){</span>
+<span class="nc" id="L263">				warnText = Messages.get(Blacksmith.class, &quot;exit_warn_med&quot;);</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">			} else if (goldAmount &lt; 40){</span>
+<span class="nc" id="L265">				warnText = Messages.get(Blacksmith.class, &quot;exit_warn_high&quot;);</span>
+			} else {
+<span class="nc" id="L267">				warnText = Messages.get(Blacksmith.class, &quot;exit_warn_full&quot;);</span>
+			}
+
+<span class="nc bnc" id="L270" title="All 2 branches missed.">			if (!Blacksmith.Quest.bossBeaten()){</span>
+<span class="nc bnc" id="L271" title="All 4 branches missed.">				switch (Blacksmith.Quest.Type()){</span>
+<span class="nc" id="L272">					case Blacksmith.Quest.CRYSTAL: warnText += &quot;\n\n&quot; + Messages.get(Blacksmith.class, &quot;exit_warn_crystal&quot;); break;</span>
+<span class="nc" id="L273">					case Blacksmith.Quest.GNOLL: warnText += &quot;\n\n&quot; + Messages.get(Blacksmith.class, &quot;exit_warn_gnoll&quot;); break;</span>
+<span class="nc" id="L274">					case Blacksmith.Quest.FUNGI: warnText += &quot;\n\n&quot; + Messages.get(Blacksmith.class, &quot;exit_warn_fungi&quot;); break;</span>
+				}
+			}
+
+<span class="nc" id="L278">			String finalWarnText = warnText;</span>
+<span class="nc" id="L279">			Game.runOnRenderThread(new Callback() {</span>
+				@Override
+				public void call() {
+<span class="nc" id="L282">					GameScene.show(new WndOptions( new BlacksmithSprite(),</span>
+<span class="nc" id="L283">							Messages.titleCase(Messages.get(Blacksmith.class, &quot;name&quot;)),</span>
+							finalWarnText,
+<span class="nc" id="L285">							Messages.get(Blacksmith.class, &quot;exit_yes&quot;),</span>
+<span class="nc" id="L286">							Messages.get(Blacksmith.class, &quot;exit_no&quot;)){</span>
+						@Override
+						protected void onSelect(int index) {
+<span class="nc bnc" id="L289" title="All 2 branches missed.">							if (index == 0){</span>
+<span class="nc" id="L290">								Blacksmith.Quest.complete();</span>
+<span class="nc" id="L291">								MiningLevel.super.activateTransition(hero, transition);</span>
+							}
+<span class="nc" id="L293">						}</span>
+					} );
+<span class="nc" id="L295">				}</span>
+			});
+<span class="nc" id="L297">			return false;</span>
+
+		} else {
+<span class="nc" id="L300">			return super.activateTransition(hero, transition);</span>
+		}
+	}
+
+	@Override
+	public String tileDesc( int tile ) {
+<span class="nc bnc" id="L306" title="All 6 branches missed.">		switch (tile) {</span>
+			case Terrain.WALL:
+<span class="nc" id="L308">				return Messages.get(MiningLevel.class, &quot;wall_desc&quot;);</span>
+			case Terrain.WALL_DECO:
+<span class="nc" id="L310">				return super.tileDesc(tile) + &quot;\n\n&quot; +  Messages.get(MiningLevel.class, &quot;gold_extra_desc&quot;);</span>
+			case Terrain.MINE_CRYSTAL:
+<span class="nc" id="L312">				return Messages.get(MiningLevel.class, &quot;crystal_desc&quot;);</span>
+			case Terrain.MINE_BOULDER:
+<span class="nc" id="L314">				return Messages.get(MiningLevel.class, &quot;boulder_desc&quot;);</span>
+			case Terrain.BARRICADE:
+<span class="nc" id="L316">				return Messages.get(MiningLevel.class, &quot;barricade_desc&quot;);</span>
+			default:
+<span class="nc" id="L318">				return super.tileDesc( tile );</span>
+		}
+	}
+
+	@Override
+	public Group addVisuals() {
+<span class="nc" id="L324">		super.addVisuals();</span>
+<span class="nc" id="L325">		visuals.clear(); //we re-add these in wall visuals</span>
+<span class="nc" id="L326">		return visuals;</span>
+	}
+
+	@Override
+	public Group addWallVisuals() {
+<span class="nc" id="L331">		super.addWallVisuals();</span>
+<span class="nc" id="L332">		CavesLevel.addCavesVisuals(this, wallVisuals, true);</span>
+<span class="nc" id="L333">		return wallVisuals;</span>
+	}
+
+	@Override
+	public boolean invalidHeroPos(int tile) {
+<span class="nc" id="L338">		return false; //solid tiles are fine for hero to be in here</span>
+	}
+
+<span class="nc" id="L341">	public static class BorderTopDarken extends CustomTilemap {</span>
+
+		{
+<span class="nc" id="L344">			texture = Assets.Environment.CAVES_QUEST;</span>
+<span class="nc" id="L345">		}</span>
+
+		@Override
+		public Tilemap create() {
+<span class="nc" id="L349">			Tilemap v = super.create();</span>
+<span class="nc" id="L350">			int[] data = new int[tileW*tileH];</span>
+<span class="nc" id="L351">			Arrays.fill(data, 1);</span>
+<span class="nc" id="L352">			v.map( data, tileW );</span>
+<span class="nc" id="L353">			return v;</span>
+		}
+
+		@Override
+		public Image image(int tileX, int tileY) {
+<span class="nc" id="L358">			return null;</span>
+		}
+	}
+
+<span class="nc" id="L362">	public static class BorderWallsDarken extends CustomTilemap {</span>
+
+		{
+<span class="nc" id="L365">			texture = Assets.Environment.CAVES_QUEST;</span>
+<span class="nc" id="L366">		}</span>
+
+		@Override
+		public Tilemap create() {
+<span class="nc" id="L370">			Tilemap v = super.create();</span>
+<span class="nc" id="L371">			int[] data = new int[tileW*tileH];</span>
+<span class="nc bnc" id="L372" title="All 2 branches missed.">			for (int i = 0; i &lt; data.length; i++){</span>
+<span class="nc bnc" id="L373" title="All 4 branches missed.">				if (i % tileW == 0 || i % tileW == tileW-1){</span>
+<span class="nc" id="L374">					data[i] = 1;</span>
+<span class="nc bnc" id="L375" title="All 2 branches missed.">				} else if (i + 2*tileW &gt; data.length) {</span>
+<span class="nc" id="L376">					data[i] = 2;</span>
+				} else {
+<span class="nc" id="L378">					data[i] = -1;</span>
+				}
+			}
+<span class="nc" id="L381">			v.map( data, tileW );</span>
+<span class="nc" id="L382">			return v;</span>
+		}
+
+		@Override
+		public Image image(int tileX, int tileY) {
+<span class="nc" id="L387">			return null;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TitleScene.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.scenes</a> &gt; <span class="el_source">TitleScene.java</span></div><h1>TitleScene.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.scenes;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.effects.BannerSprites;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Fireball;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.services.news.News;
+import com.shatteredpixel.shatteredpixeldungeon.services.updates.AvailableUpdateData;
+import com.shatteredpixel.shatteredpixeldungeon.services.updates.Updates;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Archs;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ExitButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndSettings;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndVictoryCongrats;
+import com.watabou.glwrap.Blending;
+import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Music;
+import com.watabou.utils.ColorMath;
+import com.watabou.utils.DeviceCompat;
+
+import java.util.Date;
+
+<span class="nc" id="L58">public class TitleScene extends PixelScene {</span>
+	
+	@Override
+	public void create() {
+		
+<span class="nc" id="L63">		super.create();</span>
+
+<span class="nc" id="L65">		Music.INSTANCE.playTracks(</span>
+				new String[]{Assets.Music.THEME_1, Assets.Music.THEME_2},
+				new float[]{1, 1},
+				false);
+
+<span class="nc" id="L70">		uiCamera.visible = false;</span>
+		
+<span class="nc" id="L72">		int w = Camera.main.width;</span>
+<span class="nc" id="L73">		int h = Camera.main.height;</span>
+		
+<span class="nc" id="L75">		Archs archs = new Archs();</span>
+<span class="nc" id="L76">		archs.setSize( w, h );</span>
+<span class="nc" id="L77">		add( archs );</span>
+
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		Image title = BannerSprites.get( landscape() ? BannerSprites.Type.TITLE_LAND : BannerSprites.Type.TITLE_PORT);</span>
+<span class="nc" id="L80">		add( title );</span>
+
+<span class="nc" id="L82">		float topRegion = Math.max(title.height - 6, h*0.45f);</span>
+
+<span class="nc" id="L84">		title.x = (w - title.width()) / 2f;</span>
+<span class="nc" id="L85">		title.y = 2 + (topRegion - title.height()) / 2f;</span>
+
+<span class="nc" id="L87">		align(title);</span>
+
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		if (landscape()){</span>
+<span class="nc" id="L90">			placeTorch(title.x + 30, title.y + 35);</span>
+<span class="nc" id="L91">			placeTorch(title.x + title.width - 30, title.y + 35);</span>
+		} else {
+<span class="nc" id="L93">			placeTorch(title.x + 16, title.y + 70);</span>
+<span class="nc" id="L94">			placeTorch(title.x + title.width - 16, title.y + 70);</span>
+		}
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">		Image signs = new Image(BannerSprites.get( landscape() ? BannerSprites.Type.TITLE_GLOW_LAND : BannerSprites.Type.TITLE_GLOW_PORT)){</span>
+<span class="nc" id="L98">			private float time = 0;</span>
+			@Override
+			public void update() {
+<span class="nc" id="L101">				super.update();</span>
+<span class="nc" id="L102">				am = Math.max(0f, (float)Math.sin( time += Game.elapsed ));</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">				if (time &gt;= 1.5f*Math.PI) time = 0;</span>
+<span class="nc" id="L104">			}</span>
+			@Override
+			public void draw() {
+<span class="nc" id="L107">				Blending.setLightMode();</span>
+<span class="nc" id="L108">				super.draw();</span>
+<span class="nc" id="L109">				Blending.setNormalMode();</span>
+<span class="nc" id="L110">			}</span>
+		};
+<span class="nc" id="L112">		signs.x = title.x + (title.width() - signs.width())/2f;</span>
+<span class="nc" id="L113">		signs.y = title.y;</span>
+<span class="nc" id="L114">		add( signs );</span>
+
+<span class="nc" id="L116">		final Chrome.Type GREY_TR = Chrome.Type.GREY_BUTTON_TR;</span>
+		
+<span class="nc" id="L118">		StyledButton btnPlay = new StyledButton(GREY_TR, Messages.get(this, &quot;enter&quot;)){</span>
+			@Override
+			protected void onClick() {
+<span class="nc bnc" id="L121" title="All 2 branches missed.">				if (GamesInProgress.checkAll().size() == 0){</span>
+<span class="nc" id="L122">					GamesInProgress.selectedClass = null;</span>
+<span class="nc" id="L123">					GamesInProgress.curSlot = 1;</span>
+<span class="nc" id="L124">					ShatteredPixelDungeon.switchScene(HeroSelectScene.class);</span>
+				} else {
+<span class="nc" id="L126">					ShatteredPixelDungeon.switchNoFade( StartScene.class );</span>
+				}
+<span class="nc" id="L128">			}</span>
+			
+			@Override
+			protected boolean onLongClick() {
+				//making it easier to start runs quickly while debugging
+<span class="nc bnc" id="L133" title="All 2 branches missed.">				if (DeviceCompat.isDebug()) {</span>
+<span class="nc" id="L134">					GamesInProgress.selectedClass = null;</span>
+<span class="nc" id="L135">					GamesInProgress.curSlot = 1;</span>
+<span class="nc" id="L136">					ShatteredPixelDungeon.switchScene(HeroSelectScene.class);</span>
+<span class="nc" id="L137">					return true;</span>
+				}
+<span class="nc" id="L139">				return super.onLongClick();</span>
+			}
+		};
+<span class="nc" id="L142">		btnPlay.icon(Icons.get(Icons.ENTER));</span>
+<span class="nc" id="L143">		add(btnPlay);</span>
+
+<span class="nc" id="L145">		StyledButton btnSupport = new SupportButton(GREY_TR, Messages.get(this, &quot;support&quot;));</span>
+<span class="nc" id="L146">		add(btnSupport);</span>
+
+<span class="nc" id="L148">		StyledButton btnRankings = new StyledButton(GREY_TR,Messages.get(this, &quot;rankings&quot;)){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L151">				ShatteredPixelDungeon.switchNoFade( RankingsScene.class );</span>
+<span class="nc" id="L152">			}</span>
+		};
+<span class="nc" id="L154">		btnRankings.icon(Icons.get(Icons.RANKINGS));</span>
+<span class="nc" id="L155">		add(btnRankings);</span>
+<span class="nc" id="L156">		Dungeon.daily = Dungeon.dailyReplay = false;</span>
+
+<span class="nc" id="L158">		StyledButton btnBadges = new StyledButton(GREY_TR, Messages.get(this, &quot;journal&quot;)){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L161">				ShatteredPixelDungeon.switchNoFade( JournalScene.class );</span>
+<span class="nc" id="L162">			}</span>
+		};
+<span class="nc" id="L164">		btnBadges.icon(Icons.get(Icons.JOURNAL));</span>
+<span class="nc" id="L165">		add(btnBadges);</span>
+
+<span class="nc" id="L167">		StyledButton btnNews = new NewsButton(GREY_TR, Messages.get(this, &quot;news&quot;));</span>
+<span class="nc" id="L168">		btnNews.icon(Icons.get(Icons.NEWS));</span>
+<span class="nc" id="L169">		add(btnNews);</span>
+
+<span class="nc" id="L171">		StyledButton btnChanges = new ChangesButton(GREY_TR, Messages.get(this, &quot;changes&quot;));</span>
+<span class="nc" id="L172">		btnChanges.icon(Icons.get(Icons.CHANGES));</span>
+<span class="nc" id="L173">		add(btnChanges);</span>
+
+<span class="nc" id="L175">		StyledButton btnSettings = new SettingsButton(GREY_TR, Messages.get(this, &quot;settings&quot;));</span>
+<span class="nc" id="L176">		add(btnSettings);</span>
+
+<span class="nc" id="L178">		StyledButton btnAbout = new StyledButton(GREY_TR, Messages.get(this, &quot;about&quot;)){</span>
+			@Override
+			protected void onClick() {
+<span class="nc" id="L181">				ShatteredPixelDungeon.switchScene( AboutScene.class );</span>
+<span class="nc" id="L182">			}</span>
+		};
+<span class="nc" id="L184">		btnAbout.icon(Icons.get(Icons.SHPX));</span>
+<span class="nc" id="L185">		add(btnAbout);</span>
+		
+<span class="nc" id="L187">		final int BTN_HEIGHT = 20;</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">		int GAP = (int)(h - topRegion - (landscape() ? 3 : 4)*BTN_HEIGHT)/3;</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">		GAP /= landscape() ? 3 : 5;</span>
+<span class="nc" id="L190">		GAP = Math.max(GAP, 2);</span>
+
+<span class="nc bnc" id="L192" title="All 2 branches missed.">		float buttonAreaWidth = landscape() ? PixelScene.MIN_WIDTH_L-6 : PixelScene.MIN_WIDTH_P-2;</span>
+<span class="nc" id="L193">		float btnAreaLeft = (Camera.main.width - buttonAreaWidth) / 2f;</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">		if (landscape()) {</span>
+<span class="nc" id="L195">			btnPlay.setRect(btnAreaLeft, topRegion+GAP, (buttonAreaWidth/2)-1, BTN_HEIGHT);</span>
+<span class="nc" id="L196">			align(btnPlay);</span>
+<span class="nc" id="L197">			btnSupport.setRect(btnPlay.right()+2, btnPlay.top(), btnPlay.width(), BTN_HEIGHT);</span>
+<span class="nc" id="L198">			btnRankings.setRect(btnPlay.left(), btnPlay.bottom()+ GAP, (float) (Math.floor(buttonAreaWidth/3f)-1), BTN_HEIGHT);</span>
+<span class="nc" id="L199">			btnBadges.setRect(btnRankings.right()+2, btnRankings.top(), btnRankings.width(), BTN_HEIGHT);</span>
+<span class="nc" id="L200">			btnNews.setRect(btnBadges.right()+2, btnBadges.top(), btnRankings.width(), BTN_HEIGHT);</span>
+<span class="nc" id="L201">			btnSettings.setRect(btnRankings.left(), btnRankings.bottom() + GAP, btnRankings.width(), BTN_HEIGHT);</span>
+<span class="nc" id="L202">			btnChanges.setRect(btnSettings.right()+2, btnSettings.top(), btnRankings.width(), BTN_HEIGHT);</span>
+<span class="nc" id="L203">			btnAbout.setRect(btnChanges.right()+2, btnSettings.top(), btnRankings.width(), BTN_HEIGHT);</span>
+		} else {
+<span class="nc" id="L205">			btnPlay.setRect(btnAreaLeft, topRegion+GAP, buttonAreaWidth, BTN_HEIGHT);</span>
+<span class="nc" id="L206">			align(btnPlay);</span>
+<span class="nc" id="L207">			btnSupport.setRect(btnPlay.left(), btnPlay.bottom()+ GAP, btnPlay.width(), BTN_HEIGHT);</span>
+<span class="nc" id="L208">			btnRankings.setRect(btnPlay.left(), btnSupport.bottom()+ GAP, (btnPlay.width()/2)-1, BTN_HEIGHT);</span>
+<span class="nc" id="L209">			btnBadges.setRect(btnRankings.right()+2, btnRankings.top(), btnRankings.width(), BTN_HEIGHT);</span>
+<span class="nc" id="L210">			btnNews.setRect(btnRankings.left(), btnRankings.bottom()+ GAP, btnRankings.width(), BTN_HEIGHT);</span>
+<span class="nc" id="L211">			btnChanges.setRect(btnNews.right()+2, btnNews.top(), btnNews.width(), BTN_HEIGHT);</span>
+<span class="nc" id="L212">			btnSettings.setRect(btnNews.left(), btnNews.bottom()+GAP, btnRankings.width(), BTN_HEIGHT);</span>
+<span class="nc" id="L213">			btnAbout.setRect(btnSettings.right()+2, btnSettings.top(), btnSettings.width(), BTN_HEIGHT);</span>
+		}
+
+<span class="nc" id="L216">		BitmapText version = new BitmapText( &quot;v&quot; + Game.version, pixelFont);</span>
+<span class="nc" id="L217">		version.measure();</span>
+<span class="nc" id="L218">		version.hardlight( 0x888888 );</span>
+<span class="nc" id="L219">		version.x = w - version.width() - 4;</span>
+<span class="nc" id="L220">		version.y = h - version.height() - 2;</span>
+<span class="nc" id="L221">		add( version );</span>
+
+<span class="nc bnc" id="L223" title="All 2 branches missed.">		if (DeviceCompat.isDesktop()) {</span>
+<span class="nc" id="L224">			ExitButton btnExit = new ExitButton();</span>
+<span class="nc" id="L225">			btnExit.setPos( w - btnExit.width(), 0 );</span>
+<span class="nc" id="L226">			add( btnExit );</span>
+		}
+
+<span class="nc" id="L229">		Badges.loadGlobal();</span>
+<span class="nc bnc" id="L230" title="All 4 branches missed.">		if (Badges.isUnlocked(Badges.Badge.VICTORY) &amp;&amp; !SPDSettings.victoryNagged()) {</span>
+<span class="nc" id="L231">			SPDSettings.victoryNagged(true);</span>
+<span class="nc" id="L232">			add(new WndVictoryCongrats());</span>
+		}
+
+<span class="nc" id="L235">		fadeIn();</span>
+<span class="nc" id="L236">	}</span>
+
+	private void placeTorch( float x, float y ) {
+<span class="nc" id="L239">		Fireball fb = new Fireball();</span>
+<span class="nc" id="L240">		fb.x = x - fb.width()/2f;</span>
+<span class="nc" id="L241">		fb.y = y - fb.height();</span>
+
+<span class="nc" id="L243">		align(fb);</span>
+<span class="nc" id="L244">		add( fb );</span>
+<span class="nc" id="L245">	}</span>
+
+	private static class NewsButton extends StyledButton {
+
+		public NewsButton(Chrome.Type type, String label ){
+<span class="nc" id="L250">			super(type, label);</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">			if (SPDSettings.news()) News.checkForNews();</span>
+<span class="nc" id="L252">		}</span>
+
+<span class="nc" id="L254">		int unreadCount = -1;</span>
+
+		@Override
+		public void update() {
+<span class="nc" id="L258">			super.update();</span>
+
+<span class="nc bnc" id="L260" title="All 4 branches missed.">			if (unreadCount == -1 &amp;&amp; News.articlesAvailable()){</span>
+<span class="nc" id="L261">				long lastRead = SPDSettings.newsLastRead();</span>
+<span class="nc bnc" id="L262" title="All 2 branches missed.">				if (lastRead == 0){</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">					if (News.articles().get(0) != null) {</span>
+<span class="nc" id="L264">						SPDSettings.newsLastRead(News.articles().get(0).date.getTime());</span>
+					}
+				} else {
+<span class="nc" id="L267">					unreadCount = News.unreadArticles(new Date(SPDSettings.newsLastRead()));</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">					if (unreadCount &gt; 0) {</span>
+<span class="nc" id="L269">						unreadCount = Math.min(unreadCount, 9);</span>
+<span class="nc" id="L270">						text(text() + &quot;(&quot; + unreadCount + &quot;)&quot;);</span>
+					}
+				}
+			}
+
+<span class="nc bnc" id="L275" title="All 2 branches missed.">			if (unreadCount &gt; 0){</span>
+<span class="nc" id="L276">				textColor(ColorMath.interpolate( 0xFFFFFF, Window.SHPX_COLOR, 0.5f + (float)Math.sin(Game.timeTotal*5)/2f));</span>
+			}
+<span class="nc" id="L278">		}</span>
+
+		@Override
+		protected void onClick() {
+<span class="nc" id="L282">			super.onClick();</span>
+<span class="nc" id="L283">			ShatteredPixelDungeon.switchNoFade( NewsScene.class );</span>
+<span class="nc" id="L284">		}</span>
+	}
+
+	private static class ChangesButton extends StyledButton {
+
+		public ChangesButton( Chrome.Type type, String label ){
+<span class="nc" id="L290">			super(type, label);</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">			if (SPDSettings.updates()) Updates.checkForUpdate();</span>
+<span class="nc" id="L292">		}</span>
+
+<span class="nc" id="L294">		boolean updateShown = false;</span>
+
+		@Override
+		public void update() {
+<span class="nc" id="L298">			super.update();</span>
+
+<span class="nc bnc" id="L300" title="All 4 branches missed.">			if (!updateShown &amp;&amp; Updates.updateAvailable()){</span>
+<span class="nc" id="L301">				updateShown = true;</span>
+<span class="nc" id="L302">				text(Messages.get(TitleScene.class, &quot;update&quot;));</span>
+			}
+
+<span class="nc bnc" id="L305" title="All 2 branches missed.">			if (updateShown){</span>
+<span class="nc" id="L306">				textColor(ColorMath.interpolate( 0xFFFFFF, Window.SHPX_COLOR, 0.5f + (float)Math.sin(Game.timeTotal*5)/2f));</span>
+			}
+<span class="nc" id="L308">		}</span>
+
+		@Override
+		protected void onClick() {
+<span class="nc bnc" id="L312" title="All 2 branches missed.">			if (Updates.updateAvailable()){</span>
+<span class="nc" id="L313">				AvailableUpdateData update = Updates.updateData();</span>
+
+<span class="nc" id="L315">				ShatteredPixelDungeon.scene().addToFront( new WndOptions(</span>
+<span class="nc" id="L316">						Icons.get(Icons.CHANGES),</span>
+<span class="nc bnc" id="L317" title="All 2 branches missed.">						update.versionName == null ? Messages.get(this,&quot;title&quot;) : Messages.get(this,&quot;versioned_title&quot;, update.versionName),</span>
+<span class="nc bnc" id="L318" title="All 2 branches missed.">						update.desc == null ? Messages.get(this,&quot;desc&quot;) : update.desc,</span>
+<span class="nc" id="L319">						Messages.get(this,&quot;update&quot;),</span>
+<span class="nc" id="L320">						Messages.get(this,&quot;changes&quot;)</span>
+<span class="nc" id="L321">				) {</span>
+					@Override
+					protected void onSelect(int index) {
+<span class="nc bnc" id="L324" title="All 2 branches missed.">						if (index == 0) {</span>
+<span class="nc" id="L325">							Updates.launchUpdate(Updates.updateData());</span>
+<span class="nc bnc" id="L326" title="All 2 branches missed.">						} else if (index == 1){</span>
+<span class="nc" id="L327">							ChangesScene.changesSelected = 0;</span>
+<span class="nc" id="L328">							ShatteredPixelDungeon.switchNoFade( ChangesScene.class );</span>
+						}
+<span class="nc" id="L330">					}</span>
+				});
+
+<span class="nc" id="L333">			} else {</span>
+<span class="nc" id="L334">				ChangesScene.changesSelected = 0;</span>
+<span class="nc" id="L335">				ShatteredPixelDungeon.switchNoFade( ChangesScene.class );</span>
+			}
+<span class="nc" id="L337">		}</span>
+
+	}
+
+	private static class SettingsButton extends StyledButton {
+
+		public SettingsButton( Chrome.Type type, String label ){
+<span class="nc" id="L344">			super(type, label);</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">			if (Messages.lang().status() == Languages.Status.X_UNFINISH){</span>
+<span class="nc" id="L346">				icon(Icons.get(Icons.LANGS));</span>
+<span class="nc" id="L347">				icon.hardlight(1.5f, 0, 0);</span>
+			} else {
+<span class="nc" id="L349">				icon(Icons.get(Icons.PREFS));</span>
+			}
+<span class="nc" id="L351">		}</span>
+
+		@Override
+		public void update() {
+<span class="nc" id="L355">			super.update();</span>
+
+<span class="nc bnc" id="L357" title="All 2 branches missed.">			if (Messages.lang().status() == Languages.Status.X_UNFINISH){</span>
+<span class="nc" id="L358">				textColor(ColorMath.interpolate( 0xFFFFFF, CharSprite.NEGATIVE, 0.5f + (float)Math.sin(Game.timeTotal*5)/2f));</span>
+			}
+<span class="nc" id="L360">		}</span>
+
+		@Override
+		protected void onClick() {
+<span class="nc bnc" id="L364" title="All 2 branches missed.">			if (Messages.lang().status() == Languages.Status.X_UNFINISH){</span>
+<span class="nc" id="L365">				WndSettings.last_index = 5;</span>
+			}
+<span class="nc" id="L367">			ShatteredPixelDungeon.scene().add(new WndSettings());</span>
+<span class="nc" id="L368">		}</span>
+	}
+
+	private static class SupportButton extends StyledButton{
+
+		public SupportButton( Chrome.Type type, String label ){
+<span class="nc" id="L374">			super(type, label);</span>
+<span class="nc" id="L375">			icon(Icons.get(Icons.GOLD));</span>
+<span class="nc" id="L376">			textColor(Window.TITLE_COLOR);</span>
+<span class="nc" id="L377">		}</span>
+
+		@Override
+		protected void onClick() {
+<span class="nc" id="L381">			ShatteredPixelDungeon.switchNoFade(SupporterScene.class);</span>
+<span class="nc" id="L382">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

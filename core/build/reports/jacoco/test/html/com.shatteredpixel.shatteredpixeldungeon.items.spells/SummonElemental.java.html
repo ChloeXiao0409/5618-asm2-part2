@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SummonElemental.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.spells</a> &gt; <span class="el_source">SummonElemental.java</span></div><h1>SummonElemental.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.spells;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AllyBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.huntress.SpiritHawk;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Elemental;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.FlameParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.RainbowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShaftParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfFrost;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLiquidFlame;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.Embers;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRecharging;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTransmutation;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L62">public class SummonElemental extends Spell {</span>
+
+	public static final String AC_IMBUE = &quot;IMBUE&quot;;
+
+	{
+<span class="nc" id="L67">		image = ItemSpriteSheet.SUMMON_ELE;</span>
+
+<span class="nc" id="L69">		talentChance = 1/(float)Recipe.OUT_QUANTITY;</span>
+	}
+
+<span class="nc" id="L72">	private Class&lt;? extends Elemental&gt; summonClass = Elemental.AllyNewBornElemental.class;</span>
+
+	@Override
+	public ArrayList&lt;String&gt; actions(Hero hero) {
+<span class="nc" id="L76">		ArrayList&lt;String&gt; actions = super.actions(hero);</span>
+<span class="nc" id="L77">		actions.add(AC_IMBUE);</span>
+<span class="nc" id="L78">		return actions;</span>
+	}
+
+	@Override
+	public void execute(Hero hero, String action) {
+<span class="nc" id="L83">		super.execute(hero, action);</span>
+
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if (action.equals(AC_IMBUE)){</span>
+<span class="nc" id="L86">			GameScene.selectItem(selector);</span>
+		}
+<span class="nc" id="L88">	}</span>
+
+	@Override
+	protected void onCast(Hero hero) {
+
+<span class="nc" id="L93">		ArrayList&lt;Integer&gt; spawnPoints = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		for (int i = 0; i &lt; PathFinder.NEIGHBOURS8.length; i++) {</span>
+<span class="nc" id="L96">			int p = hero.pos + PathFinder.NEIGHBOURS8[i];</span>
+<span class="nc bnc" id="L97" title="All 4 branches missed.">			if (Actor.findChar( p ) == null &amp;&amp; Dungeon.level.passable[p]) {</span>
+<span class="nc" id="L98">				spawnPoints.add( p );</span>
+			}
+		}
+
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if (!spawnPoints.isEmpty()){</span>
+
+<span class="nc bnc" id="L104" title="All 2 branches missed.">			for (Char ch : Actor.chars()){</span>
+<span class="nc bnc" id="L105" title="All 4 branches missed.">				if (ch instanceof Elemental &amp;&amp; ch.buff(InvisAlly.class) != null){</span>
+<span class="nc" id="L106">					ScrollOfTeleportation.appear( ch, Random.element(spawnPoints) );</span>
+<span class="nc" id="L107">					((Elemental) ch).state = ((Elemental) ch).HUNTING;</span>
+<span class="nc" id="L108">					curUser.spendAndNext(Actor.TICK);</span>
+<span class="nc" id="L109">					return;</span>
+				}
+<span class="nc" id="L111">			}</span>
+
+<span class="nc" id="L113">			Elemental elemental = Reflection.newInstance(summonClass);</span>
+<span class="nc" id="L114">			GameScene.add( elemental );</span>
+<span class="nc" id="L115">			Buff.affect(elemental, InvisAlly.class);</span>
+<span class="nc" id="L116">			elemental.setSummonedALly();</span>
+<span class="nc" id="L117">			elemental.HP = elemental.HT;</span>
+<span class="nc" id="L118">			ScrollOfTeleportation.appear( elemental, Random.element(spawnPoints) );</span>
+<span class="nc" id="L119">			Invisibility.dispel(curUser);</span>
+<span class="nc" id="L120">			curUser.sprite.operate(curUser.pos);</span>
+<span class="nc" id="L121">			curUser.spendAndNext(Actor.TICK);</span>
+
+<span class="nc" id="L123">			detach(Dungeon.hero.belongings.backpack);</span>
+<span class="nc" id="L124">			Catalog.countUse(getClass());</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">			if (Random.Float() &lt; talentChance){</span>
+<span class="nc" id="L126">				Talent.onScrollUsed(curUser, curUser.pos, talentFactor, getClass());</span>
+			}
+
+<span class="nc" id="L129">		} else {</span>
+<span class="nc" id="L130">			GLog.w(Messages.get(SpiritHawk.class, &quot;no_space&quot;));</span>
+		}
+
+<span class="nc" id="L133">	}</span>
+
+	@Override
+	public ItemSprite.Glowing glowing() {
+<span class="nc bnc" id="L137" title="All 2 branches missed.">		if (summonClass == Elemental.FireElemental.class)   return new ItemSprite.Glowing(0xFFBB33);</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">		if (summonClass == Elemental.FrostElemental.class)  return new ItemSprite.Glowing(0x8EE3FF);</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		if (summonClass == Elemental.ShockElemental.class)  return new ItemSprite.Glowing(0xFFFF85);</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">		if (summonClass == Elemental.ChaosElemental.class)  return new ItemSprite.Glowing(0xE3E3E3, 0.5f);</span>
+<span class="nc" id="L141">		return super.glowing();</span>
+	}
+
+	@Override
+	public String desc() {
+<span class="nc" id="L146">		String desc = super.desc();</span>
+
+<span class="nc" id="L148">		desc += &quot;\n\n&quot;;</span>
+
+<span class="nc bnc" id="L150" title="All 2 branches missed.">		if (summonClass == Elemental.AllyNewBornElemental.class)    desc += Messages.get(this, &quot;desc_newborn&quot;);</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">		if (summonClass == Elemental.FireElemental.class)           desc += Messages.get(this, &quot;desc_fire&quot;);</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">		if (summonClass == Elemental.FrostElemental.class)          desc += Messages.get(this, &quot;desc_frost&quot;);</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">		if (summonClass == Elemental.ShockElemental.class)          desc += Messages.get(this, &quot;desc_shock&quot;);</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		if (summonClass == Elemental.ChaosElemental.class)          desc += Messages.get(this, &quot;desc_chaos&quot;);</span>
+
+<span class="nc" id="L156">		return desc;</span>
+	}
+
+	private static final String SUMMON_CLASS = &quot;summon_class&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L163">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L164">		bundle.put(SUMMON_CLASS, summonClass);</span>
+<span class="nc" id="L165">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L169">		super.restoreFromBundle(bundle);</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">		if (bundle.contains(SUMMON_CLASS)) summonClass = bundle.getClass(SUMMON_CLASS);</span>
+<span class="nc" id="L171">	}</span>
+
+<span class="nc" id="L173">	public WndBag.ItemSelector selector = new WndBag.ItemSelector() {</span>
+		@Override
+		public String textPrompt() {
+<span class="nc" id="L176">			return Messages.get(SummonElemental.class, &quot;imbue_prompt&quot;);</span>
+		}
+
+		@Override
+		public boolean itemSelectable(Item item) {
+<span class="nc bnc" id="L181" title="All 10 branches missed.">			return item.isIdentified() &amp;&amp; (item instanceof PotionOfLiquidFlame</span>
+					|| item instanceof PotionOfFrost
+					|| item instanceof ScrollOfRecharging
+					|| item instanceof ScrollOfTransmutation);
+		}
+
+		@Override
+		public void onSelect(Item item) {
+
+<span class="nc bnc" id="L190" title="All 2 branches missed.">			if (item == null){</span>
+<span class="nc" id="L191">				return;</span>
+			}
+
+<span class="nc" id="L194">			item.detach(Dungeon.hero.belongings.backpack);</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">			if (item instanceof PotionOfLiquidFlame) {</span>
+<span class="nc" id="L196">				Sample.INSTANCE.play(Assets.Sounds.BURNING);</span>
+<span class="nc" id="L197">				curUser.sprite.emitter().burst( FlameParticle.FACTORY, 12 );</span>
+<span class="nc" id="L198">				summonClass = Elemental.FireElemental.class;</span>
+
+<span class="nc bnc" id="L200" title="All 2 branches missed.">			} else if (item instanceof PotionOfFrost){</span>
+<span class="nc" id="L201">				Sample.INSTANCE.play(Assets.Sounds.SHATTER);</span>
+<span class="nc" id="L202">				curUser.sprite.emitter().burst( MagicMissile.MagicParticle.FACTORY, 12 );</span>
+<span class="nc" id="L203">				summonClass = Elemental.FrostElemental.class;</span>
+
+<span class="nc bnc" id="L205" title="All 2 branches missed.">			} else if (item instanceof ScrollOfRecharging){</span>
+<span class="nc" id="L206">				Sample.INSTANCE.play(Assets.Sounds.ZAP);</span>
+<span class="nc" id="L207">				curUser.sprite.emitter().burst( ShaftParticle.FACTORY, 12 );</span>
+<span class="nc" id="L208">				summonClass = Elemental.ShockElemental.class;</span>
+
+<span class="nc bnc" id="L210" title="All 2 branches missed.">			} else if (item instanceof ScrollOfTransmutation){</span>
+<span class="nc" id="L211">				Sample.INSTANCE.play(Assets.Sounds.READ);</span>
+<span class="nc" id="L212">				curUser.sprite.emitter().burst( RainbowParticle.BURST, 12 );</span>
+<span class="nc" id="L213">				summonClass = Elemental.ChaosElemental.class;</span>
+			}
+
+<span class="nc" id="L216">			curUser.sprite.operate(curUser.pos);</span>
+
+<span class="nc" id="L218">			updateQuickslot();</span>
+<span class="nc" id="L219">		}</span>
+	};
+
+<span class="nc" id="L222">	public static class InvisAlly extends AllyBuff{</span>
+
+		@Override
+		public void fx(boolean on) {
+<span class="nc bnc" id="L226" title="All 2 branches missed.">			if (on) target.sprite.add(CharSprite.State.HEARTS);</span>
+<span class="nc" id="L227">			else    target.sprite.remove(CharSprite.State.HEARTS);</span>
+<span class="nc" id="L228">		}</span>
+
+	}
+
+<span class="nc" id="L232">	public static class Recipe extends com.shatteredpixel.shatteredpixeldungeon.items.Recipe.SimpleRecipe {</span>
+
+		private static final int OUT_QUANTITY = 6;
+
+		{
+<span class="nc" id="L237">			inputs =  new Class[]{Embers.class};</span>
+<span class="nc" id="L238">			inQuantity = new int[]{1};</span>
+
+<span class="nc" id="L240">			cost = 10;</span>
+
+<span class="nc" id="L242">			output = SummonElemental.class;</span>
+<span class="nc" id="L243">			outQuantity = OUT_QUANTITY;</span>
+<span class="nc" id="L244">		}</span>
+
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

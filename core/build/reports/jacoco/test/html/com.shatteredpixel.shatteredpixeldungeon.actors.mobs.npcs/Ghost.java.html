@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Ghost.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs</a> &gt; <span class="el_source">Ghost.java</span></div><h1>Ghost.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AscensionChallenge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.FetidRat;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GnollTrickster;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GreatCrab;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.LeatherArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.MailArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.PlateArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ScaleArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.ParchmentScrap;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
+import com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.GhostSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndQuest;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndSadGhost;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.audio.Music;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L58">public class Ghost extends NPC {</span>
+
+	{
+<span class="nc" id="L61">		spriteClass = GhostSprite.class;</span>
+		
+<span class="nc" id="L63">		flying = true;</span>
+
+<span class="nc" id="L65">		WANDERING = new Wandering();</span>
+<span class="nc" id="L66">		state = WANDERING;</span>
+
+		//not actually large of course, but this makes the ghost stick to the exit room
+<span class="nc" id="L69">		properties.add(Property.LARGE);</span>
+<span class="nc" id="L70">	}</span>
+
+<span class="nc" id="L72">	protected class Wandering extends Mob.Wandering{</span>
+		@Override
+		protected int randomDestination() {
+<span class="nc" id="L75">			int pos = super.randomDestination();</span>
+			//cannot wander onto heaps or the level exit
+<span class="nc bnc" id="L77" title="All 4 branches missed.">			if (Dungeon.level.heaps.get(pos) != null || pos == Dungeon.level.exit()){</span>
+<span class="nc" id="L78">				return -1;</span>
+			}
+<span class="nc" id="L80">			return pos;</span>
+		}
+	}
+
+	@Override
+	public Notes.Landmark landmark() {
+<span class="nc" id="L86">		return Notes.Landmark.GHOST;</span>
+	}
+
+	@Override
+	protected boolean act() {
+<span class="nc bnc" id="L91" title="All 2 branches missed.">		if (Dungeon.hero.buff(AscensionChallenge.class) != null){</span>
+<span class="nc" id="L92">			die(null);</span>
+<span class="nc" id="L93">			Notes.remove( landmark() );</span>
+<span class="nc" id="L94">			return true;</span>
+		}
+<span class="nc" id="L96">		return super.act();</span>
+	}
+
+	@Override
+	public int defenseSkill( Char enemy ) {
+<span class="nc" id="L101">		return INFINITE_EVASION;</span>
+	}
+	
+	@Override
+	public float speed() {
+<span class="nc" id="L106">		return 0.5f;</span>
+	}
+	
+	@Override
+	protected Char chooseEnemy() {
+<span class="nc" id="L111">		return null;</span>
+	}
+
+	@Override
+	public void damage( int dmg, Object src ) {
+		//do nothing
+<span class="nc" id="L117">	}</span>
+
+	@Override
+	public boolean add( Buff buff ) {
+<span class="nc" id="L121">		return false;</span>
+	}
+	
+	@Override
+	public boolean reset() {
+<span class="nc" id="L126">		return true;</span>
+	}
+	
+	@Override
+	public boolean interact(Char c) {
+<span class="nc" id="L131">		sprite.turnTo( pos, c.pos );</span>
+		
+<span class="nc" id="L133">		Sample.INSTANCE.play( Assets.Sounds.GHOST );</span>
+
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		if (c != Dungeon.hero){</span>
+<span class="nc" id="L136">			return super.interact(c);</span>
+		}
+		
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		if (Quest.given) {</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">			if (Quest.weapon != null) {</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">				if (Quest.processed) {</span>
+<span class="nc" id="L142">					Game.runOnRenderThread(new Callback() {</span>
+						@Override
+						public void call() {
+<span class="nc" id="L145">							GameScene.show(new WndSadGhost(Ghost.this, Quest.type));</span>
+<span class="nc" id="L146">						}</span>
+					});
+				} else {
+<span class="nc" id="L149">					Game.runOnRenderThread(new Callback() {</span>
+						@Override
+						public void call() {
+<span class="nc bnc" id="L152" title="All 3 branches missed.">							switch (Quest.type) {</span>
+								case 1:
+								default:
+<span class="nc" id="L155">									GameScene.show(new WndQuest(Ghost.this, Messages.get(Ghost.this, &quot;rat_2&quot;)));</span>
+<span class="nc" id="L156">									break;</span>
+								case 2:
+<span class="nc" id="L158">									GameScene.show(new WndQuest(Ghost.this, Messages.get(Ghost.this, &quot;gnoll_2&quot;)));</span>
+<span class="nc" id="L159">									break;</span>
+								case 3:
+<span class="nc" id="L161">									GameScene.show(new WndQuest(Ghost.this, Messages.get(Ghost.this, &quot;crab_2&quot;)));</span>
+									break;
+							}
+<span class="nc" id="L164">						}</span>
+					});
+
+				}
+			}
+		} else {
+			Mob questBoss;
+			String txt_quest;
+
+<span class="nc bnc" id="L173" title="All 3 branches missed.">			switch (Quest.type){</span>
+				case 1: default:
+<span class="nc" id="L175">					questBoss = new FetidRat();</span>
+<span class="nc" id="L176">					txt_quest = Messages.get(this, &quot;rat_1&quot;, Messages.titleCase(Dungeon.hero.name())); break;</span>
+				case 2:
+<span class="nc" id="L178">					questBoss = new GnollTrickster();</span>
+<span class="nc" id="L179">					txt_quest = Messages.get(this, &quot;gnoll_1&quot;, Messages.titleCase(Dungeon.hero.name())); break;</span>
+				case 3:
+<span class="nc" id="L181">					questBoss = new GreatCrab();</span>
+<span class="nc" id="L182">					txt_quest = Messages.get(this, &quot;crab_1&quot;, Messages.titleCase(Dungeon.hero.name())); break;</span>
+			}
+
+<span class="nc" id="L185">			questBoss.pos = Dungeon.level.randomRespawnCell( this );</span>
+
+<span class="nc bnc" id="L187" title="All 2 branches missed.">			if (questBoss.pos != -1) {</span>
+<span class="nc" id="L188">				GameScene.add(questBoss);</span>
+<span class="nc" id="L189">				Quest.given = true;</span>
+<span class="nc" id="L190">				Game.runOnRenderThread(new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L193">						GameScene.show( new WndQuest( Ghost.this, txt_quest ){</span>
+							@Override
+							public void hide() {
+<span class="nc" id="L196">								super.hide();</span>
+<span class="nc" id="L197">								Music.INSTANCE.fadeOut(1f, new Callback() {</span>
+									@Override
+									public void call() {
+<span class="nc bnc" id="L200" title="All 2 branches missed.">										if (Dungeon.level != null) {</span>
+<span class="nc" id="L201">											Dungeon.level.playLevelMusic();</span>
+										}
+<span class="nc" id="L203">									}</span>
+								});
+<span class="nc" id="L205">							}</span>
+						} );
+<span class="nc" id="L207">					}</span>
+				});
+			}
+
+		}
+
+<span class="nc" id="L213">		return true;</span>
+	}
+
+<span class="nc" id="L216">	public static class Quest {</span>
+		
+		private static boolean spawned;
+
+		private static int type;
+
+		private static boolean given;
+		private static boolean processed;
+		
+		private static int depth;
+		
+		public static Weapon weapon;
+		public static Armor armor;
+		public static Weapon.Enchantment enchant;
+		public static Armor.Glyph glyph;
+		
+		public static void reset() {
+<span class="nc" id="L233">			spawned = false;</span>
+			
+<span class="nc" id="L235">			weapon = null;</span>
+<span class="nc" id="L236">			armor = null;</span>
+<span class="nc" id="L237">			enchant = null;</span>
+<span class="nc" id="L238">			glyph = null;</span>
+<span class="nc" id="L239">		}</span>
+		
+		private static final String NODE		= &quot;sadGhost&quot;;
+		
+		private static final String SPAWNED		= &quot;spawned&quot;;
+		private static final String TYPE        = &quot;type&quot;;
+		private static final String GIVEN		= &quot;given&quot;;
+		private static final String PROCESSED	= &quot;processed&quot;;
+		private static final String DEPTH		= &quot;depth&quot;;
+		private static final String WEAPON		= &quot;weapon&quot;;
+		private static final String ARMOR		= &quot;armor&quot;;
+		private static final String ENCHANT		= &quot;enchant&quot;;
+		private static final String GLYPH		= &quot;glyph&quot;;
+		
+		public static void storeInBundle( Bundle bundle ) {
+			
+<span class="nc" id="L255">			Bundle node = new Bundle();</span>
+			
+<span class="nc" id="L257">			node.put( SPAWNED, spawned );</span>
+			
+<span class="nc bnc" id="L259" title="All 2 branches missed.">			if (spawned) {</span>
+				
+<span class="nc" id="L261">				node.put( TYPE, type );</span>
+				
+<span class="nc" id="L263">				node.put( GIVEN, given );</span>
+<span class="nc" id="L264">				node.put( DEPTH, depth );</span>
+<span class="nc" id="L265">				node.put( PROCESSED, processed );</span>
+				
+<span class="nc" id="L267">				node.put( WEAPON, weapon );</span>
+<span class="nc" id="L268">				node.put( ARMOR, armor );</span>
+
+<span class="nc bnc" id="L270" title="All 2 branches missed.">				if (enchant != null) {</span>
+<span class="nc" id="L271">					node.put(ENCHANT, enchant);</span>
+<span class="nc" id="L272">					node.put(GLYPH, glyph);</span>
+				}
+			}
+			
+<span class="nc" id="L276">			bundle.put( NODE, node );</span>
+<span class="nc" id="L277">		}</span>
+		
+		public static void restoreFromBundle( Bundle bundle ) {
+			
+<span class="nc" id="L281">			Bundle node = bundle.getBundle( NODE );</span>
+
+<span class="nc bnc" id="L283" title="All 4 branches missed.">			if (!node.isNull() &amp;&amp; (spawned = node.getBoolean( SPAWNED ))) {</span>
+
+<span class="nc" id="L285">				type = node.getInt(TYPE);</span>
+<span class="nc" id="L286">				given	= node.getBoolean( GIVEN );</span>
+<span class="nc" id="L287">				processed = node.getBoolean( PROCESSED );</span>
+
+<span class="nc" id="L289">				depth	= node.getInt( DEPTH );</span>
+				
+<span class="nc" id="L291">				weapon	= (Weapon)node.get( WEAPON );</span>
+<span class="nc" id="L292">				armor	= (Armor)node.get( ARMOR );</span>
+
+<span class="nc bnc" id="L294" title="All 2 branches missed.">				if (node.contains(ENCHANT)) {</span>
+<span class="nc" id="L295">					enchant = (Weapon.Enchantment) node.get(ENCHANT);</span>
+<span class="nc" id="L296">					glyph   = (Armor.Glyph) node.get(GLYPH);</span>
+				}
+			} else {
+<span class="nc" id="L299">				reset();</span>
+			}
+<span class="nc" id="L301">		}</span>
+		
+		public static void spawn( SewerLevel level, Room room ) {
+<span class="nc bnc" id="L304" title="All 6 branches missed.">			if (!spawned &amp;&amp; Dungeon.depth &gt; 1 &amp;&amp; Random.Int( 5 - Dungeon.depth ) == 0) {</span>
+				
+<span class="nc" id="L306">				Ghost ghost = new Ghost();</span>
+				do {
+<span class="nc" id="L308">					ghost.pos = level.pointToCell(room.random());</span>
+<span class="nc bnc" id="L309" title="All 6 branches missed.">				} while (ghost.pos == -1 || level.solid[ghost.pos] || ghost.pos == level.exit());</span>
+<span class="nc" id="L310">				level.mobs.add( ghost );</span>
+				
+<span class="nc" id="L312">				spawned = true;</span>
+				//dungeon depth determines type of quest.
+				//depth2=fetid rat, 3=gnoll trickster, 4=great crab
+<span class="nc" id="L315">				type = Dungeon.depth-1;</span>
+				
+<span class="nc" id="L317">				given = false;</span>
+<span class="nc" id="L318">				processed = false;</span>
+<span class="nc" id="L319">				depth = Dungeon.depth;</span>
+
+				//50%:tier2, 30%:tier3, 15%:tier4, 5%:tier5
+<span class="nc bnc" id="L322" title="All 4 branches missed.">				switch (Random.chances(new float[]{0, 0, 10, 6, 3, 1})){</span>
+					default:
+<span class="nc" id="L324">					case 2: armor = new LeatherArmor(); break;</span>
+<span class="nc" id="L325">					case 3: armor = new MailArmor();    break;</span>
+<span class="nc" id="L326">					case 4: armor = new ScaleArmor();   break;</span>
+<span class="nc" id="L327">					case 5: armor = new PlateArmor();   break;</span>
+				}
+				//50%:tier2, 30%:tier3, 15%:tier4, 5%:tier5
+<span class="nc" id="L330">				int wepTier = Random.chances(new float[]{0, 0, 10, 6, 3, 1});</span>
+<span class="nc" id="L331">				weapon = (Weapon) Generator.random(Generator.wepTiers[wepTier - 1]);</span>
+
+				//clear weapon's starting properties
+<span class="nc" id="L334">				weapon.level(0);</span>
+<span class="nc" id="L335">				weapon.enchant(null);</span>
+<span class="nc" id="L336">				weapon.cursed = false;</span>
+
+				//50%:+0, 30%:+1, 15%:+2, 5%:+3
+<span class="nc" id="L339">				float itemLevelRoll = Random.Float();</span>
+				int itemLevel;
+<span class="nc bnc" id="L341" title="All 2 branches missed.">				if (itemLevelRoll &lt; 0.5f){</span>
+<span class="nc" id="L342">					itemLevel = 0;</span>
+<span class="nc bnc" id="L343" title="All 2 branches missed.">				} else if (itemLevelRoll &lt; 0.8f){</span>
+<span class="nc" id="L344">					itemLevel = 1;</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">				} else if (itemLevelRoll &lt; 0.95f){</span>
+<span class="nc" id="L346">					itemLevel = 2;</span>
+				} else {
+<span class="nc" id="L348">					itemLevel = 3;</span>
+				}
+<span class="nc" id="L350">				weapon.upgrade(itemLevel);</span>
+<span class="nc" id="L351">				armor.upgrade(itemLevel);</span>
+
+				// 20% base chance to be enchanted, stored separately so status isn't revealed early
+				//we generate first so that the outcome doesn't affect the number of RNG rolls
+<span class="nc" id="L355">				enchant = Weapon.Enchantment.random();</span>
+<span class="nc" id="L356">				glyph = Armor.Glyph.random();</span>
+
+<span class="nc" id="L358">				float enchantRoll = Random.Float();</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">				if (enchantRoll &gt; 0.2f * ParchmentScrap.enchantChanceMultiplier()){</span>
+<span class="nc" id="L360">					enchant = null;</span>
+<span class="nc" id="L361">					glyph = null;</span>
+				}
+
+			}
+<span class="nc" id="L365">		}</span>
+		
+		public static void process() {
+<span class="nc bnc" id="L368" title="All 8 branches missed.">			if (spawned &amp;&amp; given &amp;&amp; !processed &amp;&amp; (depth == Dungeon.depth)) {</span>
+<span class="nc" id="L369">				GLog.n( Messages.get(Ghost.class, &quot;find_me&quot;) );</span>
+<span class="nc" id="L370">				Sample.INSTANCE.play( Assets.Sounds.GHOST );</span>
+<span class="nc" id="L371">				processed = true;</span>
+<span class="nc" id="L372">				Statistics.questScores[0] = 1000;</span>
+
+<span class="nc" id="L374">				Game.runOnRenderThread(new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L377">						Music.INSTANCE.fadeOut(1f, new Callback() {</span>
+							@Override
+							public void call() {
+<span class="nc bnc" id="L380" title="All 2 branches missed.">								if (Dungeon.level != null) {</span>
+<span class="nc" id="L381">									Dungeon.level.playLevelMusic();</span>
+								}
+<span class="nc" id="L383">							}</span>
+						});
+<span class="nc" id="L385">					}</span>
+				});
+			}
+<span class="nc" id="L388">		}</span>
+
+		public static boolean active(){
+<span class="nc bnc" id="L391" title="All 8 branches missed.">			return spawned &amp;&amp; given &amp;&amp; !processed &amp;&amp; depth == Dungeon.depth;</span>
+		}
+		
+		public static void complete() {
+<span class="nc" id="L395">			weapon = null;</span>
+<span class="nc" id="L396">			armor = null;</span>
+			
+<span class="nc" id="L398">			Notes.remove( Notes.Landmark.GHOST );</span>
+<span class="nc" id="L399">		}</span>
+
+		public static boolean processed(){
+<span class="nc bnc" id="L402" title="All 4 branches missed.">			return spawned &amp;&amp; processed;</span>
+		}
+		
+		public static boolean completed(){
+<span class="nc bnc" id="L406" title="All 6 branches missed.">			return processed() &amp;&amp; weapon == null &amp;&amp; armor == null;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Swarm.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">Swarm.java</span></div><h1>Swarm.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Poison;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.SwarmSprite;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L40">public class Swarm extends Mob {</span>
+
+	{
+<span class="nc" id="L43">		spriteClass = SwarmSprite.class;</span>
+		
+<span class="nc" id="L45">		HP = HT = 50;</span>
+<span class="nc" id="L46">		defenseSkill = 5;</span>
+
+<span class="nc" id="L48">		EXP = 3;</span>
+<span class="nc" id="L49">		maxLvl = 9;</span>
+		
+<span class="nc" id="L51">		flying = true;</span>
+
+<span class="nc" id="L53">		loot = PotionOfHealing.class;</span>
+<span class="nc" id="L54">		lootChance = 0.1667f; //by default, see lootChance()</span>
+	}
+	
+	private static final float SPLIT_DELAY	= 1f;
+	
+<span class="nc" id="L59">	int generation	= 0;</span>
+	
+	private static final String GENERATION	= &quot;generation&quot;;
+	
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L65">		super.storeInBundle( bundle );</span>
+<span class="nc" id="L66">		bundle.put( GENERATION, generation );</span>
+<span class="nc" id="L67">	}</span>
+	
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L71">		super.restoreFromBundle( bundle );</span>
+<span class="nc" id="L72">		generation = bundle.getInt( GENERATION );</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">		if (generation &gt; 0) EXP = 0;</span>
+<span class="nc" id="L74">	}</span>
+
+	@Override
+	public void die(Object cause) {
+<span class="nc" id="L78">		flying = false;</span>
+<span class="nc" id="L79">		super.die(cause);</span>
+<span class="nc" id="L80">	}</span>
+	
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L84">		return Random.NormalIntRange( 1, 4 );</span>
+	}
+	
+	@Override
+	public int defenseProc( Char enemy, int damage ) {
+
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		if (HP &gt;= damage + 2) {</span>
+<span class="nc" id="L91">			ArrayList&lt;Integer&gt; candidates = new ArrayList&lt;&gt;();</span>
+			
+<span class="nc" id="L93">			int[] neighbours = {pos + 1, pos - 1, pos + Dungeon.level.width(), pos - Dungeon.level.width()};</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">			for (int n : neighbours) {</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">				if (!Dungeon.level.solid[n]</span>
+<span class="nc bnc" id="L96" title="All 6 branches missed.">						&amp;&amp; Actor.findChar( n ) == null</span>
+						&amp;&amp; (Dungeon.level.passable[n] || Dungeon.level.avoid[n])
+<span class="nc bnc" id="L98" title="All 4 branches missed.">						&amp;&amp; (!properties().contains(Property.LARGE) || Dungeon.level.openSpace[n])) {</span>
+<span class="nc" id="L99">					candidates.add( n );</span>
+				}
+			}
+	
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			if (candidates.size() &gt; 0) {</span>
+				
+<span class="nc" id="L105">				Swarm clone = split();</span>
+<span class="nc" id="L106">				clone.pos = Random.element( candidates );</span>
+<span class="nc" id="L107">				clone.state = clone.HUNTING;</span>
+<span class="nc" id="L108">				GameScene.add( clone, SPLIT_DELAY ); //we add before assigning HP due to ascension</span>
+
+<span class="nc" id="L110">				clone.HP = (HP - damage) / 2;</span>
+<span class="nc" id="L111">				Actor.add( new Pushing( clone, pos, clone.pos ) );</span>
+
+<span class="nc" id="L113">				Dungeon.level.occupyCell(clone);</span>
+				
+<span class="nc" id="L115">				HP -= clone.HP;</span>
+			}
+		}
+		
+<span class="nc" id="L119">		return super.defenseProc(enemy, damage);</span>
+	}
+	
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L124">		return 10;</span>
+	}
+	
+	private Swarm split() {
+<span class="nc" id="L128">		Swarm clone = new Swarm();</span>
+<span class="nc" id="L129">		clone.generation = generation + 1;</span>
+<span class="nc" id="L130">		clone.EXP = 0;</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">		if (buff( Burning.class ) != null) {</span>
+<span class="nc" id="L132">			Buff.affect( clone, Burning.class ).reignite( clone );</span>
+		}
+<span class="nc bnc" id="L134" title="All 2 branches missed.">		if (buff( Poison.class ) != null) {</span>
+<span class="nc" id="L135">			Buff.affect( clone, Poison.class ).set(2);</span>
+		}
+<span class="nc bnc" id="L137" title="All 2 branches missed.">		for (Buff b : buffs()){</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">			if (b.revivePersists) {</span>
+<span class="nc" id="L139">				Buff.affect(clone, b.getClass());</span>
+			}
+<span class="nc" id="L141">		}</span>
+<span class="nc" id="L142">		return clone;</span>
+	}
+
+	@Override
+	public float lootChance() {
+<span class="nc" id="L147">		lootChance = 1f/(6 * (generation+1) );</span>
+<span class="nc" id="L148">		return super.lootChance() * (5f - Dungeon.LimitedDrops.SWARM_HP.count) / 5f;</span>
+	}
+	
+	@Override
+	public Item createLoot(){
+<span class="nc" id="L153">		Dungeon.LimitedDrops.SWARM_HP.count++;</span>
+<span class="nc" id="L154">		return super.createLoot();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CapeOfThorns.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.artifacts</a> &gt; <span class="el_source">CapeOfThorns.java</span></div><h1>CapeOfThorns.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L34">public class CapeOfThorns extends Artifact {</span>
+
+	{
+<span class="nc" id="L37">		image = ItemSpriteSheet.ARTIFACT_CAPE;</span>
+
+<span class="nc" id="L39">		levelCap = 10;</span>
+
+<span class="nc" id="L41">		charge = 0;</span>
+<span class="nc" id="L42">		chargeCap = 100;</span>
+<span class="nc" id="L43">		cooldown = 0;</span>
+
+<span class="nc" id="L45">		defaultAction = &quot;NONE&quot;; //so it can be quickslotted</span>
+<span class="nc" id="L46">	}</span>
+
+	@Override
+	protected ArtifactBuff passiveBuff() {
+<span class="nc" id="L50">		return new Thorns();</span>
+	}
+	
+	@Override
+	public void charge(Hero target, float amount) {
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		if (cooldown == 0) {</span>
+<span class="nc" id="L56">			charge += Math.round(4*amount);</span>
+<span class="nc" id="L57">			updateQuickslot();</span>
+		}
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		if (charge &gt;= chargeCap){</span>
+<span class="nc" id="L60">			target.buff(Thorns.class).proc(0, null, null);</span>
+		}
+<span class="nc" id="L62">	}</span>
+	
+	@Override
+	public String desc() {
+<span class="nc" id="L66">		String desc = Messages.get(this, &quot;desc&quot;);</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">		if (isEquipped( Dungeon.hero )) {</span>
+<span class="nc" id="L68">			desc += &quot;\n\n&quot;;</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">			if (cooldown == 0)</span>
+<span class="nc" id="L70">				desc += Messages.get(this, &quot;desc_inactive&quot;);</span>
+			else
+<span class="nc" id="L72">				desc += Messages.get(this, &quot;desc_active&quot;);</span>
+		}
+
+<span class="nc" id="L75">		return desc;</span>
+	}
+
+<span class="nc" id="L78">	public class Thorns extends ArtifactBuff{</span>
+
+		@Override
+		public boolean act(){
+<span class="nc bnc" id="L82" title="All 2 branches missed.">			if (cooldown &gt; 0) {</span>
+<span class="nc" id="L83">				cooldown--;</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">				if (cooldown == 0) {</span>
+<span class="nc" id="L85">					GLog.w( Messages.get(this, &quot;inert&quot;) );</span>
+				}
+<span class="nc" id="L87">				updateQuickslot();</span>
+			}
+<span class="nc" id="L89">			spend(TICK);</span>
+<span class="nc" id="L90">			return true;</span>
+		}
+
+		public int proc(int damage, Char attacker, Char defender){
+<span class="nc bnc" id="L94" title="All 2 branches missed.">			if (cooldown == 0){</span>
+<span class="nc" id="L95">				charge += damage*(0.5+level()*0.05);</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">				if (charge &gt;= chargeCap){</span>
+<span class="nc" id="L97">					charge = 0;</span>
+<span class="nc" id="L98">					cooldown = 10+level();</span>
+<span class="nc" id="L99">					GLog.p( Messages.get(this, &quot;radiating&quot;) );</span>
+				}
+			}
+
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			if (cooldown != 0){</span>
+<span class="nc" id="L104">				int deflected = Random.NormalIntRange(0, damage);</span>
+<span class="nc" id="L105">				damage -= deflected;</span>
+
+<span class="nc bnc" id="L107" title="All 4 branches missed.">				if (attacker != null &amp;&amp; Dungeon.level.adjacent(attacker.pos, defender.pos)) {</span>
+<span class="nc" id="L108">					attacker.damage(deflected, this);</span>
+				}
+
+<span class="nc" id="L111">				exp+= deflected;</span>
+
+<span class="nc bnc" id="L113" title="All 4 branches missed.">				if (exp &gt;= (level()+1)*5 &amp;&amp; level() &lt; levelCap){</span>
+<span class="nc" id="L114">					exp -= (level()+1)*5;</span>
+<span class="nc" id="L115">					upgrade();</span>
+<span class="nc" id="L116">					Catalog.countUse(CapeOfThorns.class);</span>
+<span class="nc" id="L117">					GLog.p( Messages.get(this, &quot;levelup&quot;) );</span>
+				}
+
+			}
+<span class="nc" id="L121">			updateQuickslot();</span>
+<span class="nc" id="L122">			return damage;</span>
+		}
+
+		@Override
+		public String desc() {
+<span class="nc" id="L127">			return Messages.get(this, &quot;desc&quot;, dispTurns(cooldown));</span>
+		}
+
+		@Override
+		public int icon() {
+<span class="nc bnc" id="L132" title="All 2 branches missed.">			if (cooldown == 0)</span>
+<span class="nc" id="L133">				return BuffIndicator.NONE;</span>
+			else
+<span class="nc" id="L135">				return BuffIndicator.THORNS;</span>
+		}
+
+		@Override
+		public void detach(){
+<span class="nc" id="L140">			cooldown = 0;</span>
+<span class="nc" id="L141">			charge = 0;</span>
+<span class="nc" id="L142">			super.detach();</span>
+<span class="nc" id="L143">		}</span>
+
+	}
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

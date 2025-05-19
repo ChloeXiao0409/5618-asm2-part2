@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Ankh.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items</a> &gt; <span class="el_source">Ankh.java</span></div><h1>Ankh.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite.Glowing;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L37">public class Ankh extends Item {</span>
+
+	public static final String AC_BLESS = &quot;BLESS&quot;;
+
+	{
+<span class="nc" id="L42">		image = ItemSpriteSheet.ANKH;</span>
+
+		//You tell the ankh no, don't revive me, and then it comes back to revive you again in another run.
+		//I'm not sure if that's enthusiasm or passive-aggression.
+<span class="nc" id="L46">		bones = true;</span>
+	}
+
+<span class="nc" id="L49">	private boolean blessed = false;</span>
+	
+	@Override
+	public boolean isUpgradable() {
+<span class="nc" id="L53">		return false;</span>
+	}
+	
+	@Override
+	public boolean isIdentified() {
+<span class="nc" id="L58">		return true;</span>
+	}
+
+	@Override
+	public ArrayList&lt;String&gt; actions( Hero hero ) {
+<span class="nc" id="L63">		ArrayList&lt;String&gt; actions = super.actions(hero);</span>
+<span class="nc" id="L64">		Waterskin waterskin = hero.belongings.getItem(Waterskin.class);</span>
+<span class="nc bnc" id="L65" title="All 6 branches missed.">		if (waterskin != null &amp;&amp; waterskin.isFull() &amp;&amp; !blessed)</span>
+<span class="nc" id="L66">			actions.add( AC_BLESS );</span>
+<span class="nc" id="L67">		return actions;</span>
+	}
+
+	@Override
+	public void execute( final Hero hero, String action ) {
+
+<span class="nc" id="L73">		super.execute( hero, action );</span>
+
+<span class="nc bnc" id="L75" title="All 2 branches missed.">		if (action.equals( AC_BLESS )) {</span>
+
+<span class="nc" id="L77">			Waterskin waterskin = hero.belongings.getItem(Waterskin.class);</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">			if (waterskin != null){</span>
+<span class="nc" id="L79">				blessed = true;</span>
+<span class="nc" id="L80">				waterskin.empty();</span>
+<span class="nc" id="L81">				GLog.p( Messages.get(this, &quot;bless&quot;) );</span>
+<span class="nc" id="L82">				hero.spend( 1f );</span>
+<span class="nc" id="L83">				hero.busy();</span>
+
+
+<span class="nc" id="L86">				Sample.INSTANCE.play( Assets.Sounds.DRINK );</span>
+<span class="nc" id="L87">				CellEmitter.get(hero.pos).start(Speck.factory(Speck.LIGHT), 0.2f, 3);</span>
+<span class="nc" id="L88">				hero.sprite.operate( hero.pos );</span>
+			}
+		}
+<span class="nc" id="L91">	}</span>
+	
+	@Override
+	public String desc() {
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		if (blessed)</span>
+<span class="nc" id="L96">			return Messages.get(this, &quot;desc_blessed&quot;);</span>
+		else
+<span class="nc" id="L98">			return super.desc();</span>
+	}
+
+	public boolean isBlessed(){
+<span class="nc" id="L102">		return blessed;</span>
+	}
+
+	public void bless(){
+<span class="nc" id="L106">		blessed = true;</span>
+<span class="nc" id="L107">	}</span>
+
+<span class="nc" id="L109">	private static final Glowing WHITE = new Glowing( 0xFFFFCC );</span>
+
+	@Override
+	public Glowing glowing() {
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		return isBlessed() ? WHITE : null;</span>
+	}
+
+	private static final String BLESSED = &quot;blessed&quot;;
+
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L120">		super.storeInBundle( bundle );</span>
+<span class="nc" id="L121">		bundle.put( BLESSED, blessed );</span>
+<span class="nc" id="L122">	}</span>
+
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L126">		super.restoreFromBundle( bundle );</span>
+<span class="nc" id="L127">		blessed	= bundle.getBoolean( BLESSED );</span>
+<span class="nc" id="L128">	}</span>
+	
+	@Override
+	public int value() {
+<span class="nc" id="L132">		return 50 * quantity;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

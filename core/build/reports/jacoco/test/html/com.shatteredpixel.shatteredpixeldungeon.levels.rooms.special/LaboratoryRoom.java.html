@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LaboratoryRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special</a> &gt; <span class="el_source">LaboratoryRoom.java</span></div><h1>LaboratoryRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Alchemy;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.items.EnergyCrystal;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.journal.AlchemyPage;
+import com.shatteredpixel.shatteredpixeldungeon.items.keys.IronKey;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.TrinketCatalyst;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Document;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+<span class="nc" id="L44">public class LaboratoryRoom extends SpecialRoom {</span>
+
+	public void paint( Level level ) {
+		
+<span class="nc" id="L48">		Painter.fill( level, this, Terrain.WALL );</span>
+<span class="nc" id="L49">		Painter.fill( level, this, 1, Terrain.EMPTY_SP );</span>
+		
+<span class="nc" id="L51">		Door entrance = entrance();</span>
+		
+<span class="nc" id="L53">		Point pot = null;</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">		if (entrance.x == left) {</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">			pot = new Point( right-1, Random.Int( 2 ) == 0 ? top + 1 : bottom - 1 );</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">		} else if (entrance.x == right) {</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">			pot = new Point( left+1, Random.Int( 2 ) == 0 ? top + 1 : bottom - 1 );</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">		} else if (entrance.y == top) {</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">			pot = new Point( Random.Int( 2 ) == 0 ? left + 1 : right - 1, bottom-1 );</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		} else if (entrance.y == bottom) {</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">			pot = new Point( Random.Int( 2 ) == 0 ? left + 1 : right - 1, top+1 );</span>
+		}
+<span class="nc" id="L63">		Painter.set( level, pot, Terrain.ALCHEMY );</span>
+		
+<span class="nc" id="L65">		int chapter = 1 + Dungeon.depth/5;</span>
+<span class="nc" id="L66">		Blob.seed( pot.x + level.width() * pot.y, 1, Alchemy.class, level );</span>
+
+		int pos;
+		do {
+<span class="nc" id="L70">			pos = level.pointToCell(random());</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		} while (</span>
+				level.map[pos] != Terrain.EMPTY_SP ||
+<span class="nc bnc" id="L73" title="All 2 branches missed.">						level.heaps.get( pos ) != null);</span>
+<span class="nc" id="L74">		level.drop( new EnergyCrystal().quantity(5), pos );</span>
+
+<span class="nc" id="L76">		int n = Random.NormalIntRange( 1, 2 );</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">		for (int i=0; i &lt; n; i++) {</span>
+			do {
+<span class="nc" id="L79">				pos = level.pointToCell(random());</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">			} while (</span>
+				level.map[pos] != Terrain.EMPTY_SP ||
+<span class="nc bnc" id="L82" title="All 2 branches missed.">				level.heaps.get( pos ) != null);</span>
+<span class="nc" id="L83">			level.drop( prize( level ), pos );</span>
+		}
+		
+		//guide pages
+<span class="nc" id="L87">		Collection&lt;String&gt; allPages = Document.ALCHEMY_GUIDE.pageNames();</span>
+<span class="nc" id="L88">		ArrayList&lt;String&gt; missingPages = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		for ( String page : allPages){</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">			if (!Document.ALCHEMY_GUIDE.isPageFound(page)){</span>
+<span class="nc" id="L91">				missingPages.add(page);</span>
+			}
+<span class="nc" id="L93">		}</span>
+		
+		//5 pages in sewers, 10 in prison+
+		int chapterTarget;
+<span class="nc bnc" id="L97" title="All 2 branches missed.">		if (missingPages.size() &lt;= 5){</span>
+<span class="nc" id="L98">			chapterTarget = 2;</span>
+		} else {
+<span class="nc" id="L100">			chapterTarget = 1;</span>
+		}
+		
+<span class="nc bnc" id="L103" title="All 4 branches missed.">		if(!missingPages.isEmpty() &amp;&amp; chapter &gt;= chapterTarget){</span>
+			
+			//for each chapter ahead of the target chapter, drop 1 additional page
+<span class="nc" id="L106">			int pagesToDrop = Math.min(missingPages.size(), (chapter - chapterTarget) + 1);</span>
+			
+<span class="nc bnc" id="L108" title="All 2 branches missed.">			for (int i = 0; i &lt; pagesToDrop; i++) {</span>
+<span class="nc" id="L109">				AlchemyPage p = new AlchemyPage();</span>
+<span class="nc" id="L110">				p.page(missingPages.remove(0));</span>
+				do {
+<span class="nc" id="L112">					pos = level.pointToCell(random());</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">				} while (</span>
+						level.map[pos] != Terrain.EMPTY_SP ||
+<span class="nc bnc" id="L115" title="All 2 branches missed.">								level.heaps.get(pos) != null);</span>
+<span class="nc" id="L116">				level.drop(p, pos);</span>
+			}
+		}
+
+<span class="nc" id="L120">		entrance.set( Door.Type.LOCKED );</span>
+<span class="nc" id="L121">		level.addItemToSpawn( new IronKey( Dungeon.depth ) );</span>
+		
+<span class="nc" id="L123">	}</span>
+	
+	private static Item prize( Level level ) {
+
+<span class="nc" id="L127">		Item prize = level.findPrizeItem( TrinketCatalyst.class );</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		if (prize == null){</span>
+<span class="nc" id="L129">			prize = level.findPrizeItem( PotionOfStrength.class );</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">			if (prize == null) {</span>
+<span class="nc" id="L131">				prize = Generator.random(Random.oneOf(Generator.Category.POTION, Generator.Category.STONE));</span>
+			}
+		}
+
+<span class="nc" id="L135">		return prize;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

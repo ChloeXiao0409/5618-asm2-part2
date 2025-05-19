@@ -1,0 +1,969 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Generator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items</a> &gt; <span class="el_source">Generator.java</span></div><h1>Generator.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClericArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.DuelistArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.HuntressArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.LeatherArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.MageArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.MailArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.PlateArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.RogueArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ScaleArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.WarriorArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.AlchemistsToolkit;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.ChaliceOfBlood;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CloakOfShadows;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.EtherealChains;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HornOfPlenty;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.MasterThievesArmband;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.SandalsOfNature;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.TalismanOfForesight;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.TimekeepersHourglass;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.UnstableSpellbook;
+import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
+import com.shatteredpixel.shatteredpixeldungeon.items.food.Food;
+import com.shatteredpixel.shatteredpixeldungeon.items.food.MysteryMeat;
+import com.shatteredpixel.shatteredpixeldungeon.items.food.Pasty;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfExperience;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfFrost;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHaste;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLevitation;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLiquidFlame;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfMindVision;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfParalyticGas;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfPurity;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfToxicGas;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.brews.Brew;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs.Elixir;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.ExoticPotion;
+import com.shatteredpixel.shatteredpixeldungeon.items.quest.Pickaxe;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfAccuracy;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfArcana;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfElements;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEvasion;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfFuror;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfHaste;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfMight;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfSharpshooting;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfTenacity;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfWealth;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfIdentify;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfLullaby;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfMagicMapping;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfMirrorImage;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRage;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRecharging;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRemoveCurse;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRetribution;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTerror;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTransmutation;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ExoticScroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.spells.Spell;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.Runestone;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfAggression;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfAugmentation;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfBlast;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfBlink;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfClairvoyance;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfDeepSleep;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfDetectMagic;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfEnchantment;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfFear;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfFlock;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfIntuition;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfShock;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.ChaoticCenser;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.DimensionalSundial;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.ExoticCrystals;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.EyeOfNewt;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.MimicTooth;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.MossyClump;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.ParchmentScrap;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.PetrifiedSeed;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.RatSkull;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.SaltCube;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.ShardOfOblivion;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.ThirteenLeafClover;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.TrapMechanism;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.Trinket;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.TrinketCatalyst;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.VialOfBlood;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.WondrousResin;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfBlastWave;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfCorrosion;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfCorruption;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfDisintegration;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfFireblast;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfFrost;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfLightning;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfLivingEarth;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfPrismaticLight;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfRegrowth;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfTransfusion;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfWarding;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.AssassinsBlade;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.BattleAxe;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Crossbow;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Cudgel;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Dagger;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Dirk;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Flail;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Gauntlet;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Glaive;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Gloves;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Greataxe;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Greatshield;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Greatsword;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.HandAxe;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Katana;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Longsword;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Mace;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Quarterstaff;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Rapier;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.RoundShield;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.RunicBlade;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sai;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Scimitar;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Shortsword;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sickle;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Spear;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sword;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WarHammer;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WarScythe;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Whip;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortsword;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.Bolas;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.FishingSpear;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ForceCube;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.HeavyBoomerang;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.Javelin;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.Kunai;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.Shuriken;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingClub;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingHammer;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingKnife;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingSpear;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingSpike;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingStone;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.Tomahawk;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.Trident;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.Dart;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Blindweed;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Earthroot;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Fadeleaf;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Icecap;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Mageroyal;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Rotberry;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Sorrowmoss;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Starflower;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Stormvine;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Sungrass;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Swiftthistle;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+
+<span class="nc" id="L216">public class Generator {</span>
+
+<span class="nc" id="L218">	public enum Category {</span>
+<span class="nc" id="L219">		TRINKET ( 0, 0, Trinket.class),</span>
+
+<span class="nc" id="L221">		WEAPON	( 2, 2, MeleeWeapon.class),</span>
+<span class="nc" id="L222">		WEP_T1	( 0, 0, MeleeWeapon.class),</span>
+<span class="nc" id="L223">		WEP_T2	( 0, 0, MeleeWeapon.class),</span>
+<span class="nc" id="L224">		WEP_T3	( 0, 0, MeleeWeapon.class),</span>
+<span class="nc" id="L225">		WEP_T4	( 0, 0, MeleeWeapon.class),</span>
+<span class="nc" id="L226">		WEP_T5	( 0, 0, MeleeWeapon.class),</span>
+		
+<span class="nc" id="L228">		ARMOR	( 2, 1, Armor.class ),</span>
+		
+<span class="nc" id="L230">		MISSILE ( 1, 2, MissileWeapon.class ),</span>
+<span class="nc" id="L231">		MIS_T1  ( 0, 0, MissileWeapon.class ),</span>
+<span class="nc" id="L232">		MIS_T2  ( 0, 0, MissileWeapon.class ),</span>
+<span class="nc" id="L233">		MIS_T3  ( 0, 0, MissileWeapon.class ),</span>
+<span class="nc" id="L234">		MIS_T4  ( 0, 0, MissileWeapon.class ),</span>
+<span class="nc" id="L235">		MIS_T5  ( 0, 0, MissileWeapon.class ),</span>
+		
+<span class="nc" id="L237">		WAND	( 1, 1, Wand.class ),</span>
+<span class="nc" id="L238">		RING	( 1, 0, Ring.class ),</span>
+<span class="nc" id="L239">		ARTIFACT( 0, 1, Artifact.class),</span>
+		
+<span class="nc" id="L241">		FOOD	( 0, 0, Food.class ),</span>
+		
+<span class="nc" id="L243">		POTION	( 8, 8, Potion.class ),</span>
+<span class="nc" id="L244">		SEED	( 1, 1, Plant.Seed.class ),</span>
+		
+<span class="nc" id="L246">		SCROLL	( 8, 8, Scroll.class ),</span>
+<span class="nc" id="L247">		STONE   ( 1, 1, Runestone.class),</span>
+		
+<span class="nc" id="L249">		GOLD	( 10, 10,   Gold.class );</span>
+		
+		public Class&lt;?&gt;[] classes;
+
+		//some item types use a deck-based system, where the probs decrement as items are picked
+		// until they are all 0, and then they reset. Those generator classes should define
+		// defaultProbs. If defaultProbs is null then a deck system isn't used.
+		//Artifacts in particular don't reset, no duplicates!
+		public float[] probs;
+<span class="nc" id="L258">		public float[] defaultProbs = null;</span>
+
+		//some items types have two decks and swap between them
+		// this enforces more consistency while still allowing for better precision
+<span class="nc" id="L262">		public float[] defaultProbs2 = null;</span>
+<span class="nc" id="L263">		public boolean using2ndProbs = false;</span>
+		//but in such cases we still need a reference to the full deck in case of non-deck generation
+<span class="nc" id="L265">		public float[] defaultProbsTotal = null;</span>
+
+		//These variables are used as a part of the deck system, to ensure that drops are consistent
+		// regardless of when they occur (either as part of seeded levelgen, or random item drops)
+<span class="nc" id="L269">		public Long seed = null;</span>
+<span class="nc" id="L270">		public int dropped = 0;</span>
+
+		//game has two decks of 35 items for overall category probs
+		//one deck has a ring and extra armor, the other has an artifact and extra thrown weapon
+		//Note that pure random drops only happen as part of levelgen atm, so no seed is needed here
+		public float firstProb;
+		public float secondProb;
+		public Class&lt;? extends Item&gt; superClass;
+		
+<span class="nc" id="L279">		private Category( float firstProb, float secondProb, Class&lt;? extends Item&gt; superClass ) {</span>
+<span class="nc" id="L280">			this.firstProb = firstProb;</span>
+<span class="nc" id="L281">			this.secondProb = secondProb;</span>
+<span class="nc" id="L282">			this.superClass = superClass;</span>
+<span class="nc" id="L283">		}</span>
+
+		//some generator categories can have ordering within that category as well
+		// note that sub category ordering doesn't need to always include items that belong
+		// to that categories superclass, e.g. bombs are ordered within thrown weapons
+<span class="nc" id="L288">		private static HashMap&lt;Class, ArrayList&lt;Class&gt;&gt; subOrderings = new HashMap&lt;&gt;();</span>
+		static {
+<span class="nc" id="L290">			subOrderings.put(Trinket.class, new ArrayList&lt;&gt;(Arrays.asList(Trinket.class, TrinketCatalyst.class)));</span>
+<span class="nc" id="L291">			subOrderings.put(MissileWeapon.class, new ArrayList&lt;&gt;(Arrays.asList(MissileWeapon.class, Bomb.class)));</span>
+<span class="nc" id="L292">			subOrderings.put(Potion.class, new ArrayList&lt;&gt;(Arrays.asList(Waterskin.class, Potion.class, ExoticPotion.class, Brew.class, Elixir.class, LiquidMetal.class)));</span>
+<span class="nc" id="L293">			subOrderings.put(Scroll.class, new ArrayList&lt;&gt;(Arrays.asList(Scroll.class, ExoticScroll.class, Spell.class, ArcaneResin.class)));</span>
+		}
+
+		//in case there are multiple matches, this will return the latest match
+		public static int order( Item item ) {
+<span class="nc" id="L298">			int catResult = -1, subResult = 0;</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">			for (int i=0; i &lt; values().length; i++) {</span>
+<span class="nc" id="L300">				ArrayList&lt;Class&gt; subOrdering = subOrderings.get(values()[i].superClass);</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">				if (subOrdering != null){</span>
+<span class="nc bnc" id="L302" title="All 2 branches missed.">					for (int j=0; j &lt; subOrdering.size(); j++){</span>
+<span class="nc bnc" id="L303" title="All 2 branches missed.">						if (subOrdering.get(j).isInstance(item)){</span>
+<span class="nc" id="L304">							catResult = i;</span>
+<span class="nc" id="L305">							subResult = j;</span>
+						}
+					}
+				} else {
+<span class="nc bnc" id="L309" title="All 2 branches missed.">					if (values()[i].superClass.isInstance(item)) {</span>
+<span class="nc" id="L310">						catResult = i;</span>
+<span class="nc" id="L311">						subResult = 0;</span>
+					}
+				}
+			}
+<span class="nc bnc" id="L315" title="All 2 branches missed.">			if (catResult != -1) return catResult*100 + subResult;</span>
+
+			//items without a category-defined order are sorted based on the spritesheet
+<span class="nc" id="L318">			return Short.MAX_VALUE+item.image();</span>
+		}
+
+		static {
+<span class="nc" id="L322">			GOLD.classes = new Class&lt;?&gt;[]{</span>
+					Gold.class };
+<span class="nc" id="L324">			GOLD.probs = new float[]{ 1 };</span>
+			
+<span class="nc" id="L326">			POTION.classes = new Class&lt;?&gt;[]{</span>
+					PotionOfStrength.class, //2 drop every chapter, see Dungeon.posNeeded()
+					PotionOfHealing.class,
+					PotionOfMindVision.class,
+					PotionOfFrost.class,
+					PotionOfLiquidFlame.class,
+					PotionOfToxicGas.class,
+					PotionOfHaste.class,
+					PotionOfInvisibility.class,
+					PotionOfLevitation.class,
+					PotionOfParalyticGas.class,
+					PotionOfPurity.class,
+					PotionOfExperience.class};
+<span class="nc" id="L339">			POTION.defaultProbs  = new float[]{ 0, 3, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1 };</span>
+<span class="nc" id="L340">			POTION.defaultProbs2 = new float[]{ 0, 3, 2, 2, 1, 2, 1, 1, 1, 1, 1, 0 };</span>
+<span class="nc" id="L341">			POTION.probs = POTION.defaultProbs.clone();</span>
+			
+<span class="nc" id="L343">			SEED.classes = new Class&lt;?&gt;[]{</span>
+					Rotberry.Seed.class, //quest item
+					Sungrass.Seed.class,
+					Fadeleaf.Seed.class,
+					Icecap.Seed.class,
+					Firebloom.Seed.class,
+					Sorrowmoss.Seed.class,
+					Swiftthistle.Seed.class,
+					Blindweed.Seed.class,
+					Stormvine.Seed.class,
+					Earthroot.Seed.class,
+					Mageroyal.Seed.class,
+					Starflower.Seed.class};
+<span class="nc" id="L356">			SEED.defaultProbs = new float[]{ 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1 };</span>
+<span class="nc" id="L357">			SEED.probs = SEED.defaultProbs.clone();</span>
+			
+<span class="nc" id="L359">			SCROLL.classes = new Class&lt;?&gt;[]{</span>
+					ScrollOfUpgrade.class, //3 drop every chapter, see Dungeon.souNeeded()
+					ScrollOfIdentify.class,
+					ScrollOfRemoveCurse.class,
+					ScrollOfMirrorImage.class,
+					ScrollOfRecharging.class,
+					ScrollOfTeleportation.class,
+					ScrollOfLullaby.class,
+					ScrollOfMagicMapping.class,
+					ScrollOfRage.class,
+					ScrollOfRetribution.class,
+					ScrollOfTerror.class,
+					ScrollOfTransmutation.class
+			};
+<span class="nc" id="L373">			SCROLL.defaultProbs  = new float[]{ 0, 3, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1 };</span>
+<span class="nc" id="L374">			SCROLL.defaultProbs2 = new float[]{ 0, 3, 2, 2, 1, 2, 1, 1, 1, 1, 1, 0 };</span>
+<span class="nc" id="L375">			SCROLL.probs = SCROLL.defaultProbs.clone();</span>
+			
+<span class="nc" id="L377">			STONE.classes = new Class&lt;?&gt;[]{</span>
+					StoneOfEnchantment.class,   //1 is guaranteed to drop on floors 6-19
+					StoneOfIntuition.class,     //1 additional stone is also dropped on floors 1-3
+					StoneOfDetectMagic.class,
+					StoneOfFlock.class,
+					StoneOfShock.class,
+					StoneOfBlink.class,
+					StoneOfDeepSleep.class,
+					StoneOfClairvoyance.class,
+					StoneOfAggression.class,
+					StoneOfBlast.class,
+					StoneOfFear.class,
+					StoneOfAugmentation.class  //1 is sold in each shop
+			};
+<span class="nc" id="L391">			STONE.defaultProbs = new float[]{ 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0 };</span>
+<span class="nc" id="L392">			STONE.probs = STONE.defaultProbs.clone();</span>
+
+<span class="nc" id="L394">			WAND.classes = new Class&lt;?&gt;[]{</span>
+					WandOfMagicMissile.class,
+					WandOfLightning.class,
+					WandOfDisintegration.class,
+					WandOfFireblast.class,
+					WandOfCorrosion.class,
+					WandOfBlastWave.class,
+					WandOfLivingEarth.class,
+					WandOfFrost.class,
+					WandOfPrismaticLight.class,
+					WandOfWarding.class,
+					WandOfTransfusion.class,
+					WandOfCorruption.class,
+					WandOfRegrowth.class };
+<span class="nc" id="L408">			WAND.defaultProbs = new float[]{ 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3 };</span>
+<span class="nc" id="L409">			WAND.probs = WAND.defaultProbs.clone();</span>
+			
+			//see generator.randomWeapon
+<span class="nc" id="L412">			WEAPON.classes = new Class&lt;?&gt;[]{};</span>
+<span class="nc" id="L413">			WEAPON.probs = new float[]{};</span>
+			
+<span class="nc" id="L415">			WEP_T1.classes = new Class&lt;?&gt;[]{</span>
+					WornShortsword.class,
+					MagesStaff.class,
+					Dagger.class,
+					Gloves.class,
+					Rapier.class,
+					Cudgel.class,
+			};
+<span class="nc" id="L423">			WEP_T1.defaultProbs = new float[]{ 2, 0, 2, 2, 2, 2 };</span>
+<span class="nc" id="L424">			WEP_T1.probs = WEP_T1.defaultProbs.clone();</span>
+			
+<span class="nc" id="L426">			WEP_T2.classes = new Class&lt;?&gt;[]{</span>
+					Shortsword.class,
+					HandAxe.class,
+					Spear.class,
+					Quarterstaff.class,
+					Dirk.class,
+					Sickle.class,
+					Pickaxe.class
+			};
+<span class="nc" id="L435">			WEP_T2.defaultProbs = new float[]{ 2, 2, 2, 2, 2, 2, 0 };</span>
+<span class="nc" id="L436">			WEP_T2.probs = WEP_T2.defaultProbs.clone();</span>
+			
+<span class="nc" id="L438">			WEP_T3.classes = new Class&lt;?&gt;[]{</span>
+					Sword.class,
+					Mace.class,
+					Scimitar.class,
+					RoundShield.class,
+					Sai.class,
+					Whip.class
+			};
+<span class="nc" id="L446">			WEP_T3.defaultProbs = new float[]{ 2, 2, 2, 2, 2, 2 };</span>
+<span class="nc" id="L447">			WEP_T3.probs = WEP_T1.defaultProbs.clone();</span>
+			
+<span class="nc" id="L449">			WEP_T4.classes = new Class&lt;?&gt;[]{</span>
+					Longsword.class,
+					BattleAxe.class,
+					Flail.class,
+					RunicBlade.class,
+					AssassinsBlade.class,
+					Crossbow.class,
+					Katana.class
+			};
+<span class="nc" id="L458">			WEP_T4.defaultProbs = new float[]{ 2, 2, 2, 2, 2, 2, 2 };</span>
+<span class="nc" id="L459">			WEP_T4.probs = WEP_T4.defaultProbs.clone();</span>
+			
+<span class="nc" id="L461">			WEP_T5.classes = new Class&lt;?&gt;[]{</span>
+					Greatsword.class,
+					WarHammer.class,
+					Glaive.class,
+					Greataxe.class,
+					Greatshield.class,
+					Gauntlet.class,
+					WarScythe.class
+			};
+<span class="nc" id="L470">			WEP_T5.defaultProbs = new float[]{ 2, 2, 2, 2, 2, 2, 2 };</span>
+<span class="nc" id="L471">			WEP_T5.probs = WEP_T5.defaultProbs.clone();</span>
+			
+			//see Generator.randomArmor
+<span class="nc" id="L474">			ARMOR.classes = new Class&lt;?&gt;[]{</span>
+					ClothArmor.class,
+					LeatherArmor.class,
+					MailArmor.class,
+					ScaleArmor.class,
+					PlateArmor.class,
+					WarriorArmor.class,
+					MageArmor.class,
+					RogueArmor.class,
+					HuntressArmor.class,
+					DuelistArmor.class,
+					ClericArmor.class
+			};
+<span class="nc" id="L487">			ARMOR.probs = new float[]{ 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0 };</span>
+			
+			//see Generator.randomMissile
+<span class="nc" id="L490">			MISSILE.classes = new Class&lt;?&gt;[]{};</span>
+<span class="nc" id="L491">			MISSILE.probs = new float[]{};</span>
+			
+<span class="nc" id="L493">			MIS_T1.classes = new Class&lt;?&gt;[]{</span>
+					ThrowingStone.class,
+					ThrowingKnife.class,
+					ThrowingSpike.class,
+					Dart.class
+			};
+<span class="nc" id="L499">			MIS_T1.defaultProbs = new float[]{ 3, 3, 3, 0 };</span>
+<span class="nc" id="L500">			MIS_T1.probs = MIS_T1.defaultProbs.clone();</span>
+			
+<span class="nc" id="L502">			MIS_T2.classes = new Class&lt;?&gt;[]{</span>
+					FishingSpear.class,
+					ThrowingClub.class,
+					Shuriken.class
+			};
+<span class="nc" id="L507">			MIS_T2.defaultProbs = new float[]{ 3, 3, 3 };</span>
+<span class="nc" id="L508">			MIS_T2.probs = MIS_T2.defaultProbs.clone();</span>
+			
+<span class="nc" id="L510">			MIS_T3.classes = new Class&lt;?&gt;[]{</span>
+					ThrowingSpear.class,
+					Kunai.class,
+					Bolas.class
+			};
+<span class="nc" id="L515">			MIS_T3.defaultProbs = new float[]{ 3, 3, 3 };</span>
+<span class="nc" id="L516">			MIS_T3.probs = MIS_T3.defaultProbs.clone();</span>
+			
+<span class="nc" id="L518">			MIS_T4.classes = new Class&lt;?&gt;[]{</span>
+					Javelin.class,
+					Tomahawk.class,
+					HeavyBoomerang.class
+			};
+<span class="nc" id="L523">			MIS_T4.defaultProbs = new float[]{ 3, 3, 3 };</span>
+<span class="nc" id="L524">			MIS_T4.probs = MIS_T4.defaultProbs.clone();</span>
+			
+<span class="nc" id="L526">			MIS_T5.classes = new Class&lt;?&gt;[]{</span>
+					Trident.class,
+					ThrowingHammer.class,
+					ForceCube.class
+			};
+<span class="nc" id="L531">			MIS_T5.defaultProbs = new float[]{ 3, 3, 3 };</span>
+<span class="nc" id="L532">			MIS_T5.probs = MIS_T5.defaultProbs.clone();</span>
+			
+<span class="nc" id="L534">			FOOD.classes = new Class&lt;?&gt;[]{</span>
+					Food.class,
+					Pasty.class,
+					MysteryMeat.class };
+<span class="nc" id="L538">			FOOD.defaultProbs = new float[]{ 4, 1, 0 };</span>
+<span class="nc" id="L539">			FOOD.probs = FOOD.defaultProbs.clone();</span>
+			
+<span class="nc" id="L541">			RING.classes = new Class&lt;?&gt;[]{</span>
+					RingOfAccuracy.class,
+					RingOfArcana.class,
+					RingOfElements.class,
+					RingOfEnergy.class,
+					RingOfEvasion.class,
+					RingOfForce.class,
+					RingOfFuror.class,
+					RingOfHaste.class,
+					RingOfMight.class,
+					RingOfSharpshooting.class,
+					RingOfTenacity.class,
+					RingOfWealth.class};
+<span class="nc" id="L554">			RING.defaultProbs = new float[]{ 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3 };</span>
+<span class="nc" id="L555">			RING.probs = RING.defaultProbs.clone();</span>
+			
+<span class="nc" id="L557">			ARTIFACT.classes = new Class&lt;?&gt;[]{</span>
+					AlchemistsToolkit.class,
+					ChaliceOfBlood.class,
+					CloakOfShadows.class,
+					DriedRose.class,
+					EtherealChains.class,
+					HolyTome.class,
+					HornOfPlenty.class,
+					MasterThievesArmband.class,
+					SandalsOfNature.class,
+					TalismanOfForesight.class,
+					TimekeepersHourglass.class,
+					UnstableSpellbook.class
+			};
+<span class="nc" id="L571">			ARTIFACT.defaultProbs = new float[]{ 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1 };</span>
+<span class="nc" id="L572">			ARTIFACT.probs = ARTIFACT.defaultProbs.clone();</span>
+
+			//Trinkets are unique like artifacts, but unlike them you can only have one at once
+			//So we don't need the same enforcement of uniqueness
+<span class="nc" id="L576">			TRINKET.classes = new Class&lt;?&gt;[]{</span>
+					RatSkull.class,
+					ParchmentScrap.class,
+					PetrifiedSeed.class,
+					ExoticCrystals.class,
+					MossyClump.class,
+					DimensionalSundial.class,
+					ThirteenLeafClover.class,
+					TrapMechanism.class,
+					MimicTooth.class,
+					WondrousResin.class,
+					EyeOfNewt.class,
+					SaltCube.class,
+					VialOfBlood.class,
+					ShardOfOblivion.class,
+					ChaoticCenser.class
+			};
+<span class="nc" id="L593">			TRINKET.defaultProbs = new float[]{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };</span>
+<span class="nc" id="L594">			TRINKET.probs = TRINKET.defaultProbs.clone();</span>
+
+<span class="nc bnc" id="L596" title="All 2 branches missed.">			for (Category cat : Category.values()){</span>
+<span class="nc bnc" id="L597" title="All 2 branches missed.">				if (cat.defaultProbs2 != null){</span>
+<span class="nc" id="L598">					cat.defaultProbsTotal = new float[cat.defaultProbs.length];</span>
+<span class="nc bnc" id="L599" title="All 2 branches missed.">					for (int i = 0; i &lt; cat.defaultProbs.length; i++){</span>
+<span class="nc" id="L600">						cat.defaultProbsTotal[i] = cat.defaultProbs[i] + cat.defaultProbs2[i];</span>
+					}
+				}
+			}
+<span class="nc" id="L604">		}</span>
+	}
+
+<span class="nc" id="L607">	private static final float[][] floorSetTierProbs = new float[][] {</span>
+			{0, 75, 20,  4,  1},
+			{0, 25, 50, 20,  5},
+			{0,  0, 40, 50, 10},
+			{0,  0, 20, 40, 40},
+			{0,  0,  0, 20, 80}
+	};
+
+<span class="nc" id="L615">	private static boolean usingFirstDeck = false;</span>
+<span class="nc" id="L616">	private static HashMap&lt;Category,Float&gt; defaultCatProbs = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc" id="L617">	private static HashMap&lt;Category,Float&gt; categoryProbs = new LinkedHashMap&lt;&gt;();</span>
+
+	public static void fullReset() {
+<span class="nc bnc" id="L620" title="All 2 branches missed.">		usingFirstDeck = Random.Int(2) == 0;</span>
+<span class="nc" id="L621">		generalReset();</span>
+<span class="nc bnc" id="L622" title="All 2 branches missed.">		for (Category cat : Category.values()) {</span>
+<span class="nc bnc" id="L623" title="All 4 branches missed.">			cat.using2ndProbs =  cat.defaultProbs2 != null &amp;&amp; Random.Int(2) == 0;</span>
+<span class="nc" id="L624">			reset(cat);</span>
+<span class="nc bnc" id="L625" title="All 2 branches missed.">			if (cat.defaultProbs != null) {</span>
+<span class="nc" id="L626">				cat.seed = Random.Long();</span>
+<span class="nc" id="L627">				cat.dropped = 0;</span>
+			}
+		}
+<span class="nc" id="L630">	}</span>
+
+	public static void generalReset(){
+<span class="nc bnc" id="L633" title="All 2 branches missed.">		for (Category cat : Category.values()) {</span>
+<span class="nc bnc" id="L634" title="All 2 branches missed.">			categoryProbs.put( cat, usingFirstDeck ? cat.firstProb : cat.secondProb );</span>
+<span class="nc" id="L635">			defaultCatProbs.put( cat, cat.firstProb + cat.secondProb );</span>
+		}
+<span class="nc" id="L637">	}</span>
+
+	public static void reset(Category cat){
+<span class="nc bnc" id="L640" title="All 2 branches missed.">		if (cat.defaultProbs != null) {</span>
+<span class="nc bnc" id="L641" title="All 2 branches missed.">			if (cat.defaultProbs2 != null){</span>
+<span class="nc bnc" id="L642" title="All 2 branches missed.">				cat.using2ndProbs = !cat.using2ndProbs;</span>
+<span class="nc bnc" id="L643" title="All 2 branches missed.">				cat.probs = cat.using2ndProbs ? cat.defaultProbs2.clone() : cat.defaultProbs.clone();</span>
+			} else {
+<span class="nc" id="L645">				cat.probs = cat.defaultProbs.clone();</span>
+			}
+		}
+<span class="nc" id="L648">	}</span>
+
+	//reverts changes to drop chances generates by this item
+	//equivalent of shuffling the card back into the deck, does not preserve order!
+	public static void undoDrop(Item item){
+<span class="nc" id="L653">		undoDrop(item.getClass());</span>
+<span class="nc" id="L654">	}</span>
+
+	public static void undoDrop(Class cls){
+<span class="nc bnc" id="L657" title="All 2 branches missed.">		for (Category cat : Category.values()){</span>
+<span class="nc bnc" id="L658" title="All 2 branches missed.">			if (cls.isAssignableFrom(cat.superClass)){</span>
+<span class="nc bnc" id="L659" title="All 2 branches missed.">				if (cat.defaultProbs == null) continue;</span>
+<span class="nc bnc" id="L660" title="All 2 branches missed.">				for (int i = 0; i &lt; cat.classes.length; i++){</span>
+<span class="nc bnc" id="L661" title="All 2 branches missed.">					if (cls == cat.classes[i]){</span>
+<span class="nc" id="L662">						cat.probs[i]++;</span>
+					}
+				}
+			}
+		}
+<span class="nc" id="L667">	}</span>
+	
+	public static Item random() {
+<span class="nc" id="L670">		Category cat = Random.chances( categoryProbs );</span>
+<span class="nc bnc" id="L671" title="All 2 branches missed.">		if (cat == null){</span>
+<span class="nc bnc" id="L672" title="All 2 branches missed.">			usingFirstDeck = !usingFirstDeck;</span>
+<span class="nc" id="L673">			generalReset();</span>
+<span class="nc" id="L674">			cat = Random.chances( categoryProbs );</span>
+		}
+<span class="nc" id="L676">		categoryProbs.put( cat, categoryProbs.get( cat ) - 1);</span>
+
+<span class="nc bnc" id="L678" title="All 2 branches missed.">		if (cat == Category.SEED) {</span>
+			//We specifically use defaults for seeds here because, unlike other item categories
+			// their predominant source of drops is grass, not levelgen. This way the majority
+			// of seed drops still use a deck, but the few that are spawned by levelgen are consistent
+<span class="nc" id="L682">			return randomUsingDefaults(cat);</span>
+		} else {
+<span class="nc" id="L684">			return random(cat);</span>
+		}
+	}
+
+	public static Item randomUsingDefaults(){
+<span class="nc" id="L689">		return randomUsingDefaults(Random.chances( defaultCatProbs ));</span>
+	}
+	
+	public static Item random( Category cat ) {
+<span class="nc bnc" id="L693" title="All 5 branches missed.">		switch (cat) {</span>
+			case ARMOR:
+<span class="nc" id="L695">				return randomArmor();</span>
+			case WEAPON:
+<span class="nc" id="L697">				return randomWeapon();</span>
+			case MISSILE:
+<span class="nc" id="L699">				return randomMissile();</span>
+			case ARTIFACT:
+<span class="nc" id="L701">				Item item = randomArtifact();</span>
+				//if we're out of artifacts, return a ring instead.
+<span class="nc bnc" id="L703" title="All 2 branches missed.">				return item != null ? item : random(Category.RING);</span>
+			default:
+<span class="nc bnc" id="L705" title="All 4 branches missed.">				if (cat.defaultProbs != null &amp;&amp; cat.seed != null){</span>
+<span class="nc" id="L706">					Random.pushGenerator(cat.seed);</span>
+<span class="nc bnc" id="L707" title="All 2 branches missed.">					for (int i = 0; i &lt; cat.dropped; i++) Random.Long();</span>
+				}
+
+<span class="nc" id="L710">				int i = Random.chances(cat.probs);</span>
+<span class="nc bnc" id="L711" title="All 2 branches missed.">				if (i == -1) {</span>
+<span class="nc" id="L712">					reset(cat);</span>
+<span class="nc" id="L713">					i = Random.chances(cat.probs);</span>
+				}
+<span class="nc bnc" id="L715" title="All 2 branches missed.">				if (cat.defaultProbs != null) cat.probs[i]--;</span>
+<span class="nc" id="L716">				Class&lt;?&gt; itemCls = cat.classes[i];</span>
+
+<span class="nc bnc" id="L718" title="All 4 branches missed.">				if (cat.defaultProbs != null &amp;&amp; cat.seed != null){</span>
+<span class="nc" id="L719">					Random.popGenerator();</span>
+<span class="nc" id="L720">					cat.dropped++;</span>
+				}
+
+<span class="nc bnc" id="L723" title="All 2 branches missed.">				if (ExoticPotion.regToExo.containsKey(itemCls)){</span>
+<span class="nc bnc" id="L724" title="All 2 branches missed.">					if (Random.Float() &lt; ExoticCrystals.consumableExoticChance()){</span>
+<span class="nc" id="L725">						itemCls = ExoticPotion.regToExo.get(itemCls);</span>
+					}
+<span class="nc bnc" id="L727" title="All 2 branches missed.">				} else if (ExoticScroll.regToExo.containsKey(itemCls)){</span>
+<span class="nc bnc" id="L728" title="All 2 branches missed.">					if (Random.Float() &lt; ExoticCrystals.consumableExoticChance()){</span>
+<span class="nc" id="L729">						itemCls = ExoticScroll.regToExo.get(itemCls);</span>
+					}
+				}
+
+<span class="nc" id="L733">				return ((Item) Reflection.newInstance(itemCls)).random();</span>
+		}
+	}
+
+	//overrides any deck systems and always uses default probs
+	// except for artifacts, which must always use a deck
+	public static Item randomUsingDefaults( Category cat ){
+<span class="nc bnc" id="L740" title="All 2 branches missed.">		if (cat == Category.WEAPON){</span>
+<span class="nc" id="L741">			return randomWeapon(true);</span>
+<span class="nc bnc" id="L742" title="All 2 branches missed.">		} else if (cat == Category.MISSILE){</span>
+<span class="nc" id="L743">			return randomMissile(true);</span>
+<span class="nc bnc" id="L744" title="All 4 branches missed.">		} else if (cat.defaultProbs == null || cat == Category.ARTIFACT) {</span>
+<span class="nc" id="L745">			return random(cat);</span>
+<span class="nc bnc" id="L746" title="All 2 branches missed.">		} else if (cat.defaultProbsTotal != null){</span>
+<span class="nc" id="L747">			return ((Item) Reflection.newInstance(cat.classes[Random.chances(cat.defaultProbsTotal)])).random();</span>
+		} else {
+<span class="nc" id="L749">			Class&lt;?&gt; itemCls = cat.classes[Random.chances(cat.defaultProbs)];</span>
+
+<span class="nc bnc" id="L751" title="All 2 branches missed.">			if (ExoticPotion.regToExo.containsKey(itemCls)){</span>
+<span class="nc bnc" id="L752" title="All 2 branches missed.">				if (Random.Float() &lt; ExoticCrystals.consumableExoticChance()){</span>
+<span class="nc" id="L753">					itemCls = ExoticPotion.regToExo.get(itemCls);</span>
+				}
+<span class="nc bnc" id="L755" title="All 2 branches missed.">			} else if (ExoticScroll.regToExo.containsKey(itemCls)){</span>
+<span class="nc bnc" id="L756" title="All 2 branches missed.">				if (Random.Float() &lt; ExoticCrystals.consumableExoticChance()){</span>
+<span class="nc" id="L757">					itemCls = ExoticScroll.regToExo.get(itemCls);</span>
+				}
+			}
+
+<span class="nc" id="L761">			return ((Item) Reflection.newInstance(itemCls)).random();</span>
+		}
+	}
+	
+	public static Item random( Class&lt;? extends Item&gt; cl ) {
+<span class="nc" id="L766">		return Reflection.newInstance(cl).random();</span>
+	}
+
+	public static Armor randomArmor(){
+<span class="nc" id="L770">		return randomArmor(Dungeon.depth / 5);</span>
+	}
+	
+	public static Armor randomArmor(int floorSet) {
+
+<span class="nc" id="L775">		floorSet = (int)GameMath.gate(0, floorSet, floorSetTierProbs.length-1);</span>
+		
+<span class="nc" id="L777">		Armor a = (Armor)Reflection.newInstance(Category.ARMOR.classes[Random.chances(floorSetTierProbs[floorSet])]);</span>
+<span class="nc" id="L778">		a.random();</span>
+<span class="nc" id="L779">		return a;</span>
+	}
+
+<span class="nc" id="L782">	public static final Category[] wepTiers = new Category[]{</span>
+			Category.WEP_T1,
+			Category.WEP_T2,
+			Category.WEP_T3,
+			Category.WEP_T4,
+			Category.WEP_T5
+	};
+
+	public static MeleeWeapon randomWeapon(){
+<span class="nc" id="L791">		return randomWeapon(Dungeon.depth / 5);</span>
+	}
+
+	public static MeleeWeapon randomWeapon(int floorSet) {
+<span class="nc" id="L795">		return randomWeapon(floorSet, false);</span>
+	}
+
+	public static MeleeWeapon randomWeapon(boolean useDefaults) {
+<span class="nc" id="L799">		return randomWeapon(Dungeon.depth / 5, useDefaults);</span>
+	}
+	
+	public static MeleeWeapon randomWeapon(int floorSet, boolean useDefaults) {
+
+<span class="nc" id="L804">		floorSet = (int)GameMath.gate(0, floorSet, floorSetTierProbs.length-1);</span>
+
+		MeleeWeapon w;
+<span class="nc bnc" id="L807" title="All 2 branches missed.">		if (useDefaults){</span>
+<span class="nc" id="L808">			w = (MeleeWeapon) randomUsingDefaults(wepTiers[Random.chances(floorSetTierProbs[floorSet])]);</span>
+		} else {
+<span class="nc" id="L810">			w = (MeleeWeapon) random(wepTiers[Random.chances(floorSetTierProbs[floorSet])]);</span>
+		}
+<span class="nc" id="L812">		return w;</span>
+	}
+	
+<span class="nc" id="L815">	public static final Category[] misTiers = new Category[]{</span>
+			Category.MIS_T1,
+			Category.MIS_T2,
+			Category.MIS_T3,
+			Category.MIS_T4,
+			Category.MIS_T5
+	};
+	
+	public static MissileWeapon randomMissile(){
+<span class="nc" id="L824">		return randomMissile(Dungeon.depth / 5);</span>
+	}
+
+	public static MissileWeapon randomMissile(int floorSet) {
+<span class="nc" id="L828">		return randomMissile(floorSet, false);</span>
+	}
+
+	public static MissileWeapon randomMissile(boolean useDefaults) {
+<span class="nc" id="L832">		return randomMissile(Dungeon.depth / 5, useDefaults);</span>
+	}
+
+	public static MissileWeapon randomMissile(int floorSet, boolean useDefaults) {
+		
+<span class="nc" id="L837">		floorSet = (int)GameMath.gate(0, floorSet, floorSetTierProbs.length-1);</span>
+
+		MissileWeapon w;
+<span class="nc bnc" id="L840" title="All 2 branches missed.">		if (useDefaults){</span>
+<span class="nc" id="L841">			w = (MissileWeapon)randomUsingDefaults(misTiers[Random.chances(floorSetTierProbs[floorSet])]);</span>
+		} else {
+<span class="nc" id="L843">			w = (MissileWeapon)random(misTiers[Random.chances(floorSetTierProbs[floorSet])]);</span>
+		}
+<span class="nc" id="L845">		return w;</span>
+	}
+
+	//enforces uniqueness of artifacts throughout a run.
+	public static Artifact randomArtifact() {
+
+<span class="nc" id="L851">		Category cat = Category.ARTIFACT;</span>
+
+<span class="nc bnc" id="L853" title="All 4 branches missed.">		if (cat.defaultProbs != null &amp;&amp; cat.seed != null){</span>
+<span class="nc" id="L854">			Random.pushGenerator(cat.seed);</span>
+<span class="nc bnc" id="L855" title="All 2 branches missed.">			for (int i = 0; i &lt; cat.dropped; i++) Random.Long();</span>
+		}
+
+<span class="nc" id="L858">		int i = Random.chances( cat.probs );</span>
+
+<span class="nc bnc" id="L860" title="All 4 branches missed.">		if (cat.defaultProbs != null &amp;&amp; cat.seed != null){</span>
+<span class="nc" id="L861">			Random.popGenerator();</span>
+<span class="nc" id="L862">			cat.dropped++;</span>
+		}
+
+		//if no artifacts are left, return null
+<span class="nc bnc" id="L866" title="All 2 branches missed.">		if (i == -1){</span>
+<span class="nc" id="L867">			return null;</span>
+		}
+
+<span class="nc" id="L870">		cat.probs[i]--;</span>
+<span class="nc" id="L871">		return (Artifact) Reflection.newInstance((Class&lt;? extends Artifact&gt;) cat.classes[i]).random();</span>
+
+	}
+
+	public static boolean removeArtifact(Class&lt;?extends Artifact&gt; artifact) {
+<span class="nc" id="L876">		Category cat = Category.ARTIFACT;</span>
+<span class="nc bnc" id="L877" title="All 2 branches missed.">		for (int i = 0; i &lt; cat.classes.length; i++){</span>
+<span class="nc bnc" id="L878" title="All 4 branches missed.">			if (cat.classes[i].equals(artifact) &amp;&amp; cat.probs[i] &gt; 0) {</span>
+<span class="nc" id="L879">				cat.probs[i] = 0;</span>
+<span class="nc" id="L880">				return true;</span>
+			}
+		}
+<span class="nc" id="L883">		return false;</span>
+	}
+
+	private static final String FIRST_DECK = &quot;first_deck&quot;;
+	private static final String GENERAL_PROBS = &quot;general_probs&quot;;
+	private static final String CATEGORY_PROBS = &quot;_probs&quot;;
+	private static final String CATEGORY_USING_PROBS2 = &quot;_using_probs2&quot;;
+	private static final String CATEGORY_SEED = &quot;_seed&quot;;
+	private static final String CATEGORY_DROPPED = &quot;_dropped&quot;;
+
+	public static void storeInBundle(Bundle bundle) {
+<span class="nc" id="L894">		bundle.put(FIRST_DECK, usingFirstDeck);</span>
+
+<span class="nc" id="L896">		Float[] genProbs = categoryProbs.values().toArray(new Float[0]);</span>
+<span class="nc" id="L897">		float[] storeProbs = new float[genProbs.length];</span>
+<span class="nc bnc" id="L898" title="All 2 branches missed.">		for (int i = 0; i &lt; storeProbs.length; i++){</span>
+<span class="nc" id="L899">			storeProbs[i] = genProbs[i];</span>
+		}
+<span class="nc" id="L901">		bundle.put( GENERAL_PROBS, storeProbs);</span>
+
+<span class="nc bnc" id="L903" title="All 2 branches missed.">		for (Category cat : Category.values()){</span>
+<span class="nc bnc" id="L904" title="All 2 branches missed.">			if (cat.defaultProbs == null) continue;</span>
+
+<span class="nc" id="L906">			bundle.put(cat.name().toLowerCase() + CATEGORY_PROBS, cat.probs);</span>
+
+<span class="nc bnc" id="L908" title="All 2 branches missed.">			if (cat.defaultProbs2 != null){</span>
+<span class="nc" id="L909">				bundle.put(cat.name().toLowerCase() + CATEGORY_USING_PROBS2, cat.using2ndProbs);</span>
+			}
+
+<span class="nc bnc" id="L912" title="All 2 branches missed.">			if (cat.seed != null) {</span>
+<span class="nc" id="L913">				bundle.put(cat.name().toLowerCase() + CATEGORY_SEED, cat.seed);</span>
+<span class="nc" id="L914">				bundle.put(cat.name().toLowerCase() + CATEGORY_DROPPED, cat.dropped);</span>
+			}
+		}
+<span class="nc" id="L917">	}</span>
+
+	public static void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L920">		fullReset();</span>
+
+<span class="nc" id="L922">		usingFirstDeck = bundle.getBoolean(FIRST_DECK);</span>
+
+<span class="nc bnc" id="L924" title="All 2 branches missed.">		if (bundle.contains(GENERAL_PROBS)){</span>
+<span class="nc" id="L925">			float[] probs = bundle.getFloatArray(GENERAL_PROBS);</span>
+<span class="nc bnc" id="L926" title="All 2 branches missed.">			if (probs.length == Category.values().length) {</span>
+<span class="nc bnc" id="L927" title="All 2 branches missed.">				for (int i = 0; i &lt; probs.length; i++) {</span>
+<span class="nc" id="L928">					categoryProbs.put(Category.values()[i], probs[i]);</span>
+				}
+			}
+		}
+
+<span class="nc bnc" id="L933" title="All 2 branches missed.">		for (Category cat : Category.values()){</span>
+<span class="nc bnc" id="L934" title="All 2 branches missed.">			if (bundle.contains(cat.name().toLowerCase() + CATEGORY_PROBS)){</span>
+<span class="nc" id="L935">				float[] probs = bundle.getFloatArray(cat.name().toLowerCase() + CATEGORY_PROBS);</span>
+<span class="nc bnc" id="L936" title="All 4 branches missed.">				if (cat.defaultProbs != null &amp;&amp; probs.length == cat.defaultProbs.length){</span>
+<span class="nc" id="L937">					cat.probs = probs;</span>
+				}
+<span class="nc bnc" id="L939" title="All 2 branches missed.">				if (bundle.contains(cat.name().toLowerCase() + CATEGORY_USING_PROBS2)){</span>
+<span class="nc" id="L940">					cat.using2ndProbs = bundle.getBoolean(cat.name().toLowerCase() + CATEGORY_USING_PROBS2);</span>
+				} else {
+<span class="nc" id="L942">					cat.using2ndProbs = false;</span>
+				}
+<span class="nc bnc" id="L944" title="All 2 branches missed.">				if (bundle.contains(cat.name().toLowerCase() + CATEGORY_SEED)){</span>
+<span class="nc" id="L945">					cat.seed = bundle.getLong(cat.name().toLowerCase() + CATEGORY_SEED);</span>
+<span class="nc" id="L946">					cat.dropped = bundle.getInt(cat.name().toLowerCase() + CATEGORY_DROPPED);</span>
+				}
+
+				//pre-v3.0.0 conversion for artifacts specifically
+<span class="nc bnc" id="L950" title="All 4 branches missed.">				if (cat == Category.ARTIFACT &amp;&amp; probs.length != cat.defaultProbs.length){</span>
+<span class="nc" id="L951">					int tomeIDX = 5;</span>
+<span class="nc" id="L952">					int j = 0;</span>
+<span class="nc bnc" id="L953" title="All 2 branches missed.">					for (int i = 0; i &lt; probs.length; i++){</span>
+<span class="nc bnc" id="L954" title="All 2 branches missed.">						if (i == tomeIDX){</span>
+<span class="nc" id="L955">							cat.probs[j] = 0;</span>
+<span class="nc" id="L956">							j++;</span>
+						}
+<span class="nc" id="L958">						cat.probs[j] = probs[i];</span>
+<span class="nc" id="L959">						j++;</span>
+					}
+
+				}
+
+			}
+		}
+		
+<span class="nc" id="L967">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

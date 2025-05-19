@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DM100.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">DM100.java</span></div><h1>DM100.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AscensionChallenge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SparkParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.DM100Sprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.utils.Callback;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L40">public class DM100 extends Mob implements Callback {</span>
+
+	private static final float TIME_TO_ZAP	= 1f;
+	
+	{
+<span class="nc" id="L45">		spriteClass = DM100Sprite.class;</span>
+		
+<span class="nc" id="L47">		HP = HT = 20;</span>
+<span class="nc" id="L48">		defenseSkill = 8;</span>
+		
+<span class="nc" id="L50">		EXP = 6;</span>
+<span class="nc" id="L51">		maxLvl = 13;</span>
+		
+<span class="nc" id="L53">		loot = Generator.Category.SCROLL;</span>
+<span class="nc" id="L54">		lootChance = 0.25f;</span>
+		
+<span class="nc" id="L56">		properties.add(Property.ELECTRIC);</span>
+<span class="nc" id="L57">		properties.add(Property.INORGANIC);</span>
+<span class="nc" id="L58">	}</span>
+	
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L62">		return Random.NormalIntRange( 2, 8 );</span>
+	}
+	
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L67">		return 11;</span>
+	}
+	
+	@Override
+	public int drRoll() {
+<span class="nc" id="L72">		return super.drRoll() + Random.NormalIntRange(0, 4);</span>
+	}
+
+	@Override
+	protected boolean canAttack( Char enemy ) {
+<span class="nc bnc" id="L77" title="All 2 branches missed.">		return super.canAttack(enemy)</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">				|| new Ballistica( pos, enemy.pos, Ballistica.MAGIC_BOLT).collisionPos == enemy.pos;</span>
+	}
+	
+	//used so resistances can differentiate between melee and magical attacks
+<span class="nc" id="L82">	public static class LightningBolt{}</span>
+	
+	@Override
+	protected boolean doAttack( Char enemy ) {
+
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		if (Dungeon.level.adjacent( pos, enemy.pos )</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">				|| new Ballistica( pos, enemy.pos, Ballistica.MAGIC_BOLT).collisionPos != enemy.pos) {</span>
+			
+<span class="nc" id="L90">			return super.doAttack( enemy );</span>
+			
+		} else {
+			
+<span class="nc" id="L94">			spend( TIME_TO_ZAP );</span>
+
+<span class="nc" id="L96">			Invisibility.dispel(this);</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">			if (hit( this, enemy, true )) {</span>
+<span class="nc" id="L98">				int dmg = Random.NormalIntRange(3, 10);</span>
+<span class="nc" id="L99">				dmg = Math.round(dmg * AscensionChallenge.statModifier(this));</span>
+<span class="nc" id="L100">				enemy.damage( dmg, new LightningBolt() );</span>
+
+<span class="nc bnc" id="L102" title="All 2 branches missed.">				if (enemy.sprite.visible) {</span>
+<span class="nc" id="L103">					enemy.sprite.centerEmitter().burst(SparkParticle.FACTORY, 3);</span>
+<span class="nc" id="L104">					enemy.sprite.flash();</span>
+				}
+				
+<span class="nc bnc" id="L107" title="All 2 branches missed.">				if (enemy == Dungeon.hero) {</span>
+					
+<span class="nc" id="L109">					PixelScene.shake( 2, 0.3f );</span>
+					
+<span class="nc bnc" id="L111" title="All 2 branches missed.">					if (!enemy.isAlive()) {</span>
+<span class="nc" id="L112">						Badges.validateDeathFromEnemyMagic();</span>
+<span class="nc" id="L113">						Dungeon.fail( this );</span>
+<span class="nc" id="L114">						GLog.n( Messages.get(this, &quot;zap_kill&quot;) );</span>
+					}
+				}
+<span class="nc" id="L117">			} else {</span>
+<span class="nc" id="L118">				enemy.sprite.showStatus( CharSprite.NEUTRAL,  enemy.defenseVerb() );</span>
+			}
+			
+<span class="nc bnc" id="L121" title="All 6 branches missed.">			if (sprite != null &amp;&amp; (sprite.visible || enemy.sprite.visible)) {</span>
+<span class="nc" id="L122">				sprite.zap( enemy.pos );</span>
+<span class="nc" id="L123">				return false;</span>
+			} else {
+<span class="nc" id="L125">				return true;</span>
+			}
+		}
+	}
+	
+	@Override
+	public void call() {
+<span class="nc" id="L132">		next();</span>
+<span class="nc" id="L133">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

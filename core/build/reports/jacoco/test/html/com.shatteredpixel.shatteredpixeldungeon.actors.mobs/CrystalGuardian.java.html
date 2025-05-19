@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CrystalGuardian.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">CrystalGuardian.java</span></div><h1>CrystalGuardian.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Cripple;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Doom;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Bestiary;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CrystalGuardianSprite;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+public class CrystalGuardian extends Mob{
+
+	{
+<span class="nc" id="L47">		spriteClass = CrystalGuardianSprite.class;</span>
+
+<span class="nc" id="L49">		HP = HT = 100;</span>
+<span class="nc" id="L50">		defenseSkill = 14;</span>
+
+<span class="nc" id="L52">		EXP = 10;</span>
+<span class="nc" id="L53">		maxLvl = -2;</span>
+
+<span class="nc" id="L55">		SLEEPING = new Sleeping();</span>
+<span class="nc" id="L56">		state = SLEEPING;</span>
+
+<span class="nc" id="L58">		properties.add(Property.INORGANIC);</span>
+<span class="nc" id="L59">		properties.add(Property.MINIBOSS);</span>
+	}
+
+<span class="nc" id="L62">	private boolean recovering = false;</span>
+
+	public boolean recovering(){
+<span class="nc" id="L65">		return recovering;</span>
+	}
+
+	@Override
+	protected boolean act() {
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		if (recovering){</span>
+<span class="nc" id="L71">			throwItems();</span>
+<span class="nc" id="L72">			HP = Math.min(HT, HP+5);</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">			if (Dungeon.level.heroFOV[pos]) {</span>
+<span class="nc" id="L74">				sprite.showStatusWithIcon(CharSprite.POSITIVE, &quot;5&quot;, FloatingText.HEALING);</span>
+			}
+<span class="nc bnc" id="L76" title="All 2 branches missed.">			if (HP == HT){</span>
+<span class="nc" id="L77">				recovering = false;</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">				if (sprite instanceof CrystalGuardianSprite) ((CrystalGuardianSprite) sprite).endCrumple();</span>
+			}
+<span class="nc" id="L80">			spend(TICK);</span>
+<span class="nc" id="L81">			return true;</span>
+		}
+<span class="nc" id="L83">		return super.act();</span>
+	}
+
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L88">		return Random.NormalIntRange( 10, 16 );</span>
+	}
+
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L93">		return 20;</span>
+	}
+
+	@Override
+	public int defenseSkill(Char enemy) {
+<span class="nc bnc" id="L98" title="All 2 branches missed.">		if (recovering) return 0;</span>
+<span class="nc" id="L99">		else            return super.defenseSkill(enemy);</span>
+	}
+
+	@Override
+	public boolean surprisedBy(Char enemy, boolean attacking) {
+<span class="nc bnc" id="L104" title="All 2 branches missed.">		if (recovering) return false;</span>
+<span class="nc" id="L105">		else            return super.surprisedBy(enemy, attacking);</span>
+	}
+
+	@Override
+	public int drRoll() {
+<span class="nc" id="L110">		return super.drRoll() + Random.NormalIntRange(0, 10);</span>
+	}
+
+	@Override
+	public boolean reset() {
+<span class="nc" id="L115">		return true;</span>
+	}
+
+	@Override
+	public int defenseProc(Char enemy, int damage) {
+<span class="nc bnc" id="L120" title="All 2 branches missed.">		if (recovering){</span>
+			//this triggers before blocking, so the dmg as block-bypassing
+<span class="nc" id="L122">			sprite.showStatusWithIcon(CharSprite.NEGATIVE, Integer.toString(damage), FloatingText.PHYS_DMG_NO_BLOCK);</span>
+<span class="nc" id="L123">			HP = Math.max(1, HP-damage);</span>
+<span class="nc" id="L124">			damage = -1;</span>
+		}
+
+<span class="nc" id="L127">		return super.defenseProc(enemy, damage);</span>
+	}
+
+	@Override
+	public boolean isAlive() {
+<span class="nc bnc" id="L132" title="All 2 branches missed.">		if (HP &lt;= 0){</span>
+<span class="nc" id="L133">			HP = 1;</span>
+
+<span class="nc bnc" id="L135" title="All 2 branches missed.">			for (Buff b : buffs()){</span>
+<span class="nc bnc" id="L136" title="All 4 branches missed.">				if (!(b instanceof Doom || b instanceof Cripple)) {</span>
+<span class="nc" id="L137">					b.detach();</span>
+				}
+<span class="nc" id="L139">			}</span>
+
+<span class="nc bnc" id="L141" title="All 2 branches missed.">			if (!recovering) {</span>
+<span class="nc" id="L142">				recovering = true;</span>
+<span class="nc" id="L143">				Bestiary.setSeen(getClass());</span>
+<span class="nc" id="L144">				Bestiary.countEncounter(getClass());</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">				if (sprite != null) ((CrystalGuardianSprite) sprite).crumple();</span>
+			}
+		}
+<span class="nc" id="L148">		return super.isAlive();</span>
+	}
+
+	@Override
+	public boolean isInvulnerable(Class effect) {
+<span class="nc bnc" id="L153" title="All 2 branches missed.">		if (recovering){</span>
+			//while recovering, immune to chars that aren't the hero or spire
+			// this is sort of a hack to prevent allies from attacking downed guardians
+<span class="nc bnc" id="L156" title="All 8 branches missed.">			return super.isInvulnerable(effect) || (Char.class.isAssignableFrom(effect) &amp;&amp; !Hero.class.isAssignableFrom(effect) &amp;&amp; !CrystalSpire.class.isAssignableFrom(effect));</span>
+		}
+<span class="nc" id="L158">		return super.isInvulnerable(effect);</span>
+	}
+
+	public CrystalGuardian(){
+<span class="nc" id="L162">		super();</span>
+<span class="nc bnc" id="L163" title="All 3 branches missed.">		switch (Random.Int(3)){</span>
+			case 0: default:
+<span class="nc" id="L165">				spriteClass = CrystalGuardianSprite.Blue.class;</span>
+<span class="nc" id="L166">				break;</span>
+			case 1:
+<span class="nc" id="L168">				spriteClass = CrystalGuardianSprite.Green.class;</span>
+<span class="nc" id="L169">				break;</span>
+			case 2:
+<span class="nc" id="L171">				spriteClass = CrystalGuardianSprite.Red.class;</span>
+				break;
+		}
+<span class="nc" id="L174">	}</span>
+
+	@Override
+	public float spawningWeight() {
+<span class="nc" id="L178">		return 0;</span>
+	}
+
+	@Override
+	public float speed() {
+		//crystal guardians take up to 4 turns when moving through an enclosed space
+<span class="nc bnc" id="L184" title="All 2 branches missed.">		if (!Dungeon.level.openSpace[pos]) {</span>
+<span class="nc" id="L185">			return Math.max(0.25f, super.speed() / 4f);</span>
+		}
+<span class="nc" id="L187">		return super.speed();</span>
+	}
+
+	@Override
+	public void move(int step, boolean travelling) {
+<span class="nc" id="L192">		super.move(step, travelling);</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">		if (Dungeon.level.map[pos] == Terrain.MINE_CRYSTAL){</span>
+<span class="nc" id="L194">			Level.set(pos, Terrain.EMPTY);</span>
+<span class="nc" id="L195">			GameScene.updateMap(pos);</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">			if (Dungeon.level.heroFOV[pos]){</span>
+<span class="nc" id="L197">				Splash.at(pos, 0xFFFFFF, 5);</span>
+<span class="nc" id="L198">				Sample.INSTANCE.play( Assets.Sounds.SHATTER );</span>
+			}
+			//breaking a crystal costs an extra move, not affected by enclosed spaces though
+<span class="nc" id="L201">			spend(1/super.speed());</span>
+		}
+<span class="nc" id="L203">	}</span>
+
+	@Override
+	public boolean[] modifyPassable(boolean[] passable) {
+		//if we are hunting, we can stomp through crystals, but prefer not to
+<span class="nc bnc" id="L208" title="All 4 branches missed.">		if (state == HUNTING &amp;&amp; target != -1){</span>
+<span class="nc" id="L209">			PathFinder.buildDistanceMap(target, passable);</span>
+
+<span class="nc bnc" id="L211" title="All 2 branches missed.">			if (PathFinder.distance[pos] &gt; 2*Dungeon.level.distance(pos, target)) {</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">				for (int i = 0; i &lt; Dungeon.level.length(); i++) {</span>
+<span class="nc bnc" id="L213" title="All 4 branches missed.">					passable[i] = passable[i] || Dungeon.level.map[i] == Terrain.MINE_CRYSTAL;</span>
+				}
+			}
+		}
+<span class="nc" id="L217">		return passable;</span>
+	}
+
+	@Override
+	public void beckon(int cell) {
+<span class="nc bnc" id="L222" title="All 2 branches missed.">		if (state == SLEEPING){</span>
+			//do nothing
+		} else {
+<span class="nc" id="L225">			super.beckon(cell);</span>
+		}
+<span class="nc" id="L227">	}</span>
+
+<span class="nc" id="L229">	protected class Sleeping extends Mob.Sleeping{</span>
+
+		@Override
+		protected void awaken(boolean enemyInFOV) {
+<span class="nc bnc" id="L233" title="All 2 branches missed.">			if (enemyInFOV){</span>
+				//do not wake up if we see an enemy we can't actually reach
+<span class="nc" id="L235">				PathFinder.buildDistanceMap(enemy.pos, Dungeon.level.passable);</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">				if (PathFinder.distance[pos] == Integer.MAX_VALUE){</span>
+<span class="nc" id="L237">					return;</span>
+				}
+			}
+<span class="nc" id="L240">			super.awaken(enemyInFOV);</span>
+<span class="nc" id="L241">		}</span>
+	}
+
+	public static final String SPRITE = &quot;sprite&quot;;
+	public static final String RECOVERING = &quot;recovering&quot;;
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L249">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L250">		bundle.put(SPRITE, spriteClass);</span>
+<span class="nc" id="L251">		bundle.put(RECOVERING, recovering);</span>
+<span class="nc" id="L252">	}</span>
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L256">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L257">		spriteClass = bundle.getClass(SPRITE);</span>
+<span class="nc" id="L258">		recovering = bundle.getBoolean(RECOVERING);</span>
+<span class="nc" id="L259">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WandOfFrost.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.wands</a> &gt; <span class="el_source">WandOfFrost.java</span></div><h1>WandOfFrost.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.wands;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Fire;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Chill;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.MagicalFireRoom;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Callback;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L44">public class WandOfFrost extends DamageWand {</span>
+
+	{
+<span class="nc" id="L47">		image = ItemSpriteSheet.WAND_FROST;</span>
+<span class="nc" id="L48">	}</span>
+
+	public int min(int lvl){
+<span class="nc" id="L51">		return 2+lvl;</span>
+	}
+
+	public int max(int lvl){
+<span class="nc" id="L55">		return 8+5*lvl;</span>
+	}
+
+	@Override
+	public void onZap(Ballistica bolt) {
+
+<span class="nc" id="L61">		Heap heap = Dungeon.level.heaps.get(bolt.collisionPos);</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		if (heap != null) {</span>
+<span class="nc" id="L63">			heap.freeze();</span>
+		}
+
+<span class="nc" id="L66">		Fire fire = (Fire) Dungeon.level.blobs.get(Fire.class);</span>
+<span class="nc bnc" id="L67" title="All 4 branches missed.">		if (fire != null &amp;&amp; fire.volume &gt; 0) {</span>
+<span class="nc" id="L68">			fire.clear( bolt.collisionPos );</span>
+		}
+
+<span class="nc" id="L71">		MagicalFireRoom.EternalFire eternalFire = (MagicalFireRoom.EternalFire)Dungeon.level.blobs.get(MagicalFireRoom.EternalFire.class);</span>
+<span class="nc bnc" id="L72" title="All 4 branches missed.">		if (eternalFire != null &amp;&amp; eternalFire.volume &gt; 0) {</span>
+<span class="nc" id="L73">			eternalFire.clear( bolt.collisionPos );</span>
+			//bolt ends 1 tile short of fire, so check next tile too
+<span class="nc bnc" id="L75" title="All 2 branches missed.">			if (bolt.path.size() &gt; bolt.dist+1){</span>
+<span class="nc" id="L76">				eternalFire.clear( bolt.path.get(bolt.dist+1) );</span>
+			}
+
+		}
+
+<span class="nc" id="L81">		Char ch = Actor.findChar(bolt.collisionPos);</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		if (ch != null){</span>
+
+<span class="nc" id="L84">			int damage = damageRoll();</span>
+
+<span class="nc bnc" id="L86" title="All 2 branches missed.">			if (ch.buff(Frost.class) != null){</span>
+<span class="nc" id="L87">				return; //do nothing, can't affect a frozen target</span>
+			}
+<span class="nc bnc" id="L89" title="All 2 branches missed.">			if (ch.buff(Chill.class) != null){</span>
+				//6.67% less damage per turn of chill remaining, to a max of 10 turns (50% dmg)
+<span class="nc" id="L91">				float chillturns = Math.min(10, ch.buff(Chill.class).cooldown());</span>
+<span class="nc" id="L92">				damage = (int)Math.round(damage * Math.pow(0.9333f, chillturns));</span>
+<span class="nc" id="L93">			} else {</span>
+<span class="nc" id="L94">				ch.sprite.burst( 0xFF99CCFF, buffedLvl() / 2 + 2 );</span>
+			}
+
+<span class="nc" id="L97">			wandProc(ch, chargesPerCast());</span>
+<span class="nc" id="L98">			ch.damage(damage, this);</span>
+<span class="nc" id="L99">			Sample.INSTANCE.play( Assets.Sounds.HIT_MAGIC, 1, 1.1f * Random.Float(0.87f, 1.15f) );</span>
+
+<span class="nc bnc" id="L101" title="All 2 branches missed.">			if (ch.isAlive()){</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">				if (Dungeon.level.water[ch.pos])</span>
+<span class="nc" id="L103">					Buff.affect(ch, Chill.class, 4+buffedLvl());</span>
+				else
+<span class="nc" id="L105">					Buff.affect(ch, Chill.class, 2+buffedLvl());</span>
+			}
+<span class="nc" id="L107">		} else {</span>
+<span class="nc" id="L108">			Dungeon.level.pressCell(bolt.collisionPos);</span>
+		}
+<span class="nc" id="L110">	}</span>
+
+	@Override
+	public String upgradeStat2(int level) {
+<span class="nc" id="L114">		return Integer.toString(2 + level);</span>
+	}
+
+	@Override
+	public void fx(Ballistica bolt, Callback callback) {
+<span class="nc" id="L119">		MagicMissile.boltFromChar(curUser.sprite.parent,</span>
+				MagicMissile.FROST,
+				curUser.sprite,
+<span class="nc" id="L122">				bolt.collisionPos,</span>
+				callback);
+<span class="nc" id="L124">		Sample.INSTANCE.play(Assets.Sounds.ZAP);</span>
+<span class="nc" id="L125">	}</span>
+
+	@Override
+	public void onHit(MagesStaff staff, Char attacker, Char defender, int damage) {
+<span class="nc" id="L129">		Chill chill = defender.buff(Chill.class);</span>
+
+<span class="nc bnc" id="L131" title="All 2 branches missed.">		if (chill != null) {</span>
+
+			//1/9 at 2 turns of chill, scaling to 9/9 at 10 turns
+<span class="nc" id="L134">			float procChance = ((int)Math.floor(chill.cooldown()) - 1)/9f;</span>
+<span class="nc" id="L135">			procChance *= procChanceMultiplier(attacker);</span>
+
+<span class="nc bnc" id="L137" title="All 2 branches missed.">			if (Random.Float() &lt; procChance) {</span>
+
+<span class="nc" id="L139">				float powerMulti = Math.max(1f, procChance);</span>
+
+				//need to delay this through an actor so that the freezing isn't broken by taking damage from the staff hit.
+<span class="nc" id="L142">				new FlavourBuff() {</span>
+					{
+<span class="nc" id="L144">						actPriority = VFX_PRIO;</span>
+<span class="nc" id="L145">					}</span>
+
+					public boolean act() {
+<span class="nc" id="L148">						Buff.affect(target, Frost.class, Math.round(Frost.DURATION * powerMulti));</span>
+<span class="nc" id="L149">						return super.act();</span>
+					}
+<span class="nc" id="L151">				}.attachTo(defender);</span>
+			}
+		}
+<span class="nc" id="L154">	}</span>
+
+	@Override
+	public void staffFx(MagesStaff.StaffParticle particle) {
+<span class="nc" id="L158">		particle.color(0x88CCFF);</span>
+<span class="nc" id="L159">		particle.am = 0.6f;</span>
+<span class="nc" id="L160">		particle.setLifespan(2f);</span>
+<span class="nc" id="L161">		float angle = Random.Float(PointF.PI2);</span>
+<span class="nc" id="L162">		particle.speed.polar( angle, 2f);</span>
+<span class="nc" id="L163">		particle.acc.set( 0f, 1f);</span>
+<span class="nc" id="L164">		particle.setSize( 0f, 1.5f);</span>
+<span class="nc" id="L165">		particle.radiateXY(Random.Float(1f));</span>
+<span class="nc" id="L166">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

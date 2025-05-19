@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HornOfPlenty.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.artifacts</a> &gt; <span class="el_source">HornOfPlenty.java</span></div><h1>HornOfPlenty.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Hunger;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.items.food.Blandfruit;
+import com.shatteredpixel.shatteredpixeldungeon.items.food.Food;
+import com.shatteredpixel.shatteredpixeldungeon.items.food.MeatPie;
+import com.shatteredpixel.shatteredpixeldungeon.items.food.Pasty;
+import com.shatteredpixel.shatteredpixeldungeon.items.food.PhantomMeat;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L55">public class HornOfPlenty extends Artifact {</span>
+
+
+	{
+<span class="nc" id="L59">		image = ItemSpriteSheet.ARTIFACT_HORN1;</span>
+
+<span class="nc" id="L61">		levelCap = 10;</span>
+
+<span class="nc" id="L63">		charge = 0;</span>
+<span class="nc" id="L64">		partialCharge = 0;</span>
+<span class="nc" id="L65">		chargeCap = 5 + level()/2;</span>
+
+<span class="nc" id="L67">		defaultAction = AC_SNACK;</span>
+	}
+
+<span class="nc" id="L70">	private int storedFoodEnergy = 0;</span>
+
+	public static final String AC_SNACK = &quot;SNACK&quot;;
+	public static final String AC_EAT = &quot;EAT&quot;;
+	public static final String AC_STORE = &quot;STORE&quot;;
+
+	@Override
+	public ArrayList&lt;String&gt; actions( Hero hero ) {
+<span class="nc" id="L78">		ArrayList&lt;String&gt; actions = super.actions( hero );</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if (hero.buff(MagicImmune.class) != null) return actions;</span>
+<span class="nc bnc" id="L80" title="All 4 branches missed.">		if (isEquipped( hero ) &amp;&amp; charge &gt; 0) {</span>
+<span class="nc" id="L81">			actions.add(AC_SNACK);</span>
+<span class="nc" id="L82">			actions.add(AC_EAT);</span>
+		}
+<span class="nc bnc" id="L84" title="All 6 branches missed.">		if (isEquipped( hero ) &amp;&amp; level() &lt; levelCap &amp;&amp; !cursed) {</span>
+<span class="nc" id="L85">			actions.add(AC_STORE);</span>
+		}
+<span class="nc" id="L87">		return actions;</span>
+	}
+
+	@Override
+	public void execute( Hero hero, String action ) {
+
+<span class="nc" id="L93">		super.execute(hero, action);</span>
+
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		if (hero.buff(MagicImmune.class) != null) return;</span>
+
+<span class="nc bnc" id="L97" title="All 4 branches missed.">		if (action.equals(AC_EAT) || action.equals(AC_SNACK)){</span>
+
+<span class="nc bnc" id="L99" title="All 2 branches missed.">			if (!isEquipped(hero)) GLog.i( Messages.get(Artifact.class, &quot;need_to_equip&quot;) );</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">			else if (charge == 0)  GLog.i( Messages.get(this, &quot;no_food&quot;) );</span>
+			else {
+				//consume as much food as it takes to be full, to a minimum of 1
+<span class="nc" id="L103">				int satietyPerCharge = (int) (Hunger.STARVING/5f);</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">				if (Dungeon.isChallenged(Challenges.NO_FOOD)){</span>
+<span class="nc" id="L105">					satietyPerCharge /= 3;</span>
+				}
+
+<span class="nc" id="L108">				Hunger hunger = Buff.affect(Dungeon.hero, Hunger.class);</span>
+<span class="nc" id="L109">				int chargesToUse = Math.max( 1, hunger.hunger() / satietyPerCharge);</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">				if (chargesToUse &gt; charge) chargesToUse = charge;</span>
+
+				//always use 1 charge if snacking
+<span class="nc bnc" id="L113" title="All 2 branches missed.">				if (action.equals(AC_SNACK)){</span>
+<span class="nc" id="L114">					chargesToUse = 1;</span>
+				}
+
+<span class="nc" id="L117">				doEatEffect(hero, chargesToUse);</span>
+<span class="nc" id="L118">			}</span>
+
+<span class="nc bnc" id="L120" title="All 2 branches missed.">		} else if (action.equals(AC_STORE)){</span>
+
+<span class="nc" id="L122">			GameScene.selectItem(itemSelector);</span>
+
+		}
+<span class="nc" id="L125">	}</span>
+
+	public void doEatEffect(Hero hero, int chargesToUse){
+<span class="nc" id="L128">		int satietyPerCharge = (int) (Hunger.STARVING/5f);</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">		if (Dungeon.isChallenged(Challenges.NO_FOOD)){</span>
+<span class="nc" id="L130">			satietyPerCharge /= 3;</span>
+		}
+
+<span class="nc" id="L133">		Buff.affect(hero, Hunger.class).satisfy(satietyPerCharge * chargesToUse);</span>
+
+<span class="nc" id="L135">		Statistics.foodEaten++;</span>
+
+<span class="nc" id="L137">		charge -= chargesToUse;</span>
+<span class="nc" id="L138">		Talent.onArtifactUsed(hero);</span>
+
+<span class="nc" id="L140">		hero.sprite.operate(hero.pos);</span>
+<span class="nc" id="L141">		hero.busy();</span>
+<span class="nc" id="L142">		SpellSprite.show(hero, SpellSprite.FOOD);</span>
+<span class="nc" id="L143">		Sample.INSTANCE.play(Assets.Sounds.EAT);</span>
+<span class="nc" id="L144">		GLog.i( Messages.get(this, &quot;eat&quot;) );</span>
+
+<span class="nc bnc" id="L146" title="All 2 branches missed.">		if (Dungeon.hero.hasTalent(Talent.IRON_STOMACH)</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">				|| Dungeon.hero.hasTalent(Talent.ENERGIZING_MEAL)</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">				|| Dungeon.hero.hasTalent(Talent.MYSTICAL_MEAL)</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">				|| Dungeon.hero.hasTalent(Talent.INVIGORATING_MEAL)</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">				|| Dungeon.hero.hasTalent(Talent.FOCUSED_MEAL)</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">				|| Dungeon.hero.hasTalent(Talent.ENLIGHTENING_MEAL)){</span>
+<span class="nc" id="L152">			hero.spend(Food.TIME_TO_EAT - 2);</span>
+		} else {
+<span class="nc" id="L154">			hero.spend(Food.TIME_TO_EAT);</span>
+		}
+
+<span class="nc" id="L157">		Talent.onFoodEaten(hero, satietyPerCharge * chargesToUse, this);</span>
+
+<span class="nc" id="L159">		Badges.validateFoodEaten();</span>
+
+<span class="nc bnc" id="L161" title="All 2 branches missed.">		if (charge &gt;= 8)        image = ItemSpriteSheet.ARTIFACT_HORN4;</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">		else if (charge &gt;= 5)   image = ItemSpriteSheet.ARTIFACT_HORN3;</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		else if (charge &gt;= 2)   image = ItemSpriteSheet.ARTIFACT_HORN2;</span>
+<span class="nc" id="L164">		else                    image = ItemSpriteSheet.ARTIFACT_HORN1;</span>
+
+<span class="nc" id="L166">		updateQuickslot();</span>
+<span class="nc" id="L167">	}</span>
+
+	@Override
+	protected ArtifactBuff passiveBuff() {
+<span class="nc" id="L171">		return new hornRecharge();</span>
+	}
+	
+	@Override
+	public void charge(Hero target, float amount) {
+<span class="nc bnc" id="L176" title="All 6 branches missed.">		if (charge &lt; chargeCap &amp;&amp; !cursed &amp;&amp; target.buff(MagicImmune.class) == null){</span>
+<span class="nc" id="L177">			partialCharge += 0.25f*amount;</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">			while (partialCharge &gt;= 1){</span>
+<span class="nc" id="L179">				partialCharge--;</span>
+<span class="nc" id="L180">				charge++;</span>
+				
+<span class="nc bnc" id="L182" title="All 2 branches missed.">				if (charge == chargeCap){</span>
+<span class="nc" id="L183">					GLog.p( Messages.get(HornOfPlenty.class, &quot;full&quot;) );</span>
+<span class="nc" id="L184">					partialCharge = 0;</span>
+				}
+
+<span class="nc bnc" id="L187" title="All 2 branches missed.">				if (charge &gt;= 8)        image = ItemSpriteSheet.ARTIFACT_HORN4;</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">				else if (charge &gt;= 5)   image = ItemSpriteSheet.ARTIFACT_HORN3;</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">				else if (charge &gt;= 2)   image = ItemSpriteSheet.ARTIFACT_HORN2;</span>
+<span class="nc" id="L190">				else                    image = ItemSpriteSheet.ARTIFACT_HORN1;</span>
+
+<span class="nc" id="L192">				updateQuickslot();</span>
+			}
+		}
+<span class="nc" id="L195">	}</span>
+	
+	@Override
+	public String desc() {
+<span class="nc" id="L199">		String desc = super.desc();</span>
+
+<span class="nc bnc" id="L201" title="All 2 branches missed.">		if ( isEquipped( Dungeon.hero ) ){</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">			if (!cursed) {</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">				if (level() &lt; levelCap)</span>
+<span class="nc" id="L204">					desc += &quot;\n\n&quot; +Messages.get(this, &quot;desc_hint&quot;);</span>
+			} else {
+<span class="nc" id="L206">				desc += &quot;\n\n&quot; +Messages.get(this, &quot;desc_cursed&quot;);</span>
+			}
+		}
+
+<span class="nc" id="L210">		return desc;</span>
+	}
+
+	@Override
+	public void level(int value) {
+<span class="nc" id="L215">		super.level(value);</span>
+<span class="nc" id="L216">		chargeCap = 5 + level()/2;</span>
+<span class="nc" id="L217">	}</span>
+
+	@Override
+	public Item upgrade() {
+<span class="nc" id="L221">		super.upgrade();</span>
+<span class="nc" id="L222">		chargeCap = 5 + level()/2;</span>
+<span class="nc" id="L223">		return this;</span>
+	}
+	
+	public void gainFoodValue( Food food ){
+<span class="nc bnc" id="L227" title="All 2 branches missed.">		if (level() &gt;= 10) return;</span>
+		
+<span class="nc" id="L229">		storedFoodEnergy += food.energy;</span>
+		//Pasties and phantom meat are worth two upgrades instead of 1.5, meat pies are worth 4 instead of 3!
+<span class="nc bnc" id="L231" title="All 4 branches missed.">		if (food instanceof Pasty || food instanceof PhantomMeat){</span>
+<span class="nc" id="L232">			storedFoodEnergy += Hunger.HUNGRY/2;</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">		} else if (food instanceof MeatPie){</span>
+<span class="nc" id="L234">			storedFoodEnergy += Hunger.HUNGRY;</span>
+		}
+<span class="nc bnc" id="L236" title="All 2 branches missed.">		if (storedFoodEnergy &gt;= Hunger.HUNGRY){</span>
+<span class="nc" id="L237">			int upgrades = storedFoodEnergy / (int)Hunger.HUNGRY;</span>
+<span class="nc" id="L238">			upgrades = Math.min(upgrades, 10 - level());</span>
+<span class="nc" id="L239">			upgrade(upgrades);</span>
+<span class="nc" id="L240">			Catalog.countUse(HornOfPlenty.class);</span>
+<span class="nc" id="L241">			storedFoodEnergy -= upgrades * Hunger.HUNGRY;</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">			if (level() == 10){</span>
+<span class="nc" id="L243">				storedFoodEnergy = 0;</span>
+<span class="nc" id="L244">				GLog.p( Messages.get(this, &quot;maxlevel&quot;) );</span>
+			} else {
+<span class="nc" id="L246">				GLog.p( Messages.get(this, &quot;levelup&quot;) );</span>
+			}
+<span class="nc" id="L248">		} else {</span>
+<span class="nc" id="L249">			GLog.i( Messages.get(this, &quot;feed&quot;) );</span>
+		}
+<span class="nc" id="L251">	}</span>
+	
+	private static final String STORED = &quot;stored&quot;;
+	
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L257">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L258">		bundle.put( STORED, storedFoodEnergy );</span>
+<span class="nc" id="L259">	}</span>
+	
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L263">		super.restoreFromBundle(bundle);</span>
+
+<span class="nc" id="L265">		storedFoodEnergy = bundle.getInt(STORED);</span>
+		
+<span class="nc bnc" id="L267" title="All 2 branches missed.">		if (charge &gt;= 8)       image = ItemSpriteSheet.ARTIFACT_HORN4;</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">		else if (charge &gt;= 5)  image = ItemSpriteSheet.ARTIFACT_HORN3;</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">		else if (charge &gt;= 2)   image = ItemSpriteSheet.ARTIFACT_HORN2;</span>
+<span class="nc" id="L270">	}</span>
+
+<span class="nc" id="L272">	public class hornRecharge extends ArtifactBuff{</span>
+
+		public void gainCharge(float levelPortion) {
+<span class="nc bnc" id="L275" title="All 4 branches missed.">			if (cursed || target.buff(MagicImmune.class) != null) return;</span>
+			
+<span class="nc bnc" id="L277" title="All 2 branches missed.">			if (charge &lt; chargeCap) {</span>
+
+				//generates 0.25x max hunger value every hero level, +0.125x max value per horn level
+				//to a max of 1.5x max hunger value per hero level
+				//This means that a standard ration will be recovered in ~5.333 hero levels
+<span class="nc" id="L282">				float chargeGain = Hunger.STARVING * levelPortion * (0.25f + (0.125f*level()));</span>
+<span class="nc" id="L283">				chargeGain *= RingOfEnergy.artifactChargeMultiplier(target);</span>
+
+				//each charge is equal to 1/5 the max hunger value
+<span class="nc" id="L286">				chargeGain /= Hunger.STARVING/5;</span>
+<span class="nc" id="L287">				partialCharge += chargeGain;</span>
+
+				//charge is in increments of 1/5 max hunger value.
+<span class="nc bnc" id="L290" title="All 2 branches missed.">				while (partialCharge &gt;= 1) {</span>
+<span class="nc" id="L291">					charge++;</span>
+<span class="nc" id="L292">					partialCharge -= 1;</span>
+
+<span class="nc bnc" id="L294" title="All 2 branches missed.">					if (charge &gt;= 8)        image = ItemSpriteSheet.ARTIFACT_HORN4;</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">					else if (charge &gt;= 5)   image = ItemSpriteSheet.ARTIFACT_HORN3;</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">					else if (charge &gt;= 2)   image = ItemSpriteSheet.ARTIFACT_HORN2;</span>
+<span class="nc" id="L297">					else                    image = ItemSpriteSheet.ARTIFACT_HORN1;</span>
+
+<span class="nc" id="L299">					updateQuickslot();</span>
+
+<span class="nc bnc" id="L301" title="All 2 branches missed.">					if (charge == chargeCap){</span>
+<span class="nc" id="L302">						GLog.p( Messages.get(HornOfPlenty.class, &quot;full&quot;) );</span>
+<span class="nc" id="L303">						partialCharge = 0;</span>
+					}
+				}
+<span class="nc" id="L306">			} else {</span>
+<span class="nc" id="L307">				partialCharge = 0;</span>
+			}
+<span class="nc" id="L309">		}</span>
+
+	}
+
+<span class="nc" id="L313">	protected static WndBag.ItemSelector itemSelector = new WndBag.ItemSelector() {</span>
+
+		@Override
+		public String textPrompt() {
+<span class="nc" id="L317">			return Messages.get(HornOfPlenty.class, &quot;prompt&quot;);</span>
+		}
+
+		@Override
+		public Class&lt;?extends Bag&gt; preferredBag(){
+<span class="nc" id="L322">			return Belongings.Backpack.class;</span>
+		}
+
+		@Override
+		public boolean itemSelectable(Item item) {
+<span class="nc" id="L327">			return item instanceof Food;</span>
+		}
+
+		@Override
+		public void onSelect( Item item ) {
+<span class="nc bnc" id="L332" title="All 4 branches missed.">			if (item != null &amp;&amp; item instanceof Food) {</span>
+<span class="nc bnc" id="L333" title="All 4 branches missed.">				if (item instanceof Blandfruit &amp;&amp; ((Blandfruit) item).potionAttrib == null){</span>
+<span class="nc" id="L334">					GLog.w( Messages.get(HornOfPlenty.class, &quot;reject&quot;) );</span>
+				} else {
+<span class="nc" id="L336">					Hero hero = Dungeon.hero;</span>
+<span class="nc" id="L337">					hero.sprite.operate( hero.pos );</span>
+<span class="nc" id="L338">					hero.busy();</span>
+<span class="nc" id="L339">					hero.spend( Food.TIME_TO_EAT );</span>
+
+<span class="nc" id="L341">					((HornOfPlenty)curItem).gainFoodValue(((Food)item));</span>
+<span class="nc" id="L342">					item.detach(hero.belongings.backpack);</span>
+				}
+
+			}
+<span class="nc" id="L346">		}</span>
+	};
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

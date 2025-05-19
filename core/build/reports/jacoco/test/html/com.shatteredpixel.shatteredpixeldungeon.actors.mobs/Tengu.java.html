@@ -1,0 +1,1136 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Tengu.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">Tengu.java</span></div><h1>Tengu.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Electricity;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Fire;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Blindness;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Doom;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Dread;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.LockedFloor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Roots;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Terror;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
+import com.shatteredpixel.shatteredpixeldungeon.effects.BlobEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Lightning;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.BlastParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.FlameParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SmokeParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SparkParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.TengusMask;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.LloydsBeacon;
+import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.PrisonBossLevel;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.TenguSprite;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.utils.BArray;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.GameMath;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+
+<span class="nc" id="L85">public class Tengu extends Mob {</span>
+	
+	{
+<span class="nc" id="L88">		spriteClass = TenguSprite.class;</span>
+		
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		HP = HT = Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? 250 : 200;</span>
+<span class="nc" id="L91">		EXP = 20;</span>
+<span class="nc" id="L92">		defenseSkill = 15;</span>
+		
+<span class="nc" id="L94">		HUNTING = new Hunting();</span>
+		
+<span class="nc" id="L96">		properties.add(Property.BOSS);</span>
+		
+<span class="nc" id="L98">		viewDistance = 12;</span>
+	}
+	
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L103">		return Random.NormalIntRange( 6, 12 );</span>
+	}
+	
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		if (Dungeon.level.adjacent(pos, target.pos)){</span>
+<span class="nc" id="L109">			return 10;</span>
+		} else {
+<span class="nc" id="L111">			return 20;</span>
+		}
+	}
+	
+	@Override
+	public int drRoll() {
+<span class="nc" id="L117">		return super.drRoll() + Random.NormalIntRange(0, 5);</span>
+	}
+
+<span class="nc" id="L120">	boolean loading = false;</span>
+
+	//Tengu is immune to debuffs and damage when removed from the level
+	@Override
+	public boolean add(Buff buff) {
+<span class="nc bnc" id="L125" title="All 6 branches missed.">		if (Actor.chars().contains(this) || buff instanceof Doom || loading){</span>
+<span class="nc" id="L126">			return super.add(buff);</span>
+		}
+<span class="nc" id="L128">		return false;</span>
+	}
+
+	@Override
+	public void damage(int dmg, Object src) {
+<span class="nc bnc" id="L133" title="All 2 branches missed.">		if (!Dungeon.level.mobs.contains(this)){</span>
+<span class="nc" id="L134">			return;</span>
+		}
+
+<span class="nc" id="L137">		PrisonBossLevel.State state = ((PrisonBossLevel)Dungeon.level).state();</span>
+		
+<span class="nc" id="L139">		int hpBracket = HT / 8;</span>
+
+<span class="nc" id="L141">		int curbracket = HP / hpBracket;</span>
+
+<span class="nc" id="L143">		int beforeHitHP = HP;</span>
+<span class="nc" id="L144">		super.damage(dmg, src);</span>
+
+		//cannot be hit through multiple brackets at a time
+<span class="nc bnc" id="L147" title="All 2 branches missed.">		if (HP &lt;= (curbracket-1)*hpBracket){</span>
+<span class="nc" id="L148">			HP = (curbracket-1)*hpBracket + 1;</span>
+		}
+
+<span class="nc" id="L151">		int newBracket =  HP / hpBracket;</span>
+<span class="nc" id="L152">		dmg = beforeHitHP - HP;</span>
+
+<span class="nc" id="L154">		LockedFloor lock = Dungeon.hero.buff(LockedFloor.class);</span>
+<span class="nc bnc" id="L155" title="All 6 branches missed.">		if (lock != null &amp;&amp; !isImmune(src.getClass()) &amp;&amp; !isInvulnerable(src.getClass())){</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">			if (Dungeon.isChallenged(Challenges.STRONGER_BOSSES))   lock.addTime(2*dmg/3f);</span>
+<span class="nc" id="L157">			else                                                    lock.addTime(dmg);</span>
+		}
+
+		//phase 2 of the fight is over
+<span class="nc bnc" id="L161" title="All 4 branches missed.">		if (HP == 0 &amp;&amp; state == PrisonBossLevel.State.FIGHT_ARENA) {</span>
+			//let full attack action complete first
+<span class="nc" id="L163">			Actor.add(new Actor() {</span>
+
+				{
+<span class="nc" id="L166">					actPriority = VFX_PRIO;</span>
+<span class="nc" id="L167">				}</span>
+
+				@Override
+				protected boolean act() {
+<span class="nc" id="L171">					Actor.remove(this);</span>
+<span class="nc" id="L172">					((PrisonBossLevel)Dungeon.level).progress();</span>
+<span class="nc" id="L173">					return true;</span>
+				}
+			});
+<span class="nc" id="L176">			return;</span>
+		}
+
+		//phase 1 of the fight is over
+<span class="nc bnc" id="L180" title="All 4 branches missed.">		if (state == PrisonBossLevel.State.FIGHT_START &amp;&amp; HP &lt;= HT/2){</span>
+<span class="nc" id="L181">			HP = (HT/2);</span>
+<span class="nc" id="L182">			yell(Messages.get(this, &quot;interesting&quot;));</span>
+<span class="nc" id="L183">			((PrisonBossLevel)Dungeon.level).progress();</span>
+<span class="nc" id="L184">			BossHealthBar.bleed(true);</span>
+
+		//if tengu has lost a certain amount of hp, jump
+<span class="nc bnc" id="L187" title="All 2 branches missed.">		} else if (newBracket != curbracket) {</span>
+			//let full attack action complete first
+<span class="nc" id="L189">			Actor.add(new Actor() {</span>
+
+				{
+<span class="nc" id="L192">					actPriority = VFX_PRIO;</span>
+<span class="nc" id="L193">				}</span>
+
+				@Override
+				protected boolean act() {
+<span class="nc" id="L197">					Actor.remove(this);</span>
+<span class="nc" id="L198">					jump();</span>
+<span class="nc" id="L199">					return true;</span>
+				}
+			});
+<span class="nc" id="L202">			return;</span>
+		}
+<span class="nc" id="L204">	}</span>
+	
+	@Override
+	public boolean isAlive() {
+<span class="nc bnc" id="L208" title="All 4 branches missed.">		return super.isAlive() || Dungeon.level.mobs.contains(this); //Tengu has special death rules, see prisonbosslevel.progress()</span>
+	}
+
+	@Override
+	public void die( Object cause ) {
+		
+<span class="nc bnc" id="L214" title="All 2 branches missed.">		if (Dungeon.hero.subClass == HeroSubClass.NONE) {</span>
+<span class="nc" id="L215">			Dungeon.level.drop( new TengusMask(), pos ).sprite.drop();</span>
+		}
+		
+<span class="nc" id="L218">		GameScene.bossSlain();</span>
+<span class="nc" id="L219">		super.die( cause );</span>
+		
+<span class="nc" id="L221">		Badges.validateBossSlain();</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">		if (Statistics.qualifiedForBossChallengeBadge){</span>
+<span class="nc" id="L223">			Badges.validateBossChallengeCompleted();</span>
+		}
+<span class="nc" id="L225">		Statistics.bossScores[1] += 2000;</span>
+		
+<span class="nc" id="L227">		LloydsBeacon beacon = Dungeon.hero.belongings.getItem(LloydsBeacon.class);</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">		if (beacon != null) {</span>
+<span class="nc" id="L229">			beacon.upgrade();</span>
+		}
+		
+<span class="nc" id="L232">		yell( Messages.get(this, &quot;defeated&quot;) );</span>
+<span class="nc" id="L233">	}</span>
+	
+	@Override
+	protected boolean canAttack( Char enemy ) {
+<span class="nc bnc" id="L237" title="All 2 branches missed.">		return new Ballistica( pos, enemy.pos, Ballistica.PROJECTILE).collisionPos == enemy.pos;</span>
+	}
+	
+	private void jump() {
+		
+		//in case tengu hasn't had a chance to act yet
+<span class="nc bnc" id="L243" title="All 4 branches missed.">		if (fieldOfView == null || fieldOfView.length != Dungeon.level.length()){</span>
+<span class="nc" id="L244">			fieldOfView = new boolean[Dungeon.level.length()];</span>
+<span class="nc" id="L245">			Dungeon.level.updateFieldOfView( this, fieldOfView );</span>
+		}
+		
+<span class="nc bnc" id="L248" title="All 2 branches missed.">		if (enemy == null) enemy = chooseEnemy();</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">		if (enemy == null) return;</span>
+		
+		int newPos;
+<span class="nc bnc" id="L252" title="All 2 branches missed.">		if (Dungeon.level instanceof PrisonBossLevel){</span>
+<span class="nc" id="L253">			PrisonBossLevel level = (PrisonBossLevel) Dungeon.level;</span>
+			
+			//if we're in phase 1, want to warp around within the room
+<span class="nc bnc" id="L256" title="All 2 branches missed.">			if (level.state() == PrisonBossLevel.State.FIGHT_START) {</span>
+				
+<span class="nc" id="L258">				level.cleanTenguCell();</span>
+
+<span class="nc" id="L260">				int tries = 100;</span>
+				do {
+<span class="nc" id="L262">					newPos = ((PrisonBossLevel)Dungeon.level).randomTenguCellPos();</span>
+<span class="nc" id="L263">					tries--;</span>
+<span class="nc bnc" id="L264" title="All 4 branches missed.">				} while ( tries &gt; 0 &amp;&amp; (level.trueDistance(newPos, enemy.pos) &lt;= 3.5f</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">						|| level.trueDistance(newPos, Dungeon.hero.pos) &lt;= 3.5f</span>
+<span class="nc bnc" id="L266" title="All 2 branches missed.">						|| Actor.findChar(newPos) != null));</span>
+
+<span class="nc bnc" id="L268" title="All 2 branches missed.">				if (tries &lt;= 0) newPos = pos;</span>
+
+<span class="nc bnc" id="L270" title="All 2 branches missed.">				if (level.heroFOV[pos]) CellEmitter.get( pos ).burst( Speck.factory( Speck.WOOL ), 6 );</span>
+				
+<span class="nc" id="L272">				sprite.move( pos, newPos );</span>
+<span class="nc" id="L273">				move( newPos );</span>
+				
+<span class="nc bnc" id="L275" title="All 2 branches missed.">				if (level.heroFOV[newPos]) CellEmitter.get( newPos ).burst( Speck.factory( Speck.WOOL ), 6 );</span>
+<span class="nc" id="L276">				Sample.INSTANCE.play( Assets.Sounds.PUFF );</span>
+
+<span class="nc" id="L278">				float fill = 0.9f - 0.5f*((HP-(HT/2f))/(HT/2f));</span>
+<span class="nc" id="L279">				level.placeTrapsInTenguCell(fill);</span>
+				
+			//otherwise, jump in a larger possible area, as the room is bigger
+<span class="nc" id="L282">			} else {</span>
+
+<span class="nc" id="L284">				int tries = 100;</span>
+				do {
+<span class="nc" id="L286">					newPos = Random.Int(level.length());</span>
+<span class="nc" id="L287">					tries--;</span>
+<span class="nc bnc" id="L288" title="All 4 branches missed.">				} while (  tries &gt; 0 &amp;&amp;</span>
+						(level.solid[newPos] ||
+<span class="nc bnc" id="L290" title="All 2 branches missed.">								level.distance(newPos, enemy.pos) &lt; 5 ||</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">								level.distance(newPos, enemy.pos) &gt; 7 ||</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">								level.distance(newPos, Dungeon.hero.pos) &lt; 5 ||</span>
+<span class="nc bnc" id="L293" title="All 2 branches missed.">								level.distance(newPos, Dungeon.hero.pos) &gt; 7 ||</span>
+<span class="nc bnc" id="L294" title="All 2 branches missed.">								level.distance(newPos, pos) &lt; 5 ||</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">								Actor.findChar(newPos) != null ||</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">								Dungeon.level.heaps.get(newPos) != null));</span>
+
+<span class="nc bnc" id="L298" title="All 2 branches missed.">				if (tries &lt;= 0) newPos = pos;</span>
+
+<span class="nc bnc" id="L300" title="All 2 branches missed.">				if (level.heroFOV[pos]) CellEmitter.get( pos ).burst( Speck.factory( Speck.WOOL ), 6 );</span>
+				
+<span class="nc" id="L302">				sprite.move( pos, newPos );</span>
+<span class="nc" id="L303">				move( newPos );</span>
+				
+<span class="nc bnc" id="L305" title="All 2 branches missed.">				if (arenaJumps &lt; 4) arenaJumps++;</span>
+				
+<span class="nc bnc" id="L307" title="All 2 branches missed.">				if (level.heroFOV[newPos]) CellEmitter.get( newPos ).burst( Speck.factory( Speck.WOOL ), 6 );</span>
+<span class="nc" id="L308">				Sample.INSTANCE.play( Assets.Sounds.PUFF );</span>
+				
+			}
+			
+		//if we're on another type of level
+<span class="nc" id="L313">		} else {</span>
+<span class="nc" id="L314">			Level level = Dungeon.level;</span>
+			
+<span class="nc" id="L316">			newPos = level.randomRespawnCell( this );</span>
+			
+<span class="nc bnc" id="L318" title="All 2 branches missed.">			if (level.heroFOV[pos]) CellEmitter.get( pos ).burst( Speck.factory( Speck.WOOL ), 6 );</span>
+			
+<span class="nc" id="L320">			sprite.move( pos, newPos );</span>
+<span class="nc" id="L321">			move( newPos );</span>
+			
+<span class="nc bnc" id="L323" title="All 2 branches missed.">			if (level.heroFOV[newPos]) CellEmitter.get( newPos ).burst( Speck.factory( Speck.WOOL ), 6 );</span>
+<span class="nc" id="L324">			Sample.INSTANCE.play( Assets.Sounds.PUFF );</span>
+			
+		}
+		
+<span class="nc" id="L328">	}</span>
+	
+	@Override
+	public void notice() {
+<span class="nc" id="L332">		super.notice();</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">		if (!BossHealthBar.isAssigned()) {</span>
+<span class="nc" id="L334">			BossHealthBar.assignBoss(this);</span>
+<span class="nc bnc" id="L335" title="All 2 branches missed.">			if (HP &lt;= HT/2) BossHealthBar.bleed(true);</span>
+<span class="nc bnc" id="L336" title="All 2 branches missed.">			if (HP == HT) {</span>
+<span class="nc" id="L337">				yell(Messages.get(this, &quot;notice_gotcha&quot;, Dungeon.hero.name()));</span>
+<span class="nc bnc" id="L338" title="All 2 branches missed.">				for (Char ch : Actor.chars()){</span>
+<span class="nc bnc" id="L339" title="All 2 branches missed.">					if (ch instanceof DriedRose.GhostHero){</span>
+<span class="nc" id="L340">						((DriedRose.GhostHero) ch).sayBoss();</span>
+					}
+<span class="nc" id="L342">				}</span>
+			} else {
+<span class="nc" id="L344">				yell(Messages.get(this, &quot;notice_have&quot;, Dungeon.hero.name()));</span>
+			}
+		}
+<span class="nc" id="L347">	}</span>
+	
+	{
+<span class="nc" id="L350">		immunities.add( Roots.class );</span>
+<span class="nc" id="L351">		immunities.add( Blindness.class );</span>
+<span class="nc" id="L352">		immunities.add( Dread.class );</span>
+<span class="nc" id="L353">		immunities.add( Terror.class );</span>
+	}
+	
+	private static final String LAST_ABILITY     = &quot;last_ability&quot;;
+	private static final String ABILITIES_USED   = &quot;abilities_used&quot;;
+	private static final String ARENA_JUMPS      = &quot;arena_jumps&quot;;
+	private static final String ABILITY_COOLDOWN = &quot;ability_cooldown&quot;;
+	
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L363">		super.storeInBundle(bundle);</span>
+<span class="nc" id="L364">		bundle.put( LAST_ABILITY, lastAbility );</span>
+<span class="nc" id="L365">		bundle.put( ABILITIES_USED, abilitiesUsed );</span>
+<span class="nc" id="L366">		bundle.put( ARENA_JUMPS, arenaJumps );</span>
+<span class="nc" id="L367">		bundle.put( ABILITY_COOLDOWN, abilityCooldown );</span>
+<span class="nc" id="L368">	}</span>
+	
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L372">		loading = true;</span>
+<span class="nc" id="L373">		super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L374">		loading = false;</span>
+<span class="nc" id="L375">		lastAbility = bundle.getInt( LAST_ABILITY );</span>
+<span class="nc" id="L376">		abilitiesUsed = bundle.getInt( ABILITIES_USED );</span>
+<span class="nc" id="L377">		arenaJumps = bundle.getInt( ARENA_JUMPS );</span>
+<span class="nc" id="L378">		abilityCooldown = bundle.getInt( ABILITY_COOLDOWN );</span>
+		
+<span class="nc" id="L380">		BossHealthBar.assignBoss(this);</span>
+<span class="nc bnc" id="L381" title="All 2 branches missed.">		if (HP &lt;= HT/2) BossHealthBar.bleed(true);</span>
+<span class="nc" id="L382">	}</span>
+	
+	//don't bother bundling this, as its purely cosmetic
+<span class="nc" id="L385">	private boolean yelledCoward = false;</span>
+	
+	//tengu is always hunting
+<span class="nc" id="L388">	private class Hunting extends Mob.Hunting{</span>
+		
+		@Override
+		public boolean act(boolean enemyInFOV, boolean justAlerted) {
+			
+<span class="nc" id="L393">			enemySeen = enemyInFOV;</span>
+<span class="nc bnc" id="L394" title="All 6 branches missed.">			if (enemyInFOV &amp;&amp; !isCharmedBy( enemy ) &amp;&amp; canAttack( enemy )) {</span>
+				
+<span class="nc bnc" id="L396" title="All 2 branches missed.">				if (canUseAbility()){</span>
+<span class="nc" id="L397">					return useAbility();</span>
+				}
+
+<span class="nc" id="L400">				recentlyAttackedBy.clear();</span>
+<span class="nc" id="L401">				target = enemy.pos;</span>
+<span class="nc" id="L402">				return doAttack( enemy );</span>
+				
+			} else {
+				
+<span class="nc bnc" id="L406" title="All 2 branches missed.">				if (enemyInFOV) {</span>
+<span class="nc" id="L407">					target = enemy.pos;</span>
+				} else {
+<span class="nc" id="L409">					chooseEnemy();</span>
+<span class="nc bnc" id="L410" title="All 2 branches missed.">					if (enemy == null){</span>
+						//if nothing else can be targeted, target hero
+<span class="nc" id="L412">						enemy = Dungeon.hero;</span>
+					}
+<span class="nc" id="L414">					target = enemy.pos;</span>
+				}
+				
+				//if not charmed, attempt to use an ability, even if the enemy can't be seen
+<span class="nc bnc" id="L418" title="All 2 branches missed.">				if (canUseAbility()){</span>
+<span class="nc" id="L419">					return useAbility();</span>
+				}
+				
+<span class="nc" id="L422">				spend( TICK );</span>
+<span class="nc" id="L423">				return true;</span>
+				
+			}
+		}
+	}
+	
+	//*****************************************************************************************
+	//***** Tengu abilities. These are expressed in game logic as buffs, blobs, and items *****
+	//*****************************************************************************************
+	
+	//so that mobs can also use this
+	private static Char throwingChar;
+	
+<span class="nc" id="L436">	private int lastAbility = -1;</span>
+<span class="nc" id="L437">	private int abilitiesUsed = 0;</span>
+<span class="nc" id="L438">	private int arenaJumps = 0;</span>
+	
+	//starts at 2, so one turn and then first ability
+<span class="nc" id="L441">	private int abilityCooldown = 2;</span>
+	
+	private static final int BOMB_ABILITY    = 0;
+	private static final int FIRE_ABILITY    = 1;
+	private static final int SHOCKER_ABILITY = 2;
+	
+	//expects to be called once per turn;
+	public boolean canUseAbility(){
+		
+<span class="nc bnc" id="L450" title="All 2 branches missed.">		if (HP &gt; HT/2) return false;</span>
+		
+<span class="nc bnc" id="L452" title="All 2 branches missed.">		if (abilitiesUsed &gt;= targetAbilityUses()){</span>
+<span class="nc" id="L453">			return false;</span>
+		} else {
+			
+<span class="nc" id="L456">			abilityCooldown--;</span>
+			
+<span class="nc bnc" id="L458" title="All 4 branches missed.">			if (targetAbilityUses() - abilitiesUsed &gt;= 4 &amp;&amp; !Dungeon.isChallenged(Challenges.STRONGER_BOSSES)){</span>
+				//Very behind in ability uses, use one right away!
+				//but not on bosses challenge, we already cast quickly then
+<span class="nc" id="L461">				abilityCooldown = 0;</span>
+				
+<span class="nc bnc" id="L463" title="All 2 branches missed.">			} else if (targetAbilityUses() - abilitiesUsed &gt;= 3){</span>
+				//moderately behind in uses, use one every other action.
+<span class="nc bnc" id="L465" title="All 4 branches missed.">				if (abilityCooldown == -1 || abilityCooldown &gt; 1) abilityCooldown = 1;</span>
+				
+			} else {
+				//standard delay before ability use, 1-4 turns
+<span class="nc bnc" id="L469" title="All 2 branches missed.">				if (abilityCooldown == -1) abilityCooldown = Random.IntRange(1, 4);</span>
+			}
+			
+<span class="nc bnc" id="L472" title="All 2 branches missed.">			if (abilityCooldown == 0){</span>
+<span class="nc" id="L473">				return true;</span>
+			} else {
+<span class="nc" id="L475">				return false;</span>
+			}
+		}
+	}
+	
+	private int targetAbilityUses(){
+		//1 base ability use, plus 2 uses per jump
+<span class="nc" id="L482">		int targetAbilityUses = 1 + 2*arenaJumps;</span>
+		
+		//and ane extra 2 use for jumps 3 and 4
+<span class="nc" id="L485">		targetAbilityUses += Math.max(0, arenaJumps-2);</span>
+		
+<span class="nc" id="L487">		return targetAbilityUses;</span>
+	}
+	
+	public boolean useAbility(){
+<span class="nc" id="L491">		boolean abilityUsed = false;</span>
+<span class="nc" id="L492">		int abilityToUse = -1;</span>
+		
+<span class="nc bnc" id="L494" title="All 2 branches missed.">		while (!abilityUsed){</span>
+			
+<span class="nc bnc" id="L496" title="All 2 branches missed.">			if (abilitiesUsed == 0){</span>
+<span class="nc" id="L497">				abilityToUse = BOMB_ABILITY;</span>
+<span class="nc bnc" id="L498" title="All 2 branches missed.">			} else if (abilitiesUsed == 1){</span>
+<span class="nc" id="L499">				abilityToUse = SHOCKER_ABILITY;</span>
+<span class="nc bnc" id="L500" title="All 2 branches missed.">			} else if (Dungeon.isChallenged(Challenges.STRONGER_BOSSES)) {</span>
+<span class="nc" id="L501">				abilityToUse = Random.Int(2)*2; //0 or 2, can't roll fire ability with challenge</span>
+			} else {
+<span class="nc" id="L503">				abilityToUse = Random.Int(3);</span>
+			}
+			
+			//If we roll the same ability as last time, 9/10 chance to reroll
+<span class="nc bnc" id="L507" title="All 4 branches missed.">			if (abilityToUse != lastAbility || Random.Int(10) == 0){</span>
+<span class="nc bnc" id="L508" title="All 3 branches missed.">				switch (abilityToUse){</span>
+					case BOMB_ABILITY : default:
+<span class="nc" id="L510">						abilityUsed = throwBomb(Tengu.this, enemy);</span>
+						//if Tengu cannot use his bomb ability first, use fire instead.
+<span class="nc bnc" id="L512" title="All 4 branches missed.">						if (abilitiesUsed == 0 &amp;&amp; !abilityUsed){</span>
+<span class="nc" id="L513">							abilityToUse = FIRE_ABILITY;</span>
+<span class="nc" id="L514">							abilityUsed = throwFire(Tengu.this, enemy);</span>
+						}
+						break;
+					case FIRE_ABILITY:
+<span class="nc" id="L518">						abilityUsed = throwFire(Tengu.this, enemy);</span>
+<span class="nc" id="L519">						break;</span>
+					case SHOCKER_ABILITY:
+<span class="nc" id="L521">						abilityUsed = throwShocker(Tengu.this, enemy);</span>
+						//if Tengu cannot use his shocker ability second, use fire instead.
+<span class="nc bnc" id="L523" title="All 4 branches missed.">						if (abilitiesUsed == 1 &amp;&amp; !abilityUsed){</span>
+<span class="nc" id="L524">							abilityToUse = FIRE_ABILITY;</span>
+<span class="nc" id="L525">							abilityUsed = throwFire(Tengu.this, enemy);</span>
+						}
+						break;
+				}
+				//always use the fire ability with the bosses challenge
+<span class="nc bnc" id="L530" title="All 6 branches missed.">				if (abilityUsed &amp;&amp; abilityToUse != FIRE_ABILITY &amp;&amp; Dungeon.isChallenged(Challenges.STRONGER_BOSSES)){</span>
+<span class="nc" id="L531">					throwFire(Tengu.this, enemy);</span>
+				}
+			}
+			
+		}
+		
+		//spend 1 less turn if seriously behind on ability uses
+<span class="nc bnc" id="L538" title="All 2 branches missed.">		if (Dungeon.isChallenged(Challenges.STRONGER_BOSSES)){</span>
+<span class="nc bnc" id="L539" title="All 2 branches missed.">			if (targetAbilityUses() - abilitiesUsed &gt;= 4) {</span>
+				//spend no time
+			} else {
+<span class="nc" id="L542">				spend(TICK);</span>
+			}
+		} else {
+<span class="nc bnc" id="L545" title="All 2 branches missed.">			if (targetAbilityUses() - abilitiesUsed &gt;= 4) {</span>
+<span class="nc" id="L546">				spend(TICK);</span>
+			} else {
+<span class="nc" id="L548">				spend(2 * TICK);</span>
+			}
+		}
+		
+<span class="nc" id="L552">		lastAbility = abilityToUse;</span>
+<span class="nc" id="L553">		abilitiesUsed++;</span>
+<span class="nc bnc" id="L554" title="All 2 branches missed.">		return lastAbility == FIRE_ABILITY;</span>
+	}
+	
+	//******************
+	//***Bomb Ability***
+	//******************
+	
+	//returns true if bomb was thrown
+	public static boolean throwBomb(final Char thrower, final Char target){
+		
+<span class="nc" id="L564">		int targetCell = -1;</span>
+		
+		//Targets closest cell which is adjacent to target and has no existing bombs
+<span class="nc bnc" id="L567" title="All 2 branches missed.">		for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc" id="L568">			int cell = target.pos + i;</span>
+<span class="nc" id="L569">			boolean bombHere = false;</span>
+<span class="nc bnc" id="L570" title="All 2 branches missed.">			for (BombAbility b : thrower.buffs(BombAbility.class)){</span>
+<span class="nc bnc" id="L571" title="All 2 branches missed.">				if (b.bombPos == cell){</span>
+<span class="nc" id="L572">					bombHere = true;</span>
+				}
+<span class="nc" id="L574">			}</span>
+<span class="nc bnc" id="L575" title="All 6 branches missed.">			if (!bombHere &amp;&amp; !Dungeon.level.solid[cell] &amp;&amp;</span>
+<span class="nc bnc" id="L576" title="All 2 branches missed.">					(targetCell == -1 || Dungeon.level.trueDistance(cell, thrower.pos) &lt; Dungeon.level.trueDistance(targetCell, thrower.pos))){</span>
+<span class="nc" id="L577">				targetCell = cell;</span>
+			}
+		}
+		
+<span class="nc bnc" id="L581" title="All 2 branches missed.">		if (targetCell == -1){</span>
+<span class="nc" id="L582">			return false;</span>
+		}
+		
+<span class="nc" id="L585">		final int finalTargetCell = targetCell;</span>
+<span class="nc" id="L586">		throwingChar = thrower;</span>
+<span class="nc" id="L587">		final BombAbility.BombItem item = new BombAbility.BombItem();</span>
+<span class="nc" id="L588">		thrower.sprite.zap(finalTargetCell);</span>
+<span class="nc" id="L589">		((MissileSprite) thrower.sprite.parent.recycle(MissileSprite.class)).</span>
+<span class="nc" id="L590">				reset(thrower.sprite,</span>
+						finalTargetCell,
+						item,
+<span class="nc" id="L593">						new Callback() {</span>
+							@Override
+							public void call() {
+<span class="nc" id="L596">								item.onThrow(finalTargetCell);</span>
+<span class="nc" id="L597">								thrower.next();</span>
+<span class="nc" id="L598">							}</span>
+						});
+<span class="nc" id="L600">		return true;</span>
+	}
+	
+<span class="nc" id="L603">	public static class BombAbility extends Buff {</span>
+		
+<span class="nc" id="L605">		public int bombPos = -1;</span>
+<span class="nc" id="L606">		private int timer = 3;</span>
+
+<span class="nc" id="L608">		private ArrayList&lt;Emitter&gt; smokeEmitters = new ArrayList&lt;&gt;();</span>
+		
+		@Override
+		public boolean act() {
+
+<span class="nc bnc" id="L613" title="All 2 branches missed.">			if (smokeEmitters.isEmpty()){</span>
+<span class="nc" id="L614">				fx(true);</span>
+			}
+			
+<span class="nc" id="L617">			PointF p = DungeonTilemap.raisedTileCenterToWorld(bombPos);</span>
+<span class="nc bnc" id="L618" title="All 2 branches missed.">			if (timer == 3) {</span>
+<span class="nc" id="L619">				FloatingText.show(p.x, p.y, bombPos, &quot;3...&quot;, CharSprite.WARNING);</span>
+<span class="nc bnc" id="L620" title="All 2 branches missed.">			} else if (timer == 2){</span>
+<span class="nc" id="L621">				FloatingText.show(p.x, p.y, bombPos, &quot;2...&quot;, CharSprite.WARNING);</span>
+<span class="nc bnc" id="L622" title="All 2 branches missed.">			} else if (timer == 1){</span>
+<span class="nc" id="L623">				FloatingText.show(p.x, p.y, bombPos, &quot;1...&quot;, CharSprite.WARNING);</span>
+			} else {
+<span class="nc" id="L625">				PathFinder.buildDistanceMap( bombPos, BArray.not( Dungeon.level.solid, null ), 2 );</span>
+<span class="nc bnc" id="L626" title="All 2 branches missed.">				for (int cell = 0; cell &lt; PathFinder.distance.length; cell++) {</span>
+
+<span class="nc bnc" id="L628" title="All 2 branches missed.">					if (PathFinder.distance[cell] &lt; Integer.MAX_VALUE) {</span>
+<span class="nc" id="L629">						Char ch = Actor.findChar(cell);</span>
+<span class="nc bnc" id="L630" title="All 4 branches missed.">						if (ch != null &amp;&amp; !(ch instanceof Tengu)) {</span>
+<span class="nc" id="L631">							int dmg = Random.NormalIntRange(5 + Dungeon.scalingDepth(), 10 + Dungeon.scalingDepth() * 2);</span>
+<span class="nc" id="L632">							dmg -= ch.drRoll();</span>
+
+<span class="nc bnc" id="L634" title="All 2 branches missed.">							if (dmg &gt; 0) {</span>
+<span class="nc" id="L635">								ch.damage(dmg, Bomb.class);</span>
+							}
+
+<span class="nc bnc" id="L638" title="All 2 branches missed.">							if (ch == Dungeon.hero){</span>
+<span class="nc" id="L639">								Statistics.qualifiedForBossChallengeBadge = false;</span>
+<span class="nc" id="L640">								Statistics.bossScores[1] -= 100;</span>
+
+<span class="nc bnc" id="L642" title="All 2 branches missed.">								if (!ch.isAlive()) {</span>
+<span class="nc" id="L643">									Dungeon.fail(Tengu.class);</span>
+								}
+							}
+						}
+					}
+
+				}
+
+<span class="nc" id="L651">				Heap h = Dungeon.level.heaps.get(bombPos);</span>
+<span class="nc bnc" id="L652" title="All 2 branches missed.">				if (h != null) {</span>
+<span class="nc bnc" id="L653" title="All 2 branches missed.">					for (Item i : h.items.toArray(new Item[0])) {</span>
+<span class="nc bnc" id="L654" title="All 2 branches missed.">						if (i instanceof BombItem) {</span>
+<span class="nc" id="L655">							h.remove(i);</span>
+						}
+					}
+				}
+<span class="nc" id="L659">				Sample.INSTANCE.play(Assets.Sounds.BLAST);</span>
+<span class="nc" id="L660">				detach();</span>
+<span class="nc" id="L661">				return true;</span>
+			}
+			
+<span class="nc" id="L664">			timer--;</span>
+<span class="nc" id="L665">			spend(TICK);</span>
+<span class="nc" id="L666">			return true;</span>
+		}
+
+		@Override
+		public void fx(boolean on) {
+<span class="nc bnc" id="L671" title="All 4 branches missed.">			if (on &amp;&amp; bombPos != -1){</span>
+<span class="nc" id="L672">				PathFinder.buildDistanceMap( bombPos, BArray.not( Dungeon.level.solid, null ), 2 );</span>
+<span class="nc bnc" id="L673" title="All 2 branches missed.">				for (int i = 0; i &lt; PathFinder.distance.length; i++) {</span>
+<span class="nc bnc" id="L674" title="All 2 branches missed.">					if (PathFinder.distance[i] &lt; Integer.MAX_VALUE) {</span>
+<span class="nc" id="L675">						Emitter e = CellEmitter.get(i);</span>
+<span class="nc" id="L676">						e.pour( SmokeParticle.FACTORY, 0.25f );</span>
+<span class="nc" id="L677">						smokeEmitters.add(e);</span>
+					}
+				}
+<span class="nc bnc" id="L680" title="All 2 branches missed.">			} else if (!on) {</span>
+<span class="nc bnc" id="L681" title="All 2 branches missed.">				for (Emitter e : smokeEmitters){</span>
+<span class="nc" id="L682">					e.burst(BlastParticle.FACTORY, 2);</span>
+<span class="nc" id="L683">				}</span>
+			}
+<span class="nc" id="L685">		}</span>
+
+		private static final String BOMB_POS = &quot;bomb_pos&quot;;
+		private static final String TIMER = &quot;timer&quot;;
+		
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L692">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L693">			bundle.put( BOMB_POS, bombPos );</span>
+<span class="nc" id="L694">			bundle.put( TIMER, timer );</span>
+<span class="nc" id="L695">		}</span>
+		
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L699">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L700">			bombPos = bundle.getInt( BOMB_POS );</span>
+<span class="nc" id="L701">			timer = bundle.getInt( TIMER );</span>
+<span class="nc" id="L702">		}</span>
+		
+<span class="nc" id="L704">		public static class BombItem extends Item {</span>
+			
+			{
+<span class="nc" id="L707">				dropsDownHeap = true;</span>
+<span class="nc" id="L708">				unique = true;</span>
+				
+<span class="nc" id="L710">				image = ItemSpriteSheet.TENGU_BOMB;</span>
+<span class="nc" id="L711">			}</span>
+			
+			@Override
+			public boolean doPickUp(Hero hero, int pos) {
+<span class="nc" id="L715">				GLog.w( Messages.get(this, &quot;cant_pickup&quot;) );</span>
+<span class="nc" id="L716">				return false;</span>
+			}
+			
+			@Override
+			protected void onThrow(int cell) {
+<span class="nc" id="L721">				super.onThrow(cell);</span>
+<span class="nc bnc" id="L722" title="All 2 branches missed.">				if (throwingChar != null){</span>
+<span class="nc" id="L723">					Buff.append(throwingChar, BombAbility.class).bombPos = cell;</span>
+<span class="nc" id="L724">					throwingChar = null;</span>
+				} else {
+<span class="nc" id="L726">					Buff.append(curUser, BombAbility.class).bombPos = cell;</span>
+				}
+<span class="nc" id="L728">			}</span>
+			
+			@Override
+			public Emitter emitter() {
+<span class="nc" id="L732">				Emitter emitter = new Emitter();</span>
+<span class="nc" id="L733">				emitter.pos(7.5f, 3.5f);</span>
+<span class="nc" id="L734">				emitter.fillTarget = false;</span>
+<span class="nc" id="L735">				emitter.pour(SmokeParticle.SPEW, 0.05f);</span>
+<span class="nc" id="L736">				return emitter;</span>
+			}
+		}
+	}
+	
+	//******************
+	//***Fire Ability***
+	//******************
+	
+	public static boolean throwFire(final Char thrower, final Char target){
+		
+<span class="nc" id="L747">		Ballistica aim = new Ballistica(thrower.pos, target.pos, Ballistica.WONT_STOP);</span>
+		
+<span class="nc bnc" id="L749" title="All 2 branches missed.">		for (int i = 0; i &lt; PathFinder.CIRCLE8.length; i++){</span>
+<span class="nc bnc" id="L750" title="All 2 branches missed.">			if (aim.sourcePos+PathFinder.CIRCLE8[i] == aim.path.get(1)){</span>
+<span class="nc" id="L751">				thrower.sprite.zap(target.pos);</span>
+<span class="nc" id="L752">				Buff.append(thrower, Tengu.FireAbility.class).direction = i;</span>
+				
+<span class="nc" id="L754">				thrower.sprite.emitter().start(Speck.factory(Speck.STEAM), .03f, 10);</span>
+<span class="nc" id="L755">				return true;</span>
+			}
+		}
+		
+<span class="nc" id="L759">		return false;</span>
+	}
+	
+<span class="nc" id="L762">	public static class FireAbility extends Buff {</span>
+		
+		public int direction;
+		private int[] curCells;
+		
+<span class="nc" id="L767">		HashSet&lt;Integer&gt; toCells = new HashSet&lt;&gt;();</span>
+		
+		@Override
+		public boolean act() {
+
+<span class="nc" id="L772">			toCells.clear();</span>
+
+<span class="nc bnc" id="L774" title="All 2 branches missed.">			if (curCells == null){</span>
+<span class="nc" id="L775">				curCells = new int[1];</span>
+<span class="nc" id="L776">				curCells[0] = target.pos;</span>
+<span class="nc" id="L777">				spreadFromCell( curCells[0] );</span>
+
+			} else {
+<span class="nc bnc" id="L780" title="All 2 branches missed.">				for (Integer c : curCells) {</span>
+<span class="nc bnc" id="L781" title="All 2 branches missed.">					if (FireBlob.volumeAt(c, FireBlob.class) &gt; 0) spreadFromCell(c);</span>
+				}
+			}
+			
+<span class="nc bnc" id="L785" title="All 2 branches missed.">			for (Integer c : curCells){</span>
+<span class="nc" id="L786">				toCells.remove(c);</span>
+			}
+			
+<span class="nc bnc" id="L789" title="All 2 branches missed.">			if (toCells.isEmpty()){</span>
+<span class="nc" id="L790">				detach();</span>
+			} else {
+<span class="nc" id="L792">				curCells = new int[toCells.size()];</span>
+<span class="nc" id="L793">				int i = 0;</span>
+<span class="nc bnc" id="L794" title="All 2 branches missed.">				for (Integer c : toCells){</span>
+<span class="nc" id="L795">					GameScene.add(Blob.seed(c, 2, FireBlob.class));</span>
+<span class="nc" id="L796">					curCells[i] = c;</span>
+<span class="nc" id="L797">					i++;</span>
+<span class="nc" id="L798">				}</span>
+			}
+			
+<span class="nc" id="L801">			spend(TICK);</span>
+<span class="nc" id="L802">			return true;</span>
+		}
+		
+		private void spreadFromCell( int cell ){
+<span class="nc bnc" id="L806" title="All 2 branches missed.">			if (!Dungeon.level.solid[cell + PathFinder.CIRCLE8[left(direction)]]){</span>
+<span class="nc" id="L807">				toCells.add(cell + PathFinder.CIRCLE8[left(direction)]);</span>
+			}
+<span class="nc bnc" id="L809" title="All 2 branches missed.">			if (!Dungeon.level.solid[cell + PathFinder.CIRCLE8[direction]]){</span>
+<span class="nc" id="L810">				toCells.add(cell + PathFinder.CIRCLE8[direction]);</span>
+			}
+<span class="nc bnc" id="L812" title="All 2 branches missed.">			if (!Dungeon.level.solid[cell + PathFinder.CIRCLE8[right(direction)]]){</span>
+<span class="nc" id="L813">				toCells.add(cell + PathFinder.CIRCLE8[right(direction)]);</span>
+			}
+<span class="nc" id="L815">		}</span>
+		
+		private int left(int direction){
+<span class="nc bnc" id="L818" title="All 2 branches missed.">			return direction == 0 ? 7 : direction-1;</span>
+		}
+		
+		private int right(int direction){
+<span class="nc bnc" id="L822" title="All 2 branches missed.">			return direction == 7 ? 0 : direction+1;</span>
+		}
+		
+		private static final String DIRECTION = &quot;direction&quot;;
+		private static final String CUR_CELLS = &quot;cur_cells&quot;;
+		
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L830">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L831">			bundle.put( DIRECTION, direction );</span>
+<span class="nc bnc" id="L832" title="All 2 branches missed.">			if (curCells != null) bundle.put( CUR_CELLS, curCells );</span>
+<span class="nc" id="L833">		}</span>
+		
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L837">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L838">			direction = bundle.getInt( DIRECTION );</span>
+<span class="nc bnc" id="L839" title="All 2 branches missed.">			if (bundle.contains( CUR_CELLS )) curCells = bundle.getIntArray( CUR_CELLS );</span>
+<span class="nc" id="L840">		}</span>
+		
+<span class="nc" id="L842">		public static class FireBlob extends Blob {</span>
+			
+			{
+<span class="nc" id="L845">				actPriority = BUFF_PRIO - 1;</span>
+<span class="nc" id="L846">				alwaysVisible = true;</span>
+<span class="nc" id="L847">			}</span>
+			
+			@Override
+			protected void evolve() {
+				
+<span class="nc" id="L852">				boolean observe = false;</span>
+<span class="nc" id="L853">				boolean burned = false;</span>
+				
+				int cell;
+<span class="nc bnc" id="L856" title="All 2 branches missed.">				for (int i = area.left; i &lt; area.right; i++){</span>
+<span class="nc bnc" id="L857" title="All 2 branches missed.">					for (int j = area.top; j &lt; area.bottom; j++){</span>
+<span class="nc" id="L858">						cell = i + j* Dungeon.level.width();</span>
+<span class="nc" id="L859">						off[cell] = (int)GameMath.gate(0, cur[cell] - 1, 1);</span>
+						
+<span class="nc bnc" id="L861" title="All 2 branches missed.">						if (off[cell] &gt; 0) {</span>
+<span class="nc" id="L862">							volume += off[cell];</span>
+						}
+						
+<span class="nc bnc" id="L865" title="All 4 branches missed.">						if (cur[cell] &gt; 0 &amp;&amp; off[cell] == 0){</span>
+
+							//similar to fire.burn(), but Tengu is immune, and hero loses score
+<span class="nc" id="L868">							Char ch = Actor.findChar( cell );</span>
+<span class="nc bnc" id="L869" title="All 6 branches missed.">							if (ch != null &amp;&amp; !ch.isImmune(Fire.class) &amp;&amp; !(ch instanceof Tengu)) {</span>
+<span class="nc" id="L870">								Buff.affect( ch, Burning.class ).reignite( ch );</span>
+							}
+<span class="nc bnc" id="L872" title="All 2 branches missed.">							if (ch == Dungeon.hero){</span>
+<span class="nc" id="L873">								Statistics.qualifiedForBossChallengeBadge = false;</span>
+<span class="nc" id="L874">								Statistics.bossScores[1] -= 100;</span>
+							}
+
+<span class="nc" id="L877">							Heap heap = Dungeon.level.heaps.get( cell );</span>
+<span class="nc bnc" id="L878" title="All 2 branches missed.">							if (heap != null) {</span>
+<span class="nc" id="L879">								heap.burn();</span>
+							}
+
+<span class="nc" id="L882">							Plant plant = Dungeon.level.plants.get( cell );</span>
+<span class="nc bnc" id="L883" title="All 2 branches missed.">							if (plant != null){</span>
+<span class="nc" id="L884">								plant.wither();</span>
+							}
+							
+<span class="nc bnc" id="L887" title="All 2 branches missed.">							if (Dungeon.level.flamable[cell]){</span>
+<span class="nc" id="L888">								Dungeon.level.destroy( cell );</span>
+								
+<span class="nc" id="L890">								observe = true;</span>
+<span class="nc" id="L891">								GameScene.updateMap( cell );</span>
+							}
+							
+<span class="nc" id="L894">							burned = true;</span>
+<span class="nc" id="L895">							CellEmitter.get(cell).start(FlameParticle.FACTORY, 0.03f, 10);</span>
+						}
+					}
+				}
+				
+<span class="nc bnc" id="L900" title="All 2 branches missed.">				if (observe) {</span>
+<span class="nc" id="L901">					Dungeon.observe();</span>
+				}
+				
+<span class="nc bnc" id="L904" title="All 2 branches missed.">				if (burned){</span>
+<span class="nc" id="L905">					Sample.INSTANCE.play(Assets.Sounds.BURNING);</span>
+				}
+<span class="nc" id="L907">			}</span>
+			
+			@Override
+			public void use(BlobEmitter emitter) {
+<span class="nc" id="L911">				super.use(emitter);</span>
+				
+<span class="nc" id="L913">				emitter.pour( Speck.factory( Speck.STEAM ), 0.2f );</span>
+<span class="nc" id="L914">			}</span>
+			
+			@Override
+			public String tileDesc() {
+<span class="nc" id="L918">				return Messages.get(this, &quot;desc&quot;);</span>
+			}
+		}
+	}
+	
+	//*********************
+	//***Shocker Ability***
+	//*********************
+	
+	//returns true if shocker was thrown
+	public static boolean throwShocker(final Char thrower, final Char target){
+		
+<span class="nc" id="L930">		int targetCell = -1;</span>
+		
+		//Targets closest cell which is adjacent to target, and not adjacent to thrower or another shocker
+<span class="nc bnc" id="L933" title="All 2 branches missed.">		for (int i : PathFinder.NEIGHBOURS8){</span>
+<span class="nc" id="L934">			int cell = target.pos + i;</span>
+<span class="nc bnc" id="L935" title="All 4 branches missed.">			if (Dungeon.level.distance(cell, thrower.pos) &gt;= 2 &amp;&amp; !Dungeon.level.solid[cell]){</span>
+<span class="nc" id="L936">				boolean validTarget = true;</span>
+<span class="nc bnc" id="L937" title="All 2 branches missed.">				for (ShockerAbility s : thrower.buffs(ShockerAbility.class)){</span>
+<span class="nc bnc" id="L938" title="All 2 branches missed.">					if (Dungeon.level.distance(cell, s.shockerPos) &lt; 2){</span>
+<span class="nc" id="L939">						validTarget = false;</span>
+<span class="nc" id="L940">						break;</span>
+					}
+<span class="nc" id="L942">				}</span>
+<span class="nc bnc" id="L943" title="All 4 branches missed.">				if (validTarget &amp;&amp; Dungeon.level.trueDistance(cell, thrower.pos) &lt; Dungeon.level.trueDistance(targetCell, thrower.pos)){</span>
+<span class="nc" id="L944">					targetCell = cell;</span>
+				}
+			}
+		}
+		
+<span class="nc bnc" id="L949" title="All 2 branches missed.">		if (targetCell == -1){</span>
+<span class="nc" id="L950">			return false;</span>
+		}
+		
+<span class="nc" id="L953">		final int finalTargetCell = targetCell;</span>
+<span class="nc" id="L954">		throwingChar = thrower;</span>
+<span class="nc" id="L955">		final ShockerAbility.ShockerItem item = new ShockerAbility.ShockerItem();</span>
+<span class="nc" id="L956">		thrower.sprite.zap(finalTargetCell);</span>
+<span class="nc" id="L957">		((MissileSprite) thrower.sprite.parent.recycle(MissileSprite.class)).</span>
+<span class="nc" id="L958">				reset(thrower.sprite,</span>
+						finalTargetCell,
+						item,
+<span class="nc" id="L961">						new Callback() {</span>
+							@Override
+							public void call() {
+<span class="nc" id="L964">								item.onThrow(finalTargetCell);</span>
+<span class="nc" id="L965">								thrower.next();</span>
+<span class="nc" id="L966">							}</span>
+						});
+<span class="nc" id="L968">		return true;</span>
+	}
+	
+<span class="nc" id="L971">	public static class ShockerAbility extends Buff {</span>
+	
+		public int shockerPos;
+<span class="nc" id="L974">		private Boolean shockingOrdinals = null;</span>
+		
+		@Override
+		public boolean act() {
+			
+<span class="nc bnc" id="L979" title="All 2 branches missed.">			if (shockingOrdinals == null){</span>
+<span class="nc bnc" id="L980" title="All 2 branches missed.">				shockingOrdinals = Random.Int(2) == 1;</span>
+				
+<span class="nc" id="L982">				spreadblob();</span>
+<span class="nc bnc" id="L983" title="All 2 branches missed.">			} else if (shockingOrdinals){</span>
+				
+<span class="nc" id="L985">				target.sprite.parent.add(new Lightning(shockerPos - 1 - Dungeon.level.width(), shockerPos + 1 + Dungeon.level.width(), null));</span>
+<span class="nc" id="L986">				target.sprite.parent.add(new Lightning(shockerPos - 1 + Dungeon.level.width(), shockerPos + 1 - Dungeon.level.width(), null));</span>
+				
+<span class="nc bnc" id="L988" title="All 2 branches missed.">				if (Dungeon.level.distance(Dungeon.hero.pos, shockerPos) &lt;= 1){</span>
+<span class="nc" id="L989">					Sample.INSTANCE.play( Assets.Sounds.LIGHTNING );</span>
+				}
+				
+<span class="nc" id="L992">				shockingOrdinals = false;</span>
+<span class="nc" id="L993">				spreadblob();</span>
+			} else {
+				
+<span class="nc" id="L996">				target.sprite.parent.add(new Lightning(shockerPos - Dungeon.level.width(), shockerPos + Dungeon.level.width(), null));</span>
+<span class="nc" id="L997">				target.sprite.parent.add(new Lightning(shockerPos - 1, shockerPos + 1, null));</span>
+				
+<span class="nc bnc" id="L999" title="All 2 branches missed.">				if (Dungeon.level.distance(Dungeon.hero.pos, shockerPos) &lt;= 1){</span>
+<span class="nc" id="L1000">					Sample.INSTANCE.play( Assets.Sounds.LIGHTNING );</span>
+				}
+				
+<span class="nc" id="L1003">				shockingOrdinals = true;</span>
+<span class="nc" id="L1004">				spreadblob();</span>
+			}
+			
+<span class="nc" id="L1007">			spend(TICK);</span>
+<span class="nc" id="L1008">			return true;</span>
+		}
+		
+		private void spreadblob(){
+<span class="nc" id="L1012">			GameScene.add(Blob.seed(shockerPos, 1, ShockerBlob.class));</span>
+<span class="nc bnc" id="L1013" title="All 4 branches missed.">			for (int i = shockingOrdinals ? 0 : 1; i &lt; PathFinder.CIRCLE8.length; i += 2){</span>
+<span class="nc bnc" id="L1014" title="All 2 branches missed.">				if (!Dungeon.level.solid[shockerPos+PathFinder.CIRCLE8[i]]) {</span>
+<span class="nc" id="L1015">					GameScene.add(Blob.seed(shockerPos + PathFinder.CIRCLE8[i], 2, ShockerBlob.class));</span>
+				}
+			}
+<span class="nc" id="L1018">		}</span>
+		
+		private static final String SHOCKER_POS = &quot;shocker_pos&quot;;
+		private static final String SHOCKING_ORDINALS = &quot;shocking_ordinals&quot;;
+		
+		@Override
+		public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L1025">			super.storeInBundle(bundle);</span>
+<span class="nc" id="L1026">			bundle.put( SHOCKER_POS, shockerPos );</span>
+<span class="nc bnc" id="L1027" title="All 2 branches missed.">			if (shockingOrdinals != null) bundle.put( SHOCKING_ORDINALS, shockingOrdinals );</span>
+<span class="nc" id="L1028">		}</span>
+		
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L1032">			super.restoreFromBundle(bundle);</span>
+<span class="nc" id="L1033">			shockerPos = bundle.getInt( SHOCKER_POS );</span>
+<span class="nc bnc" id="L1034" title="All 2 branches missed.">			if (bundle.contains(SHOCKING_ORDINALS)) shockingOrdinals = bundle.getBoolean( SHOCKING_ORDINALS );</span>
+<span class="nc" id="L1035">		}</span>
+		
+<span class="nc" id="L1037">		public static class ShockerBlob extends Blob {</span>
+			
+			{
+<span class="nc" id="L1040">				actPriority = BUFF_PRIO - 1;</span>
+<span class="nc" id="L1041">				alwaysVisible = true;</span>
+<span class="nc" id="L1042">			}</span>
+			
+			@Override
+			protected void evolve() {
+
+<span class="nc" id="L1047">				boolean shocked = false;</span>
+				
+				int cell;
+<span class="nc bnc" id="L1050" title="All 2 branches missed.">				for (int i = area.left; i &lt; area.right; i++){</span>
+<span class="nc bnc" id="L1051" title="All 2 branches missed.">					for (int j = area.top; j &lt; area.bottom; j++){</span>
+<span class="nc" id="L1052">						cell = i + j* Dungeon.level.width();</span>
+<span class="nc bnc" id="L1053" title="All 2 branches missed.">						off[cell] = cur[cell] &gt; 0 ? cur[cell] - 1 : 0;</span>
+						
+<span class="nc bnc" id="L1055" title="All 2 branches missed.">						if (off[cell] &gt; 0) {</span>
+<span class="nc" id="L1056">							volume += off[cell];</span>
+						}
+						
+<span class="nc bnc" id="L1059" title="All 4 branches missed.">						if (cur[cell] &gt; 0 &amp;&amp; off[cell] == 0){</span>
+
+<span class="nc" id="L1061">							shocked = true;</span>
+							
+<span class="nc" id="L1063">							Char ch = Actor.findChar(cell);</span>
+<span class="nc bnc" id="L1064" title="All 4 branches missed.">							if (ch != null &amp;&amp; !(ch instanceof Tengu)){</span>
+<span class="nc" id="L1065">								ch.damage(2 + Dungeon.scalingDepth(), new Electricity());</span>
+								
+<span class="nc bnc" id="L1067" title="All 2 branches missed.">								if (ch == Dungeon.hero){</span>
+<span class="nc" id="L1068">									Statistics.qualifiedForBossChallengeBadge = false;</span>
+<span class="nc" id="L1069">									Statistics.bossScores[1] -= 100;</span>
+<span class="nc bnc" id="L1070" title="All 2 branches missed.">									if (!ch.isAlive()) {</span>
+<span class="nc" id="L1071">										Dungeon.fail(Tengu.class);</span>
+<span class="nc" id="L1072">										GLog.n(Messages.get(Electricity.class, &quot;ondeath&quot;));</span>
+									}
+								}
+							}
+							
+						}
+					}
+				}
+
+<span class="nc bnc" id="L1081" title="All 2 branches missed.">				if (shocked) Sample.INSTANCE.play( Assets.Sounds.LIGHTNING );</span>
+				
+<span class="nc" id="L1083">			}</span>
+			
+			@Override
+			public void use(BlobEmitter emitter) {
+<span class="nc" id="L1087">				super.use(emitter);</span>
+				
+<span class="nc" id="L1089">				emitter.pour( SparkParticle.STATIC, 0.10f );</span>
+<span class="nc" id="L1090">			}</span>
+			
+			@Override
+			public String tileDesc() {
+<span class="nc" id="L1094">				return Messages.get(this, &quot;desc&quot;);</span>
+			}
+		}
+		
+<span class="nc" id="L1098">		public static class ShockerItem extends Item {</span>
+			
+			{
+<span class="nc" id="L1101">				dropsDownHeap = true;</span>
+<span class="nc" id="L1102">				unique = true;</span>
+				
+<span class="nc" id="L1104">				image = ItemSpriteSheet.TENGU_SHOCKER;</span>
+<span class="nc" id="L1105">			}</span>
+			
+			@Override
+			public boolean doPickUp(Hero hero, int pos) {
+<span class="nc" id="L1109">				GLog.w( Messages.get(this, &quot;cant_pickup&quot;) );</span>
+<span class="nc" id="L1110">				return false;</span>
+			}
+			
+			@Override
+			protected void onThrow(int cell) {
+<span class="nc" id="L1115">				super.onThrow(cell);</span>
+<span class="nc bnc" id="L1116" title="All 2 branches missed.">				if (throwingChar != null){</span>
+<span class="nc" id="L1117">					Buff.append(throwingChar, ShockerAbility.class).shockerPos = cell;</span>
+<span class="nc" id="L1118">					throwingChar = null;</span>
+				} else {
+<span class="nc" id="L1120">					Buff.append(curUser, ShockerAbility.class).shockerPos = cell;</span>
+				}
+<span class="nc" id="L1122">			}</span>
+			
+			@Override
+			public Emitter emitter() {
+<span class="nc" id="L1126">				Emitter emitter = new Emitter();</span>
+<span class="nc" id="L1127">				emitter.pos(5, 5);</span>
+<span class="nc" id="L1128">				emitter.fillTarget = false;</span>
+<span class="nc" id="L1129">				emitter.pour(SparkParticle.FACTORY, 0.1f);</span>
+<span class="nc" id="L1130">				return emitter;</span>
+			}
+		}
+		
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

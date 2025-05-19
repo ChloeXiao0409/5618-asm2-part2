@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Bee.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.actors.mobs</a> &gt; <span class="el_source">Bee.java</span></div><h1>Bee.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AllyBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Amok;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.BeeSprite;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+
+//FIXME the AI for these things is becoming a complete mess, should refactor
+<span class="nc" id="L36">public class Bee extends Mob {</span>
+	
+	{
+<span class="nc" id="L39">		spriteClass = BeeSprite.class;</span>
+		
+<span class="nc" id="L41">		viewDistance = 4;</span>
+
+<span class="nc" id="L43">		EXP = 0;</span>
+		
+<span class="nc" id="L45">		flying = true;</span>
+<span class="nc" id="L46">		state = WANDERING;</span>
+		
+		//only applicable when the bee is charmed with elixir of honeyed healing
+<span class="nc" id="L49">		intelligentAlly = true;</span>
+<span class="nc" id="L50">	}</span>
+
+	private int level;
+
+	//-1 refers to a pot that has gone missing.
+	private int potPos;
+	//-1 for no owner
+	private int potHolder;
+	
+	private static final String LEVEL	    = &quot;level&quot;;
+	private static final String POTPOS	    = &quot;potpos&quot;;
+	private static final String POTHOLDER	= &quot;potholder&quot;;
+	private static final String ALIGMNENT   = &quot;alignment&quot;;
+	
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+<span class="nc" id="L66">		super.storeInBundle( bundle );</span>
+<span class="nc" id="L67">		bundle.put( LEVEL, level );</span>
+<span class="nc" id="L68">		bundle.put( POTPOS, potPos );</span>
+<span class="nc" id="L69">		bundle.put( POTHOLDER, potHolder );</span>
+<span class="nc" id="L70">		bundle.put( ALIGMNENT, alignment);</span>
+<span class="nc" id="L71">	}</span>
+	
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+<span class="nc" id="L75">		super.restoreFromBundle( bundle );</span>
+<span class="nc" id="L76">		spawn( bundle.getInt( LEVEL ) );</span>
+<span class="nc" id="L77">		potPos = bundle.getInt( POTPOS );</span>
+<span class="nc" id="L78">		potHolder = bundle.getInt( POTHOLDER );</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if (bundle.contains(ALIGMNENT)) alignment = bundle.getEnum( ALIGMNENT, Alignment.class);</span>
+<span class="nc" id="L80">	}</span>
+
+	@Override
+	public void die(Object cause) {
+<span class="nc" id="L84">		flying = false;</span>
+<span class="nc" id="L85">		super.die(cause);</span>
+<span class="nc" id="L86">	}</span>
+	
+	public void spawn( int level ) {
+<span class="nc" id="L89">		this.level = level;</span>
+		
+<span class="nc" id="L91">		HT = (2 + level) * 4;</span>
+<span class="nc" id="L92">		defenseSkill = 9 + level;</span>
+<span class="nc" id="L93">	}</span>
+
+	public void setPotInfo(int potPos, Char potHolder){
+<span class="nc" id="L96">		this.potPos = potPos;</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">		if (potHolder == null)</span>
+<span class="nc" id="L98">			this.potHolder = -1;</span>
+		else
+<span class="nc" id="L100">			this.potHolder = potHolder.id();</span>
+<span class="nc" id="L101">	}</span>
+	
+	public int potPos(){
+<span class="nc" id="L104">		return potPos;</span>
+	}
+	
+	public int potHolderID(){
+<span class="nc" id="L108">		return potHolder;</span>
+	}
+	
+	@Override
+	public int attackSkill( Char target ) {
+<span class="nc" id="L113">		return defenseSkill;</span>
+	}
+	
+	@Override
+	public int damageRoll() {
+<span class="nc" id="L118">		return Random.NormalIntRange( HT / 10, HT / 4 );</span>
+	}
+	
+	@Override
+	public int attackProc( Char enemy, int damage ) {
+<span class="nc" id="L123">		damage = super.attackProc( enemy, damage );</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">		if (enemy instanceof Mob) {</span>
+<span class="nc" id="L125">			((Mob)enemy).aggro( this );</span>
+		}
+<span class="nc" id="L127">		return damage;</span>
+	}
+
+	@Override
+	public boolean add(Buff buff) {
+<span class="nc bnc" id="L132" title="All 2 branches missed.">		if (super.add(buff)) {</span>
+			//TODO maybe handle honeyed bees with their own ally buff?
+<span class="nc bnc" id="L134" title="All 2 branches missed.">			if (buff instanceof AllyBuff) {</span>
+<span class="nc" id="L135">				intelligentAlly = false;</span>
+<span class="nc" id="L136">				setPotInfo(-1, null);</span>
+			}
+<span class="nc" id="L138">			return true;</span>
+		}
+<span class="nc" id="L140">		return false;</span>
+	}
+
+	@Override
+	protected Char chooseEnemy() {
+		//if the pot is no longer present, default to regular AI behaviour
+<span class="nc bnc" id="L146" title="All 6 branches missed.">		if (alignment == Alignment.ALLY || (potHolder == -1 &amp;&amp; potPos == -1)){</span>
+<span class="nc" id="L147">			return super.chooseEnemy();</span>
+		
+		//if something is holding the pot, target that
+<span class="nc bnc" id="L150" title="All 2 branches missed.">		}else if (Actor.findById(potHolder) != null){</span>
+<span class="nc" id="L151">			return (Char) Actor.findById(potHolder);</span>
+			
+		//if the pot is on the ground
+		}else {
+			
+			//try to find a new enemy in these circumstances
+<span class="nc bnc" id="L157" title="All 8 branches missed.">			if (enemy == null || !enemy.isAlive() || !Actor.chars().contains(enemy) || state == WANDERING</span>
+<span class="nc bnc" id="L158" title="All 6 branches missed.">					|| Dungeon.level.distance(enemy.pos, potPos) &gt; 3</span>
+					|| (alignment == Alignment.ALLY &amp;&amp; enemy.alignment == Alignment.ALLY)
+<span class="nc bnc" id="L160" title="All 4 branches missed.">					|| (buff( Amok.class ) == null &amp;&amp; enemy.isInvulnerable(getClass()))){</span>
+				
+				//target closest potential enemy near the pot
+<span class="nc" id="L163">				Char closest = null;</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">				for (Mob mob : Dungeon.level.mobs) {</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">					if (!(mob == this)</span>
+<span class="nc bnc" id="L166" title="All 4 branches missed.">							&amp;&amp; Dungeon.level.distance(mob.pos, potPos) &lt;= 3</span>
+							&amp;&amp; mob.alignment != Alignment.NEUTRAL
+<span class="nc bnc" id="L168" title="All 6 branches missed.">							&amp;&amp; !mob.isInvulnerable(getClass())</span>
+							&amp;&amp; !(alignment == Alignment.ALLY &amp;&amp; mob.alignment == Alignment.ALLY)) {
+<span class="nc bnc" id="L170" title="All 4 branches missed.">						if (closest == null || Dungeon.level.distance(closest.pos, pos) &gt; Dungeon.level.distance(mob.pos, pos)){</span>
+<span class="nc" id="L171">							closest = mob;</span>
+						}
+					}
+<span class="nc" id="L174">				}</span>
+				
+<span class="nc bnc" id="L176" title="All 2 branches missed.">				if (closest != null){</span>
+<span class="nc" id="L177">					return closest;</span>
+				} else {
+<span class="nc bnc" id="L179" title="All 4 branches missed.">					if (alignment != Alignment.ALLY &amp;&amp; Dungeon.level.distance(Dungeon.hero.pos, potPos) &lt;= 3){</span>
+<span class="nc" id="L180">						return Dungeon.hero;</span>
+					} else {
+<span class="nc" id="L182">						return null;</span>
+					}
+				}
+				
+			} else {
+<span class="nc" id="L187">				return enemy;</span>
+			}
+
+			
+		}
+	}
+
+	@Override
+	protected boolean getCloser(int target) {
+<span class="nc bnc" id="L196" title="All 6 branches missed.">		if (alignment == Alignment.ALLY &amp;&amp; enemy == null &amp;&amp; buffs(AllyBuff.class).isEmpty()) {</span>
+<span class="nc" id="L197">			target = Dungeon.hero.pos;</span>
+<span class="nc bnc" id="L198" title="All 4 branches missed.">		} else if (enemy != null &amp;&amp; Actor.findById(potHolder) == enemy) {</span>
+<span class="nc" id="L199">			target = enemy.pos;</span>
+<span class="nc bnc" id="L200" title="All 6 branches missed.">		} else if (potPos != -1 &amp;&amp; (state == WANDERING || Dungeon.level.distance(target, potPos) &gt; 3)) {</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">			if (!Dungeon.level.insideMap(potPos)){</span>
+<span class="nc" id="L202">				potPos = -1;</span>
+			} else {
+<span class="nc" id="L204">				this.target = target = potPos;</span>
+			}
+		}
+<span class="nc" id="L207">		return super.getCloser( target );</span>
+	}
+	
+	@Override
+	public String description() {
+<span class="nc bnc" id="L212" title="All 4 branches missed.">		if (alignment == Alignment.ALLY &amp;&amp; buffs(AllyBuff.class).isEmpty()){</span>
+<span class="nc" id="L213">			return Messages.get(this, &quot;desc_honey&quot;);</span>
+		} else {
+<span class="nc" id="L215">			return super.description();</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

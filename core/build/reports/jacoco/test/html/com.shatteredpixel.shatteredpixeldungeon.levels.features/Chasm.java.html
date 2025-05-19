@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Chasm.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.features</a> &gt; <span class="el_source">Chasm.java</span></div><h1>Chasm.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.features;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Bleeding;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Cripple;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs.ElixirOfFeatherFall;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.RegularLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.WeakFloorRoom;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.MobSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Callback;
+import com.watabou.utils.Random;
+
+<span class="nc" id="L51">public class Chasm implements Hero.Doom {</span>
+
+<span class="nc" id="L53">	public static boolean jumpConfirmed = false;</span>
+	private static int heroPos;
+	
+	public static void heroJump( final Hero hero ) {
+<span class="nc" id="L57">		heroPos = hero.pos;</span>
+<span class="nc" id="L58">		Game.runOnRenderThread(new Callback() {</span>
+			@Override
+			public void call() {
+<span class="nc" id="L61">				GameScene.show(</span>
+<span class="nc" id="L62">						new WndOptions( new Image(Dungeon.level.tilesTex(), 176, 16, 16, 16),</span>
+<span class="nc" id="L63">								Messages.get(Chasm.class, &quot;chasm&quot;),</span>
+<span class="nc" id="L64">								Messages.get(Chasm.class, &quot;jump&quot;),</span>
+<span class="nc" id="L65">								Messages.get(Chasm.class, &quot;yes&quot;),</span>
+<span class="nc" id="L66">								Messages.get(Chasm.class, &quot;no&quot;) ) {</span>
+
+<span class="nc" id="L68">							private float elapsed = 0f;</span>
+
+							@Override
+							public synchronized void update() {
+<span class="nc" id="L72">								super.update();</span>
+<span class="nc" id="L73">								elapsed += Game.elapsed;</span>
+<span class="nc" id="L74">							}</span>
+
+							@Override
+							public void hide() {
+<span class="nc bnc" id="L78" title="All 2 branches missed.">								if (elapsed &gt; 0.2f){</span>
+<span class="nc" id="L79">									super.hide();</span>
+								}
+<span class="nc" id="L81">							}</span>
+
+							@Override
+							protected void onSelect( int index ) {
+<span class="nc bnc" id="L85" title="All 4 branches missed.">								if (index == 0 &amp;&amp; elapsed &gt; 0.2f) {</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">									if (Dungeon.hero.pos == heroPos) {</span>
+<span class="nc" id="L87">										jumpConfirmed = true;</span>
+<span class="nc" id="L88">										hero.resume();</span>
+									}
+								}
+<span class="nc" id="L91">							}</span>
+						}
+				);
+<span class="nc" id="L94">			}</span>
+		});
+<span class="nc" id="L96">	}</span>
+	
+	public static void heroFall( int pos ) {
+		
+<span class="nc" id="L100">		jumpConfirmed = false;</span>
+				
+<span class="nc" id="L102">		Sample.INSTANCE.play( Assets.Sounds.FALLING );</span>
+
+<span class="nc" id="L104">		Level.beforeTransition();</span>
+
+<span class="nc bnc" id="L106" title="All 2 branches missed.">		if (Dungeon.hero.isAlive()) {</span>
+<span class="nc" id="L107">			Dungeon.hero.interrupt();</span>
+<span class="nc" id="L108">			InterlevelScene.mode = InterlevelScene.Mode.FALL;</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">			if (Dungeon.level instanceof RegularLevel &amp;&amp;</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">						((RegularLevel)Dungeon.level).room( pos ) instanceof WeakFloorRoom){</span>
+<span class="nc" id="L111">				InterlevelScene.fallIntoPit = true;</span>
+<span class="nc" id="L112">				Notes.remove(Notes.Landmark.DISTANT_WELL);</span>
+			} else {
+<span class="nc" id="L114">				InterlevelScene.fallIntoPit = false;</span>
+			}
+<span class="nc" id="L116">			Game.switchScene( InterlevelScene.class );</span>
+		} else {
+<span class="nc" id="L118">			Dungeon.hero.sprite.visible = false;</span>
+		}
+<span class="nc" id="L120">	}</span>
+
+	@Override
+	public void onDeath() {
+<span class="nc" id="L124">		Badges.validateDeathFromFalling();</span>
+
+<span class="nc" id="L126">		Dungeon.fail( Chasm.class );</span>
+<span class="nc" id="L127">		GLog.n( Messages.get(Chasm.class, &quot;ondeath&quot;) );</span>
+<span class="nc" id="L128">	}</span>
+
+	public static void heroLand() {
+		
+<span class="nc" id="L132">		Hero hero = Dungeon.hero;</span>
+		
+<span class="nc" id="L134">		ElixirOfFeatherFall.FeatherBuff b = hero.buff(ElixirOfFeatherFall.FeatherBuff.class);</span>
+		
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		if (b != null){</span>
+<span class="nc" id="L137">			hero.sprite.emitter().burst( Speck.factory( Speck.JET ), 20);</span>
+<span class="nc" id="L138">			b.processFall();</span>
+<span class="nc" id="L139">			return;</span>
+		}
+		
+<span class="nc" id="L142">		PixelScene.shake( 4, 1f );</span>
+
+<span class="nc" id="L144">		Dungeon.level.occupyCell(hero );</span>
+<span class="nc" id="L145">		Buff.prolong( hero, Cripple.class, Cripple.DURATION );</span>
+
+		//The lower the hero's HP, the more bleed and the less upfront damage.
+		//Hero has a 50% chance to bleed out at 66% HP, and begins to risk instant-death at 25%
+<span class="nc" id="L149">		Buff.affect( hero, Bleeding.class).set( Math.round(hero.HT / (6f + (6f*(hero.HP/(float)hero.HT)))), Chasm.class);</span>
+<span class="nc" id="L150">		hero.damage( Math.max( hero.HP / 2, Random.NormalIntRange( hero.HP / 2, hero.HT / 4 )), new Chasm() );</span>
+<span class="nc" id="L151">	}</span>
+
+	public static void mobFall( Mob mob ) {
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		if (mob.isAlive()) mob.die( Chasm.class );</span>
+		
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		if (mob.sprite != null) ((MobSprite)mob.sprite).fall();</span>
+<span class="nc" id="L157">	}</span>
+	
+<span class="nc" id="L159">	public static class Falling extends Buff {</span>
+		
+		{
+<span class="nc" id="L162">			actPriority = VFX_PRIO;</span>
+<span class="nc" id="L163">		}</span>
+		
+		@Override
+		public boolean act() {
+<span class="nc" id="L167">			heroLand();</span>
+<span class="nc" id="L168">			detach();</span>
+<span class="nc" id="L169">			return true;</span>
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

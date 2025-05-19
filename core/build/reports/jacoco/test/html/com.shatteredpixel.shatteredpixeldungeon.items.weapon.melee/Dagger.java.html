@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Dagger.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee</a> &gt; <span class="el_source">Dagger.java</span></div><h1>Dagger.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.BArray;
+import com.watabou.utils.PathFinder;
+
+<span class="nc" id="L43">public class Dagger extends MeleeWeapon {</span>
+	
+	{
+<span class="nc" id="L46">		image = ItemSpriteSheet.DAGGER;</span>
+<span class="nc" id="L47">		hitSound = Assets.Sounds.HIT_STAB;</span>
+<span class="nc" id="L48">		hitSoundPitch = 1.1f;</span>
+
+<span class="nc" id="L50">		tier = 1;</span>
+		
+<span class="nc" id="L52">		bones = false;</span>
+<span class="nc" id="L53">	}</span>
+
+	@Override
+	public int max(int lvl) {
+<span class="nc" id="L57">		return  4*(tier+1) +    //8 base, down from 10</span>
+				lvl*(tier+1);   //scaling unchanged
+	}
+	
+	@Override
+	public int damageRoll(Char owner) {
+<span class="nc bnc" id="L63" title="All 2 branches missed.">		if (owner instanceof Hero) {</span>
+<span class="nc" id="L64">			Hero hero = (Hero)owner;</span>
+<span class="nc" id="L65">			Char enemy = hero.enemy();</span>
+<span class="nc bnc" id="L66" title="All 4 branches missed.">			if (enemy instanceof Mob &amp;&amp; ((Mob) enemy).surprisedBy(hero)) {</span>
+				//deals 75% toward max to max on surprise, instead of min to max.
+<span class="nc" id="L68">				int diff = max() - min();</span>
+<span class="nc" id="L69">				int damage = augment.damageFactor(Hero.heroDamageIntRange(</span>
+<span class="nc" id="L70">						min() + Math.round(diff*0.75f),</span>
+<span class="nc" id="L71">						max()));</span>
+<span class="nc" id="L72">				int exStr = hero.STR() - STRReq();</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">				if (exStr &gt; 0) {</span>
+<span class="nc" id="L74">					damage += Hero.heroDamageIntRange(0, exStr);</span>
+				}
+<span class="nc" id="L76">				return damage;</span>
+			}
+		}
+<span class="nc" id="L79">		return super.damageRoll(owner);</span>
+	}
+
+	@Override
+	public String targetingPrompt() {
+<span class="nc" id="L84">		return Messages.get(this, &quot;prompt&quot;);</span>
+	}
+
+	public boolean useTargeting(){
+<span class="nc" id="L88">		return false;</span>
+	}
+
+	@Override
+	protected void duelistAbility(Hero hero, Integer target) {
+<span class="nc" id="L93">		sneakAbility(hero, target, 5, 2+buffedLvl(), this);</span>
+<span class="nc" id="L94">	}</span>
+
+	@Override
+	public String abilityInfo() {
+<span class="nc bnc" id="L98" title="All 2 branches missed.">		if (levelKnown){</span>
+<span class="nc" id="L99">			return Messages.get(this, &quot;ability_desc&quot;, 2+buffedLvl());</span>
+		} else {
+<span class="nc" id="L101">			return Messages.get(this, &quot;typical_ability_desc&quot;, 2);</span>
+		}
+	}
+
+	@Override
+	public String upgradeAbilityStat(int level) {
+<span class="nc" id="L107">		return Integer.toString(2+level);</span>
+	}
+
+	public static void sneakAbility(Hero hero, Integer target, int maxDist, int invisTurns, MeleeWeapon wep){
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		if (target == null) {</span>
+<span class="nc" id="L112">			return;</span>
+		}
+
+<span class="nc" id="L115">		PathFinder.buildDistanceMap(Dungeon.hero.pos, BArray.or(Dungeon.level.passable, Dungeon.level.avoid, null), maxDist);</span>
+<span class="nc bnc" id="L116" title="All 6 branches missed.">		if (PathFinder.distance[target] == Integer.MAX_VALUE || !Dungeon.level.heroFOV[target] || hero.rooted) {</span>
+<span class="nc" id="L117">			GLog.w(Messages.get(wep, &quot;ability_target_range&quot;));</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">			if (Dungeon.hero.rooted) PixelScene.shake( 1, 1f );</span>
+<span class="nc" id="L119">			return;</span>
+		}
+
+<span class="nc bnc" id="L122" title="All 2 branches missed.">		if (Actor.findChar(target) != null) {</span>
+<span class="nc" id="L123">			GLog.w(Messages.get(wep, &quot;ability_occupied&quot;));</span>
+<span class="nc" id="L124">			return;</span>
+		}
+
+<span class="nc" id="L127">		wep.beforeAbilityUsed(hero, null);</span>
+<span class="nc" id="L128">		Buff.affect(hero, Invisibility.class, invisTurns-1); //1 fewer turns as ability is instant</span>
+
+<span class="nc" id="L130">		Dungeon.hero.sprite.turnTo( Dungeon.hero.pos, target);</span>
+<span class="nc" id="L131">		Dungeon.hero.pos = target;</span>
+<span class="nc" id="L132">		Dungeon.level.occupyCell(Dungeon.hero);</span>
+<span class="nc" id="L133">		Dungeon.observe();</span>
+<span class="nc" id="L134">		GameScene.updateFog();</span>
+<span class="nc" id="L135">		Dungeon.hero.checkVisibleMobs();</span>
+
+<span class="nc" id="L137">		Dungeon.hero.sprite.place( Dungeon.hero.pos );</span>
+<span class="nc" id="L138">		CellEmitter.get( Dungeon.hero.pos ).burst( Speck.factory( Speck.WOOL ), 6 );</span>
+<span class="nc" id="L139">		Sample.INSTANCE.play( Assets.Sounds.PUFF );</span>
+
+<span class="nc" id="L141">		hero.next();</span>
+<span class="nc" id="L142">		wep.afterAbilityUsed(hero);</span>
+<span class="nc" id="L143">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

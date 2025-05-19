@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ShrapnelBomb.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.bombs</a> &gt; <span class="el_source">ShrapnelBomb.java</span></div><h1>ShrapnelBomb.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.bombs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.BlastParticle;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.ShadowCaster;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.watabou.utils.Point;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L36">public class ShrapnelBomb extends Bomb {</span>
+	
+	{
+<span class="nc" id="L39">		image = ItemSpriteSheet.SHRAPNEL_BOMB;</span>
+<span class="nc" id="L40">	}</span>
+	
+	@Override
+	public boolean explodesDestructively() {
+<span class="nc" id="L44">		return false;</span>
+	}
+
+	@Override
+	protected int explosionRange() {
+<span class="nc" id="L49">		return 8;</span>
+	}
+
+	@Override
+	public void explode(int cell) {
+<span class="nc" id="L54">		super.explode(cell);</span>
+		
+<span class="nc" id="L56">		boolean[] FOV = new boolean[Dungeon.level.length()];</span>
+<span class="nc" id="L57">		Point c = Dungeon.level.cellToPoint(cell);</span>
+<span class="nc" id="L58">		ShadowCaster.castShadow(c.x, c.y, Dungeon.level.width(), FOV, Dungeon.level.losBlocking, explosionRange());</span>
+		
+<span class="nc" id="L60">		ArrayList&lt;Char&gt; affected = new ArrayList&lt;&gt;();</span>
+		
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		for (int i = 0; i &lt; FOV.length; i++) {</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">			if (FOV[i]) {</span>
+<span class="nc bnc" id="L64" title="All 4 branches missed.">				if (Dungeon.level.heroFOV[i] &amp;&amp; !Dungeon.level.solid[i]) {</span>
+<span class="nc" id="L65">					CellEmitter.center( i ).burst( BlastParticle.FACTORY, 5 );</span>
+				}
+<span class="nc" id="L67">				Char ch = Actor.findChar(i);</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">				if (ch != null){</span>
+<span class="nc" id="L69">					affected.add(ch);</span>
+				}
+			}
+		}
+		
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		for (Char ch : affected){</span>
+			//regular bomb damage over an FOV up to 8-range
+<span class="nc" id="L76">			int damage = Random.NormalIntRange( 4 + Dungeon.scalingDepth(), 12 + 3*Dungeon.scalingDepth() );</span>
+<span class="nc" id="L77">			damage -= ch.drRoll();</span>
+<span class="nc" id="L78">			ch.damage(damage, this);</span>
+<span class="nc bnc" id="L79" title="All 4 branches missed.">			if (ch == Dungeon.hero &amp;&amp; !ch.isAlive()) {</span>
+<span class="nc" id="L80">				Dungeon.fail(this);</span>
+			}
+<span class="nc" id="L82">		}</span>
+<span class="nc" id="L83">	}</span>
+	
+	@Override
+	public int value() {
+		//prices of ingredients
+<span class="nc" id="L88">		return quantity * (20 + 50);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ItemSprite.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.sprites</a> &gt; <span class="el_source">ItemSprite.java</span></div><h1>ItemSprite.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.sprites;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.items.Gold;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.watabou.gltextures.SmartTexture;
+import com.watabou.gltextures.TextureCache;
+import com.watabou.glwrap.Matrix;
+import com.watabou.glwrap.Vertexbuffer;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.MovieClip;
+import com.watabou.noosa.NoosaScript;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+
+import java.nio.Buffer;
+
+public class ItemSprite extends MovieClip {
+
+	public static final int SIZE	= 16;
+	
+	private static final float DROP_INTERVAL = 0.4f;
+	
+	public Heap heap;
+	
+	private Glowing glowing;
+	//FIXME: a lot of this emitter functionality isn't very well implemented.
+	//right now I want to ship 0.3.0, but should refactor in the future.
+	protected Emitter emitter;
+	private float phase;
+	private boolean glowUp;
+	
+	private float dropInterval;
+
+	//the amount the sprite is raised from flat when viewed in a raised perspective
+<span class="nc" id="L69">	protected float perspectiveRaise    = 5 / 16f; //5 pixels</span>
+
+	//the width and height of the shadow are a percentage of sprite size
+	//offset is the number of pixels the shadow is moved down or up (handy for some animations)
+<span class="nc" id="L73">	protected boolean renderShadow  = false;</span>
+<span class="nc" id="L74">	protected float shadowWidth     = 1f;</span>
+<span class="nc" id="L75">	protected float shadowHeight    = 0.25f;</span>
+<span class="nc" id="L76">	protected float shadowOffset    = 0.5f;</span>
+	
+	public ItemSprite() {
+<span class="nc" id="L79">		this( ItemSpriteSheet.SOMETHING, null );</span>
+<span class="nc" id="L80">	}</span>
+	
+	public ItemSprite( Heap heap ){
+<span class="nc" id="L83">		super(Assets.Sprites.ITEMS);</span>
+<span class="nc" id="L84">		view( heap );</span>
+<span class="nc" id="L85">	}</span>
+	
+	public ItemSprite( Item item ) {
+<span class="nc" id="L88">		super(Assets.Sprites.ITEMS);</span>
+<span class="nc" id="L89">		view( item );</span>
+<span class="nc" id="L90">	}</span>
+	
+	public ItemSprite( int image ){
+<span class="nc" id="L93">		this( image, null );</span>
+<span class="nc" id="L94">	}</span>
+	
+	public ItemSprite( int image, Glowing glowing ) {
+<span class="nc" id="L97">		super( Assets.Sprites.ITEMS );</span>
+		
+<span class="nc" id="L99">		view(image, glowing);</span>
+<span class="nc" id="L100">	}</span>
+	
+	public void link() {
+<span class="nc" id="L103">		link(heap);</span>
+<span class="nc" id="L104">	}</span>
+	
+	public void link( Heap heap ) {
+<span class="nc" id="L107">		this.heap = heap;</span>
+<span class="nc" id="L108">		view(heap);</span>
+<span class="nc" id="L109">		renderShadow = true;</span>
+<span class="nc" id="L110">		visible = heap.seen;</span>
+<span class="nc" id="L111">		place(heap.pos);</span>
+<span class="nc" id="L112">	}</span>
+	
+	@Override
+	public void revive() {
+<span class="nc" id="L116">		super.revive();</span>
+		
+<span class="nc" id="L118">		speed.set( 0 );</span>
+<span class="nc" id="L119">		acc.set( 0 );</span>
+<span class="nc" id="L120">		dropInterval = 0;</span>
+		
+<span class="nc" id="L122">		heap = null;</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		if (emitter != null) {</span>
+<span class="nc" id="L124">			emitter.killAndErase();</span>
+<span class="nc" id="L125">			emitter = null;</span>
+		}
+<span class="nc" id="L127">	}</span>
+
+	@Override
+	public void copy(Image other) {
+<span class="nc" id="L131">		super.copy(other);</span>
+
+<span class="nc bnc" id="L133" title="All 4 branches missed.">		if (other instanceof ItemSprite &amp;&amp; ((ItemSprite) other).glowing != null){</span>
+<span class="nc" id="L134">			glow(((ItemSprite) other).glowing);</span>
+		}
+
+<span class="nc" id="L137">	}</span>
+
+	public void visible(boolean value){
+<span class="nc" id="L140">		this.visible = value;</span>
+<span class="nc bnc" id="L141" title="All 4 branches missed.">		if (emitter != null &amp;&amp; !visible){</span>
+<span class="nc" id="L142">			emitter.killAndErase();</span>
+<span class="nc" id="L143">			emitter = null;</span>
+		}
+<span class="nc" id="L145">	}</span>
+	
+	public PointF worldToCamera( int cell ) {
+<span class="nc" id="L148">		final int csize = DungeonTilemap.SIZE;</span>
+		
+<span class="nc" id="L150">		return new PointF(</span>
+<span class="nc" id="L151">				PixelScene.align(Camera.main, ((cell % Dungeon.level.width()) + 0.5f) * csize - width() * 0.5f),</span>
+<span class="nc" id="L152">				PixelScene.align(Camera.main, ((cell / Dungeon.level.width()) + 1.0f) * csize - height() - csize * perspectiveRaise)</span>
+		);
+	}
+	
+	public void place( int p ) {
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		if (Dungeon.level != null) {</span>
+<span class="nc" id="L158">			point(worldToCamera(p));</span>
+<span class="nc" id="L159">			shadowOffset = 0.5f;</span>
+		}
+<span class="nc" id="L161">	}</span>
+	
+	public void drop() {
+
+<span class="nc bnc" id="L165" title="All 2 branches missed.">		if (heap.isEmpty()) {</span>
+<span class="nc" id="L166">			return;</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">		} else if (heap.size() == 1){</span>
+			// normally this would happen for any heap, however this is not applied to heaps greater than 1 in size
+			// in order to preserve an amusing visual bug/feature that used to trigger for heaps with size &gt; 1
+			// where as long as the player continually taps, the heap sails up into the air.
+<span class="nc" id="L171">			place(heap.pos);</span>
+		}
+			
+<span class="nc" id="L174">		dropInterval = DROP_INTERVAL;</span>
+		
+<span class="nc" id="L176">		speed.set( 0, -100 );</span>
+<span class="nc" id="L177">		acc.set(0, -speed.y / DROP_INTERVAL * 2);</span>
+		
+<span class="nc bnc" id="L179" title="All 6 branches missed.">		if (heap != null &amp;&amp; heap.seen &amp;&amp; heap.peek() instanceof Gold) {</span>
+<span class="nc" id="L180">			CellEmitter.center( heap.pos ).burst( Speck.factory( Speck.COIN ), 5 );</span>
+<span class="nc" id="L181">			Sample.INSTANCE.play( Assets.Sounds.GOLD, 1, 1, Random.Float( 0.9f, 1.1f ) );</span>
+		}
+<span class="nc" id="L183">	}</span>
+	
+	public void drop( int from ) {
+
+<span class="nc bnc" id="L187" title="All 2 branches missed.">		if (heap.pos == from) {</span>
+<span class="nc" id="L188">			drop();</span>
+		} else {
+			
+<span class="nc" id="L191">			float px = x;</span>
+<span class="nc" id="L192">			float py = y;</span>
+<span class="nc" id="L193">			drop();</span>
+			
+<span class="nc" id="L195">			place(from);</span>
+	
+<span class="nc" id="L197">			speed.offset((px - x) / DROP_INTERVAL, (py - y) / DROP_INTERVAL);</span>
+		}
+<span class="nc" id="L199">	}</span>
+
+	public ItemSprite view( Item item ){
+<span class="nc" id="L202">		view(item.image(), item.glowing());</span>
+<span class="nc" id="L203">		Emitter emitter = item.emitter();</span>
+<span class="nc bnc" id="L204" title="All 4 branches missed.">		if (emitter != null &amp;&amp; parent != null) {</span>
+<span class="nc" id="L205">			emitter.pos( this );</span>
+<span class="nc" id="L206">			parent.add( emitter );</span>
+<span class="nc" id="L207">			this.emitter = emitter;</span>
+		}
+<span class="nc" id="L209">		return this;</span>
+	}
+	
+	public ItemSprite view( Heap heap ){
+<span class="nc bnc" id="L213" title="All 4 branches missed.">		if (heap.size() &lt;= 0 || heap.items == null){</span>
+<span class="nc" id="L214">			return view( 0, null );</span>
+		}
+		
+<span class="nc bnc" id="L217" title="All 8 branches missed.">		switch (heap.type) {</span>
+			case HEAP: case FOR_SALE:
+<span class="nc" id="L219">				return view( heap.peek() );</span>
+			case CHEST:
+<span class="nc" id="L221">				return view( ItemSpriteSheet.CHEST, null );</span>
+			case LOCKED_CHEST:
+<span class="nc" id="L223">				return view( ItemSpriteSheet.LOCKED_CHEST, null );</span>
+			case CRYSTAL_CHEST:
+<span class="nc" id="L225">				return view( ItemSpriteSheet.CRYSTAL_CHEST, null );</span>
+			case TOMB:
+<span class="nc" id="L227">				return view( ItemSpriteSheet.TOMB, null );</span>
+			case SKELETON:
+<span class="nc" id="L229">				return view( ItemSpriteSheet.BONES, null );</span>
+			case REMAINS:
+<span class="nc" id="L231">				return view( ItemSpriteSheet.REMAINS, null );</span>
+			default:
+<span class="nc" id="L233">				return view( 0, null );</span>
+		}
+	}
+	
+	public ItemSprite view( int image, Glowing glowing ) {
+<span class="nc bnc" id="L238" title="All 2 branches missed.">		if (this.emitter != null) this.emitter.killAndErase();</span>
+<span class="nc" id="L239">		emitter = null;</span>
+<span class="nc" id="L240">		frame( image );</span>
+<span class="nc" id="L241">		glow( glowing );</span>
+<span class="nc" id="L242">		return this;</span>
+	}
+
+	public void frame( int image ){
+<span class="nc" id="L246">		frame( ItemSpriteSheet.film.get( image ));</span>
+
+<span class="nc" id="L248">		float height = ItemSpriteSheet.film.height( image );</span>
+		//adds extra raise to very short items, so they are visible
+<span class="nc bnc" id="L250" title="All 2 branches missed.">		if (height &lt; 8f){</span>
+<span class="nc" id="L251">			perspectiveRaise =  (5 + 8 - height) / 16f;</span>
+		}
+<span class="nc" id="L253">	}</span>
+	
+	public synchronized void glow( Glowing glowing ){
+<span class="nc" id="L256">		this.glowing = glowing;</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">		if (glowing == null) resetColor();</span>
+<span class="nc" id="L258">	}</span>
+
+	@Override
+	public void kill() {
+<span class="nc" id="L262">		super.kill();</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">		if (emitter != null) {</span>
+<span class="nc" id="L264">			emitter.on = false;</span>
+<span class="nc" id="L265">			emitter.autoKill = true;</span>
+		}
+<span class="nc" id="L267">		emitter = null;</span>
+<span class="nc" id="L268">	}</span>
+
+<span class="nc" id="L270">	private float[] shadowMatrix = new float[16];</span>
+
+	@Override
+	protected void updateMatrix() {
+<span class="nc" id="L274">		super.updateMatrix();</span>
+<span class="nc" id="L275">		Matrix.copy(matrix, shadowMatrix);</span>
+<span class="nc" id="L276">		Matrix.translate(shadowMatrix,</span>
+<span class="nc" id="L277">				(width() * (1f - shadowWidth)) / 2f,</span>
+<span class="nc" id="L278">				(height() * (1f - shadowHeight)) + shadowOffset);</span>
+<span class="nc" id="L279">		Matrix.scale(shadowMatrix, shadowWidth, shadowHeight);</span>
+<span class="nc" id="L280">	}</span>
+
+	@Override
+	public void draw() {
+<span class="nc bnc" id="L284" title="All 6 branches missed.">		if (texture == null || (!dirty &amp;&amp; buffer == null))</span>
+<span class="nc" id="L285">			return;</span>
+
+<span class="nc bnc" id="L287" title="All 2 branches missed.">		if (renderShadow) {</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">			if (dirty) {</span>
+<span class="nc" id="L289">				((Buffer)verticesBuffer).position(0);</span>
+<span class="nc" id="L290">				verticesBuffer.put(vertices);</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">				if (buffer == null)</span>
+<span class="nc" id="L292">					buffer = new Vertexbuffer(verticesBuffer);</span>
+				else
+<span class="nc" id="L294">					buffer.updateVertices(verticesBuffer);</span>
+<span class="nc" id="L295">				dirty = false;</span>
+			}
+
+<span class="nc" id="L298">			NoosaScript script = script();</span>
+
+<span class="nc" id="L300">			texture.bind();</span>
+
+<span class="nc" id="L302">			script.camera(camera());</span>
+
+<span class="nc" id="L304">			updateMatrix();</span>
+
+<span class="nc" id="L306">			script.uModel.valueM4(shadowMatrix);</span>
+<span class="nc" id="L307">			script.lighting(</span>
+					0, 0, 0, am * .6f,
+					0, 0, 0, aa * .6f);
+
+<span class="nc" id="L311">			script.drawQuad(buffer);</span>
+		}
+
+<span class="nc" id="L314">		super.draw();</span>
+
+<span class="nc" id="L316">	}</span>
+
+	@Override
+	public synchronized void update() {
+<span class="nc" id="L320">		super.update();</span>
+
+<span class="nc bnc" id="L322" title="All 4 branches missed.">		visible = (heap == null || heap.seen);</span>
+
+<span class="nc bnc" id="L324" title="All 2 branches missed.">		if (emitter != null){</span>
+<span class="nc" id="L325">			emitter.visible = visible;</span>
+		}
+
+<span class="nc bnc" id="L328" title="All 2 branches missed.">		if (dropInterval &gt; 0){</span>
+<span class="nc" id="L329">			shadowOffset -= speed.y * Game.elapsed * 0.8f;</span>
+
+<span class="nc bnc" id="L331" title="All 2 branches missed.">			if ((dropInterval -= Game.elapsed) &lt;= 0){</span>
+
+<span class="nc" id="L333">				speed.set(0);</span>
+<span class="nc" id="L334">				acc.set(0);</span>
+<span class="nc" id="L335">				shadowOffset = 0.25f;</span>
+<span class="nc" id="L336">				place(heap.pos);</span>
+
+<span class="nc bnc" id="L338" title="All 2 branches missed.">				if (visible) {</span>
+
+<span class="nc bnc" id="L340" title="All 2 branches missed.">					if (Dungeon.level.water[heap.pos]) {</span>
+<span class="nc" id="L341">						GameScene.ripple(heap.pos);</span>
+					}
+
+<span class="nc bnc" id="L344" title="All 2 branches missed.">					if (Dungeon.level.water[heap.pos]) {</span>
+<span class="nc" id="L345">						Sample.INSTANCE.play( Assets.Sounds.WATER, 0.8f, Random.Float( 1f, 1.45f ) );</span>
+<span class="nc bnc" id="L346" title="All 2 branches missed.">					} else if (Dungeon.level.map[heap.pos] == Terrain.EMPTY_SP) {</span>
+<span class="nc" id="L347">						Sample.INSTANCE.play( Assets.Sounds.STURDY, 0.8f, Random.Float( 1.16f, 1.25f ) );</span>
+<span class="nc bnc" id="L348" title="All 6 branches missed.">					} else if (Dungeon.level.map[heap.pos] == Terrain.GRASS</span>
+							|| Dungeon.level.map[heap.pos] == Terrain.EMBERS
+							|| Dungeon.level.map[heap.pos] == Terrain.FURROWED_GRASS){
+<span class="nc" id="L351">						Sample.INSTANCE.play( Assets.Sounds.GRASS, 0.8f, Random.Float( 1.16f, 1.25f ) );</span>
+<span class="nc bnc" id="L352" title="All 2 branches missed.">					} else if (Dungeon.level.map[heap.pos] == Terrain.HIGH_GRASS) {</span>
+<span class="nc" id="L353">						Sample.INSTANCE.play( Assets.Sounds.STEP, 0.8f, Random.Float( 1.16f, 1.25f ) );</span>
+					} else {
+<span class="nc" id="L355">						Sample.INSTANCE.play( Assets.Sounds.STEP, 0.8f, Random.Float( 1.16f, 1.25f ));</span>
+					}
+				}
+			}
+		}
+
+<span class="nc bnc" id="L361" title="All 4 branches missed.">		if (visible &amp;&amp; glowing != null) {</span>
+<span class="nc bnc" id="L362" title="All 4 branches missed.">			if (glowUp &amp;&amp; (phase += Game.elapsed) &gt; glowing.period) {</span>
+				
+<span class="nc" id="L364">				glowUp = false;</span>
+<span class="nc" id="L365">				phase = glowing.period;</span>
+				
+<span class="nc bnc" id="L367" title="All 4 branches missed.">			} else if (!glowUp &amp;&amp; (phase -= Game.elapsed) &lt; 0) {</span>
+				
+<span class="nc" id="L369">				glowUp = true;</span>
+<span class="nc" id="L370">				phase = 0;</span>
+				
+			}
+			
+<span class="nc" id="L374">			float value = phase / glowing.period * 0.6f;</span>
+			
+<span class="nc" id="L376">			rm = gm = bm = 1 - value;</span>
+<span class="nc" id="L377">			ra = glowing.red * value;</span>
+<span class="nc" id="L378">			ga = glowing.green * value;</span>
+<span class="nc" id="L379">			ba = glowing.blue * value;</span>
+		}
+<span class="nc" id="L381">	}</span>
+
+	public static int pick( int index, int x, int y ) {
+<span class="nc" id="L384">		SmartTexture tx = TextureCache.get( Assets.Sprites.ITEMS );</span>
+<span class="nc" id="L385">		int rows = tx.width / SIZE;</span>
+<span class="nc" id="L386">		int row = index / rows;</span>
+<span class="nc" id="L387">		int col = index % rows;</span>
+<span class="nc" id="L388">		return tx.getPixel( col * SIZE + x, row * SIZE + y );</span>
+	}
+	
+	public static class Glowing {
+		
+		public int color;
+		public float red;
+		public float green;
+		public float blue;
+		public float period;
+		
+		public Glowing( int color ) {
+<span class="fc" id="L400">			this( color, 1f );</span>
+<span class="fc" id="L401">		}</span>
+		
+<span class="fc" id="L403">		public Glowing( int color, float period ) {</span>
+
+<span class="fc" id="L405">			this.color = color;</span>
+
+<span class="fc" id="L407">			red = (color &gt;&gt; 16) / 255f;</span>
+<span class="fc" id="L408">			green = ((color &gt;&gt; 8) &amp; 0xFF) / 255f;</span>
+<span class="fc" id="L409">			blue = (color &amp; 0xFF) / 255f;</span>
+			
+<span class="fc" id="L411">			this.period = period;</span>
+<span class="fc" id="L412">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

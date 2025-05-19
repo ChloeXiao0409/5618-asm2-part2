@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FloatingText.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.effects</a> &gt; <span class="el_source">FloatingText.java</span></div><h1>FloatingText.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.effects;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.RenderedText;
+import com.watabou.noosa.TextureFilm;
+import com.watabou.utils.Callback;
+import com.watabou.utils.SparseArray;
+
+import java.util.ArrayList;
+
+public class FloatingText extends RenderedTextBlock {
+
+	private static final float LIFESPAN	= 1f;
+	private static final float DISTANCE	= DungeonTilemap.SIZE;
+
+	public static final int ICON_SIZE = 7;
+<span class="nc" id="L45">	public static TextureFilm iconFilm = new TextureFilm( Assets.Effects.TEXT_ICONS, ICON_SIZE, ICON_SIZE );</span>
+
+<span class="nc" id="L47">	public static int NO_ICON   = -1;</span>
+
+	//combat damage icons
+<span class="nc" id="L50">	public static int PHYS_DMG          = 0;</span>
+<span class="nc" id="L51">	public static int PHYS_DMG_NO_BLOCK = 1;</span>
+<span class="nc" id="L52">	public static int MAGIC_DMG         = 2;</span>
+<span class="nc" id="L53">	public static int PICK_DMG          = 3;</span>
+
+	//debuff/dot damage icons
+<span class="nc" id="L56">	public static int HUNGER    = 5;</span>
+<span class="nc" id="L57">	public static int BURNING   = 6;</span>
+<span class="nc" id="L58">	public static int SHOCKING  = 7;</span>
+<span class="nc" id="L59">	public static int FROST     = 8;</span>
+<span class="nc" id="L60">	public static int WATER     = 9;</span>
+<span class="nc" id="L61">	public static int BLEEDING  = 10;</span>
+<span class="nc" id="L62">	public static int TOXIC     = 11;</span>
+<span class="nc" id="L63">	public static int CORROSION = 12;</span>
+<span class="nc" id="L64">	public static int POISON    = 13;</span>
+<span class="nc" id="L65">	public static int OOZE      = 14;</span>
+<span class="nc" id="L66">	public static int DEFERRED  = 15;</span>
+<span class="nc" id="L67">	public static int CORRUPTION= 16;</span>
+<span class="nc" id="L68">	public static int AMULET    = 17;</span>
+
+	//positive icons
+<span class="nc" id="L71">	public static int HEALING   = 18;</span>
+<span class="nc" id="L72">	public static int SHIELDING = 19;</span>
+<span class="nc" id="L73">	public static int EXPERIENCE= 20;</span>
+<span class="nc" id="L74">	public static int STRENGTH  = 21;</span>
+
+	//currency icons
+<span class="nc" id="L77">	public static int GOLD      = 23;</span>
+<span class="nc" id="L78">	public static int ENERGY    = 24;</span>
+
+	private Image icon;
+	private boolean iconLeft;
+
+	private float timeLeft;
+	
+<span class="nc" id="L85">	private int key = -1;</span>
+
+<span class="nc" id="L87">	private static final SparseArray&lt;ArrayList&lt;FloatingText&gt;&gt; stacks = new SparseArray&lt;&gt;();</span>
+	
+	public FloatingText() {
+<span class="nc" id="L90">		super(9*PixelScene.defaultZoom);</span>
+<span class="nc" id="L91">		setHightlighting(false);</span>
+<span class="nc" id="L92">	}</span>
+	
+	@Override
+	public void update() {
+<span class="nc" id="L96">		super.update();</span>
+		
+<span class="nc bnc" id="L98" title="All 2 branches missed.">		if (timeLeft &gt;= 0) {</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">			if ((timeLeft -= Game.elapsed) &lt;= 0) {</span>
+<span class="nc" id="L100">				kill();</span>
+			} else {
+<span class="nc" id="L102">				float p = timeLeft / LIFESPAN;</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">				alpha( p &gt; 0.5f ? 1 : p * 2 );</span>
+				
+<span class="nc" id="L105">				float yMove = (DISTANCE / LIFESPAN) * Game.elapsed;</span>
+<span class="nc" id="L106">				y -= yMove;</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">				for (RenderedText t : words){</span>
+<span class="nc" id="L108">					t.y -= yMove;</span>
+<span class="nc" id="L109">				}</span>
+
+<span class="nc bnc" id="L111" title="All 2 branches missed.">				if (icon != null){</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">					icon.alpha(p &gt; 0.5f ? 1 : p * 2);</span>
+<span class="nc" id="L113">					icon.y -= yMove;</span>
+				}
+			}
+		}
+<span class="nc" id="L117">	}</span>
+
+	@Override
+	protected synchronized void layout() {
+<span class="nc" id="L121">		super.layout();</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">		if (icon != null){</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">			if (iconLeft){</span>
+<span class="nc" id="L124">				icon.x = left();</span>
+			} else {
+<span class="nc" id="L126">				icon.x = left() + width() - icon.width();</span>
+			}
+<span class="nc" id="L128">			icon.y = top();</span>
+<span class="nc" id="L129">			PixelScene.align(icon);</span>
+		}
+<span class="nc" id="L131">	}</span>
+
+	@Override
+	public float width() {
+<span class="nc" id="L135">		float width = super.width();</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		if (icon != null){</span>
+<span class="nc" id="L137">			width += icon.width()-0.5f;</span>
+		}
+<span class="nc" id="L139">		return width;</span>
+	}
+
+	@Override
+	public void kill() {
+<span class="nc bnc" id="L144" title="All 2 branches missed.">		if (key != -1) {</span>
+<span class="nc" id="L145">			synchronized (stacks) {</span>
+<span class="nc" id="L146">				stacks.get(key).remove(this);</span>
+<span class="nc" id="L147">			}</span>
+<span class="nc" id="L148">			key = -1;</span>
+		}
+<span class="nc" id="L150">		super.kill();</span>
+<span class="nc" id="L151">	}</span>
+	
+	@Override
+	public void destroy() {
+<span class="nc" id="L155">		kill();</span>
+<span class="nc" id="L156">		super.destroy();</span>
+<span class="nc" id="L157">	}</span>
+	
+	public void reset( float x, float y, String text, int color, int iconIdx, boolean left ) {
+		
+<span class="nc" id="L161">		revive();</span>
+		
+<span class="nc" id="L163">		zoom( 1 / (float)PixelScene.defaultZoom );</span>
+
+<span class="nc" id="L165">		text( text );</span>
+<span class="nc" id="L166">		hardlight( color );</span>
+
+<span class="nc bnc" id="L168" title="All 2 branches missed.">		if (iconIdx != NO_ICON){</span>
+<span class="nc" id="L169">			icon = new Image( Assets.Effects.TEXT_ICONS);</span>
+<span class="nc" id="L170">			icon.frame(iconFilm.get(iconIdx));</span>
+<span class="nc" id="L171">			add(icon);</span>
+<span class="nc" id="L172">			iconLeft = left;</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">			if (iconLeft){</span>
+<span class="nc" id="L174">				align(RIGHT_ALIGN);</span>
+			}
+		} else {
+<span class="nc" id="L177">			icon = null;</span>
+		}
+
+<span class="nc" id="L180">		setPos(</span>
+<span class="nc" id="L181">			PixelScene.align( Camera.main, x - width() / 2),</span>
+<span class="nc" id="L182">			PixelScene.align( Camera.main, y - height())</span>
+		);
+		
+<span class="nc" id="L185">		timeLeft = LIFESPAN;</span>
+<span class="nc" id="L186">	}</span>
+	
+	/* STATIC METHODS */
+
+	public static void show( float x, float y, String text, int color) {
+<span class="nc" id="L191">		show(x, y, -1, text, color, -1, false);</span>
+<span class="nc" id="L192">	}</span>
+	
+	public static void show( float x, float y, int key, String text, int color) {
+<span class="nc" id="L195">		show(x, y, key, text, color, -1, false);</span>
+<span class="nc" id="L196">	}</span>
+	
+	public static void show( float x, float y, int key, String text, int color, int iconIdx, boolean left ) {
+<span class="nc" id="L199">		Game.runOnRenderThread(new Callback() {</span>
+			@Override
+			public void call() {
+<span class="nc" id="L202">				FloatingText txt = GameScene.status();</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">				if (txt != null){</span>
+<span class="nc" id="L204">					txt.reset(x, y, text, color, iconIdx, left);</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">					if (key != -1) push(txt, key);</span>
+				}
+<span class="nc" id="L207">			}</span>
+		});
+<span class="nc" id="L209">	}</span>
+	
+	private static void push( FloatingText txt, int key ) {
+		
+<span class="nc" id="L213">		synchronized (stacks) {</span>
+<span class="nc" id="L214">			txt.key = key;</span>
+			
+<span class="nc" id="L216">			ArrayList&lt;FloatingText&gt; stack = stacks.get(key);</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">			if (stack == null) {</span>
+<span class="nc" id="L218">				stack = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L219">				stacks.put(key, stack);</span>
+			}
+			
+<span class="nc bnc" id="L222" title="All 2 branches missed.">			if (stack.size() &gt; 0) {</span>
+<span class="nc" id="L223">				FloatingText below = txt;</span>
+<span class="nc" id="L224">				int aboveIndex = stack.size() - 1;</span>
+<span class="nc" id="L225">				int numBelow = 0;</span>
+<span class="nc bnc" id="L226" title="All 2 branches missed.">				while (aboveIndex &gt;= 0) {</span>
+<span class="nc" id="L227">					numBelow++;</span>
+<span class="nc" id="L228">					FloatingText above = stack.get(aboveIndex);</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">					if (above.bottom() + 4 &gt; below.top()) {</span>
+<span class="nc" id="L230">						above.setPos(above.left(), below.top() - above.height() - 4);</span>
+
+						//reduce remaining time on texts being nudged up, to prevent spam
+<span class="nc" id="L233">						above.timeLeft = Math.min(above.timeLeft, LIFESPAN-(numBelow/5f));</span>
+<span class="nc" id="L234">						above.timeLeft = Math.max(above.timeLeft, 0);</span>
+						
+<span class="nc" id="L236">						below = above;</span>
+<span class="nc" id="L237">						aboveIndex--;</span>
+					} else {
+						break;
+					}
+<span class="nc" id="L241">				}</span>
+			}
+			
+<span class="nc" id="L244">			stack.add(txt);</span>
+<span class="nc" id="L245">		}</span>
+<span class="nc" id="L246">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

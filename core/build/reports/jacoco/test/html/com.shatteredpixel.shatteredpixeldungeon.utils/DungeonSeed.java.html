@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DungeonSeed.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.utils</a> &gt; <span class="el_source">DungeonSeed.java</span></div><h1>DungeonSeed.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.utils;
+
+import com.watabou.utils.Random;
+
+import java.util.Locale;
+
+//This class defines the parameters for seeds in ShatteredPD and contains a few convenience methods
+<span class="nc" id="L29">public class DungeonSeed {</span>
+
+<span class="nc" id="L31">	public static long TOTAL_SEEDS = 5429503678976L; //larges possible seed has a value of 26^9</span>
+
+	//Seed codes take the form @@@-@@@-@@@ where @ is any letter from A to Z (only uppercase)
+	//This is effectively a base-26 number system, therefore 26^9 unique seeds are possible.
+
+	//Seed codes exist to make sharing and inputting seeds easier
+	//ZZZ-ZZZ-ZZZ is much easier to enter and share than 5,429,503,678,975
+
+	//generates a random seed, omitting seeds that contain vowels (to minimize real words appearing randomly)
+	//This means that there are 21^9 = 794,280,046,581 unique seeds that can be randomly generated
+	public static long randomSeed(){
+		Long seed;
+		String seedText;
+		do {
+<span class="nc" id="L45">			seed = Random.Long(TOTAL_SEEDS);</span>
+<span class="nc" id="L46">			seedText = convertToCode(seed);</span>
+<span class="nc bnc" id="L47" title="All 10 branches missed.">		} while (seedText.contains(&quot;A&quot;) || seedText.contains(&quot;E&quot;) || seedText.contains(&quot;I&quot;) || seedText.contains(&quot;O&quot;) || seedText.contains(&quot;U&quot;));</span>
+<span class="nc" id="L48">		return seed;</span>
+	}
+
+	//Takes a seed code (@@@@@@@@@) and converts it to the equivalent long value
+	public static long convertFromCode( String code ){
+		//if code is formatted properly, force uppercase
+<span class="nc bnc" id="L54" title="All 6 branches missed.">		if (code.length() == 11 &amp;&amp; code.charAt(3) == '-' &amp;&amp; code.charAt(7) == '-'){</span>
+<span class="nc" id="L55">			code = code.toUpperCase(Locale.ROOT);</span>
+		}
+
+		//ignore whitespace characters and dashes
+<span class="nc" id="L59">		code = code.replaceAll(&quot;[-\\s]&quot;, &quot;&quot;);</span>
+
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if (code.length() != 9) {</span>
+<span class="nc" id="L62">			throw new IllegalArgumentException(&quot;codes must be 9 A-Z characters.&quot;);</span>
+		}
+
+<span class="nc" id="L65">		long result = 0;</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		for (int i = 8; i &gt;= 0; i--) {</span>
+<span class="nc" id="L67">			char c = code.charAt(i);</span>
+<span class="nc bnc" id="L68" title="All 4 branches missed.">			if (c &gt; 'Z' || c &lt; 'A')</span>
+<span class="nc" id="L69">				throw new IllegalArgumentException(&quot;codes must be 9 A-Z characters.&quot;);</span>
+
+<span class="nc" id="L71">			result += (c - 65) * Math.pow(26, (8 - i));</span>
+		}
+<span class="nc" id="L73">		return result;</span>
+	}
+
+	//Takes a long value and converts it to the equivalent seed code
+	public static String convertToCode( long seed ){
+<span class="nc bnc" id="L78" title="All 4 branches missed.">		if (seed &lt; 0 || seed &gt;= TOTAL_SEEDS) {</span>
+<span class="nc" id="L79">			throw new IllegalArgumentException(&quot;seeds must be within the range [0, TOTAL_SEEDS)&quot;);</span>
+		}
+
+		//this almost gives us the right answer, but its 0-p instead of A-Z
+<span class="nc" id="L83">		String interrim = Long.toString(seed, 26);</span>
+<span class="nc" id="L84">		StringBuilder result = new StringBuilder();</span>
+
+		//so we convert
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		for (int i = 0; i &lt; 9; i++) {</span>
+
+<span class="nc bnc" id="L89" title="All 2 branches missed.">			if (i &lt; interrim.length()){</span>
+<span class="nc" id="L90">				char c = interrim.charAt(i);</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">				if (c &lt;= '9') c += 17; //convert 0-9 to A-J</span>
+<span class="nc" id="L92">				else          c -= 22; //convert a-p to K-Z</span>
+
+<span class="nc" id="L94">				result.append(c);</span>
+
+<span class="nc" id="L96">			} else {</span>
+<span class="nc" id="L97">				result.insert(0, 'A'); //pad with A (zeroes) until we reach length of 9</span>
+
+			}
+		}
+
+		//insert dashes for readability
+<span class="nc" id="L103">		result.insert(3, '-');</span>
+<span class="nc" id="L104">		result.insert(7, '-');</span>
+
+<span class="nc" id="L106">		return result.toString();</span>
+	}
+
+	//Creates a seed from arbitrary user text input
+	public static long convertFromText( String inputText ){
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		if (inputText.isEmpty()) return -1;</span>
+
+		//First see if input is a seed code, use that format if it is
+		try {
+<span class="nc" id="L115">			return convertFromCode(inputText);</span>
+<span class="nc" id="L116">		} catch (IllegalArgumentException e){</span>
+
+		}
+
+		//Then see if input is a number (ignoring spaces), if so parse as a long seed (with overflow)
+		try {
+<span class="nc" id="L122">			return Long.parseLong(inputText.replaceAll(&quot;\\s&quot;, &quot;&quot;)) % TOTAL_SEEDS;</span>
+<span class="nc" id="L123">		} catch (NumberFormatException e){</span>
+
+		}
+
+		//Finally, if the user has entered unformatted text, convert it to a long seed equivalent
+		// This is basically the same as string.hashcode except with long, and overflow
+		// this lets the user input 'fun' seeds, like names or places
+<span class="nc" id="L130">		long total = 0;</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">		for (char c : inputText.toCharArray()){</span>
+<span class="nc" id="L132">			total = 31 * total + c;</span>
+		}
+<span class="nc bnc" id="L134" title="All 2 branches missed.">		if (total &lt; 0) total += Long.MAX_VALUE;</span>
+<span class="nc" id="L135">		total %= TOTAL_SEEDS;</span>
+<span class="nc" id="L136">		return total;</span>
+	}
+
+
+	public static String formatText( String inputText ){
+		try {
+			//if the seed matches a code, then just convert it to using the code system
+<span class="nc" id="L143">			return convertToCode(convertFromCode(inputText));</span>
+<span class="nc" id="L144">		} catch (IllegalArgumentException e){</span>
+			//otherwise just return the input text
+<span class="nc" id="L146">			return inputText;</span>
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

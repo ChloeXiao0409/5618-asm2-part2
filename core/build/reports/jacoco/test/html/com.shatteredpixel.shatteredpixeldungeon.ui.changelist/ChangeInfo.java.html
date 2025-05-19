@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChangeInfo.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui.changelist</a> &gt; <span class="el_source">ChangeInfo.java</span></div><h1>ChangeInfo.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui.changelist;
+
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.watabou.noosa.ColorBlock;
+import com.watabou.noosa.ui.Component;
+
+import java.util.ArrayList;
+
+public class ChangeInfo extends Component {
+	
+	protected ColorBlock line;
+	
+	private RenderedTextBlock title;
+	public boolean major;
+	
+	private RenderedTextBlock text;
+	
+<span class="nc" id="L40">	private ArrayList&lt;ChangeButton&gt; buttons = new ArrayList&lt;&gt;();</span>
+	
+	public ChangeInfo( String title, boolean majorTitle, String text){
+<span class="nc" id="L43">		super();</span>
+		
+<span class="nc bnc" id="L45" title="All 2 branches missed.">		if (majorTitle){</span>
+<span class="nc" id="L46">			this.title = PixelScene.renderTextBlock( title, 9 );</span>
+<span class="nc" id="L47">			line = new ColorBlock( 1, 1, 0xFF222222);</span>
+<span class="nc" id="L48">			add(line);</span>
+		} else {
+<span class="nc" id="L50">			this.title = PixelScene.renderTextBlock( title, 6 );</span>
+<span class="nc" id="L51">			line = new ColorBlock( 1, 1, 0xFF333333);</span>
+<span class="nc" id="L52">			add(line);</span>
+		}
+<span class="nc" id="L54">		major = majorTitle;</span>
+		
+<span class="nc" id="L56">		add(this.title);</span>
+		
+<span class="nc bnc" id="L58" title="All 4 branches missed.">		if (text != null &amp;&amp; !text.equals(&quot;&quot;)){</span>
+<span class="nc" id="L59">			this.text = PixelScene.renderTextBlock(text, 6);</span>
+<span class="nc" id="L60">			add(this.text);</span>
+		}
+		
+<span class="nc" id="L63">	}</span>
+	
+	public void hardlight( int color ){
+<span class="nc" id="L66">		title.hardlight( color );</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">		if (text != null){</span>
+<span class="nc" id="L68">			text.hardlight(color);</span>
+		}
+<span class="nc" id="L70">	}</span>
+	
+	public void addButton( ChangeButton button ){
+<span class="nc" id="L73">		buttons.add(button);</span>
+<span class="nc" id="L74">		add(button);</span>
+		
+<span class="nc" id="L76">		button.setSize(16, 16);</span>
+<span class="nc" id="L77">		layout();</span>
+<span class="nc" id="L78">	}</span>
+	
+	public boolean onClick( float x, float y ){
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		for( ChangeButton button : buttons){</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">			if (button.inside(x, y)){</span>
+<span class="nc" id="L83">				button.onClick();</span>
+<span class="nc" id="L84">				return true;</span>
+			}
+<span class="nc" id="L86">		}</span>
+<span class="nc" id="L87">		return false;</span>
+	}
+	
+	@Override
+	protected void layout() {
+<span class="nc" id="L92">		float posY = this.y + 3;</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		if (major) posY += 2;</span>
+		
+<span class="nc" id="L95">		title.setPos(</span>
+<span class="nc" id="L96">				x + (width - title.width()) / 2f,</span>
+				posY
+		);
+<span class="nc" id="L99">		PixelScene.align( title );</span>
+<span class="nc" id="L100">		posY += title.height() + 2;</span>
+		
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if (text != null) {</span>
+<span class="nc" id="L103">			text.maxWidth((int) width());</span>
+<span class="nc" id="L104">			text.setPos(x, posY);</span>
+<span class="nc" id="L105">			posY += text.height();</span>
+		}
+		
+<span class="nc" id="L108">		float posX = x;</span>
+<span class="nc" id="L109">		float tallest = 0;</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		for (ChangeButton change : buttons){</span>
+			
+<span class="nc bnc" id="L112" title="All 2 branches missed.">			if (posX + change.width() &gt;= right()){</span>
+<span class="nc" id="L113">				posX = x;</span>
+<span class="nc" id="L114">				posY += tallest;</span>
+<span class="nc" id="L115">				tallest = 0;</span>
+			}
+			
+			//centers
+<span class="nc bnc" id="L119" title="All 2 branches missed.">			if (posX == x){</span>
+<span class="nc" id="L120">				float offset = width;</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">				for (ChangeButton b : buttons){</span>
+<span class="nc" id="L122">					offset -= b.width();</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">					if (offset &lt;= 0){</span>
+<span class="nc" id="L124">						offset += b.width();</span>
+<span class="nc" id="L125">						break;</span>
+					}
+<span class="nc" id="L127">				}</span>
+<span class="nc" id="L128">				posX += offset / 2f;</span>
+			}
+			
+<span class="nc" id="L131">			change.setPos(posX, posY);</span>
+<span class="nc" id="L132">			posX += change.width();</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">			if (tallest &lt; change.height()){</span>
+<span class="nc" id="L134">				tallest = change.height();</span>
+			}
+<span class="nc" id="L136">		}</span>
+<span class="nc" id="L137">		posY += tallest + 2;</span>
+		
+<span class="nc" id="L139">		height = posY - this.y;</span>
+		
+<span class="nc bnc" id="L141" title="All 2 branches missed.">		if (major) {</span>
+<span class="nc" id="L142">			line.size(width(), 1);</span>
+<span class="nc" id="L143">			line.x = x;</span>
+<span class="nc" id="L144">			line.y = y+2;</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">		} else if (x == 0){</span>
+<span class="nc" id="L146">			line.size(1, height());</span>
+<span class="nc" id="L147">			line.x = width;</span>
+<span class="nc" id="L148">			line.y = y;</span>
+		} else {
+<span class="nc" id="L150">			line.size(1, height());</span>
+<span class="nc" id="L151">			line.x = x;</span>
+<span class="nc" id="L152">			line.y = y;</span>
+		}
+<span class="nc" id="L154">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

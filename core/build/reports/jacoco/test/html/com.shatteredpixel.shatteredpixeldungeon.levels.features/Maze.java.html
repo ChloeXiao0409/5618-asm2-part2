@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Maze.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.features</a> &gt; <span class="el_source">Maze.java</span></div><h1>Maze.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.features;
+
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.watabou.utils.Random;
+import com.watabou.utils.Rect;
+
+<span class="nc" id="L28">public class Maze {</span>
+	
+<span class="nc" id="L30">	public static boolean EMPTY     = false;</span>
+<span class="nc" id="L31">	public static boolean FILLED    = true;</span>
+	
+	public static boolean[][] generate(Room r){
+<span class="nc" id="L34">		boolean[][] maze = new boolean[r.width()][r.height()];</span>
+		
+<span class="nc bnc" id="L36" title="All 2 branches missed.">		for (int x = 0; x &lt; maze.length; x++) {</span>
+<span class="nc bnc" id="L37" title="All 2 branches missed.">			for (int y = 0; y &lt; maze[0].length; y++) {</span>
+<span class="nc bnc" id="L38" title="All 8 branches missed.">				if (x == 0 || x == maze.length - 1 ||</span>
+						y == 0 || y == maze[0].length - 1) {
+					
+<span class="nc" id="L41">					maze[x][y] = FILLED;</span>
+					
+				}
+			}
+		}
+		
+		//set spaces where there are doors
+<span class="nc bnc" id="L48" title="All 2 branches missed.">		for (Room.Door d : r.connected.values()) {</span>
+<span class="nc" id="L49">			maze[d.x - r.left][d.y - r.top] = EMPTY;</span>
+<span class="nc" id="L50">		}</span>
+		
+<span class="nc" id="L52">		return generate(maze);</span>
+	}
+	
+	public static boolean[][] generate(Rect r){
+<span class="nc" id="L56">		return generate(r.width()+1, r.height()+1);</span>
+	}
+	
+	public static boolean[][] generate(Rect r, int[] terrain, int width, int filledTerrainType){
+<span class="nc" id="L60">		boolean[][] maze = new boolean[r.width()][r.height()];</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		for (int x = 0; x &lt; maze.length; x++) {</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">			for (int y = 0; y &lt; maze[0].length; y++) {</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">				if (terrain[x + r.left + (y + r.top)*width] == filledTerrainType){</span>
+<span class="nc" id="L64">					maze[x][y] = FILLED;</span>
+				}
+			}
+		}
+		
+<span class="nc" id="L69">		return generate(maze);</span>
+	}
+	
+	public static boolean[][] generate(int width, int height){
+<span class="nc" id="L73">		return generate(new boolean[width][height]);</span>
+	}
+	
+	public static boolean[][] generate(boolean[][] maze){
+<span class="nc" id="L77">		int fails = 0;</span>
+		int x, y, moves;
+		int[] mov;
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		while (fails &lt; 2500) {</span>
+			
+			//find a random wall point
+			do {
+<span class="nc" id="L84">				x = Random.Int(maze.length);</span>
+<span class="nc" id="L85">				y = Random.Int(maze[0].length);</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">			} while (!maze[x][y]);</span>
+			
+			//decide on how we're going to move
+<span class="nc" id="L89">			mov = decideDirection(maze, x, y);</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">			if (mov == null) {</span>
+<span class="nc" id="L91">				fails++;</span>
+			} else {
+				
+<span class="nc" id="L94">				fails = 0;</span>
+<span class="nc" id="L95">				moves = 0;</span>
+				do {
+<span class="nc" id="L97">					x += mov[0];</span>
+<span class="nc" id="L98">					y += mov[1];</span>
+<span class="nc" id="L99">					maze[x][y] = FILLED;</span>
+<span class="nc" id="L100">					moves++;</span>
+<span class="nc bnc" id="L101" title="All 4 branches missed.">				} while (Random.Int(moves) == 0 &amp;&amp; checkValidMove(maze, x, y, mov));</span>
+				
+			}
+			
+		}
+		
+<span class="nc" id="L107">		return maze;</span>
+	}
+	
+	private static int[] decideDirection(boolean[][] maze, int x, int y){
+		
+		//attempts to move up
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		if (Random.Int(4) == 0 &amp;&amp; //1 in 4 chance</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">				checkValidMove(maze, x, y, new int[]{0, -1})){</span>
+<span class="nc" id="L115">			return new int[]{0, -1};</span>
+		}
+		
+		//attempts to move right
+<span class="nc bnc" id="L119" title="All 2 branches missed.">		if (Random.Int(3) == 0 &amp;&amp; //1 in 3 chance</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">				checkValidMove(maze, x, y, new int[]{1, 0})){</span>
+<span class="nc" id="L121">			return new int[]{1, 0};</span>
+		}
+		
+		//attempts to move down
+<span class="nc bnc" id="L125" title="All 2 branches missed.">		if (Random.Int(2) == 0 &amp;&amp; //1 in 2 chance</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">				checkValidMove(maze, x, y, new int[]{0, 1})){</span>
+<span class="nc" id="L127">			return new int[]{0, 1};</span>
+		}
+		
+		//attempts to move left
+<span class="nc" id="L131">		if (</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">				checkValidMove(maze, x, y, new int[]{-1, 0})){</span>
+<span class="nc" id="L133">			return new int[]{-1, 0};</span>
+		}
+		
+<span class="nc" id="L136">		return null;</span>
+	}
+	
+<span class="nc" id="L139">	public static boolean allowDiagonals = false;</span>
+	
+	private static boolean checkValidMove( boolean[][] maze, int x, int y, int[] mov){
+<span class="nc" id="L142">		int sideX = 1 - Math.abs(mov[0]);</span>
+<span class="nc" id="L143">		int sideY = 1 - Math.abs(mov[1]);</span>
+		
+<span class="nc" id="L145">		x += mov[0];</span>
+<span class="nc" id="L146">		y += mov[1];</span>
+		
+<span class="nc bnc" id="L148" title="All 8 branches missed.">		if ( x &lt;= 0 || x &gt;= maze.length-1 || y &lt;= 0 || y &gt;= maze[0].length-1){</span>
+<span class="nc" id="L149">			return false;</span>
+<span class="nc bnc" id="L150" title="All 6 branches missed.">		} else if (maze[x][y] || maze[x + sideX][y + sideY] || maze[x - sideX][y - sideY]){</span>
+<span class="nc" id="L151">			return false;</span>
+		}
+		
+<span class="nc" id="L154">		x += mov[0];</span>
+<span class="nc" id="L155">		y += mov[1];</span>
+		
+<span class="nc bnc" id="L157" title="All 8 branches missed.">		if ( x &lt;= 0 || x &gt;= maze.length-1 || y &lt;= 0 || y &gt;= maze[0].length-1){</span>
+<span class="nc" id="L158">			return false;</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">		} else if (maze[x][y]){</span>
+<span class="nc" id="L160">			return false;</span>
+<span class="nc bnc" id="L161" title="All 6 branches missed.">		} else if (!allowDiagonals &amp;&amp; (maze[x + sideX][y + sideY] || maze[x - sideX][y - sideY])){</span>
+<span class="nc" id="L162">			return false;</span>
+		}
+		
+<span class="nc" id="L165">		return true;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

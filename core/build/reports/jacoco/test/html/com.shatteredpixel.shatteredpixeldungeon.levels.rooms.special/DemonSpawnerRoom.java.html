@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DemonSpawnerRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special</a> &gt; <span class="el_source">DemonSpawnerRoom.java</span></div><h1>DemonSpawnerRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DemonSpawner;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
+import com.watabou.noosa.Tilemap;
+import com.watabou.utils.Point;
+
+<span class="nc" id="L36">public class DemonSpawnerRoom extends SpecialRoom {</span>
+	@Override
+	public void paint(Level level) {
+
+<span class="nc" id="L40">		Painter.fill( level, this, Terrain.WALL );</span>
+<span class="nc" id="L41">		Painter.fill( level, this, 1, Terrain.EMPTY );</span>
+
+<span class="nc" id="L43">		Point c = center();</span>
+<span class="nc" id="L44">		int cx = c.x;</span>
+<span class="nc" id="L45">		int cy = c.y;</span>
+
+<span class="nc" id="L47">		Door door = entrance();</span>
+<span class="nc" id="L48">		door.set(Door.Type.UNLOCKED);</span>
+
+<span class="nc" id="L50">		DemonSpawner spawner = new DemonSpawner();</span>
+<span class="nc" id="L51">		spawner.pos = cx + cy * level.width();</span>
+<span class="nc" id="L52">		level.mobs.add( spawner );</span>
+
+<span class="nc" id="L54">		CustomFloor vis = new CustomFloor();</span>
+<span class="nc" id="L55">		vis.setRect(left+1, top+1, width()-2, height()-2);</span>
+<span class="nc" id="L56">		level.customTiles.add(vis);</span>
+
+<span class="nc" id="L58">	}</span>
+
+	@Override
+	public boolean connect(Room room) {
+		//cannot connect to entrance, otherwise works normally
+<span class="nc bnc" id="L63" title="All 2 branches missed.">		if (room.isExit())  return false;</span>
+<span class="nc" id="L64">		else                return super.connect(room);</span>
+	}
+
+	@Override
+	public boolean canPlaceTrap(Point p) {
+<span class="nc" id="L69">		return false;</span>
+	}
+
+	@Override
+	public boolean canPlaceWater(Point p) {
+<span class="nc" id="L74">		return false;</span>
+	}
+
+	@Override
+	public boolean canPlaceGrass(Point p) {
+<span class="nc" id="L79">		return false;</span>
+	}
+
+<span class="nc" id="L82">	public static class CustomFloor extends CustomTilemap {</span>
+
+		{
+<span class="nc" id="L85">			texture = Assets.Environment.HALLS_SP;</span>
+<span class="nc" id="L86">		}</span>
+
+		@Override
+		public Tilemap create() {
+<span class="nc" id="L90">			Tilemap v = super.create();</span>
+<span class="nc" id="L91">			int cell = tileX + tileY * Dungeon.level.width();</span>
+<span class="nc" id="L92">			int[] map = Dungeon.level.map;</span>
+<span class="nc" id="L93">			int[] data = new int[tileW*tileH];</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">			for (int i = 0; i &lt; data.length; i++){</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">				if (i % tileW == 0){</span>
+<span class="nc" id="L96">					cell = tileX + (tileY + i / tileW) * Dungeon.level.width();</span>
+				}
+
+<span class="nc bnc" id="L99" title="All 2 branches missed.">				if (Dungeon.level.findMob(cell) instanceof DemonSpawner){</span>
+<span class="nc" id="L100">					data[i-1] = 5 + 4*8;</span>
+<span class="nc" id="L101">					data[i] = 6 + 4*8;</span>
+<span class="nc" id="L102">					data[i+1] = 7 + 4*8;</span>
+<span class="nc" id="L103">					i++;</span>
+<span class="nc" id="L104">					cell++;</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">				} else if (map[cell] == Terrain.EMPTY_DECO) {</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">					if (Statistics.amuletObtained){</span>
+<span class="nc" id="L107">						data[i] = 31;</span>
+					} else {
+<span class="nc" id="L109">						data[i] = 27;</span>
+					}
+				} else {
+<span class="nc" id="L112">					data[i] = 19;</span>
+				}
+
+<span class="nc" id="L115">				cell++;</span>
+			}
+<span class="nc" id="L117">			v.map( data, tileW );</span>
+<span class="nc" id="L118">			return v;</span>
+		}
+
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

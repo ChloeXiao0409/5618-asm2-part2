@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FigureEightBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.builders</a> &gt; <span class="el_source">FigureEightBuilder.java</span></div><h1>FigureEightBuilder.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.builders;
+
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.connection.ConnectionRoom;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+<span class="nc" id="L31">public class FigureEightBuilder extends RegularBuilder {</span>
+	
+	//These methods allow for the adjusting of the shape of the loop
+	//by default the loop is a perfect circle, but it can be adjusted
+	
+	//increasing the exponent will increase the the curvature, making the loop more oval shaped.
+<span class="nc" id="L37">	private int curveExponent = 0;</span>
+	
+	//This is a percentage (range 0-1) of the intensity of the curve function
+	// 0 makes for a perfect linear curve (circle)
+	// 1 means the curve is completely determined by the curve exponent
+<span class="nc" id="L42">	private float curveIntensity = 1;</span>
+	
+	//Adjusts the starting point along the loop.
+	// a common example, setting to 0.25 will make for a short fat oval instead of a long one.
+<span class="nc" id="L46">	private float curveOffset = 0;</span>
+	
+	public FigureEightBuilder setLoopShape(int exponent, float intensity, float offset){
+<span class="nc" id="L49">		this.curveExponent = Math.abs(exponent);</span>
+<span class="nc" id="L50">		curveIntensity = intensity % 1f;</span>
+<span class="nc" id="L51">		curveOffset = offset % 0.5f;</span>
+<span class="nc" id="L52">		return this;</span>
+	}
+	
+	private float targetAngle( float percentAlong ){
+<span class="nc" id="L56">		percentAlong += curveOffset;</span>
+<span class="nc" id="L57">		return 360f * (float)(</span>
+<span class="nc" id="L58">				curveIntensity * curveEquation(percentAlong)</span>
+						+ (1-curveIntensity)*(percentAlong)
+						- curveOffset);
+	}
+	
+	private double curveEquation( double x ){
+<span class="nc" id="L64">		return Math.pow(4, 2*curveExponent)</span>
+<span class="nc" id="L65">				*(Math.pow((x % 0.5f )-0.25, 2*curveExponent + 1))</span>
+<span class="nc" id="L66">				+ 0.25 + 0.5*Math.floor(2*x);</span>
+	}
+	
+	private Room landmarkRoom;
+	
+	public FigureEightBuilder setLandmarkRoom(Room room){
+<span class="nc" id="L72">		landmarkRoom = room;</span>
+<span class="nc" id="L73">		return this;</span>
+	}
+	
+	ArrayList&lt;Room&gt; firstLoop, secondLoop;
+	PointF firstLoopCenter, secondLoopCenter;
+	
+	@Override
+	public ArrayList&lt;Room&gt; build(ArrayList&lt;Room&gt; rooms) {
+<span class="nc" id="L81">		setupRooms(rooms);</span>
+		
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if (landmarkRoom == null){</span>
+			//prefer large and giant standard rooms over others
+<span class="nc bnc" id="L85" title="All 2 branches missed.">			for (Room r : mainPathRooms){</span>
+<span class="nc bnc" id="L86" title="All 4 branches missed.">				if ( r.maxConnections(Room.ALL) &gt;= 4 &amp;&amp;</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">						(landmarkRoom == null || landmarkRoom.minWidth()*landmarkRoom.minHeight() &lt; r.minWidth()*r.minHeight())){</span>
+<span class="nc" id="L88">					landmarkRoom = r;</span>
+				}
+<span class="nc" id="L90">			}</span>
+			//add another room to the path to compensate
+<span class="nc bnc" id="L92" title="All 2 branches missed.">			if (!multiConnections.isEmpty()){</span>
+<span class="nc" id="L93">				mainPathRooms.add(multiConnections.remove(0));</span>
+			}
+		}
+<span class="nc" id="L96">		mainPathRooms.remove(landmarkRoom);</span>
+<span class="nc" id="L97">		multiConnections.remove(landmarkRoom);</span>
+		
+<span class="nc" id="L99">		float startAngle = Random.Float(0, 360);</span>
+
+<span class="nc" id="L101">		int roomsOnFirstLoop = mainPathRooms.size()/2;</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if (mainPathRooms.size() % 2 == 1) roomsOnFirstLoop += Random.Int(2);</span>
+
+<span class="nc" id="L104">		ArrayList&lt;Room&gt; roomsToLoop = (ArrayList&lt;Room&gt;) mainPathRooms.clone();</span>
+
+<span class="nc" id="L106">		ArrayList&lt;Room&gt; firstLoopTemp = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L107">		firstLoopTemp.add(landmarkRoom);</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		for (int i = 0; i &lt; roomsOnFirstLoop; i++){</span>
+<span class="nc" id="L109">			firstLoopTemp.add(roomsToLoop.remove(0));</span>
+		}
+<span class="nc" id="L111">		firstLoopTemp.add((firstLoopTemp.size()+1)/2, entrance);</span>
+
+<span class="nc" id="L113">		float[] pathTunnels = pathTunnelChances.clone();</span>
+
+<span class="nc" id="L115">		firstLoop = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		for (Room r : firstLoopTemp){</span>
+<span class="nc" id="L117">			firstLoop.add(r);</span>
+
+<span class="nc" id="L119">			int tunnels = Random.chances(pathTunnels);</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			if (tunnels == -1){</span>
+<span class="nc" id="L121">				pathTunnels = pathTunnelChances.clone();</span>
+<span class="nc" id="L122">				tunnels = Random.chances(pathTunnels);</span>
+			}
+<span class="nc" id="L124">			pathTunnels[tunnels]--;</span>
+
+<span class="nc bnc" id="L126" title="All 2 branches missed.">			for (int j = 0; j &lt; tunnels; j++){</span>
+<span class="nc" id="L127">				firstLoop.add(ConnectionRoom.createRoom());</span>
+			}
+<span class="nc" id="L129">		}</span>
+<span class="nc" id="L130">		ArrayList&lt;Room&gt; secondLoopTemp = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L131">		secondLoopTemp.add(landmarkRoom);</span>
+<span class="nc" id="L132">		secondLoopTemp.addAll(roomsToLoop);</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">		if (exit != null) secondLoopTemp.add((secondLoopTemp.size()+1)/2, exit);</span>
+
+<span class="nc" id="L135">		secondLoop = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		for (Room r : secondLoopTemp){</span>
+<span class="nc" id="L137">			secondLoop.add(r);</span>
+
+<span class="nc" id="L139">			int tunnels = Random.chances(pathTunnels);</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">			if (tunnels == -1){</span>
+<span class="nc" id="L141">				pathTunnels = pathTunnelChances.clone();</span>
+<span class="nc" id="L142">				tunnels = Random.chances(pathTunnels);</span>
+			}
+<span class="nc" id="L144">			pathTunnels[tunnels]--;</span>
+
+<span class="nc bnc" id="L146" title="All 2 branches missed.">			for (int j = 0; j &lt; tunnels; j++){</span>
+<span class="nc" id="L147">				secondLoop.add(ConnectionRoom.createRoom());</span>
+			}
+<span class="nc" id="L149">		}</span>
+		
+<span class="nc" id="L151">		landmarkRoom.setSize();</span>
+<span class="nc" id="L152">		landmarkRoom.setPos(0, 0);</span>
+		
+<span class="nc" id="L154">		Room prev = landmarkRoom;</span>
+		float targetAngle;
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		for (int i = 1; i &lt; firstLoop.size(); i++){</span>
+<span class="nc" id="L157">			Room r = firstLoop.get(i);</span>
+<span class="nc" id="L158">			targetAngle = startAngle + targetAngle( i / (float)firstLoop.size());</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">			if (placeRoom(rooms, prev, r, targetAngle) != -1) {</span>
+<span class="nc" id="L160">				prev = r;</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">				if (!rooms.contains(prev))</span>
+<span class="nc" id="L162">					rooms.add(prev);</span>
+			} else {
+				//FIXME this is lazy, there are ways to do this without relying on chance
+<span class="nc" id="L165">				return null;</span>
+			}
+		}
+		
+		//FIXME this is still fairly chance reliant
+		// should just write a general function for stitching two rooms together in builder
+<span class="nc bnc" id="L171" title="All 2 branches missed.">		while (!prev.connect(landmarkRoom)){</span>
+			
+<span class="nc" id="L173">			ConnectionRoom c = ConnectionRoom.createRoom();</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">			if (placeRoom(rooms, prev, c, angleBetweenRooms(prev, landmarkRoom)) == -1){</span>
+<span class="nc" id="L175">				return null;</span>
+			}
+<span class="nc" id="L177">			firstLoop.add(c);</span>
+<span class="nc" id="L178">			rooms.add(c);</span>
+<span class="nc" id="L179">			prev = c;</span>
+<span class="nc" id="L180">		}</span>
+		
+<span class="nc" id="L182">		prev = landmarkRoom;</span>
+<span class="nc" id="L183">		startAngle += 180f;</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">		for (int i = 1; i &lt; secondLoop.size(); i++){</span>
+<span class="nc" id="L185">			Room r = secondLoop.get(i);</span>
+<span class="nc" id="L186">			targetAngle = startAngle + targetAngle( i / (float)secondLoop.size());</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">			if (placeRoom(rooms, prev, r, targetAngle) != -1) {</span>
+<span class="nc" id="L188">				prev = r;</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">				if (!rooms.contains(prev))</span>
+<span class="nc" id="L190">					rooms.add(prev);</span>
+			} else {
+				//FIXME this is lazy, there are ways to do this without relying on chance
+<span class="nc" id="L193">				return null;</span>
+			}
+		}
+		
+		//FIXME this is still fairly chance reliant
+		// should just write a general function for stitching two rooms together in builder
+<span class="nc bnc" id="L199" title="All 2 branches missed.">		while (!prev.connect(landmarkRoom)){</span>
+			
+<span class="nc" id="L201">			ConnectionRoom c = ConnectionRoom.createRoom();</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">			if (placeRoom(rooms, prev, c, angleBetweenRooms(prev, landmarkRoom)) == -1){</span>
+<span class="nc" id="L203">				return null;</span>
+			}
+<span class="nc" id="L205">			secondLoop.add(c);</span>
+<span class="nc" id="L206">			rooms.add(c);</span>
+<span class="nc" id="L207">			prev = c;</span>
+<span class="nc" id="L208">		}</span>
+		
+<span class="nc bnc" id="L210" title="All 2 branches missed.">		if (shop != null) {</span>
+			float angle;
+<span class="nc" id="L212">			int tries = 10;</span>
+			do {
+<span class="nc" id="L214">				angle = placeRoom(rooms, entrance, shop, Random.Float(360f));</span>
+<span class="nc" id="L215">				tries--;</span>
+<span class="nc bnc" id="L216" title="All 4 branches missed.">			} while (angle == -1 &amp;&amp; tries &gt;= 0);</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">			if (angle == -1) return null;</span>
+		}
+		
+<span class="nc" id="L220">		firstLoopCenter = new PointF();</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">		for (Room r : firstLoop){</span>
+<span class="nc" id="L222">			firstLoopCenter.x += (r.left + r.right)/2f;</span>
+<span class="nc" id="L223">			firstLoopCenter.y += (r.top + r.bottom)/2f;</span>
+<span class="nc" id="L224">		}</span>
+<span class="nc" id="L225">		firstLoopCenter.x /= firstLoop.size();</span>
+<span class="nc" id="L226">		firstLoopCenter.y /= firstLoop.size();</span>
+		
+<span class="nc" id="L228">		secondLoopCenter = new PointF();</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">		for (Room r : secondLoop){</span>
+<span class="nc" id="L230">			secondLoopCenter.x += (r.left + r.right)/2f;</span>
+<span class="nc" id="L231">			secondLoopCenter.y += (r.top + r.bottom)/2f;</span>
+<span class="nc" id="L232">		}</span>
+<span class="nc" id="L233">		secondLoopCenter.x /= secondLoop.size();</span>
+<span class="nc" id="L234">		secondLoopCenter.y /= secondLoop.size();</span>
+		
+<span class="nc" id="L236">		ArrayList&lt;Room&gt; branchable = new ArrayList&lt;&gt;(firstLoop);</span>
+<span class="nc" id="L237">		branchable.addAll(secondLoop);</span>
+<span class="nc" id="L238">		branchable.remove(landmarkRoom); //remove once so it isn't present twice</span>
+		
+<span class="nc" id="L240">		ArrayList&lt;Room&gt; roomsToBranch = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L241">		roomsToBranch.addAll(multiConnections);</span>
+<span class="nc" id="L242">		roomsToBranch.addAll(singleConnections);</span>
+<span class="nc" id="L243">		weightRooms(branchable);</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">		if (!createBranches(rooms, branchable, roomsToBranch, branchTunnelChances)){</span>
+<span class="nc" id="L245">			return null;</span>
+		}
+		
+<span class="nc" id="L248">		findNeighbours(rooms);</span>
+		
+<span class="nc bnc" id="L250" title="All 2 branches missed.">		for (Room r : rooms){</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">			for (Room n : r.neigbours){</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">				if (!n.connected.containsKey(r)</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">						&amp;&amp; Random.Float() &lt; extraConnectionChance){</span>
+<span class="nc" id="L254">					r.connect(n);</span>
+				}
+<span class="nc" id="L256">			}</span>
+<span class="nc" id="L257">		}</span>
+		
+<span class="nc" id="L259">		return rooms;</span>
+	}
+	
+	@Override
+	protected float randomBranchAngle( Room r ) {
+		PointF center;
+<span class="nc bnc" id="L265" title="All 2 branches missed.">		if (firstLoop.contains(r)){</span>
+<span class="nc" id="L266">			center = firstLoopCenter;</span>
+		} else {
+<span class="nc" id="L268">			center = secondLoopCenter;</span>
+		}
+<span class="nc bnc" id="L270" title="All 2 branches missed.">		if (center == null)</span>
+<span class="nc" id="L271">			return super.randomBranchAngle( r );</span>
+		else {
+			//generate four angles randomly and return the one which points closer to the center
+<span class="nc" id="L274">			float toCenter = angleBetweenPoints( new PointF((r.left + r.right)/2f, (r.top + r.bottom)/2f), center);</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">			if (toCenter &lt; 0) toCenter += 360f;</span>
+			
+<span class="nc" id="L277">			float currAngle = Random.Float(360f);</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">			for( int i = 0; i &lt; 4; i ++){</span>
+<span class="nc" id="L279">				float newAngle = Random.Float(360f);</span>
+<span class="nc bnc" id="L280" title="All 2 branches missed.">				if (Math.abs(toCenter - newAngle) &lt; Math.abs(toCenter - currAngle)){</span>
+<span class="nc" id="L281">					currAngle = newAngle;</span>
+				}
+			}
+<span class="nc" id="L284">			return currAngle;</span>
+		}
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

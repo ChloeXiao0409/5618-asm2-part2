@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FistSprite.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.sprites</a> &gt; <span class="el_source">FistSprite.java</span></div><h1>FistSprite.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.sprites;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.YogFist;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Beam;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.CorrosionParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.FlameParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.LeafParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SparkParticle;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.watabou.noosa.TextureFilm;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
+import com.watabou.utils.Callback;
+
+public abstract class FistSprite extends MobSprite {
+
+	private static final float SLAM_TIME	= 0.33f;
+
+	protected int boltType;
+
+	protected abstract int texOffset();
+
+	private Emitter particles;
+	protected abstract Emitter createEmitter();
+
+	public FistSprite() {
+<span class="nc" id="L54">		super();</span>
+
+<span class="nc" id="L56">		int c = texOffset();</span>
+
+<span class="nc" id="L58">		texture( Assets.Sprites.FISTS );</span>
+
+<span class="nc" id="L60">		TextureFilm frames = new TextureFilm( texture, 24, 17 );</span>
+
+<span class="nc" id="L62">		idle = new Animation( 2, true );</span>
+<span class="nc" id="L63">		idle.frames( frames, c+0, c+0, c+1 );</span>
+
+<span class="nc" id="L65">		run = new Animation( 3, true );</span>
+<span class="nc" id="L66">		run.frames( frames, c+0, c+1 );</span>
+
+<span class="nc" id="L68">		attack = new Animation( Math.round(1 / SLAM_TIME), false );</span>
+<span class="nc" id="L69">		attack.frames( frames, c+0 );</span>
+
+<span class="nc" id="L71">		zap = new Animation( 8, false );</span>
+<span class="nc" id="L72">		zap.frames( frames, c+0, c+5, c+6 );</span>
+
+<span class="nc" id="L74">		die = new Animation( 10, false );</span>
+<span class="nc" id="L75">		die.frames( frames, c+0, c+2, c+3, c+4 );</span>
+
+<span class="nc" id="L77">		play( idle );</span>
+<span class="nc" id="L78">	}</span>
+
+	@Override
+	public void link( Char ch ) {
+<span class="nc" id="L82">		super.link( ch );</span>
+
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		if (particles == null) {</span>
+<span class="nc" id="L85">			particles = createEmitter();</span>
+		}
+<span class="nc" id="L87">	}</span>
+
+	@Override
+	public void update() {
+<span class="nc" id="L91">		super.update();</span>
+
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		if (particles != null){</span>
+<span class="nc" id="L94">			particles.visible = visible;</span>
+		}
+<span class="nc" id="L96">	}</span>
+
+	@Override
+	public void die() {
+<span class="nc" id="L100">		super.die();</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (particles != null){</span>
+<span class="nc" id="L102">			particles.on = false;</span>
+		}
+<span class="nc" id="L104">	}</span>
+
+	@Override
+	public void kill() {
+<span class="nc" id="L108">		super.kill();</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		if (particles != null){</span>
+<span class="nc" id="L110">			particles.killAndErase();</span>
+		}
+<span class="nc" id="L112">	}</span>
+
+	@Override
+	public void attack( int cell ) {
+<span class="nc" id="L116">		super.attack( cell );</span>
+
+<span class="nc" id="L118">		jump(ch.pos, ch.pos, 9, SLAM_TIME, null );</span>
+<span class="nc" id="L119">	}</span>
+
+	//different bolt, so overrides zap
+	public void zap( int cell ) {
+
+<span class="nc" id="L124">		super.zap( cell );</span>
+
+<span class="nc" id="L126">		MagicMissile.boltFromChar( parent,</span>
+				boltType,
+				this,
+				cell,
+<span class="nc" id="L130">				new Callback() {</span>
+					@Override
+					public void call() {
+<span class="nc" id="L133">						((YogFist)ch).onZapComplete();</span>
+<span class="nc" id="L134">					}</span>
+				} );
+<span class="nc" id="L136">		Sample.INSTANCE.play( Assets.Sounds.ZAP );</span>
+<span class="nc" id="L137">	}</span>
+
+	@Override
+	public void onComplete( Animation anim ) {
+<span class="nc" id="L141">		super.onComplete( anim );</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">		if (anim == attack) {</span>
+<span class="nc" id="L143">			PixelScene.shake( 4, 0.2f );</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">		} else if (anim == zap) {</span>
+<span class="nc" id="L145">			idle();</span>
+		}
+<span class="nc" id="L147">	}</span>
+
+<span class="nc" id="L149">	public static class Burning extends FistSprite {</span>
+
+		{
+<span class="nc" id="L152">			boltType = MagicMissile.FIRE;</span>
+<span class="nc" id="L153">		}</span>
+
+		@Override
+		protected int texOffset() {
+<span class="nc" id="L157">			return 0;</span>
+		}
+
+		@Override
+		protected Emitter createEmitter() {
+<span class="nc" id="L162">			Emitter emitter = emitter();</span>
+<span class="nc" id="L163">			emitter.pour( FlameParticle.FACTORY, 0.06f );</span>
+<span class="nc" id="L164">			return emitter;</span>
+		}
+
+		@Override
+		public int blood() {
+<span class="nc" id="L169">			return 0xFFFFDD34;</span>
+		}
+
+	}
+
+<span class="nc" id="L174">	public static class Soiled extends FistSprite {</span>
+
+		{
+<span class="nc" id="L177">			boltType = MagicMissile.FOLIAGE;</span>
+<span class="nc" id="L178">		}</span>
+
+		@Override
+		protected int texOffset() {
+<span class="nc" id="L182">			return 10;</span>
+		}
+
+		@Override
+		protected Emitter createEmitter() {
+<span class="nc" id="L187">			Emitter emitter = emitter();</span>
+<span class="nc" id="L188">			emitter.pour( LeafParticle.GENERAL, 0.06f );</span>
+<span class="nc" id="L189">			return emitter;</span>
+		}
+
+		@Override
+		public int blood() {
+<span class="nc" id="L194">			return 0xFF7F5424;</span>
+		}
+
+	}
+
+<span class="nc" id="L199">	public static class Rotting extends FistSprite {</span>
+
+		{
+<span class="nc" id="L202">			boltType = MagicMissile.SPECK + Speck.TOXIC;</span>
+<span class="nc" id="L203">		}</span>
+
+		@Override
+		protected int texOffset() {
+<span class="nc" id="L207">			return 20;</span>
+		}
+
+		@Override
+		protected Emitter createEmitter() {
+<span class="nc" id="L212">			Emitter emitter = emitter();</span>
+<span class="nc" id="L213">			emitter.pour(Speck.factory(Speck.TOXIC), 0.25f );</span>
+<span class="nc" id="L214">			return emitter;</span>
+		}
+
+		@Override
+		public int blood() {
+<span class="nc" id="L219">			return 0xFFB8BBA1;</span>
+		}
+
+	}
+
+<span class="nc" id="L224">	public static class Rusted extends FistSprite {</span>
+
+		{
+<span class="nc" id="L227">			boltType = MagicMissile.CORROSION;</span>
+<span class="nc" id="L228">		}</span>
+
+		@Override
+		protected int texOffset() {
+<span class="nc" id="L232">			return 30;</span>
+		}
+
+		@Override
+		protected Emitter createEmitter() {
+<span class="nc" id="L237">			Emitter emitter = emitter();</span>
+<span class="nc" id="L238">			emitter.pour(CorrosionParticle.MISSILE, 0.06f );</span>
+<span class="nc" id="L239">			return emitter;</span>
+		}
+
+		@Override
+		public int blood() {
+<span class="nc" id="L244">			return 0xFF7F7F7F;</span>
+		}
+
+	}
+
+<span class="nc" id="L249">	public static class Bright extends FistSprite {</span>
+
+		{
+<span class="nc" id="L252">			boltType = MagicMissile.RAINBOW;</span>
+<span class="nc" id="L253">		}</span>
+
+		@Override
+		protected int texOffset() {
+<span class="nc" id="L257">			return 40;</span>
+		}
+
+		@Override
+		protected Emitter createEmitter() {
+<span class="nc" id="L262">			Emitter emitter = emitter();</span>
+<span class="nc" id="L263">			emitter.pour(SparkParticle.STATIC, 0.06f );</span>
+<span class="nc" id="L264">			return emitter;</span>
+		}
+
+		@Override
+		public void zap( int cell ) {
+<span class="nc" id="L269">			super.zap( cell, null );</span>
+
+<span class="nc" id="L271">			((YogFist)ch).onZapComplete();</span>
+<span class="nc" id="L272">			parent.add( new Beam.LightRay(center(), DungeonTilemap.raisedTileCenterToWorld(cell)));</span>
+<span class="nc" id="L273">		}</span>
+		@Override
+		public int blood() {
+<span class="nc" id="L276">			return 0xFFFFFFFF;</span>
+		}
+
+	}
+
+<span class="nc" id="L281">	public static class Dark extends FistSprite {</span>
+
+		{
+<span class="nc" id="L284">			boltType = MagicMissile.SHADOW;</span>
+<span class="nc" id="L285">		}</span>
+
+		@Override
+		protected int texOffset() {
+<span class="nc" id="L289">			return 50;</span>
+		}
+
+		@Override
+		protected Emitter createEmitter() {
+<span class="nc" id="L294">			Emitter emitter = emitter();</span>
+<span class="nc" id="L295">			emitter.pour(ShadowParticle.MISSILE, 0.06f );</span>
+<span class="nc" id="L296">			return emitter;</span>
+		}
+
+		@Override
+		public int blood() {
+<span class="nc" id="L301">			return 0xFF4A2F53;</span>
+		}
+
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

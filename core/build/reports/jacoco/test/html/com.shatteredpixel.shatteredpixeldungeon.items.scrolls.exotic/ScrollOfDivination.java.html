@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScrollOfDivination.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic</a> &gt; <span class="el_source">ScrollOfDivination.java</span></div><h1>ScrollOfDivination.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Identification;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.IconTitle;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+
+<span class="nc" id="L46">public class ScrollOfDivination extends ExoticScroll {</span>
+	
+	{
+<span class="nc" id="L49">		icon = ItemSpriteSheet.Icons.SCROLL_DIVINATE;</span>
+<span class="nc" id="L50">	}</span>
+	
+	@Override
+	public void doRead() {
+
+<span class="nc" id="L55">		detach(curUser.belongings.backpack);</span>
+<span class="nc" id="L56">		curUser.sprite.parent.add( new Identification( curUser.sprite.center().offset( 0, -16 ) ) );</span>
+		
+<span class="nc" id="L58">		Sample.INSTANCE.play( Assets.Sounds.READ );</span>
+		
+<span class="nc" id="L60">		HashSet&lt;Class&lt;? extends Potion&gt;&gt; potions = Potion.getUnknown();</span>
+<span class="nc" id="L61">		HashSet&lt;Class&lt;? extends Scroll&gt;&gt; scrolls = Scroll.getUnknown();</span>
+<span class="nc" id="L62">		HashSet&lt;Class&lt;? extends Ring&gt;&gt; rings = Ring.getUnknown();</span>
+		
+<span class="nc" id="L64">		int total = potions.size() + scrolls.size() + rings.size();</span>
+		
+<span class="nc" id="L66">		ArrayList&lt;Item&gt; IDed = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L67">		int left = 4;</span>
+		
+<span class="nc" id="L69">		float[] baseProbs = new float[]{3, 3, 3};</span>
+<span class="nc" id="L70">		float[] probs = baseProbs.clone();</span>
+		
+<span class="nc bnc" id="L72" title="All 4 branches missed.">		while (left &gt; 0 &amp;&amp; total &gt; 0) {</span>
+<span class="nc bnc" id="L73" title="All 4 branches missed.">			switch (Random.chances(probs)) {</span>
+				default:
+<span class="nc" id="L75">					probs = baseProbs.clone();</span>
+<span class="nc" id="L76">					continue;</span>
+				case 0:
+<span class="nc bnc" id="L78" title="All 2 branches missed.">					if (potions.isEmpty()) {</span>
+<span class="nc" id="L79">						probs[0] = 0;</span>
+<span class="nc" id="L80">						continue;</span>
+					}
+<span class="nc" id="L82">					probs[0]--;</span>
+<span class="nc" id="L83">					Potion p = Reflection.newInstance(Random.element(potions));</span>
+<span class="nc" id="L84">					p.identify();</span>
+<span class="nc" id="L85">					IDed.add(p);</span>
+<span class="nc" id="L86">					potions.remove(p.getClass());</span>
+<span class="nc" id="L87">					break;</span>
+				case 1:
+<span class="nc bnc" id="L89" title="All 2 branches missed.">					if (scrolls.isEmpty()) {</span>
+<span class="nc" id="L90">						probs[1] = 0;</span>
+<span class="nc" id="L91">						continue;</span>
+					}
+<span class="nc" id="L93">					probs[1]--;</span>
+<span class="nc" id="L94">					Scroll s = Reflection.newInstance(Random.element(scrolls));</span>
+<span class="nc" id="L95">					s.identify();</span>
+<span class="nc" id="L96">					IDed.add(s);</span>
+<span class="nc" id="L97">					scrolls.remove(s.getClass());</span>
+<span class="nc" id="L98">					break;</span>
+				case 2:
+<span class="nc bnc" id="L100" title="All 2 branches missed.">					if (rings.isEmpty()) {</span>
+<span class="nc" id="L101">						probs[2] = 0;</span>
+<span class="nc" id="L102">						continue;</span>
+					}
+<span class="nc" id="L104">					probs[2]--;</span>
+<span class="nc" id="L105">					Ring r = Reflection.newInstance(Random.element(rings));</span>
+<span class="nc" id="L106">					r.setKnown();</span>
+<span class="nc" id="L107">					IDed.add(r);</span>
+<span class="nc" id="L108">					rings.remove(r.getClass());</span>
+					break;
+			}
+<span class="nc" id="L111">			left --;</span>
+<span class="nc" id="L112">			total --;</span>
+		}
+
+<span class="nc bnc" id="L115" title="All 2 branches missed.">		if (left == 4){</span>
+<span class="nc" id="L116">			GLog.n( Messages.get(this, &quot;nothing_left&quot;) );</span>
+		} else {
+<span class="nc" id="L118">			GameScene.show(new WndDivination(IDed));</span>
+		}
+
+<span class="nc" id="L121">		readAnimation();</span>
+<span class="nc" id="L122">		identify();</span>
+<span class="nc" id="L123">	}</span>
+	
+	private class WndDivination extends Window {
+		
+		private static final int WIDTH = 120;
+		
+<span class="nc" id="L129">		WndDivination(ArrayList&lt;Item&gt; IDed ){</span>
+<span class="nc" id="L130">			IconTitle cur = new IconTitle(new ItemSprite(ScrollOfDivination.this),</span>
+<span class="nc" id="L131">					Messages.titleCase(Messages.get(ScrollOfDivination.class, &quot;name&quot;)));</span>
+<span class="nc" id="L132">			cur.setRect(0, 0, WIDTH, 0);</span>
+<span class="nc" id="L133">			add(cur);</span>
+			
+<span class="nc" id="L135">			RenderedTextBlock msg = PixelScene.renderTextBlock(Messages.get(this, &quot;desc&quot;), 6);</span>
+<span class="nc" id="L136">			msg.maxWidth(120);</span>
+<span class="nc" id="L137">			msg.setPos(0, cur.bottom() + 2);</span>
+<span class="nc" id="L138">			add(msg);</span>
+			
+<span class="nc" id="L140">			float pos = msg.bottom() + 10;</span>
+			
+<span class="nc bnc" id="L142" title="All 2 branches missed.">			for (Item i : IDed){</span>
+				
+<span class="nc" id="L144">				cur = new IconTitle(i);</span>
+<span class="nc" id="L145">				cur.setRect(0, pos, WIDTH, 0);</span>
+<span class="nc" id="L146">				add(cur);</span>
+<span class="nc" id="L147">				pos = cur.bottom() + 2;</span>
+				
+<span class="nc" id="L149">			}</span>
+			
+<span class="nc" id="L151">			resize(WIDTH, (int)pos);</span>
+<span class="nc" id="L152">		}</span>
+		
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

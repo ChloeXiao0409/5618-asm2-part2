@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SpecialRoom.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special</a> &gt; <span class="el_source">SpecialRoom.java</span></div><h1>SpecialRoom.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+import com.watabou.utils.Reflection;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+
+<span class="nc" id="L34">public abstract class SpecialRoom extends Room {</span>
+	
+	@Override
+<span class="nc" id="L37">	public int minWidth() { return 5; }</span>
+<span class="nc" id="L38">	public int maxWidth() { return 10; }</span>
+	
+	@Override
+	public int minHeight() {
+<span class="nc" id="L42">		return 5;</span>
+	}
+<span class="nc" id="L44">	public int maxHeight() { return 10; }</span>
+	
+	@Override
+	public int maxConnections(int direction) {
+<span class="nc" id="L48">		return 1;</span>
+	}
+	
+	private Door entrance;
+	
+	public Door entrance() {
+<span class="nc bnc" id="L54" title="All 2 branches missed.">		if (entrance == null){</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">			if (connected.isEmpty()){</span>
+<span class="nc" id="L56">				return null;</span>
+			} else {
+<span class="nc" id="L58">				entrance = connected.values().iterator().next();</span>
+			}
+		}
+<span class="nc" id="L61">		return entrance;</span>
+	}
+	
+	private static final String ENTRANCE = &quot;entrance&quot;;
+	
+	@Override
+	public void storeInBundle(Bundle bundle) {
+<span class="nc" id="L68">		super.storeInBundle(bundle);</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		if (entrance() != null){</span>
+<span class="nc" id="L70">			bundle.put(ENTRANCE, entrance());</span>
+		}
+<span class="nc" id="L72">	}</span>
+	
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+<span class="nc" id="L76">		super.restoreFromBundle(bundle);</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">		if (bundle.contains(ENTRANCE)){</span>
+<span class="nc" id="L78">			entrance = (Door)bundle.get(ENTRANCE);</span>
+		}
+<span class="nc" id="L80">	}</span>
+
+	//9 special rooms which give equipment more often than consumables (or as often as)
+<span class="nc" id="L83">	private static final ArrayList&lt;Class&lt;? extends SpecialRoom&gt;&gt; EQUIP_SPECIALS = new ArrayList&lt;&gt;( Arrays.asList(</span>
+			WeakFloorRoom.class, CryptRoom.class, PoolRoom.class, ArmoryRoom.class, SentryRoom.class,
+			StatueRoom.class, CrystalVaultRoom.class, CrystalChoiceRoom.class, SacrificeRoom.class
+	));
+
+	//10 special rooms which give consumables more often than equipment
+	//note that alchemy rooms are spawned separately
+<span class="nc" id="L90">	private static final ArrayList&lt;Class&lt;? extends SpecialRoom&gt;&gt; CONSUMABLE_SPECIALS = new ArrayList&lt;&gt;( Arrays.asList(</span>
+			RunestoneRoom.class, GardenRoom.class, LibraryRoom.class, StorageRoom.class,
+			TreasuryRoom.class, MagicWellRoom.class, ToxicGasRoom.class, MagicalFireRoom.class,
+			TrapsRoom.class, CrystalPathRoom.class
+	) );
+
+	//only one special that uses crystal keys per floor
+<span class="nc" id="L97">	private static final ArrayList&lt;Class&lt;? extends SpecialRoom&gt;&gt; CRYSTAL_KEY_SPECIALS = new ArrayList&lt;&gt;( Arrays.asList(</span>
+			PitRoom.class, CrystalVaultRoom.class, CrystalChoiceRoom.class, CrystalPathRoom.class
+	) );
+
+	//only one special that generates a potion per floor
+<span class="nc" id="L102">	private static final ArrayList&lt;Class&lt;? extends SpecialRoom&gt;&gt; POTION_SPAWN_ROOMS = new ArrayList&lt;&gt;( Arrays.asList(</span>
+			PoolRoom.class, SentryRoom.class, StorageRoom.class, ToxicGasRoom.class, MagicalFireRoom.class, TrapsRoom.class
+	) );
+
+<span class="nc" id="L106">	public static ArrayList&lt;Class&lt;? extends Room&gt;&gt; runSpecials = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L107">	public static ArrayList&lt;Class&lt;? extends Room&gt;&gt; floorSpecials = new ArrayList&lt;&gt;();</span>
+	
+<span class="nc" id="L109">	private static int pitNeededDepth = -1;</span>
+	
+	public static void initForRun() {
+<span class="nc" id="L112">		runSpecials = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L114">		ArrayList&lt;Class&lt;?extends Room&gt;&gt; runEquipSpecials = (ArrayList&lt;Class&lt;?extends Room&gt;&gt;)EQUIP_SPECIALS.clone();</span>
+<span class="nc" id="L115">		ArrayList&lt;Class&lt;?extends Room&gt;&gt; runConsSpecials = (ArrayList&lt;Class&lt;?extends Room&gt;&gt;)CONSUMABLE_SPECIALS.clone();</span>
+
+<span class="nc" id="L117">		Random.shuffle(runEquipSpecials);</span>
+<span class="nc" id="L118">		Random.shuffle(runConsSpecials);</span>
+
+		// TODO currently always a consumable special first as there's 1 more of them, adjust as needed if adding more
+<span class="nc" id="L121">		runSpecials.add(runConsSpecials.remove(0));</span>
+
+<span class="nc bnc" id="L123" title="All 4 branches missed.">		while (!runEquipSpecials.isEmpty() || !runConsSpecials.isEmpty()){</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">			if (!runEquipSpecials.isEmpty())    runSpecials.add(runEquipSpecials.remove(0));</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">			if (!runConsSpecials.isEmpty())     runSpecials.add(runConsSpecials.remove(0));</span>
+		}
+
+<span class="nc" id="L128">		pitNeededDepth = -1;</span>
+<span class="nc" id="L129">	}</span>
+	
+	public static void initForFloor(){
+<span class="nc" id="L132">		floorSpecials = (ArrayList&lt;Class&lt;?extends Room&gt;&gt;) runSpecials.clone();</span>
+		
+		//laboratory rooms spawn on floor 3 or 4 each chapter
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		if (Dungeon.labRoomNeeded()){</span>
+<span class="nc" id="L136">			Dungeon.LimitedDrops.LAB_ROOM.count++;</span>
+<span class="nc" id="L137">			floorSpecials.add(0, LaboratoryRoom.class);</span>
+		}
+<span class="nc" id="L139">	}</span>
+	
+	private static void useType( Class&lt;?extends Room&gt; type ) {
+<span class="nc" id="L142">		floorSpecials.remove( type );</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">		if (CRYSTAL_KEY_SPECIALS.contains(type)){</span>
+<span class="nc" id="L144">			floorSpecials.removeAll(CRYSTAL_KEY_SPECIALS);</span>
+		}
+<span class="nc bnc" id="L146" title="All 2 branches missed.">		if (POTION_SPAWN_ROOMS.contains(type)){</span>
+<span class="nc" id="L147">			floorSpecials.removeAll(POTION_SPAWN_ROOMS);</span>
+		}
+<span class="nc bnc" id="L149" title="All 2 branches missed.">		if (runSpecials.remove( type )) {</span>
+<span class="nc" id="L150">			runSpecials.add( type );</span>
+		}
+<span class="nc" id="L152">	}</span>
+
+	public static void resetPitRoom(int depth){
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		if (pitNeededDepth == depth) pitNeededDepth = -1;</span>
+<span class="nc" id="L156">	}</span>
+	
+	public static SpecialRoom createRoom(){
+<span class="nc bnc" id="L159" title="All 2 branches missed.">		if (Dungeon.depth == pitNeededDepth){</span>
+<span class="nc" id="L160">			pitNeededDepth = -1;</span>
+			
+<span class="nc" id="L162">			useType( PitRoom.class );</span>
+<span class="nc" id="L163">			return new PitRoom();</span>
+			
+<span class="nc bnc" id="L165" title="All 2 branches missed.">		} else if (floorSpecials.contains(LaboratoryRoom.class)) {</span>
+		
+<span class="nc" id="L167">			useType(LaboratoryRoom.class);</span>
+<span class="nc" id="L168">			return new LaboratoryRoom();</span>
+		
+		} else {
+			
+<span class="nc bnc" id="L172" title="All 2 branches missed.">			if (Dungeon.bossLevel(Dungeon.depth + 1)){</span>
+<span class="nc" id="L173">				floorSpecials.remove(WeakFloorRoom.class);</span>
+			}
+
+			//60% chance for front of queue, 30% chance for next, 10% for one after that
+<span class="nc" id="L177">			int index = Random.chances(new float[]{6, 3, 1});</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">			while (index &gt;= floorSpecials.size()) index--;</span>
+
+<span class="nc" id="L180">			Room r = Reflection.newInstance(floorSpecials.get( index ));</span>
+
+<span class="nc bnc" id="L182" title="All 2 branches missed.">			if (r instanceof WeakFloorRoom){</span>
+<span class="nc" id="L183">				pitNeededDepth = Dungeon.depth + 1;</span>
+			}
+			
+<span class="nc" id="L186">			useType( r.getClass() );</span>
+<span class="nc" id="L187">			return (SpecialRoom)r;</span>
+		
+		}
+	}
+	
+	private static final String ROOMS	= &quot;special_rooms&quot;;
+	private static final String PIT	    = &quot;pit_needed&quot;;
+	
+	public static void restoreRoomsFromBundle( Bundle bundle ) {
+<span class="nc" id="L196">		runSpecials.clear();</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">		if (bundle.contains( ROOMS )) {</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">			for (Class&lt;? extends Room&gt; type : bundle.getClassArray(ROOMS)) {</span>
+<span class="nc" id="L199">				runSpecials.add(type);</span>
+			}
+		} else {
+<span class="nc" id="L202">			initForRun();</span>
+<span class="nc" id="L203">			ShatteredPixelDungeon.reportException(new Exception(&quot;specials array didn't exist!&quot;));</span>
+		}
+<span class="nc" id="L205">		pitNeededDepth = bundle.getInt(PIT);</span>
+<span class="nc" id="L206">	}</span>
+	
+	public static void storeRoomsInBundle( Bundle bundle ) {
+<span class="nc" id="L209">		bundle.put( ROOMS, runSpecials.toArray(new Class[0]) );</span>
+<span class="nc" id="L210">		bundle.put( PIT, pitNeededDepth );</span>
+<span class="nc" id="L211">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

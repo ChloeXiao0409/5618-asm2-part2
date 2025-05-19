@@ -1,0 +1,993 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Toolbar.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.shatteredpixel.shatteredpixeldungeon.ui</a> &gt; <span class="el_source">Toolbar.java</span></div><h1>Toolbar.java</h1><pre class="source lang-java linenums">/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2024 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.ui;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.QuickSlot;
+import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.HoldFast;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTerrainTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndKeyBindings;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndMessage;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndQuickBag;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndUseItem;
+import com.watabou.input.ControllerHandler;
+import com.watabou.input.GameAction;
+import com.watabou.input.KeyBindings;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Gizmo;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.PointerArea;
+import com.watabou.noosa.ui.Component;
+import com.watabou.utils.Point;
+import com.watabou.utils.PointF;
+
+import java.util.ArrayList;
+
+public class Toolbar extends Component {
+
+	private Tool btnWait;
+	private Tool btnSearch;
+	private Tool btnInventory;
+	private QuickslotTool[] btnQuick;
+	private SlotSwapTool btnSwap;
+	
+	private PickedUpItem pickedUp;
+	
+<span class="nc" id="L71">	private boolean lastEnabled = true;</span>
+<span class="nc" id="L72">	public boolean examining = false;</span>
+
+	private static Toolbar instance;
+
+<span class="nc" id="L76">	public enum Mode {</span>
+<span class="nc" id="L77">		SPLIT,</span>
+<span class="nc" id="L78">		GROUP,</span>
+<span class="nc" id="L79">		CENTER</span>
+	}
+	
+	public Toolbar() {
+<span class="nc" id="L83">		super();</span>
+
+<span class="nc" id="L85">		instance = this;</span>
+
+<span class="nc" id="L87">		height = btnInventory.height();</span>
+<span class="nc" id="L88">	}</span>
+
+	@Override
+	public synchronized void destroy() {
+<span class="nc" id="L92">		super.destroy();</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		if (instance == this) instance = null;</span>
+<span class="nc" id="L94">	}</span>
+
+	@Override
+	protected void createChildren() {
+
+<span class="nc" id="L99">		add(btnSwap = new SlotSwapTool(128, 0, 21, 23));</span>
+
+<span class="nc" id="L101">		btnQuick = new QuickslotTool[QuickSlot.SIZE];</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		for (int i = 0; i &lt; btnQuick.length; i++){</span>
+<span class="nc" id="L103">			add( btnQuick[i] = new QuickslotTool(64, 0, 22, 24, i) );</span>
+		}
+
+		//hidden button for quickslot selector keybind
+<span class="nc" id="L107">		add(new Button(){</span>
+			@Override
+			protected void onClick() {
+<span class="nc bnc" id="L110" title="All 2 branches missed.">				if (QuickSlotButton.targetingSlot != -1){</span>
+<span class="nc" id="L111">					int cell = QuickSlotButton.autoAim(QuickSlotButton.lastTarget, Dungeon.quickslot.getItem(QuickSlotButton.targetingSlot));</span>
+
+<span class="nc bnc" id="L113" title="All 2 branches missed.">					if (cell != -1){</span>
+<span class="nc" id="L114">						GameScene.handleCell(cell);</span>
+					} else {
+						//couldn't auto-aim, just target the position and hope for the best.
+<span class="nc" id="L117">						GameScene.handleCell( QuickSlotButton.lastTarget.pos );</span>
+					}
+<span class="nc" id="L119">					return;</span>
+				}
+
+<span class="nc bnc" id="L122" title="All 6 branches missed.">				if (Dungeon.hero != null &amp;&amp; Dungeon.hero.ready &amp;&amp; !GameScene.cancel()) {</span>
+
+<span class="nc" id="L124">					String[] slotNames = new String[6];</span>
+<span class="nc" id="L125">					Image[] slotIcons = new Image[6];</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">					for (int i = 0; i &lt; 6; i++){</span>
+<span class="nc" id="L127">						Item item = Dungeon.quickslot.getItem(i);</span>
+
+<span class="nc bnc" id="L129" title="All 4 branches missed.">						if (item != null &amp;&amp; !Dungeon.quickslot.isPlaceholder(i) &amp;&amp;</span>
+<span class="nc bnc" id="L130" title="All 4 branches missed.">								(!Dungeon.hero.belongings.lostInventory() || item.keptThroughLostInventory())){</span>
+<span class="nc" id="L131">							slotNames[i] = Messages.titleCase(item.name());</span>
+<span class="nc" id="L132">							slotIcons[i] = new ItemSprite(item);</span>
+						} else {
+<span class="nc" id="L134">							slotNames[i] = Messages.get(Toolbar.class, &quot;quickslot_assign&quot;);</span>
+<span class="nc" id="L135">							slotIcons[i] = new ItemSprite(ItemSpriteSheet.SOMETHING);</span>
+						}
+					}
+
+<span class="nc" id="L139">					String info = &quot;&quot;;</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">					if (ControllerHandler.controllerActive){</span>
+<span class="nc" id="L141">						info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.LEFT_CLICK, true)) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;quickslot_select&quot;) + &quot;\n&quot;;</span>
+<span class="nc" id="L142">						info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.RIGHT_CLICK, true)) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;quickslot_assign&quot;) + &quot;\n&quot;;</span>
+<span class="nc" id="L143">						info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, true)) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;quickslot_cancel&quot;);</span>
+					} else {
+<span class="nc" id="L145">						info += Messages.get(WndKeyBindings.class, SPDAction.LEFT_CLICK.name()) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;quickslot_select&quot;) + &quot;\n&quot;;</span>
+<span class="nc" id="L146">						info += Messages.get(WndKeyBindings.class, SPDAction.RIGHT_CLICK.name()) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;quickslot_assign&quot;) + &quot;\n&quot;;</span>
+<span class="nc" id="L147">						info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, false)) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;quickslot_cancel&quot;);</span>
+					}
+
+<span class="nc" id="L150">					Game.scene().addToFront(new RadialMenu(Messages.get(Toolbar.class, &quot;quickslot_prompt&quot;), info, slotNames, slotIcons) {</span>
+						@Override
+						public void onSelect(int idx, boolean alt) {
+<span class="nc" id="L153">							Item item = Dungeon.quickslot.getItem(idx);</span>
+
+<span class="nc bnc" id="L155" title="All 4 branches missed.">							if (item == null || Dungeon.quickslot.isPlaceholder(idx)</span>
+<span class="nc bnc" id="L156" title="All 6 branches missed.">									|| (Dungeon.hero.belongings.lostInventory() &amp;&amp; !item.keptThroughLostInventory())</span>
+									|| alt){
+								//TODO would be nice to use a radial menu for this too
+								// Also a bunch of code could be moved out of here into subclasses of RadialMenu
+<span class="nc" id="L160">								GameScene.selectItem(new WndBag.ItemSelector() {</span>
+									@Override
+									public String textPrompt() {
+<span class="nc" id="L163">										return Messages.get(QuickSlotButton.class, &quot;select_item&quot;);</span>
+									}
+
+									@Override
+									public boolean itemSelectable(Item item) {
+<span class="nc bnc" id="L168" title="All 2 branches missed.">										return item.defaultAction() != null;</span>
+									}
+
+									@Override
+									public void onSelect(Item item) {
+<span class="nc bnc" id="L173" title="All 2 branches missed.">										if (item != null) {</span>
+<span class="nc" id="L174">											QuickSlotButton.set(idx, item);</span>
+										}
+<span class="nc" id="L176">									}</span>
+								});
+							} else {
+
+<span class="nc" id="L180">								item.execute(Dungeon.hero);</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">								if (item.usesTargeting) {</span>
+<span class="nc" id="L182">									QuickSlotButton.useTargeting(idx);</span>
+								}
+							}
+<span class="nc" id="L185">							super.onSelect(idx, alt);</span>
+<span class="nc" id="L186">						}</span>
+					});
+				}
+<span class="nc" id="L189">			}</span>
+
+			@Override
+			public GameAction keyAction() {
+<span class="nc bnc" id="L193" title="All 2 branches missed.">				if (btnWait.active) return SPDAction.QUICKSLOT_SELECTOR;</span>
+<span class="nc" id="L194">				else				return null;</span>
+			}
+		});
+		
+<span class="nc" id="L198">		add(btnWait = new Tool(24, 0, 20, 26) {</span>
+			@Override
+			protected void onClick() {
+<span class="nc bnc" id="L201" title="All 6 branches missed.">				if (Dungeon.hero != null &amp;&amp;  Dungeon.hero.ready &amp;&amp; !GameScene.cancel()) {</span>
+<span class="nc" id="L202">					examining = false;</span>
+<span class="nc" id="L203">					Dungeon.hero.rest(false);</span>
+				}
+<span class="nc" id="L205">			}</span>
+			
+			@Override
+			public GameAction keyAction() {
+<span class="nc" id="L209">				return SPDAction.WAIT;</span>
+			}
+
+			@Override
+			public GameAction secondaryTooltipAction() {
+<span class="nc" id="L214">				return SPDAction.WAIT_OR_PICKUP;</span>
+			}
+
+			@Override
+			protected String hoverText() {
+<span class="nc" id="L219">				return Messages.titleCase(Messages.get(WndKeyBindings.class, &quot;wait&quot;));</span>
+			}
+
+			protected boolean onLongClick() {
+<span class="nc bnc" id="L223" title="All 6 branches missed.">				if (Dungeon.hero != null &amp;&amp; Dungeon.hero.ready &amp;&amp; !GameScene.cancel()) {</span>
+<span class="nc" id="L224">					examining = false;</span>
+<span class="nc" id="L225">					Dungeon.hero.rest(true);</span>
+				}
+<span class="nc" id="L227">				return true;</span>
+			}
+		});
+<span class="nc" id="L230">		btnWait.icon( 176, 0, 16, 16 );</span>
+
+		//hidden button for rest keybind
+<span class="nc" id="L233">		add(new Button(){</span>
+			@Override
+			protected void onClick() {
+<span class="nc bnc" id="L236" title="All 6 branches missed.">				if (Dungeon.hero != null &amp;&amp; Dungeon.hero.ready &amp;&amp; !GameScene.cancel()) {</span>
+<span class="nc" id="L237">					examining = false;</span>
+<span class="nc" id="L238">					Dungeon.hero.rest(true);</span>
+				}
+<span class="nc" id="L240">			}</span>
+
+			@Override
+			public GameAction keyAction() {
+<span class="nc bnc" id="L244" title="All 2 branches missed.">				if (btnWait.active) return SPDAction.REST;</span>
+<span class="nc" id="L245">				else				return null;</span>
+			}
+		});
+
+		//hidden button for wait / pickup keybind
+<span class="nc" id="L250">		add(new Button(){</span>
+			@Override
+			protected void onClick() {
+<span class="nc bnc" id="L253" title="All 6 branches missed.">				if (Dungeon.hero != null &amp;&amp; Dungeon.hero.ready &amp;&amp; !GameScene.cancel()) {</span>
+<span class="nc" id="L254">					Dungeon.hero.waitOrPickup = true;</span>
+<span class="nc bnc" id="L255" title="All 4 branches missed.">					if ((Dungeon.level.heaps.get(Dungeon.hero.pos) != null || Dungeon.hero.canSelfTrample())</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">						&amp;&amp; Dungeon.hero.handle(Dungeon.hero.pos)){</span>
+						//trigger hold fast and patient strike here, even if the hero didn't specifically wait
+<span class="nc bnc" id="L258" title="All 2 branches missed.">						if (Dungeon.hero.hasTalent(Talent.HOLD_FAST)){</span>
+<span class="nc" id="L259">							Buff.affect(Dungeon.hero, HoldFast.class).pos = Dungeon.hero.pos;</span>
+						}
+<span class="nc bnc" id="L261" title="All 2 branches missed.">						if (Dungeon.hero.hasTalent(Talent.PATIENT_STRIKE)){</span>
+<span class="nc" id="L262">							Buff.affect(Dungeon.hero, Talent.PatientStrikeTracker.class).pos = Dungeon.hero.pos;</span>
+						}
+<span class="nc" id="L264">						Dungeon.hero.next();</span>
+					} else {
+<span class="nc" id="L266">						examining = false;</span>
+<span class="nc" id="L267">						Dungeon.hero.rest(false);</span>
+					}
+				}
+<span class="nc" id="L270">			}</span>
+
+			protected boolean onLongClick() {
+<span class="nc bnc" id="L273" title="All 6 branches missed.">				if (Dungeon.hero != null &amp;&amp; Dungeon.hero.ready &amp;&amp; !GameScene.cancel()) {</span>
+<span class="nc" id="L274">					examining = false;</span>
+<span class="nc" id="L275">					Dungeon.hero.rest(true);</span>
+				}
+<span class="nc" id="L277">				return true;</span>
+			}
+
+			@Override
+			public GameAction keyAction() {
+<span class="nc bnc" id="L282" title="All 2 branches missed.">				if (btnWait.active) return SPDAction.WAIT_OR_PICKUP;</span>
+<span class="nc" id="L283">				else				return null;</span>
+			}
+		});
+		
+<span class="nc" id="L287">		add(btnSearch = new Tool(44, 0, 20, 26) {</span>
+			@Override
+			protected void onClick() {
+<span class="nc bnc" id="L290" title="All 4 branches missed.">				if (Dungeon.hero != null &amp;&amp; Dungeon.hero.ready) {</span>
+<span class="nc bnc" id="L291" title="All 4 branches missed.">					if (!examining &amp;&amp; !GameScene.cancel()) {</span>
+<span class="nc" id="L292">						GameScene.selectCell(informer);</span>
+<span class="nc" id="L293">						examining = true;</span>
+<span class="nc bnc" id="L294" title="All 2 branches missed.">					} else if (examining) {</span>
+<span class="nc" id="L295">						informer.onSelect(null);</span>
+<span class="nc" id="L296">						Dungeon.hero.search(true);</span>
+					}
+				}
+<span class="nc" id="L299">			}</span>
+			
+			@Override
+			public GameAction keyAction() {
+<span class="nc" id="L303">				return SPDAction.EXAMINE;</span>
+			}
+
+			@Override
+			protected String hoverText() {
+<span class="nc" id="L308">				return Messages.titleCase(Messages.get(WndKeyBindings.class, &quot;examine&quot;));</span>
+			}
+			
+			@Override
+			protected boolean onLongClick() {
+<span class="nc" id="L313">				Dungeon.hero.search(true);</span>
+<span class="nc" id="L314">				return true;</span>
+			}
+		});
+<span class="nc" id="L317">		btnSearch.icon( 192, 0, 16, 16 );</span>
+		
+<span class="nc" id="L319">		add(btnInventory = new Tool(0, 0, 24, 26) {</span>
+			private CurrencyIndicator ind;
+
+			private Image arrow;
+
+			@Override
+			protected void onClick() {
+<span class="nc bnc" id="L326" title="All 6 branches missed.">				if (Dungeon.hero != null &amp;&amp; (Dungeon.hero.ready || !Dungeon.hero.isAlive())) {</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">					if (SPDSettings.interfaceSize() == 2) {</span>
+<span class="nc" id="L328">						GameScene.toggleInvPane();</span>
+					} else {
+<span class="nc bnc" id="L330" title="All 2 branches missed.">						if (!GameScene.cancel()) {</span>
+<span class="nc" id="L331">							GameScene.show(new WndBag(Dungeon.hero.belongings.backpack));</span>
+						}
+					}
+				}
+<span class="nc" id="L335">			}</span>
+			
+			@Override
+			public GameAction keyAction() {
+<span class="nc" id="L339">				return SPDAction.INVENTORY;</span>
+			}
+
+			@Override
+			public GameAction secondaryTooltipAction() {
+<span class="nc" id="L344">				return SPDAction.INVENTORY_SELECTOR;</span>
+			}
+
+			@Override
+			protected String hoverText() {
+<span class="nc" id="L349">				return Messages.titleCase(Messages.get(WndKeyBindings.class, &quot;inventory&quot;));</span>
+			}
+			
+			@Override
+			protected boolean onLongClick() {
+<span class="nc" id="L354">				GameScene.show(new WndQuickBag(null));</span>
+<span class="nc" id="L355">				return true;</span>
+			}
+
+			@Override
+			protected void createChildren() {
+<span class="nc" id="L360">				super.createChildren();</span>
+<span class="nc" id="L361">				arrow = Icons.get(Icons.COMPASS);</span>
+<span class="nc" id="L362">				arrow.originToCenter();</span>
+<span class="nc bnc" id="L363" title="All 2 branches missed.">				arrow.visible = SPDSettings.interfaceSize() == 2;</span>
+<span class="nc" id="L364">				arrow.tint(0x3D2E18, 1f);</span>
+<span class="nc" id="L365">				add(arrow);</span>
+
+<span class="nc" id="L367">				ind = new CurrencyIndicator();</span>
+<span class="nc" id="L368">				add(ind);</span>
+<span class="nc" id="L369">			}</span>
+
+			@Override
+			protected void layout() {
+<span class="nc" id="L373">				super.layout();</span>
+<span class="nc" id="L374">				ind.fill(this);</span>
+<span class="nc" id="L375">				bringToFront(ind);</span>
+
+<span class="nc" id="L377">				arrow.x = left() + (width - arrow.width())/2;</span>
+<span class="nc" id="L378">				arrow.y = bottom()-arrow.height-1;</span>
+<span class="nc bnc" id="L379" title="All 2 branches missed.">				arrow.angle = bottom() == camera().height ? 0 : 180;</span>
+<span class="nc" id="L380">			}</span>
+
+			@Override
+			public void enable(boolean value) {
+<span class="nc bnc" id="L384" title="All 2 branches missed.">				if (value != active){</span>
+<span class="nc bnc" id="L385" title="All 2 branches missed.">					arrow.alpha( value ? 1f : 0.4f );</span>
+				}
+<span class="nc" id="L387">				super.enable(value);</span>
+<span class="nc" id="L388">			}</span>
+		});
+<span class="nc" id="L390">		btnInventory.icon( 160, 0, 16, 16 );</span>
+
+		//hidden button for inventory selector keybind
+<span class="nc" id="L393">		add(new Button(){</span>
+			@Override
+			protected void onClick() {
+<span class="nc bnc" id="L396" title="All 6 branches missed.">				if (Dungeon.hero != null &amp;&amp; Dungeon.hero.ready &amp;&amp; !GameScene.cancel()) {</span>
+<span class="nc" id="L397">					ArrayList&lt;Bag&gt; bags = Dungeon.hero.belongings.getBags();</span>
+<span class="nc" id="L398">					String[] names = new String[bags.size()];</span>
+<span class="nc" id="L399">					Image[] images = new Image[bags.size()];</span>
+<span class="nc bnc" id="L400" title="All 2 branches missed.">					for (int i = 0; i &lt; bags.size(); i++){</span>
+<span class="nc" id="L401">						names[i] = Messages.titleCase(bags.get(i).name());</span>
+<span class="nc" id="L402">						images[i] = new ItemSprite(bags.get(i));</span>
+					}
+<span class="nc" id="L404">					String info = &quot;&quot;;</span>
+<span class="nc bnc" id="L405" title="All 2 branches missed.">					if (ControllerHandler.controllerActive){</span>
+<span class="nc" id="L406">						info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.LEFT_CLICK, true)) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;container_select&quot;) + &quot;\n&quot;;</span>
+<span class="nc" id="L407">						info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, true)) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;container_cancel&quot;);</span>
+					} else {
+<span class="nc" id="L409">						info += Messages.get(WndKeyBindings.class, SPDAction.LEFT_CLICK.name()) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;container_select&quot;) + &quot;\n&quot;;</span>
+<span class="nc" id="L410">						info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, false)) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;container_cancel&quot;);</span>
+					}
+
+<span class="nc" id="L413">					Game.scene().addToFront(new RadialMenu(Messages.get(Toolbar.class, &quot;container_prompt&quot;), info, names, images){</span>
+						@Override
+						public void onSelect(int idx, boolean alt) {
+<span class="nc" id="L416">							super.onSelect(idx, alt);</span>
+<span class="nc" id="L417">							Bag bag = bags.get(idx);</span>
+<span class="nc" id="L418">							ArrayList&lt;Item&gt; items = (ArrayList&lt;Item&gt;) bag.items.clone();</span>
+
+<span class="nc bnc" id="L420" title="All 2 branches missed.">							for(Item i : bag.items){</span>
+<span class="nc bnc" id="L421" title="All 2 branches missed.">								if (i instanceof Bag) items.remove(i);</span>
+<span class="nc bnc" id="L422" title="All 4 branches missed.">								if (Dungeon.hero.belongings.lostInventory() &amp;&amp; !i.keptThroughLostInventory()) items.remove(i);</span>
+<span class="nc" id="L423">							}</span>
+
+<span class="nc bnc" id="L425" title="All 2 branches missed.">							if (idx == 0){</span>
+<span class="nc" id="L426">								Belongings b = Dungeon.hero.belongings;</span>
+<span class="nc bnc" id="L427" title="All 2 branches missed.">								if (b.ring() != null) items.add(0, b.ring());</span>
+<span class="nc bnc" id="L428" title="All 2 branches missed.">								if (b.misc() != null) items.add(0, b.misc());</span>
+<span class="nc bnc" id="L429" title="All 2 branches missed.">								if (b.artifact() != null) items.add(0, b.artifact());</span>
+<span class="nc bnc" id="L430" title="All 2 branches missed.">								if (b.armor() != null) items.add(0, b.armor());</span>
+<span class="nc bnc" id="L431" title="All 2 branches missed.">								if (b.weapon() != null) items.add(0, b.weapon());</span>
+							}
+
+<span class="nc bnc" id="L434" title="All 2 branches missed.">							if (items.size() == 0){</span>
+<span class="nc" id="L435">								GameScene.show(new WndMessage(Messages.get(Toolbar.class, &quot;container_empty&quot;)));</span>
+<span class="nc" id="L436">								return;</span>
+							}
+
+<span class="nc" id="L439">							String[] itemNames = new String[items.size()];</span>
+<span class="nc" id="L440">							Image[] itemIcons = new Image[items.size()];</span>
+<span class="nc bnc" id="L441" title="All 2 branches missed.">							for (int i = 0; i &lt; items.size(); i++){</span>
+<span class="nc" id="L442">								itemNames[i] = Messages.titleCase(items.get(i).name());</span>
+<span class="nc" id="L443">								itemIcons[i] = new ItemSprite(items.get(i));</span>
+							}
+
+<span class="nc" id="L446">							String info = &quot;&quot;;</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">							if (ControllerHandler.controllerActive){</span>
+<span class="nc" id="L448">								info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.LEFT_CLICK, true)) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;item_select&quot;) + &quot;\n&quot;;</span>
+<span class="nc" id="L449">								info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.RIGHT_CLICK, true)) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;item_use&quot;) + &quot;\n&quot;;</span>
+<span class="nc" id="L450">								info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, true)) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;item_cancel&quot;);</span>
+							} else {
+<span class="nc" id="L452">								info += Messages.get(WndKeyBindings.class, SPDAction.LEFT_CLICK.name()) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;item_select&quot;) + &quot;\n&quot;;</span>
+<span class="nc" id="L453">								info += Messages.get(WndKeyBindings.class, SPDAction.RIGHT_CLICK.name()) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;item_use&quot;) + &quot;\n&quot;;</span>
+<span class="nc" id="L454">								info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, false)) + &quot;: &quot; + Messages.get(Toolbar.class, &quot;item_cancel&quot;);</span>
+							}
+
+<span class="nc" id="L457">							Game.scene().addToFront(new RadialMenu(Messages.get(Toolbar.class, &quot;item_prompt&quot;), info, itemNames, itemIcons){</span>
+								@Override
+								public void onSelect(int idx, boolean alt) {
+<span class="nc" id="L460">									super.onSelect(idx, alt);</span>
+<span class="nc" id="L461">									Item item = items.get(idx);</span>
+<span class="nc bnc" id="L462" title="All 4 branches missed.">									if (alt &amp;&amp; item.defaultAction() != null) {</span>
+<span class="nc" id="L463">										item.execute(Dungeon.hero);</span>
+									} else {
+<span class="nc" id="L465">										InventoryPane.clearTargetingSlot();</span>
+<span class="nc" id="L466">										Game.scene().addToFront(new WndUseItem(null, item));</span>
+									}
+<span class="nc" id="L468">								}</span>
+							});
+<span class="nc" id="L470">						}</span>
+					});
+				}
+<span class="nc" id="L473">			}</span>
+
+			@Override
+			public GameAction keyAction() {
+<span class="nc bnc" id="L477" title="All 2 branches missed.">				if (btnWait.active) return SPDAction.INVENTORY_SELECTOR;</span>
+<span class="nc" id="L478">				else				return null;</span>
+			}
+		});
+
+<span class="nc" id="L482">		add(pickedUp = new PickedUpItem());</span>
+<span class="nc" id="L483">	}</span>
+	
+	@Override
+	protected void layout() {
+
+<span class="nc" id="L488">		float right = width;</span>
+
+<span class="nc" id="L490">		int quickslotsToShow = 4;</span>
+<span class="nc bnc" id="L491" title="All 2 branches missed.">		if (PixelScene.uiCamera.width &gt; 152) quickslotsToShow ++;</span>
+<span class="nc bnc" id="L492" title="All 2 branches missed.">		if (PixelScene.uiCamera.width &gt; 170) quickslotsToShow ++;</span>
+
+		int startingSlot;
+<span class="nc bnc" id="L495" title="All 4 branches missed.">		if (SPDSettings.quickSwapper() &amp;&amp; quickslotsToShow &lt; 6){</span>
+<span class="nc" id="L496">			quickslotsToShow = 3;</span>
+<span class="nc bnc" id="L497" title="All 2 branches missed.">			startingSlot = swappedQuickslots ? 3 : 0;</span>
+<span class="nc" id="L498">			btnSwap.visible = true;</span>
+<span class="nc" id="L499">			btnSwap.active = lastEnabled;</span>
+<span class="nc" id="L500">			QuickSlotButton.lastVisible = 6;</span>
+		} else {
+<span class="nc" id="L502">			startingSlot = 0;</span>
+<span class="nc" id="L503">			btnSwap.visible = btnSwap.active = false;</span>
+<span class="nc" id="L504">			btnSwap.setPos(0, PixelScene.uiCamera.height);</span>
+<span class="nc" id="L505">			QuickSlotButton.lastVisible = quickslotsToShow;</span>
+		}
+<span class="nc" id="L507">		int endingSlot = startingSlot+quickslotsToShow-1;</span>
+
+<span class="nc bnc" id="L509" title="All 2 branches missed.">		for (int i = 0; i &lt; btnQuick.length; i++){</span>
+<span class="nc bnc" id="L510" title="All 4 branches missed.">			btnQuick[i].visible = i &gt;= startingSlot &amp;&amp; i &lt;= endingSlot;</span>
+<span class="nc bnc" id="L511" title="All 4 branches missed.">			btnQuick[i].enable(btnQuick[i].visible &amp;&amp; lastEnabled);</span>
+<span class="nc bnc" id="L512" title="All 4 branches missed.">			if (i &lt; startingSlot || i &gt; endingSlot){</span>
+<span class="nc" id="L513">				btnQuick[i].setPos(btnQuick[i].left(), PixelScene.uiCamera.height);</span>
+			}
+		}
+
+<span class="nc bnc" id="L517" title="All 2 branches missed.">		if (SPDSettings.interfaceSize() &gt; 0){</span>
+<span class="nc" id="L518">			btnInventory.setPos(right - btnInventory.width(), y);</span>
+<span class="nc" id="L519">			btnWait.setPos(btnInventory.left() - btnWait.width(), y);</span>
+<span class="nc" id="L520">			btnSearch.setPos(btnWait.left() - btnSearch.width(), y);</span>
+
+<span class="nc" id="L522">			right = btnSearch.left();</span>
+<span class="nc bnc" id="L523" title="All 2 branches missed.">			for(int i = endingSlot; i &gt;= startingSlot; i--) {</span>
+<span class="nc bnc" id="L524" title="All 2 branches missed.">				if (i == endingSlot){</span>
+<span class="nc" id="L525">					btnQuick[i].border(0, 2);</span>
+<span class="nc" id="L526">					btnQuick[i].frame(106, 0, 19, 24);</span>
+<span class="nc bnc" id="L527" title="All 2 branches missed.">				} else if (i == 0){</span>
+<span class="nc" id="L528">					btnQuick[i].border(2, 1);</span>
+<span class="nc" id="L529">					btnQuick[i].frame(86, 0, 20, 24);</span>
+				} else {
+<span class="nc" id="L531">					btnQuick[i].border(0, 1);</span>
+<span class="nc" id="L532">					btnQuick[i].frame(88, 0, 18, 24);</span>
+				}
+<span class="nc" id="L534">				btnQuick[i].setPos(right-btnQuick[i].width(), y+2);</span>
+<span class="nc" id="L535">				right = btnQuick[i].left();</span>
+			}
+
+			//swap button never appears on larger interface sizes
+
+<span class="nc" id="L540">			return;</span>
+		}
+
+<span class="nc bnc" id="L543" title="All 2 branches missed.">		for(int i = startingSlot; i &lt;= endingSlot; i++) {</span>
+<span class="nc bnc" id="L544" title="All 6 branches missed.">			if (i == startingSlot &amp;&amp; !SPDSettings.flipToolbar() ||</span>
+<span class="nc bnc" id="L545" title="All 2 branches missed.">				i == endingSlot &amp;&amp; SPDSettings.flipToolbar()){</span>
+<span class="nc" id="L546">				btnQuick[i].border(0, 2);</span>
+<span class="nc" id="L547">				btnQuick[i].frame(106, 0, 19, 24);</span>
+<span class="nc bnc" id="L548" title="All 6 branches missed.">			} else if (i == startingSlot &amp;&amp; SPDSettings.flipToolbar() ||</span>
+<span class="nc bnc" id="L549" title="All 2 branches missed.">					i == endingSlot &amp;&amp; !SPDSettings.flipToolbar()){</span>
+<span class="nc" id="L550">				btnQuick[i].border(2, 1);</span>
+<span class="nc" id="L551">				btnQuick[i].frame(86, 0, 20, 24);</span>
+			} else {
+<span class="nc" id="L553">				btnQuick[i].border(0, 1);</span>
+<span class="nc" id="L554">				btnQuick[i].frame(88, 0, 18, 24);</span>
+			}
+		}
+
+<span class="nc" id="L558">		float shift = 0;</span>
+		Toolbar.Mode mode;
+		try {
+<span class="nc" id="L561">			mode = Mode.valueOf(SPDSettings.toolbarMode());</span>
+<span class="nc" id="L562">		} catch (Exception e){</span>
+<span class="nc" id="L563">			Game.reportException(e);</span>
+<span class="nc bnc" id="L564" title="All 2 branches missed.">			mode = PixelScene.landscape() ? Mode.GROUP : Mode.SPLIT;</span>
+<span class="nc" id="L565">		}</span>
+<span class="nc bnc" id="L566" title="All 4 branches missed.">		switch(mode){</span>
+			case SPLIT:
+<span class="nc" id="L568">				btnWait.setPos(x, y);</span>
+<span class="nc" id="L569">				btnSearch.setPos(btnWait.right(), y);</span>
+
+<span class="nc" id="L571">				btnInventory.setPos(right - btnInventory.width(), y);</span>
+
+<span class="nc" id="L573">				float left = 0;</span>
+
+<span class="nc" id="L575">				btnQuick[startingSlot].setPos(btnInventory.left() - btnQuick[startingSlot].width(), y + 2);</span>
+<span class="nc bnc" id="L576" title="All 2 branches missed.">				for (int i = startingSlot+1; i &lt;= endingSlot; i++) {</span>
+<span class="nc" id="L577">					btnQuick[i].setPos(btnQuick[i-1].left() - btnQuick[i].width(), y + 2);</span>
+<span class="nc" id="L578">					shift = btnSearch.right() - btnQuick[i].left();</span>
+				}
+
+<span class="nc bnc" id="L581" title="All 2 branches missed.">				if (btnSwap.visible){</span>
+<span class="nc" id="L582">					btnSwap.setPos(btnQuick[endingSlot].left() - (btnSwap.width()-2), y+3);</span>
+<span class="nc" id="L583">					shift = btnSearch.right() - btnSwap.left();</span>
+				}
+
+				break;
+
+			//center = group but.. well.. centered, so all we need to do is pre-emptively set the right side further in.
+			case CENTER:
+<span class="nc" id="L590">				float toolbarWidth = btnWait.width() + btnSearch.width() + btnInventory.width();</span>
+<span class="nc bnc" id="L591" title="All 2 branches missed.">				for(Button slot : btnQuick){</span>
+<span class="nc bnc" id="L592" title="All 2 branches missed.">					if (slot.visible) toolbarWidth += slot.width();</span>
+				}
+<span class="nc bnc" id="L594" title="All 2 branches missed.">				if (btnSwap.visible) toolbarWidth += btnSwap.width()-2;</span>
+<span class="nc" id="L595">				right = (width + toolbarWidth)/2;</span>
+
+			case GROUP:
+<span class="nc" id="L598">				btnWait.setPos(right - btnWait.width(), y);</span>
+<span class="nc" id="L599">				btnSearch.setPos(btnWait.left() - btnSearch.width(), y);</span>
+<span class="nc" id="L600">				btnInventory.setPos(btnSearch.left() - btnInventory.width(), y);</span>
+
+<span class="nc" id="L602">				btnQuick[startingSlot].setPos(btnInventory.left() - btnQuick[startingSlot].width(), y + 2);</span>
+<span class="nc bnc" id="L603" title="All 2 branches missed.">				for (int i = startingSlot+1; i &lt;= endingSlot; i++) {</span>
+<span class="nc" id="L604">					btnQuick[i].setPos(btnQuick[i-1].left() - btnQuick[i].width(), y + 2);</span>
+<span class="nc" id="L605">					shift = -btnQuick[i].left();</span>
+				}
+
+<span class="nc bnc" id="L608" title="All 2 branches missed.">				if (btnSwap.visible){</span>
+<span class="nc" id="L609">					btnSwap.setPos(btnQuick[endingSlot].left() - (btnSwap.width()-2), y+3);</span>
+<span class="nc" id="L610">					shift = -btnSwap.left();</span>
+				}
+				
+				break;
+		}
+
+<span class="nc bnc" id="L616" title="All 2 branches missed.">		if (shift &gt; 0){</span>
+<span class="nc" id="L617">			shift /= 2; //we want to center;</span>
+<span class="nc bnc" id="L618" title="All 2 branches missed.">			for (int i = startingSlot; i &lt;= endingSlot; i++) {</span>
+<span class="nc" id="L619">				btnQuick[i].setPos(btnQuick[i].left()+shift,  btnQuick[i].top());</span>
+			}
+<span class="nc bnc" id="L621" title="All 2 branches missed.">			if (btnSwap.visible){</span>
+<span class="nc" id="L622">				btnSwap.setPos(btnSwap.left()+shift, btnSwap.top());</span>
+			}
+		}
+
+<span class="nc" id="L626">		right = width;</span>
+
+<span class="nc bnc" id="L628" title="All 2 branches missed.">		if (SPDSettings.flipToolbar()) {</span>
+
+<span class="nc" id="L630">			btnWait.setPos( (right - btnWait.right()), y);</span>
+<span class="nc" id="L631">			btnSearch.setPos( (right - btnSearch.right()), y);</span>
+<span class="nc" id="L632">			btnInventory.setPos( (right - btnInventory.right()), y);</span>
+
+<span class="nc bnc" id="L634" title="All 2 branches missed.">			for(int i = startingSlot; i &lt;= endingSlot; i++) {</span>
+<span class="nc" id="L635">				btnQuick[i].setPos( right - btnQuick[i].right(), y+2);</span>
+			}
+
+<span class="nc bnc" id="L638" title="All 2 branches missed.">			if (btnSwap.visible){</span>
+<span class="nc" id="L639">				btnSwap.setPos( right - btnSwap.right(), y+3);</span>
+			}
+
+		}
+
+<span class="nc" id="L644">	}</span>
+
+	public static void updateLayout(){
+<span class="nc bnc" id="L647" title="All 2 branches missed.">		if (instance != null) instance.layout();</span>
+<span class="nc" id="L648">	}</span>
+	
+	@Override
+	public void update() {
+<span class="nc" id="L652">		super.update();</span>
+		
+<span class="nc bnc" id="L654" title="All 6 branches missed.">		if (lastEnabled != (Dungeon.hero.ready &amp;&amp; Dungeon.hero.isAlive())) {</span>
+<span class="nc bnc" id="L655" title="All 4 branches missed.">			lastEnabled = (Dungeon.hero.ready &amp;&amp; Dungeon.hero.isAlive());</span>
+			
+<span class="nc bnc" id="L657" title="All 2 branches missed.">			for (Gizmo tool : members.toArray(new Gizmo[0])) {</span>
+<span class="nc bnc" id="L658" title="All 2 branches missed.">				if (tool instanceof Tool) {</span>
+<span class="nc" id="L659">					((Tool)tool).enable( lastEnabled );</span>
+				}
+			}
+		}
+		
+<span class="nc bnc" id="L664" title="All 2 branches missed.">		if (!Dungeon.hero.isAlive()) {</span>
+<span class="nc" id="L665">			btnInventory.enable(true);</span>
+		}
+<span class="nc" id="L667">	}</span>
+
+	public void alpha( float value ){
+<span class="nc" id="L670">		btnWait.alpha( value );</span>
+<span class="nc" id="L671">		btnSearch.alpha( value );</span>
+<span class="nc" id="L672">		btnInventory.alpha( value );</span>
+<span class="nc bnc" id="L673" title="All 2 branches missed.">		for (QuickslotTool tool : btnQuick){</span>
+<span class="nc" id="L674">			tool.alpha(value);</span>
+		}
+<span class="nc" id="L676">		btnSwap.alpha( value );</span>
+<span class="nc" id="L677">	}</span>
+
+	public void pickup( Item item, int cell ) {
+<span class="nc" id="L680">		pickedUp.reset( item,</span>
+			cell,
+<span class="nc" id="L682">			btnInventory.centerX(),</span>
+<span class="nc" id="L683">			btnInventory.centerY());</span>
+<span class="nc" id="L684">	}</span>
+	
+<span class="nc" id="L686">	private static CellSelector.Listener informer = new CellSelector.Listener() {</span>
+		@Override
+		public void onSelect( Integer cell ) {
+<span class="nc bnc" id="L689" title="All 2 branches missed.">			if (instance != null) {</span>
+<span class="nc" id="L690">				instance.examining = false;</span>
+<span class="nc" id="L691">				GameScene.examineCell(cell);</span>
+			}
+<span class="nc" id="L693">		}</span>
+		@Override
+		public String prompt() {
+<span class="nc" id="L696">			return Messages.get(Toolbar.class, &quot;examine_prompt&quot;);</span>
+		}
+	};
+	
+	private static class Tool extends Button {
+		
+		private static final int BGCOLOR = 0x7B8073;
+		
+		private Image base;
+		private Image icon;
+		
+		public Tool( int x, int y, int width, int height ) {
+<span class="nc" id="L708">			super();</span>
+
+<span class="nc" id="L710">			hotArea.blockLevel = PointerArea.ALWAYS_BLOCK;</span>
+<span class="nc" id="L711">			frame(x, y, width, height);</span>
+<span class="nc" id="L712">		}</span>
+
+		public void frame( int x, int y, int width, int height) {
+<span class="nc" id="L715">			base.frame( x, y, width, height );</span>
+
+<span class="nc" id="L717">			this.width = width;</span>
+<span class="nc" id="L718">			this.height = height;</span>
+<span class="nc" id="L719">		}</span>
+
+		public void icon( int x, int y, int width, int height){
+<span class="nc bnc" id="L722" title="All 2 branches missed.">			if (icon == null) icon = new Image( Assets.Interfaces.TOOLBAR );</span>
+<span class="nc" id="L723">			add(icon);</span>
+
+<span class="nc" id="L725">			icon.frame( x, y, width, height);</span>
+<span class="nc" id="L726">		}</span>
+		
+		@Override
+		protected void createChildren() {
+<span class="nc" id="L730">			super.createChildren();</span>
+			
+<span class="nc" id="L732">			base = new Image( Assets.Interfaces.TOOLBAR );</span>
+<span class="nc" id="L733">			add( base );</span>
+<span class="nc" id="L734">		}</span>
+		
+		@Override
+		protected void layout() {
+<span class="nc" id="L738">			super.layout();</span>
+			
+<span class="nc" id="L740">			base.x = x;</span>
+<span class="nc" id="L741">			base.y = y;</span>
+
+<span class="nc bnc" id="L743" title="All 2 branches missed.">			if (icon != null){</span>
+<span class="nc" id="L744">				icon.x = x + (width()- icon.width())/2f;</span>
+<span class="nc" id="L745">				icon.y = y + (height()- icon.height())/2f;</span>
+			}
+<span class="nc" id="L747">		}</span>
+
+		public void alpha( float value ){
+<span class="nc" id="L750">			base.alpha(value);</span>
+<span class="nc bnc" id="L751" title="All 2 branches missed.">			if (icon != null) icon.alpha(value);</span>
+<span class="nc" id="L752">		}</span>
+
+		@Override
+		protected void onPointerDown() {
+<span class="nc" id="L756">			base.brightness( 1.4f );</span>
+<span class="nc" id="L757">		}</span>
+		
+		@Override
+		protected void onPointerUp() {
+<span class="nc bnc" id="L761" title="All 2 branches missed.">			if (active) {</span>
+<span class="nc" id="L762">				base.resetColor();</span>
+			} else {
+<span class="nc" id="L764">				base.tint( BGCOLOR, 0.7f );</span>
+			}
+<span class="nc" id="L766">		}</span>
+		
+		public void enable( boolean value ) {
+<span class="nc bnc" id="L769" title="All 2 branches missed.">			if (value != active) {</span>
+<span class="nc bnc" id="L770" title="All 4 branches missed.">				if (icon != null) icon.alpha( value ? 1f : 0.4f);</span>
+<span class="nc" id="L771">				active = value;</span>
+			}
+<span class="nc" id="L773">		}</span>
+	}
+	
+	private static class QuickslotTool extends Tool {
+		
+		private QuickSlotButton slot;
+<span class="nc" id="L779">		private int borderLeft = 2;</span>
+<span class="nc" id="L780">		private int borderRight = 2;</span>
+		
+		public QuickslotTool( int x, int y, int width, int height, int slotNum ) {
+<span class="nc" id="L783">			super( x, y, width, height );</span>
+
+<span class="nc" id="L785">			slot = new QuickSlotButton( slotNum );</span>
+<span class="nc" id="L786">			add( slot );</span>
+<span class="nc" id="L787">		}</span>
+
+		public void border( int left, int right ){
+<span class="nc" id="L790">			borderLeft = left;</span>
+<span class="nc" id="L791">			borderRight = right;</span>
+<span class="nc" id="L792">			layout();</span>
+<span class="nc" id="L793">		}</span>
+		
+		@Override
+		protected void layout() {
+<span class="nc" id="L797">			super.layout();</span>
+<span class="nc" id="L798">			slot.setRect( x, y, width, height );</span>
+<span class="nc" id="L799">			slot.slotMargins(borderLeft, 2, borderRight, 2);</span>
+<span class="nc" id="L800">		}</span>
+
+		@Override
+		public void alpha(float value) {
+<span class="nc" id="L804">			super.alpha(value);</span>
+<span class="nc" id="L805">			slot.alpha(value);</span>
+<span class="nc" id="L806">		}</span>
+
+		@Override
+		public void enable( boolean value ) {
+<span class="nc bnc" id="L810" title="All 4 branches missed.">			super.enable( value &amp;&amp; visible );</span>
+<span class="nc bnc" id="L811" title="All 4 branches missed.">			slot.enable( value &amp;&amp; visible );</span>
+<span class="nc" id="L812">		}</span>
+	}
+
+<span class="nc" id="L815">	public static boolean swappedQuickslots = false;</span>
+	public static SlotSwapTool SWAP_INSTANCE;
+
+	public static class SlotSwapTool extends Tool {
+
+<span class="nc" id="L820">		private Image[] icons = new Image[4];</span>
+<span class="nc" id="L821">		private Item[] items = new Item[4];</span>
+
+		public SlotSwapTool(int x, int y, int width, int height) {
+<span class="nc" id="L824">			super(x, y, width, height);</span>
+<span class="nc" id="L825">			SWAP_INSTANCE = this;</span>
+<span class="nc" id="L826">			updateVisuals();</span>
+<span class="nc" id="L827">		}</span>
+
+		@Override
+		public synchronized void destroy() {
+<span class="nc" id="L831">			super.destroy();</span>
+<span class="nc bnc" id="L832" title="All 2 branches missed.">			if (SWAP_INSTANCE == this) SWAP_INSTANCE = null;</span>
+<span class="nc" id="L833">		}</span>
+
+		@Override
+		protected void onClick() {
+<span class="nc" id="L837">			super.onClick();</span>
+<span class="nc bnc" id="L838" title="All 2 branches missed.">			swappedQuickslots = !swappedQuickslots;</span>
+<span class="nc" id="L839">			updateLayout();</span>
+<span class="nc" id="L840">			updateVisuals();</span>
+<span class="nc" id="L841">		}</span>
+
+		public void updateVisuals(){
+<span class="nc bnc" id="L844" title="All 2 branches missed.">			if (icons[0] == null){</span>
+<span class="nc" id="L845">				icons[0] = Icons.get(Icons.CHANGES);</span>
+<span class="nc" id="L846">				icons[0].scale.set(PixelScene.align(0.45f));</span>
+<span class="nc" id="L847">				add(icons[0]);</span>
+			}
+
+			int slot;
+			int slotDir;
+<span class="nc bnc" id="L852" title="All 2 branches missed.">			if (SPDSettings.flipToolbar()){</span>
+<span class="nc bnc" id="L853" title="All 2 branches missed.">				slot = swappedQuickslots ? 0 : 3;</span>
+<span class="nc" id="L854">				slotDir = +1;</span>
+			} else {
+<span class="nc bnc" id="L856" title="All 2 branches missed.">				slot = swappedQuickslots ? 2 : 5;</span>
+<span class="nc" id="L857">				slotDir = -1;</span>
+			}
+
+<span class="nc bnc" id="L860" title="All 2 branches missed.">			for (int i = 1; i &lt; 4; i++){</span>
+<span class="nc bnc" id="L861" title="All 2 branches missed.">				if (items[i] == Dungeon.quickslot.getItem(slot)){</span>
+<span class="nc" id="L862">					slot += slotDir;</span>
+<span class="nc" id="L863">					continue;</span>
+				} else {
+<span class="nc" id="L865">					items[i] = Dungeon.quickslot.getItem(slot);</span>
+				}
+<span class="nc bnc" id="L867" title="All 2 branches missed.">				if (icons[i] != null){</span>
+<span class="nc" id="L868">					icons[i].killAndErase();</span>
+<span class="nc" id="L869">					icons[i] = null;</span>
+				}
+<span class="nc bnc" id="L871" title="All 2 branches missed.">				if (items[i] != null){</span>
+<span class="nc" id="L872">					icons[i] = new ItemSprite(items[i]);</span>
+<span class="nc" id="L873">					icons[i].scale.set(PixelScene.align(0.45f));</span>
+<span class="nc bnc" id="L874" title="All 2 branches missed.">					if (Dungeon.quickslot.isPlaceholder(slot)) icons[i].alpha(0.29f);</span>
+<span class="nc" id="L875">					add(icons[i]);</span>
+				}
+<span class="nc" id="L877">				slot += slotDir;</span>
+			}
+
+<span class="nc" id="L880">			icons[0].x = x + 2 + (8 - icons[0].width())/2;</span>
+<span class="nc" id="L881">			icons[0].y = y + 2 + (9 - icons[0].height())/2;</span>
+<span class="nc" id="L882">			PixelScene.align(icons[0]);</span>
+
+<span class="nc bnc" id="L884" title="All 2 branches missed.">			if (icons[1] != null){</span>
+<span class="nc" id="L885">				icons[1].x = x + 11 + (8 - icons[1].width())/2;</span>
+<span class="nc" id="L886">				icons[1].y = y + 2 + (9 - icons[1].height())/2;</span>
+<span class="nc" id="L887">				PixelScene.align(icons[1]);</span>
+			}
+
+<span class="nc bnc" id="L890" title="All 2 branches missed.">			if (icons[2] != null){</span>
+<span class="nc" id="L891">				icons[2].x = x + 2 + (8 - icons[2].width())/2;</span>
+<span class="nc" id="L892">				icons[2].y = y + 12 + (9 - icons[2].height())/2;</span>
+<span class="nc" id="L893">				PixelScene.align(icons[2]);</span>
+			}
+
+<span class="nc bnc" id="L896" title="All 2 branches missed.">			if (icons[3] != null){</span>
+<span class="nc" id="L897">				icons[3].x = x + 11 + (8 - icons[3].width())/2;</span>
+<span class="nc" id="L898">				icons[3].y = y + 12 + (9 - icons[3].height())/2;</span>
+<span class="nc" id="L899">				PixelScene.align(icons[3]);</span>
+			}
+<span class="nc" id="L901">		}</span>
+
+		@Override
+		protected void layout() {
+<span class="nc" id="L905">			super.layout();</span>
+<span class="nc" id="L906">			updateVisuals();</span>
+<span class="nc" id="L907">		}</span>
+
+		@Override
+		public void alpha(float value) {
+<span class="nc" id="L911">			super.alpha(value);</span>
+<span class="nc bnc" id="L912" title="All 2 branches missed.">			for (Image im : icons){</span>
+<span class="nc bnc" id="L913" title="All 2 branches missed.">				if (im != null) im.alpha(value);</span>
+			}
+<span class="nc" id="L915">		}</span>
+
+		@Override
+		public void enable(boolean value) {
+<span class="nc" id="L919">			super.enable(value);</span>
+<span class="nc bnc" id="L920" title="All 2 branches missed.">			for (Image ic : icons){</span>
+<span class="nc bnc" id="L921" title="All 4 branches missed.">				if (ic != null &amp;&amp; ic.alpha() &gt;= 0.3f){</span>
+<span class="nc bnc" id="L922" title="All 2 branches missed.">					ic.alpha( value ? 1 : 0.3f);</span>
+				}
+			}
+<span class="nc" id="L925">		}</span>
+
+		//private
+
+	}
+	
+	public static class PickedUpItem extends ItemSprite {
+		
+		private static final float DURATION = 0.5f;
+		
+		private float startScale;
+		private float startX, startY;
+		private float endX, endY;
+		private float left;
+		
+		public PickedUpItem() {
+<span class="nc" id="L941">			super();</span>
+			
+<span class="nc" id="L943">			originToCenter();</span>
+			
+<span class="nc" id="L945">			active =</span>
+			visible =
+				false;
+<span class="nc" id="L948">		}</span>
+		
+		public void reset( Item item, int cell, float endX, float endY ) {
+<span class="nc" id="L951">			view( item );</span>
+			
+<span class="nc" id="L953">			active =</span>
+			visible =
+				true;
+			
+<span class="nc" id="L957">			PointF tile = DungeonTerrainTilemap.raisedTileCenterToWorld(cell);</span>
+<span class="nc" id="L958">			Point screen = Camera.main.cameraToScreen(tile.x, tile.y);</span>
+<span class="nc" id="L959">			PointF start = camera().screenToCamera(screen.x, screen.y);</span>
+			
+<span class="nc" id="L961">			x = this.startX = start.x - width() / 2;</span>
+<span class="nc" id="L962">			y = this.startY = start.y - width() / 2;</span>
+			
+<span class="nc" id="L964">			this.endX = endX - width() / 2;</span>
+<span class="nc" id="L965">			this.endY = endY - width() / 2;</span>
+<span class="nc" id="L966">			left = DURATION;</span>
+			
+<span class="nc" id="L968">			scale.set( startScale = Camera.main.zoom / camera().zoom );</span>
+			
+<span class="nc" id="L970">		}</span>
+		
+		@Override
+		public void update() {
+<span class="nc" id="L974">			super.update();</span>
+			
+<span class="nc bnc" id="L976" title="All 2 branches missed.">			if ((left -= Game.elapsed) &lt;= 0) {</span>
+				
+<span class="nc" id="L978">				visible =</span>
+				active =
+					false;
+<span class="nc bnc" id="L981" title="All 2 branches missed.">				if (emitter != null) emitter.on = false;</span>
+				
+			} else {
+<span class="nc" id="L984">				float p = left / DURATION;</span>
+<span class="nc" id="L985">				scale.set( startScale * (float)Math.sqrt( p ) );</span>
+				
+<span class="nc" id="L987">				x = startX*p + endX*(1-p);</span>
+<span class="nc" id="L988">				y = startY*p + endY*(1-p);</span>
+			}
+<span class="nc" id="L990">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
