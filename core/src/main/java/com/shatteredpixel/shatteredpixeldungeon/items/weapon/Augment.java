@@ -1,8 +1,8 @@
 package com.shatteredpixel.shatteredpixeldungeon.items.weapon;
 
 public enum Augment {
-    SPEED   (0.7f, 2/3f),
-    DAMAGE  (1.5f, 5/3f),
+    SPEED   (0.7f, 2f / 3f),
+    DAMAGE  (1.5f, 5f / 3f),
     NONE	(1.0f, 1f);
 
     private float damageFactor;

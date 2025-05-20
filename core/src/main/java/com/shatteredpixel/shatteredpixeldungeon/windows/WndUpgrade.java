@@ -51,6 +51,7 @@ import com.watabou.noosa.BitmapText;
 import com.watabou.noosa.ColorBlock;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.Reflection;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Augment;
 
 public class WndUpgrade extends Window {
 
@@ -195,7 +196,7 @@ public class WndUpgrade extends Window {
 
 		//physical damage
 		if (toUpgrade instanceof Weapon){
-			Weapon.Augment aug = ((Weapon) toUpgrade).augment;
+			Augment aug = ((Weapon) toUpgrade).augment;
 			bottom = fillFields(Messages.get(this, "damage"),
 					aug.damageFactor(((Weapon) toUpgrade).min(levelFrom)) + "-" + aug.damageFactor(((Weapon) toUpgrade).max(levelFrom)),
 					aug.damageFactor(((Weapon) toUpgrade).min(levelTo)) + "-" + aug.damageFactor(((Weapon) toUpgrade).max(levelTo)),

@@ -37,6 +37,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.windows.IconTitle;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Augment;
 
 public class StoneOfAugmentation extends InventoryStone {
 	
@@ -57,7 +58,7 @@ public class StoneOfAugmentation extends InventoryStone {
 		
 	}
 	
-	public void apply( Weapon weapon, Weapon.Augment augment ) {
+	public void apply( Weapon weapon, Augment augment ) {
 		
 		weapon.augment = augment;
 		useAnimation();
@@ -113,7 +114,7 @@ public class StoneOfAugmentation extends InventoryStone {
 			float pos = tfMesage.top() + tfMesage.height();
 			
 			if (toAugment instanceof Weapon){
-				for (final Weapon.Augment aug : Weapon.Augment.values()){
+				for (final Augment aug : Augment.values()){
 					if (((Weapon) toAugment).augment != aug){
 						RedButton btnSpeed = new RedButton( Messages.get(this, aug.name()) ) {
 							@Override
