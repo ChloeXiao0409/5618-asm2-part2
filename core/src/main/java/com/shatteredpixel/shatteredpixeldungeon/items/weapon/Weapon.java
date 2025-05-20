@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.weapon;
 
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.DamageCalculator;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
@@ -75,6 +76,8 @@ import com.watabou.utils.Bundlable;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.Random;
 import com.watabou.utils.Reflection;
+
+import main.java.com.shatteredpixel.shatteredpixeldungeon.items.weapon.DamageCalculator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -635,5 +638,15 @@ public abstract class Weapon extends KindOfWeapon implements IEquipment {
 	@Override
 	public String getName() {
 		return this.name();  // 复用现有名称方法
+	}
+
+	@Override
+	public int damageRoll(Char owner) {
+		return DamageCalculator.calculate(
+			min(), 
+			max(), 
+			this.augment,
+			owner instanceof Hero
+		);
 	}
 }
