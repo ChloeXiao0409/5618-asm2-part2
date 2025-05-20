@@ -2,7 +2,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.weapon;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
-import com.shatteredpixel.shatteredpixeldungeon.utils.Random;
+import com.watabou.utils.Random;
 
 public class DamageCalculator {
 

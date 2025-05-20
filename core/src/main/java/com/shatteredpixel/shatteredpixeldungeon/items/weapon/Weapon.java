@@ -77,7 +77,7 @@ import com.watabou.utils.Bundle;
 import com.watabou.utils.Random;
 import com.watabou.utils.Reflection;
 
-import main.java.com.shatteredpixel.shatteredpixeldungeon.items.weapon.DamageCalculator;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.DamageCalculator;
 
 import java.util.ArrayList;
 import java.util.Arrays;

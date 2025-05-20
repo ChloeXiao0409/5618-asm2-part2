@@ -1,0 +1,1 @@
+{"5618-asm2-part2.core.main":{"name":"5618-asm2-part2.core.main","packages":{"com.shatteredpixel.shatteredpixeldungeon.items.weapon":{"packageName":"com.shatteredpixel.shatteredpixeldungeon.items.weapon","isAll":false,"classes":["Lcom.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon.Enchantment","Lcom.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon"]}}}}
